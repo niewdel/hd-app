@@ -156,7 +156,7 @@ class CoverPage(Flowable):
 
 def info_block(data, st):
     """Three-column stacked layout. Each column has a header row then
-    label-above-value pairs — no side-by-side label/value split, so
+    label-above-value pairs â no side-by-side label/value split, so
     long emails and addresses never wrap awkwardly."""
 
     lbl_s  = ParagraphStyle('ibl', fontName='Helvetica-Bold', fontSize=7,
@@ -170,7 +170,7 @@ def info_block(data, st):
         parts = [Paragraph(title, hdr_s)]
         for lbl, val in pairs:
             parts.append(Paragraph(lbl, lbl_s))
-            parts.append(Paragraph(val or '—', val_s))
+            parts.append(Paragraph(val or 'â', val_s))
         return parts
 
     from reportlab.platypus import Frame
@@ -309,7 +309,7 @@ def bid_table(items, st):
     return t
 
 def total_line(total):
-    """Clean right-aligned total — label in regular weight, amount in bold black.
+    """Clean right-aligned total â label in regular weight, amount in bold black.
     No box, no background. Just a subtle top rule and generous spacing so it
     reads as a natural footer to the table above it."""
     cw  = W - inch
@@ -415,159 +415,167 @@ def approval_page(data, st):
     return elems
 
 def tc_block(title, body_items, st, cw):
-    """Returns a KeepTogether block for one T&C section."""
     hdr = Table([[Paragraph(title, st['tc_section'])]], colWidths=[cw])
     hdr.setStyle(TableStyle([
         ('BACKGROUND',   (0,0),(-1,-1), colors.HexColor('#F6F6F6')),
         ('LINEBEFORE',   (0,0),(0,-1),  4, RED),
-        ('LINEBELOW',    (0,0),(-1,-1), 0.5, TBLBORD),
+        ('LINEBELOW',    (0,0),(-1,-1), 0.5, TBLBRD),
         ('TOPPADDING',   (0,0),(-1,-1), 6),
         ('BOTTOMPADDING',(0,0),(-1,-1), 6),
         ('LEFTPADDING',  (0,0),(-1,-1), 10),
     ]))
     items = [hdr, Spacer(1, 0.04*inch)]
     for item in body_items:
-        if item.startswith('•'):
+        if item.startswith('\u2022'):
             items.append(Paragraph(item, st['tc_bullet']))
         else:
             items.append(Paragraph(item, st['tc_body']))
     items.append(Spacer(1, 0.06*inch))
     return KeepTogether(items)
 
+
 def tc_pages(st):
     cw = W - inch
     elems = []
-
-    elems.append(Paragraph('Terms & Conditions',
+    elems.append(Paragraph('Terms &amp; Conditions',
         ParagraphStyle('tch', fontName='Helvetica-Bold', fontSize=14,
                        alignment=TA_CENTER, spaceAfter=6)))
     elems.append(HRFlowable(width='100%', thickness=1, color=BLACK, spaceAfter=10))
 
     sections = [
-        ('1. Contract Formation & Binding Agreement', [
-            'This Proposal and Contract becomes legally binding upon execution by both the Customer/Purchaser and HD Hauling & Grading. Any conditions not expressly set forth herein shall not be recognized unless documented in writing and signed by authorized representatives of both parties. Verbal agreements, purchase orders, or prior understandings do not modify or supersede this contract unless incorporated by written amendment.',
+        ('1. Contract Formation &amp; Binding Agreement', [
+            'This Proposal and Contract becomes legally binding upon execution by both the Customer/Purchaser and HD Hauling &amp; Grading. Any conditions not expressly set forth herein shall not be recognized unless documented in writing and signed by authorized representatives of both parties. Verbal agreements, purchase orders, or prior understandings do not modify or supersede this contract unless incorporated by written amendment.',
         ]),
         ('2. Proposal Validity', [
-            'Pricing in this proposal is valid for thirty (30) calendar days from the date of issuance. HD Hauling & Grading reserves the right to withdraw or modify this proposal if not executed within that period, including adjustments for material price changes.',
+            'Pricing in this proposal is valid for thirty (30) calendar days from the date of issuance. HD Hauling &amp; Grading reserves the right to withdraw or modify this proposal if not executed within that period, including adjustments for material price changes. If work has not commenced within sixty (60) days of contract execution, HD Hauling &amp; Grading reserves the right to reprice the contract to reflect current material and labor costs.',
         ]),
         ('3. Scope of Work', [
-            'HD Hauling & Grading\'s scope is limited to the paving, concrete, striping, and signage work explicitly described in the Bid Items section of this document. No additional work, modifications, or extensions of scope are included unless captured in a written, signed Change Order prior to commencement of that work.',
+            "HD Hauling &amp; Grading's scope is limited to the paving, concrete, striping, and signage work explicitly described in the Bid Items section of this document. No additional work, modifications, or extensions of scope are included unless captured in a written, signed Change Order prior to commencement of that work.",
         ]),
-        ('4. Change Orders', [
-            'Any modification to the approved scope of work — including additions, deletions, substitutions, or design changes — requires a written Change Order executed by both parties before work begins. HD Hauling & Grading shall not be obligated to perform out-of-scope work without an approved Change Order and is not liable for delays caused by scope changes requested after contract execution.',
+        ('4. Changed Conditions', [
+            'If HD Hauling &amp; Grading encounters subsurface or concealed conditions that differ materially from those indicated in the contract documents -- including but not limited to rock, unsuitable soils, organic material, underground obstructions, undocumented utilities, or excessive groundwater -- HD Hauling &amp; Grading shall promptly notify the Customer in writing.',
+            '\u2022 All work related to changed conditions shall be subject to a written Change Order executed before additional work proceeds.',
+            "\u2022 HD Hauling &amp; Grading is not liable for schedule delays or cost overruns resulting from changed conditions not visible during a standard site walkthrough.",
+            "\u2022 If utilities are not located and marked prior to start of work by NC 811, the Customer assumes full responsibility for any damage to underground infrastructure.",
         ]),
-        ('5. Site Access & Staging', [
-            'The Customer shall provide HD Hauling & Grading with unobstructed vehicular access to the project site, a designated staging area for equipment and materials, and a safe haul route for loaded delivery trucks for the duration of work.',
-            '• Delays, re-mobilizations, or standby time caused by restricted access, site conflicts with other trades, or unavailability of the work area will be billed at the applicable unit rates in the Paving Overage Unit Prices.',
-            '• Customer is responsible for ensuring underground utilities are located and marked prior to the start of work. HD Hauling & Grading is not liable for damage to unmarked utilities.',
+        ('5. Change Orders', [
+            'Any modification to the approved scope of work requires a written Change Order executed by both parties before work begins. HD Hauling &amp; Grading shall not be obligated to perform out-of-scope work without an approved Change Order.',
+            '\u2022 Unit prices for overage work are listed in the Paving Overage Unit Prices section and shall apply to all approved change order work of similar type.',
         ]),
-        ('6. Subgrade Acceptance & Pavement Performance', [
-            'HD Hauling & Grading is not responsible for pavement failure, cracking, settlement, or premature deterioration resulting from inadequate subgrade preparation, insufficient base compaction, poor drainage, or unsuitable sub-base materials outside HD Hauling & Grading\'s scope of work.',
-            '• Prior to paving, the Customer or their designated representative is responsible for ensuring the subgrade and base course have been properly graded, compacted to NCDOT specifications, proof-rolled where required, and inspected. Commencement of paving constitutes Customer\'s acceptance of subgrade conditions.',
-            '• Proof rolling, moisture content testing, and base course density testing are the responsibility of the Customer unless explicitly included in the scope of work.',
-            '• If HD Hauling & Grading identifies conditions that may affect pavement performance, written notification will be provided. Customer\'s direction to proceed releases HD Hauling & Grading from performance liability related to those conditions.',
+        ('6. Site Access &amp; Staging', [
+            'The Customer shall provide HD Hauling &amp; Grading with unobstructed vehicular access to the project site, a designated staging area for equipment and materials, and a safe haul route for loaded delivery trucks for the duration of work.',
+            '\u2022 Delays, re-mobilizations, or standby time caused by restricted access or site conflicts will be billed at applicable unit rates.',
+            "\u2022 Customer is responsible for ensuring underground utilities are marked by NC 811 prior to start. HD Hauling &amp; Grading is not liable for damage to unmarked or inaccurately marked utilities.",
         ]),
-        ('7. Materials & NCDOT Specifications', [
-            'All asphalt materials furnished by HD Hauling & Grading shall conform to the applicable NCDOT Standard Specifications for Roads and Structures, current edition, unless otherwise specified in writing. Mix type, aggregate gradation, and binder content shall be per the mix design designated in the Bid Items.',
-            '• Material substitutions required due to plant availability or supply chain disruptions will be communicated promptly. Functionally equivalent materials will be substituted at no additional cost.',
-            '• HD Hauling & Grading does not guarantee long-term availability of specific mix designs or material sources.',
+        ("7. Subgrade Acceptance &amp; Pavement Performance", [
+            "HD Hauling &amp; Grading is not responsible for pavement failure, cracking, or settlement resulting from inadequate subgrade preparation, poor drainage, or unsuitable sub-base materials outside HD Hauling &amp; Grading's scope of work.",
+            "\u2022 Commencement of paving constitutes Customer's acceptance of subgrade conditions. Customer is responsible for ensuring subgrade has been properly graded, compacted to NCDOT specifications, and proof-rolled prior to paving.",
+            "\u2022 If HD Hauling &amp; Grading identifies conditions that may affect pavement performance, written notification will be provided. Customer's direction to proceed releases HD Hauling &amp; Grading from performance liability related to those conditions.",
         ]),
-        ('8. Weather & Temperature Conditions — Asphalt', [
-            'Asphalt paving will not be performed under the following conditions: ambient or surface temperatures below 40°F and falling; during rain, sleet, or snow; when the base course contains standing water or frost; or when forecast conditions within four (4) hours are anticipated to compromise compaction or curing.',
-            '• Schedule adjustments caused by weather are not grounds for price renegotiation, penalties, or liquidated damages against HD Hauling & Grading.',
+        ("8. Materials &amp; NCDOT Specifications", [
+            "All asphalt materials shall conform to the applicable NCDOT Standard Specifications for Roads and Structures, current edition, unless otherwise specified in writing.",
+            "\u2022 Material substitutions required due to plant availability or supply chain disruptions will be communicated promptly. Functionally equivalent materials will be substituted at no additional cost.",
         ]),
-        ('9. Concrete Work Conditions', [
-            'All concrete work shall be performed in accordance with applicable ACI standards and NCDOT specifications. Concrete will not be placed when ambient temperatures are below 40°F without approved cold-weather protection measures, or when temperatures exceed 90°F without appropriate hot-weather precautions.',
-            '• Form layout, grade stakes, and joint locations must be approved by the Customer or their representative prior to placement. Once concrete is placed, corrections to layout or elevation are billable as additional work.',
-            '• Cure time and form removal timing will be determined by HD Hauling & Grading based on ambient conditions and mix design requirements. Customer requests to accelerate form removal or trafficking of concrete prior to adequate cure are at Customer\'s sole risk.',
-            '• HD Hauling & Grading is not responsible for surface defects, cracking, or scaling resulting from: improper curing practices by others, premature trafficking, freeze-thaw cycles, de-icing chemical application, or subgrade settlement outside HD Hauling & Grading\'s scope.',
+        ("9. Weather &amp; Temperature Conditions", [
+            "Asphalt paving will be performed in accordance with NCDOT temperature and weather placement requirements for the specified mix type. Work will not proceed during rain, sleet, or snow; or when the base course contains standing water or frost.",
+            "\u2022 Schedule adjustments caused by weather are not grounds for price renegotiation, penalties, or liquidated damages against HD Hauling &amp; Grading.",
+            "\u2022 Concrete placement shall comply with ACI 305R (hot weather) and ACI 306R (cold weather) requirements as applicable.",
         ]),
-        ('10. Compaction & Quality', [
-            'Asphalt pavement compaction shall meet NCDOT density requirements for the specified mix type. If compaction testing is required, the Customer is responsible for providing an independent testing agency.',
-            '• HD Hauling & Grading is not liable for compaction failures resulting from: mix temperature loss during transport caused by factors outside its control, Customer-caused delays between delivery and laydown, or subgrade instability.',
+        ("10. Compaction &amp; Quality", [
+            "Asphalt pavement compaction shall meet NCDOT density requirements for the specified mix type. If compaction testing is required by the Owner or Engineer of Record, the Customer is responsible for providing an independent testing agency at Customer's expense.",
         ]),
-        ('11. Warranty', [
-            'HD Hauling & Grading warrants all materials and workmanship for one (1) year from the date of substantial completion. This warranty covers defects in materials and workmanship performed directly by HD Hauling & Grading.',
-            'This warranty expressly excludes:',
-            '• Damage from petroleum products, chemical spills, or de-icing agents',
-            '• Pavement failure from subgrade conditions not prepared by HD Hauling & Grading',
-            '• Damage from vehicle loads exceeding pavement design capacity',
-            '• Deterioration adjacent to a repaired area on maintenance projects',
-            '• Pavement markings or signage not installed by HD Hauling & Grading',
-            '• Normal wear, surface oxidation, and expected pavement aging',
-            '• Damage from third parties, acts of God, or events beyond HD Hauling & Grading\'s control',
-            'For maintenance and repair projects, the warranty applies only to the specific area(s) of new work.',
+        ("11. Warranty", [
+            "HD Hauling &amp; Grading warrants all materials and workmanship against defects for one (1) year from the date of substantial completion. This warranty is limited to defects in materials and workmanship directly performed by HD Hauling &amp; Grading under this contract.",
+            "This warranty expressly excludes:",
+            "\u2022 Damage from petroleum products, chemical spills, or de-icing agents",
+            "\u2022 Pavement failure attributable to subgrade or base conditions not prepared by HD Hauling &amp; Grading",
+            "\u2022 Damage from vehicle loads exceeding the pavement design capacity",
+            "\u2022 Reflective cracking from existing pavement on mill-and-pave or overlay projects",
+            "\u2022 Normal surface oxidation, weathering, raveling, and expected pavement aging",
+            "\u2022 Damage from third parties, acts of God, flooding, or events beyond HD Hauling &amp; Grading's control",
+            "Warranty claims must be submitted in writing within the warranty period. HD Hauling &amp; Grading's sole obligation is repair or replacement of the defective work at HD Hauling &amp; Grading's discretion.",
         ]),
-        ('12. Traffic Control & Permits', [
-            'If included in the Bid Items, HD Hauling & Grading will provide traffic control in general conformance with the MUTCD for the duration of active paving operations.',
-            '• The Customer is responsible for all permits, right-of-way authorizations, and NCDOT lane closure approvals prior to the scheduled start of work.',
-            '• ADA compliance determinations for pavement markings, curb ramps, and accessible routes are the responsibility of the Owner and Engineer of Record.',
+        ("12. Traffic Control &amp; Permits", [
+            "If included in the Bid Items, HD Hauling &amp; Grading will provide traffic control in general conformance with the MUTCD for the duration of active paving operations only.",
+            "\u2022 The Customer is responsible for all permits, right-of-way authorizations, NCDOT encroachment agreements, and lane closure approvals prior to the scheduled start of work.",
         ]),
-        ('13. Pavement Markings & Signage', [
-            'Pavement markings will be installed per the approved plan or layout provided by the Customer. HD Hauling & Grading is not responsible for incorrect layouts resulting from inaccurate field dimensions or conflicting plans.',
-            '• Thermoplastic markings require a minimum asphalt cure period before application.',
-            '• Signage installation will follow locations and specifications provided. Sign content, ADA designation, and regulatory compliance are the Customer\'s responsibility.',
+        ("13. Limitation of Liability", [
+            "HD Hauling &amp; Grading's total liability under this contract shall not exceed the total contract price paid. In no event shall HD Hauling &amp; Grading be liable for consequential, incidental, indirect, special, or punitive damages, including loss of use, lost revenue, business interruption, or third-party claims.",
         ]),
-        ('14. Limitation of Liability', [
-            'HD Hauling & Grading\'s total liability under this contract, regardless of cause, shall not exceed the total contract value. In no event shall HD Hauling & Grading be liable for consequential, incidental, indirect, or punitive damages, including but not limited to loss of use, lost revenue, business interruption, or third-party claims arising from delays or defects.',
+        ("14. Payment Terms", [
+            "Payment is due Net 30 -- all invoices are due and payable within thirty (30) calendar days of the invoice date. Invoices will be issued upon substantial completion of the work or upon completion of each defined phase, whichever occurs first.",
+            "\u2022 Any balance not received within thirty (30) days of the invoice date shall accrue interest at the rate of 1.5% per month (18% per annum) on the outstanding balance, calculated from the invoice date until paid in full.",
+            "\u2022 HD Hauling &amp; Grading reserves the right to suspend work if any invoice remains outstanding beyond thirty (30) days. Schedule delays resulting from payment-related work suspensions are the Customer's responsibility.",
+            "\u2022 The individual executing this contract provides a personal guarantee for full payment of all principal, accrued interest, attorneys' fees, and collection costs.",
+            "\u2022 Disputed invoice amounts must be submitted in writing within ten (10) days of the invoice date. Undisputed portions remain due per these terms.",
         ]),
-        ('15. Payment Terms', [
-            'All invoices are due Net 30 — payment is due within thirty (30) calendar days of the invoice date. Invoices will be submitted upon completion of each defined phase of work or on a monthly basis, whichever occurs first.',
-            '• Balances not received within thirty (30) days accrue interest at 1.5% per month (18% annually).',
-            '• Final payment is due within thirty (30) calendar days of the final completion invoice. Where applicable and agreed in writing, retention may be withheld per the terms of the prime contract, but shall be released no later than thirty (30) days after final completion and acceptance of HD Hauling & Grading\'s scope of work.',
-            '• The individual executing this contract on behalf of the Customer/Purchaser provides a personal guarantee for full payment of all principal and accrued interest.',
+        ("15. Lien Rights &amp; Collections", [
+            "NOTICE: HD Hauling &amp; Grading is a licensed contractor in the State of North Carolina. HD Hauling &amp; Grading expressly reserves its right to file a Claim of Lien against the property and a Bond Claim against any applicable payment bond pursuant to N.C.G.S. Chapter 44A in the event of non-payment.",
+            "\u2022 Nothing in this contract constitutes a waiver of lien rights.",
+            "\u2022 In the event legal action is required to collect payment, the Customer shall be responsible for all reasonable attorneys' fees, court costs, and collection expenses per N.C.G.S. SS 44A-35.",
         ]),
-        ('16. Lien Rights', [
-            'HD Hauling & Grading expressly reserves its right to file a Claim of Lien pursuant to N.C.G.S. Chapter 44A in the event of non-payment. Nothing herein constitutes a waiver of lien rights. In the event legal action is required, the Customer shall be responsible for all reasonable attorney\'s fees and collection costs per N.C.G.S. § 44A-35.',
+        ("16. Material Pricing &amp; Availability", [
+            "Due to volatility in liquid asphalt index (LAI) pricing and aggregate costs, material costs may be adjusted if costs increase more than ten percent (10%) from the proposal date to the date of material purchase. Written notice will be provided prior to any adjustment.",
         ]),
-        ('17. Material Pricing & Availability', [
-            'Due to volatility in liquid asphalt, aggregate, and fuel markets, material costs may be adjusted to reflect prevailing market rates if costs increase more than ten percent (10%) from the proposal date. Written notice will be provided prior to any adjustment.',
-            '• HD Hauling & Grading is not liable for delays caused by plant shutdowns, material shortages, or supplier issues.',
+        ("17. Force Majeure", [
+            "HD Hauling &amp; Grading shall not be liable for delays caused by acts of God, severe weather, labor disputes, government actions, supply chain disruptions, fuel shortages, or other circumstances beyond its reasonable control. The project schedule shall be extended accordingly.",
         ]),
-        ('18. Force Majeure', [
-            'HD Hauling & Grading shall not be liable for delays or failure to perform caused by circumstances beyond its reasonable control, including acts of God, severe weather, labor disputes, government actions, supply chain disruptions, fuel shortages, or public health emergencies. The schedule will be extended by a reasonable period and pricing may be subject to renegotiation.',
+        ("18. Dispute Resolution", [
+            "This contract shall be governed by the laws of the State of North Carolina. The parties agree to attempt good-faith negotiation before pursuing formal legal action. Venue for any legal proceedings shall be in the county where the project is located.",
         ]),
-        ('19. Entire Agreement', [
-            'This Proposal and Contract is the entire agreement between the parties with respect to the work described herein. It supersedes all prior proposals, representations, and understandings. No terms printed on the Customer\'s purchase orders shall apply unless explicitly incorporated by written amendment signed by both parties.',
+        ("19. Entire Agreement", [
+            "This Proposal and Contract constitutes the entire agreement between the parties and supersedes all prior proposals, representations, and understandings. No terms printed on Customer's purchase orders shall apply unless explicitly incorporated by written amendment signed by both parties.",
         ]),
     ]
 
     for title, body in sections:
         elems.append(tc_block(title, body, st, cw))
 
+    # Execution signature block
+    elems.append(Spacer(1, 0.3*inch))
+    sig_data = [
+        [Paragraph('<b>HD Hauling &amp; Grading</b>', st['body']),
+         Paragraph('<b>Customer / Purchaser</b>', st['body'])],
+        [Paragraph('Authorized Signature: ___________________________', st['body']),
+         Paragraph('Authorized Signature: ___________________________', st['body'])],
+        [Paragraph('Printed Name: _________________________________', st['body']),
+         Paragraph('Printed Name: _________________________________', st['body'])],
+        [Paragraph('Title: _________________________________________', st['body']),
+         Paragraph('Title: _________________________________________', st['body'])],
+        [Paragraph('Date: __________________________________________', st['body']),
+         Paragraph('Date: __________________________________________', st['body'])],
+    ]
+    sig_tbl = Table(sig_data, colWidths=[(W-inch)/2, (W-inch)/2])
+    sig_tbl.setStyle(TableStyle([
+        ('VALIGN',       (0,0),(-1,-1), 'TOP'),
+        ('TOPPADDING',   (0,0),(-1,-1), 6),
+        ('BOTTOMPADDING',(0,0),(-1,-1), 6),
+        ('LINEABOVE',    (0,0),(-1,0),  1, TBLBRD),
+        ('LINEBELOW',    (0,-1),(-1,-1),1, TBLBRD),
+    ]))
+    elems.append(KeepTogether([
+        Paragraph('CONTRACT EXECUTION', ParagraphStyle('cex', fontName='Helvetica-Bold',
+            fontSize=10, alignment=TA_CENTER, spaceBefore=10, spaceAfter=8)),
+        sig_tbl
+    ]))
     return elems
+
 
 def build(data, out_path):
     st = S()
     doc = SimpleDocTemplate(out_path, pagesize=letter,
-                             leftMargin=LM, rightMargin=RM,
-                             topMargin=TM, bottomMargin=BM)
+                             title=data.get('project_name','Proposal'),
+                             author='HD Hauling & Grading',
+                             creator='HD Hauling & Grading',
+                             subject=data.get('project_name','Proposal'),
+                             leftMargin=0.5*inch, rightMargin=0.5*inch,
+                             topMargin=0.6*inch, bottomMargin=0.6*inch)
     story = []
-
-    story.append(CoverPage(data))
+    story += cover_page(data, st)
     story.append(PageBreak())
-
-    story.append(info_block(data, st))
-    story.append(Spacer(1, 0.12*inch))
-    story += notes_block(data.get('notes',''), st)
-    story.append(Spacer(1, 0.12*inch))
-    story.append(bid_table(data.get('line_items',[]), st))
-    story.append(Spacer(1, 0.1*inch))
-    story.append(total_line(data.get('total',0)))
-    story.append(PageBreak())
-
-    story.append(SitePlanPage())
-    story.append(PageBreak())
-
+    story += bid_items_page(data, st)
+    story += site_plan_page(data, st)
     story += approval_page(data, st)
     story.append(PageBreak())
-
     story += tc_pages(st)
-
-    doc.build(story, canvasmaker=canvas_maker(data.get('date','')))
-    print(f'OK: {out_path}')
-
-if __name__ == '__main__':
-    data = json.loads(sys.argv[1])
-    out  = sys.argv[2] if len(sys.argv) > 2 else '/mnt/user-data/outputs/HD_Proposal.pdf'
-    build(data, out)
+    doc.build(story)
