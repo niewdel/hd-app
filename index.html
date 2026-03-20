@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>HD Hauling & Grading — Quote Tool</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --red:#CC0000;--black:#111;--white:#fff;--lgray:#F5F5F5;--mgray:#E0E0E0;
+  --dgray:#555;--border:#D0D0D0;--radius:8px;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+body{font-family:var(--font);background:#F0F0F0;color:var(--black);font-size:14px;line-height:1.5;}
+
+/* ── Login screen ─────────────────────────────────────────────── */
+#login-screen{position:fixed;inset:0;background:#111;display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:24px;}
+#login-screen img{height:70px;width:auto;}
+.login-card{background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:36px 40px;width:320px;text-align:center;}
+.login-card h2{font-size:15px;font-weight:600;color:#fff;margin-bottom:6px;}
+.login-card p{font-size:12px;color:#888;margin-bottom:24px;}
+.pin-input{width:100%;padding:12px;text-align:center;font-size:22px;font-weight:700;letter-spacing:8px;background:#111;border:1px solid #333;border-radius:8px;color:#fff;margin-bottom:16px;}
+.pin-input:focus{outline:none;border-color:#CC0000;}
+.login-btn{width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);}
+.login-btn:hover{background:#aa0000;}
+.login-error{font-size:12px;color:#CC0000;margin-top:8px;min-height:16px;}
+
+/* ── App shell ─────────────────────────────────────────────────── */
+#app-shell{display:none;}
+#app-shell.visible{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+.sidebar{background:var(--black);color:#ccc;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
+.sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid #222;}
+.sidebar-logo img{height:40px;width:auto;}
+.sidebar-logo h1{font-size:10px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-top:10px;}
+.sidebar nav{flex:1;padding:12px 0;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.08em;padding:12px 16px 4px;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;color:#999;cursor:pointer;transition:all .15s;border-left:2px solid transparent;}
+.nav-item:hover{background:#1a1a1a;color:#ddd;}
+.nav-item.active{background:#1a1a1a;color:#fff;border-left-color:var(--red);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;}
+.sidebar-footer{padding:12px 16px;border-top:1px solid #222;}
+.sidebar-footer button{background:none;border:none;color:#666;font-size:12px;cursor:pointer;font-family:var(--font);}
+.sidebar-footer button:hover{color:#999;}
+.main{overflow-y:auto;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.topbar-title{font-size:15px;font-weight:600;}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+.content{padding:24px;max-width:1100px;}
+
+/* ── Panels ─────────────────────────────────────────────────── */
+.panel{display:none;}.panel.active{display:block;}
+
+/* ── Cards ───────────────────────────────────────────────────── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border);background:#FAFAFA;display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:600;}
+.card-body{padding:16px;}
+
+/* ── Forms ───────────────────────────────────────────────────── */
+.fg{display:grid;gap:12px;}
+.fg2{grid-template-columns:1fr 1fr;}
+.fg3{grid-template-columns:1fr 1fr 1fr;}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr;}
+label{display:block;font-size:11px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+input,select,textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--font);color:var(--black);background:var(--white);transition:border .15s;}
+input:focus,select:focus{outline:none;border-color:#888;}
+textarea{resize:vertical;min-height:56px;}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:var(--font);}
+.btn-primary{background:var(--red);color:#fff;}.btn-primary:hover{background:#aa0000;}
+.btn-secondary{background:#fff;color:var(--black);border:1px solid var(--border);}.btn-secondary:hover{background:var(--lgray);}
+.btn-notion{background:#2d2d2d;color:#fff;}.btn-notion:hover{background:#444;}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-icon{background:none;border:none;cursor:pointer;padding:4px;color:var(--dgray);}
+.btn-icon:hover{color:var(--red);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* ── Metrics ─────────────────────────────────────────────────── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin-bottom:18px;}
+.metric{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;}
+.metric.hl{border-color:var(--red);}
+.metric-label{font-size:10px;color:var(--dgray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;font-weight:600;}
+.metric-value{font-size:19px;font-weight:700;}
+.metric.hl .metric-value{color:var(--red);}
+.metric-sub{font-size:10px;color:#aaa;margin-top:2px;}
+
+/* ── Table ───────────────────────────────────────────────────── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{text-align:left;padding:6px 10px;border-bottom:2px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--dgray);font-weight:600;white-space:nowrap;}
+td{padding:6px 10px;border-bottom:1px solid var(--mgray);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:nth-child(even) td{background:#FAFAFA;}
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;}
+.b-base{background:#E6F1FB;color:#0C447C;}.b-binder{background:#EEEDFE;color:#3C3489;}
+.b-surface{background:#EAF3DE;color:#27500A;}.b-millings{background:#FAEEDA;color:#633806;}
+.b-concrete{background:#F0F0F0;color:#444;}
+.gp{color:#27500A;font-weight:600;}.gn{color:#A32D2D;font-weight:600;}
+
+/* ── Section blocks ──────────────────────────────────────────── */
+.sec-block{border:1px solid var(--border);border-radius:var(--radius);background:#fff;margin-bottom:10px;overflow:hidden;}
+.sec-hdr{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#FAFAFA;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.sec-hdr input[type=text]{flex:1;min-width:100px;max-width:180px;font-weight:600;}
+.sec-foot{display:flex;gap:14px;flex-wrap:wrap;padding:7px 14px;background:#FAFAFA;border-top:1px solid var(--border);font-size:12px;}
+.sec-foot span{color:var(--dgray);}.sec-foot b{color:var(--black);}
+.lyr-row{display:flex;align-items:center;gap:7px;padding:7px 14px;border-bottom:1px solid var(--mgray);flex-wrap:wrap;}
+.lyr-row:last-child{border-bottom:none;}
+.lyr-row label{font-size:11px;color:var(--dgray);white-space:nowrap;text-transform:none;letter-spacing:0;font-weight:normal;margin:0;}
+.lyr-row input{width:66px;}.lyr-row select{width:auto;min-width:110px;}
+.gmbadge{font-size:10px;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+.gmbadge.pos{background:#EAF3DE;color:#27500A;}.gmbadge.neg{background:#FCEBEB;color:#A32D2D;}
+.lres{font-size:11px;color:var(--dgray);}.lres b{color:var(--black);}
+
+/* ── Presets ─────────────────────────────────────────────────── */
+.preset-strip{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.preset-chip{background:#fff;border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;transition:all .15s;}
+.preset-chip:hover{border-color:var(--red);color:var(--red);}
+
+/* ── Toast ───────────────────────────────────────────────────── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--black);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none;max-width:380px;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{background:#27500A;}.toast.err{background:var(--red);}
+.toast a{color:#adf;text-decoration:underline;}
+
+/* ── Settings ────────────────────────────────────────────────── */
+.conn-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--lgray);border-radius:6px;margin-bottom:8px;}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot.g{background:#3B6D11;}.dot.r{background:var(--red);}.dot.gr{background:#aaa;}
+
+/* ── Saved list ──────────────────────────────────────────────── */
+.saved-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.saved-item:last-child{border-bottom:none;}
+.saved-item-meta{flex:1;}
+.saved-item-name{font-weight:600;font-size:13px;}
+.saved-item-sub{font-size:11px;color:var(--dgray);}
+
+@media(max-width:768px){
+  #app-shell.visible{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .fg2,.fg3,.fg4{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Login Screen ─────────────────────────────────────────── -->
+<div id="login-screen">
+  <img src="/assets/hd_logo.png" alt="HD Hauling & Grading" />
+  <div class="login-card">
+    <h2>Quote Tool</h2>
+    <p>Enter your access PIN to continue</p>
+    <input class="pin-input" id="pin-input" type="password" maxlength="8" placeholder="••••"
+           onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── App Shell ────────────────────────────────────────────── -->
+<div id="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="/assets/hd_logo.png" alt="HD Hauling & Grading" />
+      <h1>Quote Tool</h1>
+    </div>
+    <nav>
+      <div class="nav-section">Quote</div>
+      <div class="nav-item active" onclick="showPanel('build',this)">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Build Quote
+      </div>
+      <div class="nav-item" onclick="showPanel('saved',this)">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Quotes
+      </div>
+      <div class="nav-section">Admin</div>
+      <div class="nav-item" onclick="showPanel('settings',this)">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 5a3 3 0 100 6A3 3 0 008 5zM1 8a7 7 0 1114 0A7 7 0 011 8z"/></svg>Settings
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button onclick="doLogout()">Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title" id="topbar-title">Build Quote</span>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="saveLocal()">Save</button>
+        <button class="btn btn-secondary btn-sm" onclick="resetAll()">Reset</button>
+        <button class="btn btn-notion btn-sm" onclick="pushToNotion()" id="notion-btn">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h8l3 3v9a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 1v10h8V6H9V3H4zm2 5h4v1H6zm0 2h4v1H6z"/></svg>
+          Save to Notion
+        </button>
+        <button class="btn btn-primary btn-sm" id="pdf-btn" onclick="exportPDF()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1zm0 1v12h8V5l-3-3H4zm2 7h4v1H6zm0-2h4v1H6z"/></svg>
+          Export PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- BUILD ─────────────────────────────────────────────── -->
+      <div class="panel active" id="panel-build">
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Project Information</span></div>
+          <div class="card-body">
+            <div class="fg fg2" style="margin-bottom:12px;">
+              <div><label>Project Name</label><input id="proj-name" type="text" placeholder="e.g. Smith Commercial Lot" /></div>
+              <div>
+                <label>Client</label>
+                <div style="position:relative;">
+                  <input id="proj-client" type="text" placeholder="Client name" autocomplete="off" oninput="onClientInput(this.value)" />
+                  <div id="client-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:6px;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
+                </div>
+              </div>
+            </div>
+            <div class="fg fg3">
+              <div><label>Street Address</label><input id="proj-addr" type="text" placeholder="4512 Hicone Rd" /></div>
+              <div><label>City, State</label><input id="proj-cs" type="text" placeholder="Greensboro, NC" /></div>
+              <div><label>Date</label><input id="proj-date" type="date" /></div>
+            </div>
+            <div id="client-bar" style="display:none;margin-top:10px;padding:7px 12px;background:var(--lgray);border-radius:6px;font-size:12px;color:var(--dgray);"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Global Settings</span></div>
+          <div class="card-body">
+            <div class="fg fg3">
+              <div><label>Waste Factor %</label><input id="waste" type="number" value="7" min="0" max="30" step="1" oninput="renderAll()" /></div>
+              <div><label>Mobilization / Flat Fee ($)</label><input id="mob" type="number" value="0" min="0" step="50" oninput="recalc()" /></div>
+              <div><label>Project Notes</label><input id="proj-notes" type="text" placeholder="Notes for the proposal..." /></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Pavement Sections</span></div>
+          <div class="card-body" style="padding-bottom:8px;">
+            <div class="preset-strip" id="presets"></div>
+            <div id="sections"></div>
+            <button class="btn btn-secondary btn-sm" onclick="addSection()" style="margin-top:4px;">+ Add Section</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Concrete &amp; Curb &amp; Gutter</span>
+            <button class="btn btn-secondary btn-sm" onclick="addConc()">+ Add Type</button>
+          </div>
+          <div style="padding:0;">
+            <div id="conc-items"></div>
+            <div id="conc-empty" style="padding:14px 16px;color:var(--dgray);font-size:12px;text-align:center;">No concrete items added.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Additional Items</span>
+            <button class="btn btn-secondary btn-sm" onclick="addExtra()">+ Add Item</button>
+          </div>
+          <div style="padding:0;">
+            <div id="extra-items"></div>
+            <div id="extra-empty" style="padding:14px 16px;color:var(--dgray);font-size:12px;text-align:center;">Add pavement markings, traffic control, signage, etc.</div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Total SF</div><div class="metric-value" id="t-sf">—</div></div>
+          <div class="metric"><div class="metric-label">Total SY</div><div class="metric-value" id="t-sy">—</div></div>
+          <div class="metric"><div class="metric-label">Total Tons</div><div class="metric-value" id="t-tons">—</div><div class="metric-sub">w/ waste factor</div></div>
+          <div class="metric"><div class="metric-label">Material Cost</div><div class="metric-value" id="t-mat">—</div></div>
+          <div class="metric"><div class="metric-label">Mobilization</div><div class="metric-value" id="t-mob">—</div></div>
+          <div class="metric hl"><div class="metric-label">Bid Price</div><div class="metric-value" id="t-bid">—</div></div>
+          <div class="metric"><div class="metric-label">Gross Profit</div><div class="metric-value" id="t-gp">—</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Full Breakdown</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Section</th><th>Layer</th><th>SF</th><th>SY</th><th>Depth/Qty</th><th>Unit</th><th>Raw Tons</th><th>Tons w/Waste</th><th>Mat $/u</th><th>Mat Cost</th><th>Bid $/u</th><th>Bid Total</th><th>GM%</th></tr></thead>
+              <tbody id="breakdown"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /panel-build -->
+
+      <!-- SAVED ──────────────────────────────────────────────── -->
+      <div class="panel" id="panel-saved">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Saved Quotes</span></div>
+          <div class="card-body" id="saved-list"><p style="color:var(--dgray);font-size:13px;">No saved quotes yet.</p></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS ───────────────────────────────────────────── -->
+      <div class="panel" id="panel-settings">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Sender Information</span></div>
+          <div class="card-body">
+            <div class="fg fg3">
+              <div><label>Your Name</label><input id="s-name" type="text" placeholder="Justin Ledwein" /></div>
+              <div><label>Your Email</label><input id="s-email" type="text" placeholder="justin@hdgrading.com" /></div>
+              <div><label>Your Phone</label><input id="s-phone" type="text" placeholder="704-900-9722" /></div>
+            </div>
+            <div style="margin-top:12px;"><button class="btn btn-primary btn-sm" onclick="saveSender()">Save Settings</button></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Notion Status</span></div>
+          <div class="card-body">
+            <div id="notion-status">
+              <div class="conn-row"><div class="dot gr"></div><div style="flex:1;font-size:13px;font-weight:500;">Notion</div><span style="font-size:12px;color:var(--dgray);">Managed server-side — credentials are secure</span></div>
+            </div>
+            <p style="font-size:12px;color:var(--dgray);margin-top:10px;">Your Notion API key and database IDs are stored as environment variables on the server. They never touch the browser. To update them, change the Railway environment variables: <code>NOTION_KEY</code>, <code>NOTION_PIPELINE</code>, <code>NOTION_CLIENTS</code>.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Spec Presets</span></div>
+          <div class="card-body">
+            <div id="preset-mgr"></div>
+            <button class="btn btn-secondary btn-sm" onclick="addCustomPreset()" style="margin-top:8px;">+ Add Preset</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app-shell -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────
+const LTYPES=['ABC base','Binder','Surface','Millings'];
+const LBS={'ABC base':150,'Binder':115,'Surface':115,'Millings':150};
+const MAT={'ABC base':30,'Binder':90,'Surface':90,'Millings':30};
+const DDEPTH={'ABC base':6,'Binder':2,'Surface':2,'Millings':4};
+const DRATE={'ABC base':50,'Binder':150,'Surface':150,'Millings':50};
+const LBADGE={'ABC base':'b-base','Binder':'b-binder','Surface':'b-surface','Millings':'b-millings'};
+const CTYPES=[
+  {id:'18sg', name:'18" Standard C&G',  desc:'18" 3000PSI Standard Curb & Gutter',    unit:'LF'},
+  {id:'24sg', name:'24" Standard C&G',  desc:'24" 3000PSI Standard Curb & Gutter',    unit:'LF'},
+  {id:'30sg', name:'30" Standard C&G',  desc:'30" 3000PSI Standard Curb & Gutter',    unit:'LF'},
+  {id:'6vt',  name:'6" Vertical Curb',  desc:'6" 3000PSI Vertical (Barrier) Curb',    unit:'LF'},
+  {id:'6mt',  name:'6" Mountable Curb', desc:'6" 3000PSI Mountable (Rollover) Curb',  unit:'LF'},
+  {id:'vg',   name:'Valley Gutter',     desc:'Concrete Valley Gutter per plan width', unit:'LF'},
+  {id:'rib',  name:'Ribbon Curb',       desc:'12" Concrete Ribbon / Ribbon Gutter',   unit:'LF'},
+  {id:'fl',   name:'Concrete Flume',    desc:'Concrete Drainage Flume per plan',      unit:'LF'},
+  {id:'te',   name:'Thickened Edge',    desc:'Concrete Thickened Edge Pavement',      unit:'LF'},
+  {id:'ada',  name:'ADA Curb Ramp',     desc:'ADA Compliant Concrete Curb Ramp',      unit:'EA'},
+];
+var PRESETS=[
+  {name:'Light duty',  layers:[{type:'ABC base',depth:6,rate:50},{type:'Surface',depth:2,rate:150}]},
+  {name:'Heavy duty',  layers:[{type:'ABC base',depth:8,rate:50},{type:'Binder',depth:2,rate:150},{type:'Surface',depth:2,rate:150}]},
+  {name:'Parking lot', layers:[{type:'ABC base',depth:6,rate:50},{type:'Surface',depth:2,rate:150}]},
+  {name:'Millings',    layers:[{type:'Millings',depth:4,rate:50}]},
+];
+
+var sections=[],sid=0,lid=0;
+var concItems=[],cid=0;
+var extraItems=[],eid=0;
+var savedQuotes=[];
+var clients=[];
+var sender={name:'',email:'',phone:''};
+
+// ── Auth ────────────────────────────────────────────────────────
+async function checkAuth(){
+  const r=await fetch('/auth/check');
+  const d=await r.json();
+  if(d.authenticated) showApp();
+}
+
+async function doLogin(){
+  const pin=document.getElementById('pin-input').value;
+  document.getElementById('login-error').textContent='';
+  const r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin})});
+  if(r.ok){ showApp(); }
+  else{ document.getElementById('login-error').textContent='Incorrect PIN. Try again.'; document.getElementById('pin-input').value=''; document.getElementById('pin-input').focus(); }
+}
+
+async function doLogout(){
+  await fetch('/auth/logout',{method:'POST'});
+  document.getElementById('app-shell').className='';
+  document.getElementById('login-screen').style.display='flex';
+}
+
+function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-shell').className='visible';
+  boot();
+}
+
+// ── Boot ────────────────────────────────────────────────────────
+function boot(){
+  loadFromStorage();
+  document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
+  renderPresets();
+  if(!sections.length){
+    addSection('Light duty',0,[{type:'ABC base',depth:6,rate:50},{type:'Surface',depth:2,rate:150}]);
+    addSection('Heavy duty',0,[{type:'ABC base',depth:8,rate:50},{type:'Binder',depth:2,rate:150},{type:'Surface',depth:2,rate:150}]);
+  } else { renderAll(); renderConc(); renderExtra(); }
+  loadClients();
+  document.addEventListener('click',e=>{if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))document.getElementById('client-sug').style.display='none';});
+}
+
+// ── localStorage ────────────────────────────────────────────────
+function loadFromStorage(){
+  try{
+    const s=localStorage.getItem('hd_sender'); if(s) sender=JSON.parse(s);
+    const p=localStorage.getItem('hd_presets'); if(p) PRESETS=JSON.parse(p);
+    const q=localStorage.getItem('hd_quotes'); if(q) savedQuotes=JSON.parse(q);
+  }catch(e){}
+}
+function persistQuotes(){ localStorage.setItem('hd_quotes',JSON.stringify(savedQuotes)); }
+function persistPresets(){ localStorage.setItem('hd_presets',JSON.stringify(PRESETS)); }
+
+// ── Helpers ─────────────────────────────────────────────────────
+function calcTons(sf,d,lbs){return(sf*(d/12)*lbs)/2000;}
+function getWaste(){return 1+(parseFloat(document.getElementById('waste').value)||0)/100;}
+function getMob(){return parseFloat(document.getElementById('mob').value)||0;}
+function gm(m,b){return b>0?((b-m)/b*100):0;}
+function fi(n){return Math.round(n).toLocaleString();}
+function f2(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function toast(msg,type='',link=''){
+  const t=document.getElementById('toast');
+  t.innerHTML=msg+(link?` <a href="${link}" target="_blank">View in Notion →</a>`:'');
+  t.className='toast '+(type==='ok'?'ok':type==='err'?'err':'');
+  setTimeout(()=>t.classList.add('show'),10);
+  setTimeout(()=>t.classList.remove('show'),4000);
+}
+
+// ── Panel nav ────────────────────────────────────────────────────
+function showPanel(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  const titles={build:'Build Quote',saved:'Saved Quotes',settings:'Settings'};
+  document.getElementById('topbar-title').textContent=titles[id]||id;
+  if(id==='saved')renderSaved();
+  if(id==='settings'){loadSenderUI();renderPresetMgr();}
+}
+
+// ── Presets ──────────────────────────────────────────────────────
+function renderPresets(){
+  const c=document.getElementById('presets');if(!c)return;
+  c.innerHTML='';
+  PRESETS.forEach((p,i)=>{const b=document.createElement('div');b.className='preset-chip';b.textContent=p.name;b.onclick=()=>addSection(p.name,0,p.layers);c.appendChild(b);});
+}
+
+// ── Sections ─────────────────────────────────────────────────────
+function addSection(name,sf,lds){
+  const s={id:sid++,name:name||('Section '+sid),sf:sf||0,layers:[]};
+  (lds||[{type:'ABC base'},{type:'Surface'}]).forEach(l=>s.layers.push({id:lid++,type:l.type,depth:l.depth!==undefined?l.depth:DDEPTH[l.type],rate:l.rate!==undefined?l.rate:DRATE[l.type]}));
+  sections.push(s); renderAll();
+}
+function remSec(id){sections=sections.filter(s=>s.id!==id);renderAll();}
+function addLyr(s2){const s=sections.find(x=>x.id===s2);if(s){s.layers.push({id:lid++,type:'Surface',depth:2,rate:150});renderAll();}}
+function remLyr(s2,l2){const s=sections.find(x=>x.id===s2);if(s){s.layers=s.layers.filter(l=>l.id!==l2);renderAll();}}
+function updSec(id,f,v){const s=sections.find(x=>x.id===id);if(!s)return;if(f==='name')s.name=v;else if(f==='sf')s.sf=parseFloat(v)||0;renderAll();}
+function updLyr(s2,l2,f,v){
+  const s=sections.find(x=>x.id===s2);if(!s)return;
+  const l=s.layers.find(x=>x.id===l2);if(!l)return;
+  if(f==='type'){l.type=v;l.depth=DDEPTH[v];l.rate=DRATE[v];renderAll();return;}
+  l[f]=parseFloat(v)||0;renderAll();
+}
+function secTotals(s){const wf=getWaste();let tt=0,tm=0,tb=0;s.layers.forEach(l=>{const t=s.sf>0?calcTons(s.sf,l.depth,LBS[l.type])*wf:0;tt+=t;tm+=t*MAT[l.type];tb+=t*l.rate;});return{tons:tt,mat:tm,bid:tb};}
+
+function renderAll(){
+  const wf=getWaste();
+  const c=document.getElementById('sections');c.innerHTML='';
+  sections.forEach(s=>{
+    const div=document.createElement('div');div.className='sec-block';
+    let lrows='';
+    s.layers.forEach(l=>{
+      const rawT=s.sf>0?calcTons(s.sf,l.depth,LBS[l.type]):0;
+      const t=rawT*wf,matC=t*MAT[l.type],bidC=t*l.rate,mp=gm(matC,bidC);
+      const res=s.sf>0?`<b>${t.toFixed(2)}t</b> &middot; mat <b>$${fi(matC)}</b> &middot; bid <b>$${fi(bidC)}</b>`:'<span style="opacity:.5">enter SF above</span>';
+      const mpB=s.sf>0&&bidC>0?`<span class="gmbadge ${mp>=0?'pos':'neg'}">${mp.toFixed(1)}% GM</span>`:'';
+      lrows+=`<div class="lyr-row">
+        <select onchange="updLyr(${s.id},${l.id},'type',this.value)">${LTYPES.map(t2=>`<option${t2===l.type?' selected':''}>${t2}</option>`).join('')}</select>
+        <label>Depth (in)</label><input type="number" value="${l.depth}" min=".5" step=".5" style="width:60px" oninput="updLyr(${s.id},${l.id},'depth',this.value)">
+        <label>$/ton</label><input type="number" value="${l.rate}" min="0" step="1" style="width:70px" oninput="updLyr(${s.id},${l.id},'rate',this.value)">
+        ${mpB}<span class="lres">${res}</span>
+        <button class="btn-icon" onclick="remLyr(${s.id},${l.id})">✕</button>
+      </div>`;
+    });
+    const st=secTotals(s),gmp=gm(st.mat,st.bid);
+    div.innerHTML=`
+      <div class="sec-hdr">
+        <input type="text" value="${esc(s.name)}" placeholder="Section name" oninput="updSec(${s.id},'name',this.value)"/>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <label style="margin:0;font-size:11px;color:var(--dgray);text-transform:none;letter-spacing:0;font-weight:normal;">SF</label>
+          <input type="number" value="${s.sf||''}" placeholder="0" min="0" step="1" style="width:100px" oninput="updSec(${s.id},'sf',this.value)">
+          <span style="font-size:12px;color:var(--dgray);">= <b>${s.sf>0?(s.sf/9).toFixed(1):'—'}</b> SY</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="addLyr(${s.id})">+ Layer</button>
+        <button class="btn-icon" onclick="remSec(${s.id})" style="margin-left:auto;">✕ Remove</button>
+      </div>
+      <div>${lrows}</div>
+      <div class="sec-foot">
+        <span>SF: <b>${s.sf.toLocaleString()}</b></span>
+        <span>SY: <b>${s.sf>0?(s.sf/9).toFixed(1):'—'}</b></span>
+        <span>Tons: <b>${s.sf>0?st.tons.toFixed(2):'—'}</b></span>
+        <span>Mat: <b>${s.sf>0?'$'+fi(st.mat):'—'}</b></span>
+        <span>Bid: <b>${s.sf>0?'$'+fi(st.bid):'—'}</b></span>
+        <span>GM: <b class="${gmp>=0?'gp':'gn'}">${s.sf>0?gmp.toFixed(1)+'%':'—'}</b></span>
+      </div>`;
+    c.appendChild(div);
+  });
+  recalc();
+}
+
+// ── Concrete ──────────────────────────────────────────────────────
+function addConc(){concItems.push({id:cid++,type:'18sg',qty:0,sub:0,markup:20});renderConc();}
+function remConc(id){concItems=concItems.filter(x=>x.id!==id);renderConc();recalc();}
+function updConc(id,f,v){const i=concItems.find(x=>x.id===id);if(!i)return;i[f]=f==='type'?v:(parseFloat(v)||0);renderConc();recalc();}
+function concBid(i){return i.sub*(1+i.markup/100);}
+
+function renderConc(){
+  const c=document.getElementById('conc-items'),em=document.getElementById('conc-empty');
+  c.innerHTML='';em.style.display=concItems.length?'none':'block';
+  concItems.forEach(item=>{
+    const ct=CTYPES.find(x=>x.id===item.type)||CTYPES[0];
+    const bR=concBid(item),bidC=item.qty*bR,subC=item.qty*item.sub,mp=gm(subC,bidC);
+    const res=item.qty>0&&item.sub>0?`<b>$${bR.toFixed(2)}/${ct.unit}</b> &middot; sub <b>$${fi(subC)}</b> &middot; bid <b>$${fi(bidC)}</b>`:'<span style="opacity:.5">enter qty & sub rate</span>';
+    const mpB=item.qty>0&&bidC>0?`<span class="gmbadge ${mp>=0?'pos':'neg'}">${mp.toFixed(1)}% GM</span>`:'';
+    const row=document.createElement('div');row.className='lyr-row';
+    row.innerHTML=`
+      <select onchange="updConc(${item.id},'type',this.value)" style="min-width:140px">
+        ${CTYPES.map(ct2=>`<option value="${ct2.id}"${ct2.id===item.type?' selected':''}>${ct2.name}</option>`).join('')}
+      </select>
+      <label>${ct.unit} qty</label><input type="number" value="${item.qty||''}" placeholder="0" min="0" step="1" style="width:76px" oninput="updConc(${item.id},'qty',this.value)">
+      <label>Sub $/${ct.unit}</label><input type="number" value="${item.sub||''}" placeholder="0.00" min="0" step=".25" style="width:78px" oninput="updConc(${item.id},'sub',this.value)">
+      <label>Markup %</label><input type="number" value="${item.markup}" min="0" step="1" style="width:60px" oninput="updConc(${item.id},'markup',this.value)">
+      ${mpB}<span class="lres">${res}</span>
+      <button class="btn-icon" onclick="remConc(${item.id})">✕</button>`;
+    c.appendChild(row);
+  });
+  recalc();
+}
+
+// ── Extra items ───────────────────────────────────────────────────
+function addExtra(){extraItems.push({id:eid++,name:'',qty:1,unit:'LS',price:0,subtotal:0});renderExtra();}
+function remExtra(id){extraItems=extraItems.filter(x=>x.id!==id);renderExtra();recalc();}
+function updExtra(id,f,v){
+  const i=extraItems.find(x=>x.id===id);if(!i)return;
+  if(f==='name'||f==='unit')i[f]=v;else i[f]=parseFloat(v)||0;
+  if(f==='qty'||f==='price')i.subtotal=(i.qty||0)*(i.price||0);
+  renderExtra();recalc();
+}
+function renderExtra(){
+  const c=document.getElementById('extra-items'),em=document.getElementById('extra-empty');
+  c.innerHTML='';em.style.display=extraItems.length?'none':'block';
+  extraItems.forEach(i=>{
+    const row=document.createElement('div');row.className='lyr-row';
+    row.innerHTML=`
+      <input type="text" value="${esc(i.name)}" placeholder="Item name" style="flex:1;min-width:160px" oninput="updExtra(${i.id},'name',this.value)">
+      <label>Qty</label><input type="number" value="${i.qty}" min="0" step="1" style="width:66px" oninput="updExtra(${i.id},'qty',this.value)">
+      <label>Unit</label>
+      <select onchange="updExtra(${i.id},'unit',this.value)" style="width:68px">
+        ${['LS','EA','LF','SY','SF'].map(u=>`<option${u===i.unit?' selected':''}>${u}</option>`).join('')}
+      </select>
+      <label>$/unit</label><input type="number" value="${i.price||''}" placeholder="0.00" min="0" step=".01" style="width:86px" oninput="updExtra(${i.id},'price',this.value)">
+      <span class="lres">${i.subtotal>0?'Subtotal: <b>$'+fi(i.subtotal)+'</b>':''}</span>
+      <button class="btn-icon" onclick="remExtra(${i.id})">✕</button>`;
+    c.appendChild(row);
+  });
+  recalc();
+}
+
+// ── Recalc ────────────────────────────────────────────────────────
+function recalc(){
+  const bk=document.getElementById('breakdown');bk.innerHTML='';
+  const wf=getWaste(),mob=getMob();
+  let gSF=0,gSY=0,gT=0,gM=0,gB=0;
+
+  sections.forEach(s=>{
+    const sf=s.sf||0,sy=sf/9;gSF+=sf;gSY+=sy;
+    s.layers.forEach(l=>{
+      const rawT=sf>0?calcTons(sf,l.depth,LBS[l.type]):0,t=rawT*wf;
+      const mC=t*MAT[l.type],bC=t*l.rate,csy=sy>0&&sf>0?bC/sy:0,mp=gm(mC,bC);
+      gT+=t;gM+=mC;gB+=bC;
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><small>${esc(s.name)}</small></td><td><span class="badge ${LBADGE[l.type]||''}">${l.type}</span></td>
+        <td>${sf>0?sf.toLocaleString():'—'}</td><td>${sf>0?sy.toFixed(1):'—'}</td>
+        <td>${l.depth}"</td><td>ton</td><td>${sf>0?rawT.toFixed(2):'—'}</td><td>${sf>0?t.toFixed(2):'—'}</td>
+        <td>$${MAT[l.type]}</td><td>${sf>0?'$'+fi(mC):'—'}</td>
+        <td>$${l.rate}</td><td>${sf>0?'$'+fi(bC):'—'}</td>
+        <td class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'%':'—'}</td>`;
+      bk.appendChild(tr);
+    });
+  });
+
+  concItems.forEach(i=>{
+    if(!i.qty||!i.sub)return;
+    const ct=CTYPES.find(x=>x.id===i.type)||CTYPES[0];
+    const subC=i.qty*i.sub,bC=i.qty*concBid(i),mp=gm(subC,bC);
+    gM+=subC;gB+=bC;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><small>Concrete</small></td><td><span class="badge b-concrete">${ct.name}</span></td>
+      <td>—</td><td>—</td><td>${i.qty.toLocaleString()} ${ct.unit}</td><td>${ct.unit}</td>
+      <td>—</td><td>—</td><td>$${i.sub.toFixed(2)}</td><td>$${fi(subC)}</td>
+      <td>$${concBid(i).toFixed(2)}</td><td>$${fi(bC)}</td>
+      <td class="${mp>=0?'gp':'gn'}">${mp.toFixed(1)}%</td>`;
+    bk.appendChild(tr);
+  });
+
+  extraItems.forEach(i=>{
+    if(!i.name||!i.subtotal)return;
+    gB+=i.subtotal;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><small>Additional</small></td><td>${esc(i.name)}</td>
+      <td>—</td><td>—</td><td>${i.qty} ${i.unit}</td><td>${i.unit}</td>
+      <td>—</td><td>—</td><td>—</td><td>—</td>
+      <td>$${f2(i.price)}</td><td>$${fi(i.subtotal)}</td><td>—</td>`;
+    bk.appendChild(tr);
+  });
+
+  const total=gB+mob,gp=gB-gM;
+  document.getElementById('t-sf').textContent=gSF>0?gSF.toLocaleString():'—';
+  document.getElementById('t-sy').textContent=gSY>0?gSY.toFixed(1):'—';
+  document.getElementById('t-tons').textContent=gT>0?gT.toFixed(2):'—';
+  document.getElementById('t-mat').textContent=gM>0?'$'+fi(gM):'—';
+  document.getElementById('t-mob').textContent=mob>0?'$'+fi(mob):'$0';
+  document.getElementById('t-bid').textContent=total>0?'$'+fi(total):'—';
+  document.getElementById('t-gp').textContent=gp>0?'$'+fi(gp)+' ('+gm(gM,gB).toFixed(1)+'%)':'—';
+}
+
+// ── Payload ────────────────────────────────────────────────────────
+function buildPayload(){
+  const wf=getWaste(),mob=getMob();
+  const name=document.getElementById('proj-name').value||'Unnamed Project';
+  const client=document.getElementById('proj-client').value||'';
+  const addr=document.getElementById('proj-addr').value||'';
+  const cs=document.getElementById('proj-cs').value||'';
+  const date=document.getElementById('proj-date').value||'';
+  const notes=document.getElementById('proj-notes').value||'';
+  const fmtDate=date?new Date(date+'T12:00:00').toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}):'';
+  const line_items=[];let total=0,totalSF=0;
+
+  sections.forEach(s=>{
+    const sf=s.sf||0,sy=sf/9;totalSF+=sf;
+    s.layers.forEach(l=>{
+      const rawT=sf>0?calcTons(sf,l.depth,LBS[l.type]):0,t=rawT*wf,bC=t*l.rate;
+      total+=bC;
+      if(sf>0)line_items.push({
+        name:`${s.name} — ${l.type}`,description:`Install ${l.depth}" ${l.type}`,
+        qty:parseFloat(sy.toFixed(1)),unit:'SY',
+        price:parseFloat(sy>0?(bC/sy).toFixed(2):'0'),subtotal:parseFloat(bC.toFixed(2))
+      });
+    });
+  });
+  concItems.forEach(i=>{
+    if(!i.qty||!i.sub)return;
+    const ct=CTYPES.find(x=>x.id===i.type)||CTYPES[0];
+    const bR=concBid(i),bC=i.qty*bR;total+=bC;
+    line_items.push({name:ct.name,description:ct.desc,qty:i.qty,unit:ct.unit,price:parseFloat(bR.toFixed(2)),subtotal:parseFloat(bC.toFixed(2))});
+  });
+  extraItems.forEach(i=>{
+    if(!i.name||!i.subtotal)return;
+    total+=i.subtotal;
+    line_items.push({name:i.name,description:'',qty:i.qty,unit:i.unit,price:i.price,subtotal:i.subtotal});
+  });
+  if(mob>0){total+=mob;line_items.push({name:'Mobilization',description:'Project mobilization & setup',qty:1,unit:'LS',price:mob,subtotal:mob});}
+
+  return{
+    project_name:name,address:addr,city_state:cs,date:fmtDate,
+    sender_name:sender.name||'HD Hauling & Grading',sender_email:sender.email||'',sender_phone:sender.phone||'',
+    company:'HD Hauling & Grading',
+    client_name:client,client_email:'',client_phone:'',client_company:'',
+    notes,total:parseFloat(total.toFixed(2)),line_items,
+    unit_prices:[
+      {name:'Additional asphalt tonnage (prevailing market rate)',rate:150},
+      {name:'Cold patch / temporary repair (per ton)',rate:200},
+      {name:'Milling overage (per SY)',rate:4.50},
+      {name:'Additional traffic control (per day)',rate:2500},
+      {name:'Additional mobilization (per occurrence)',rate:1500},
+    ],
+    // for Notion push
+    _date_iso:date,
+    _total_sf:totalSF,
+  };
+}
+
+// ── PDF export ─────────────────────────────────────────────────────
+async function exportPDF(){
+  const btn=document.getElementById('pdf-btn');
+  btn.disabled=true;btn.innerHTML='Generating...';
+  try{
+    const p=buildPayload();
+    const r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+    if(!r.ok){const e=await r.json();throw new Error(e.error||'Server error');}
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`HD_Proposal_${p.project_name.replace(/\s+/g,'_')}.pdf`;
+    a.click();URL.revokeObjectURL(url);
+    toast('PDF downloaded','ok');
+  }catch(e){toast('PDF error: '+e.message,'err');}
+  finally{
+    btn.disabled=false;
+    btn.innerHTML='<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1zm0 1v12h8V5l-3-3H4zm2 7h4v1H6zm0-2h4v1H6z"/></svg> Export PDF';
+  }
+}
+
+// ── Notion push ───────────────────────────────────────────────────
+async function pushToNotion(){
+  const btn=document.getElementById('notion-btn');
+  btn.disabled=true;btn.textContent='Saving...';
+  try{
+    const p=buildPayload();
+    const r=await fetch('/notion/push',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      project_name:p.project_name,client_name:p.client_name,address:p.address,
+      date_iso:p._date_iso,total:p.total,total_sf:p._total_sf
+    })});
+    const d=await r.json();
+    if(d.ok)toast('Saved to Notion','ok',d.url);
+    else toast('Notion error: '+(d.error||'unknown'),'err');
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{
+    btn.disabled=false;
+    btn.innerHTML='<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h8l3 3v9a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 1v10h8V6H9V3H4zm2 5h4v1H6zm0 2h4v1H6z"/></svg> Save to Notion';
+  }
+}
+
+// ── Save / load ───────────────────────────────────────────────────
+function saveLocal(){
+  const name=document.getElementById('proj-name').value||('Quote '+(savedQuotes.length+1));
+  const snap={name,client:document.getElementById('proj-client').value,date:document.getElementById('proj-date').value,
+    addr:document.getElementById('proj-addr').value,cs:document.getElementById('proj-cs').value,notes:document.getElementById('proj-notes').value,
+    waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,
+    sections,concItems,extraItems};
+  const p=buildPayload();
+  savedQuotes.push({id:Date.now(),name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});
+  persistQuotes();renderSaved();
+  toast('Quote saved','ok');
+}
+
+function loadQuote(id){
+  const q=savedQuotes.find(x=>x.id===id);if(!q)return;
+  const d=JSON.parse(q.snap);
+  document.getElementById('proj-name').value=d.name||'';
+  document.getElementById('proj-client').value=d.client||'';
+  document.getElementById('proj-date').value=d.date||'';
+  document.getElementById('proj-addr').value=d.addr||'';
+  document.getElementById('proj-cs').value=d.cs||'';
+  document.getElementById('proj-notes').value=d.notes||'';
+  document.getElementById('waste').value=d.waste||7;
+  document.getElementById('mob').value=d.mob||0;
+  sections=d.sections||[];sid=sections.reduce((m,s)=>Math.max(m,s.id+1),0);
+  lid=sections.reduce((m,s)=>s.layers.reduce((m2,l)=>Math.max(m2,l.id+1),m),0);
+  concItems=d.concItems||[];cid=concItems.reduce((m,x)=>Math.max(m,x.id+1),0);
+  extraItems=d.extraItems||[];eid=extraItems.reduce((m,x)=>Math.max(m,x.id+1),0);
+  showPanel('build',document.querySelector('.nav-item'));
+  renderAll();renderConc();renderExtra();
+  toast('Quote loaded');
+}
+
+function delSaved(id){savedQuotes=savedQuotes.filter(x=>x.id!==id);persistQuotes();renderSaved();}
+
+function renderSaved(){
+  const c=document.getElementById('saved-list');c.innerHTML='';
+  if(!savedQuotes.length){c.innerHTML='<p style="color:var(--dgray);font-size:13px;">No saved quotes yet.</p>';return;}
+  savedQuotes.forEach(q=>{
+    const div=document.createElement('div');div.className='saved-item';
+    div.innerHTML=`<div class="saved-item-meta">
+      <div class="saved-item-name">${esc(q.name)}</div>
+      <div class="saved-item-sub">${q.client?esc(q.client)+' &middot; ':''}${q.date} &middot; $${Math.round(q.total).toLocaleString()}</div>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="loadQuote(${q.id})">Load</button>
+    <button class="btn-icon" onclick="delSaved(${q.id})">✕</button>`;
+    c.appendChild(div);
+  });
+}
+
+function resetAll(){
+  sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;
+  ['proj-name','proj-client','proj-addr','proj-cs','proj-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('waste').value=7;document.getElementById('mob').value=0;
+  document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('client-bar').style.display='none';
+  renderAll();renderConc();renderExtra();
+  toast('Reset');
+}
+
+// ── Settings ──────────────────────────────────────────────────────
+function saveSender(){
+  sender={name:document.getElementById('s-name').value,email:document.getElementById('s-email').value,phone:document.getElementById('s-phone').value};
+  localStorage.setItem('hd_sender',JSON.stringify(sender));
+  toast('Sender settings saved','ok');
+}
+function loadSenderUI(){
+  document.getElementById('s-name').value=sender.name||'';
+  document.getElementById('s-email').value=sender.email||'';
+  document.getElementById('s-phone').value=sender.phone||'';
+}
+
+function addCustomPreset(){
+  const name=prompt('Preset name:');if(!name)return;
+  const layers=[];
+  const t1=prompt('Layer 1 type:\nABC base / Binder / Surface / Millings');if(!t1)return;
+  const d1=parseFloat(prompt(t1+' depth (in):')||0);
+  const r1=parseFloat(prompt(t1+' $/ton bid rate:')||0);
+  layers.push({type:t1,depth:d1,rate:r1});
+  if(confirm('Add a second layer?')){
+    const t2=prompt('Layer 2 type:');
+    if(t2){layers.push({type:t2,depth:parseFloat(prompt(t2+' depth:')||0),rate:parseFloat(prompt(t2+' rate:')||0)});}
+  }
+  PRESETS.push({name,layers});persistPresets();renderPresets();renderPresetMgr();
+  toast('Preset added','ok');
+}
+function renderPresetMgr(){
+  const c=document.getElementById('preset-mgr');if(!c)return;
+  c.innerHTML=PRESETS.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+      <span style="flex:1;font-weight:600">${esc(p.name)}</span>
+      <span style="font-size:11px;color:var(--dgray)">${p.layers.map(l=>l.type+' '+l.depth+'"').join(', ')}</span>
+      <button class="btn-icon" onclick="PRESETS.splice(${i},1);persistPresets();renderPresets();renderPresetMgr()">✕</button>
+    </div>`).join('');
+}
+
+// ── Notion client autocomplete (via backend proxy) ─────────────────
+async function loadClients(){
+  try{
+    const r=await fetch('/notion/clients');
+    if(!r.ok)return;
+    const d=await r.json();
+    clients=(d.results||[]).map(p=>{
+      const props=p.properties||{};
+      const getName=()=>{for(const k in props){if(props[k].type==='title'&&props[k].title?.length)return props[k].title.map(t=>t.plain_text).join('');} return '';};
+      const getV=(k)=>{const p2=props[k];if(!p2)return'';if(p2.type==='rich_text')return p2.rich_text?.map(t=>t.plain_text).join('')||'';if(p2.type==='phone_number')return p2.phone_number||'';if(p2.type==='email')return p2.email||'';return'';};
+      return{name:getName(),phone:getV('Phone'),email:getV('Email'),company:getV('Company')};
+    }).filter(x=>x.name);
+  }catch(e){}
+}
+
+var cliTimer=null;
+function onClientInput(v){
+  clearTimeout(cliTimer);
+  const s=document.getElementById('client-sug');
+  if(!v||v.length<2){s.style.display='none';return;}
+  cliTimer=setTimeout(()=>{
+    const m=clients.filter(c=>c.name.toLowerCase().includes(v.toLowerCase())).slice(0,6);
+    if(!m.length){s.style.display='none';return;}
+    s.innerHTML=m.map(c=>`<div onclick='selectClient(${JSON.stringify(c).replace(/'/g,"\\'")})'
+      style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);"
+      onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">
+      <div style="font-weight:600">${esc(c.name)}</div>
+      <div style="font-size:11px;color:var(--dgray)">${c.company?esc(c.company)+' · ':''}${esc(c.phone||c.email||'')}</div>
+    </div>`).join('');
+    s.style.display='block';
+  },200);
+}
+function selectClient(c){
+  if(typeof c==='string')c=JSON.parse(c);
+  document.getElementById('proj-client').value=c.name;
+  document.getElementById('client-sug').style.display='none';
+  const bar=document.getElementById('client-bar');
+  const parts=[c.company,c.phone,c.email].filter(Boolean);
+  if(parts.length){bar.style.display='block';bar.textContent=parts.join(' · ');}
+  else bar.style.display='none';
+}
+
+// ── Boot ──────────────────────────────────────────────────────────
+checkAuth();
+</script>
+</body>
+</html>
