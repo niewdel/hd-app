@@ -171,6 +171,13 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="topbar-actions">
         <button class="btn btn-sec btn-sm" onclick="saveQuote()">Save</button>
         <button class="btn btn-sec btn-sm" onclick="resetAll()">Reset</button>
+        <input type="file" id="site-plan-input" accept="image/*" style="display:none" onchange="setSitePlan(this)"/>
+        <button class="btn btn-sec btn-sm" onclick="document.getElementById('site-plan-input').click()" id="site-plan-btn" title="Upload site plan image for PDF">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v10H2zm1 9l3-4 2 2 2-3 3 5z"/></svg><span id="site-plan-label">Site Plan</span>
+        </button>
+        <button class="btn btn-sec btn-sm" id="docx-btn" onclick="exportDOCX()">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1z" fill-opacity=".3"/><path d="M4 7h8v1H4zm0 2h8v1H4zm0 2h5v1H4z"/></svg>Word
+        </button>
         <button class="btn btn-dark btn-sm" id="notion-btn" onclick="pushNotion()">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10v12H3z" fill-opacity=".2"/><path d="M5 5h6v1H5zm0 3h6v1H5zm0 3h4v1H5z"/></svg>Notion
         </button>
@@ -263,7 +270,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div class="card-hdr"><span class="card-title">Full Breakdown</span></div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Section</th><th>Layer</th><th>SF</th><th>SY</th><th>Depth/Qty</th><th>Unit</th><th>Raw Tons</th><th>Tons+Waste</th><th>Mat$/u</th><th>Mat Cost</th><th>Bid$/u</th><th>Bid Total</th><th>MU%</th></tr></thead>
+              <thead><tr><th>Section</th><th>Layer</th><th>SF</th><th>SY</th><th>Depth/Qty</th><th>Unit</th><th>Raw Tons</th><th>Tons+Waste</th><th>Mat$/u</th><th>Mat Cost</th><th>Bid$/u</th><th>Bid Total</th><th>GM%</th></tr></thead>
               <tbody id="breakdown"></tbody>
             </table>
           </div>
@@ -348,6 +355,36 @@ var concItems=[], cid=0;
 var extraItems=[], eid=0;
 var savedQuotes=[];
 var clients=[];
+var sitePlanDataUrl=null;
+function setSitePlan(inp){
+  if(!inp.files||!inp.files[0])return;
+  const f=inp.files[0];
+  const reader=new FileReader();
+  reader.onload=e=>{
+    sitePlanDataUrl=e.target.result;
+    document.getElementById('site-plan-label').textContent='✓ '+f.name.substring(0,12);
+    document.getElementById('site-plan-btn').style.borderColor='#27500A';
+    toast('Site plan loaded','ok');
+  };
+  reader.readAsDataURL(f);
+}
+async function exportDOCX(){
+  const btn=document.getElementById('docx-btn');
+  btn.disabled=true;btn.textContent='Generating...';
+  try{
+    const p=buildPayload();
+    if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
+    const r=await fetch('/generate-docx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+    if(!r.ok){const e=await r.json();throw new Error(e.error||'Server error');}
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='HD_Proposal_'+p.project_name.replace(/\s+/g,'_')+'.docx';
+    a.click();URL.revokeObjectURL(url);
+    toast('Word doc downloaded','ok');
+  }catch(e){toast('Word error: '+e.message,'err');}
+  finally{btn.disabled=false;btn.innerHTML='<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1z" fill-opacity=".3"/><path d="M4 7h8v1H4zm0 2h8v1H4zm0 2h5v1H4z"/></svg>Word';}
+}
 var sender={name:'',email:'',phone:''};
 
 // ── Auth ────────────────────────────────────────────────────────
@@ -407,7 +444,7 @@ function saveStorage(){localStorage.setItem('hd_quotes',JSON.stringify(savedQuot
 function tons(sf,d,lbs){return(sf*(d/12)*lbs)/2000;}
 function wf(){return 1+(parseFloat(document.getElementById('waste').value)||0)/100;}
 function mob(){return parseFloat(document.getElementById('mob').value)||0;}
-function gm(m,b){return m>0?((b-m)/m*100):0;}
+function gm(m,b){return b>0?((b-m)/b*100):0;}
 function fi(n){return Math.round(n).toLocaleString();}
 function f2(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -446,12 +483,12 @@ function renderPresets(){
 function addSection(name,lds){
   const s={id:sid++,name:name||('Section '+sid),sf:0,layers:[]};
   (lds||[{type:'ABC base'},{type:'Surface'}]).forEach(l=>
-    s.layers.push({id:lid++,type:l.type,depth:l.depth!==undefined?l.depth:DDEPTH[l.type],rate:l.rate!==undefined?l.rate:DRATE[l.type],markup:l.markup!==undefined?l.markup:Math.round((DRATE[l.type]-MAT[l.type])/MAT[l.type]*100),mill_days:l.mill_days||0,mill_rate:l.mill_rate||0})
+    s.layers.push({id:lid++,type:l.type,depth:l.depth!==undefined?l.depth:DDEPTH[l.type],rate:l.rate!==undefined?l.rate:DRATE[l.type]})
   );
   sections.push(s);renderAll();
 }
 function remSec(id){sections=sections.filter(s=>s.id!==id);renderAll();}
-function addLyr(sid2){const s=sections.find(x=>x.id===sid2);if(s){s.layers.push({id:lid++,type:'Surface',depth:2,rate:150,markup:Math.round((150-MAT['Surface'])/MAT['Surface']*100),mill_days:0,mill_rate:0});renderAll();}}
+function addLyr(sid2){const s=sections.find(x=>x.id===sid2);if(s){s.layers.push({id:lid++,type:'Surface',depth:2,rate:150});renderAll();}}
 function remLyr(sid2,lid2){const s=sections.find(x=>x.id===sid2);if(s){s.layers=s.layers.filter(l=>l.id!==lid2);renderAll();}}
 
 // These update state WITHOUT re-rendering the DOM
@@ -460,25 +497,12 @@ function updSecSF(id,v){const s=sections.find(x=>x.id===id);if(s){s.sf=parseFloa
 function updLyrType(sid2,lid2,v){
   const s=sections.find(x=>x.id===sid2);if(!s)return;
   const l=s.layers.find(x=>x.id===lid2);if(!l)return;
-  l.type=v;l.depth=DDEPTH[v];l.rate=DRATE[v];l.markup=Math.round((DRATE[v]-MAT[v])/MAT[v]*100);
+  l.type=v;l.depth=DDEPTH[v];l.rate=DRATE[v];
   // Type change needs full re-render since defaults change
   renderAll();
 }
-function updMillDays(sid2,lid2,v){const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;l.mill_days=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);}
-function updMillRate(sid2,lid2,v){const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;l.mill_rate=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);}
 function updLyrDepth(sid2,lid2,v){const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;l.depth=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);}
-function updLyrRate(sid2,lid2,v){
-  const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;
-  l.rate=parseFloat(v)||0;const mat=MAT[l.type]||0;l.markup=mat>0?Math.round((l.rate-mat)/mat*100):0;
-  const mInp=document.querySelector('.lyr-markup[data-lyr="'+sid2+'-'+lid2+'"]');if(mInp)mInp.value=l.markup;
-  recalc();updateLyrResult(sid2,lid2);
-}
-function updLyrMarkup(sid2,lid2,v){
-  const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;
-  l.markup=parseFloat(v)||0;const mat=MAT[l.type]||0;l.rate=parseFloat((mat*(1+l.markup/100)).toFixed(2));
-  const rInp=document.querySelector('.lyr-rate[data-lyr="'+sid2+'-'+lid2+'"]');if(rInp)rInp.value=l.rate;
-  recalc();updateLyrResult(sid2,lid2);
-}
+function updLyrRate(sid2,lid2,v){const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;l.rate=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);}
 
 // Targeted DOM updates — no full re-render
 function updateSecNameDisplay(sid2,name){
@@ -496,7 +520,7 @@ function updateSecFooter(sid2){
     <span>Tons: <b>${sf>0?st.tons.toFixed(2):'—'}</b></span>
     <span>Mat: <b>${sf>0?'$'+fi(st.mat):'—'}</b></span>
     <span>Bid: <b>${sf>0?'$'+fi(st.bid):'—'}</b></span>
-    <span>GM: <b class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'% MU':'—'}</b></span>`;
+    <span>GM: <b class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'%':'—'}</b></span>`;
   // Also update all layer results in this section
   s.layers.forEach(l=>updateLyrResult(sid2,l.id));
 }
@@ -505,18 +529,18 @@ function updateLyrResult(sid2,lid2){
   const l=s.layers.find(x=>x.id===lid2);if(!l)return;
   const sf=s.sf||0;const wfv=wf();
   const rawT=sf>0?tons(sf,l.depth,LBS[l.type]):0;
-  const t=rawT*wfv;const millFlat=l.type==='Mill & Pave'?(l.mill_days||0)*(l.mill_rate||0):0;const matC=t*MAT[l.type];const bidC=t*l.rate+millFlat;const mp=gm(matC,bidC);
+  const t=rawT*wfv;const matC=t*MAT[l.type];const bidC=t*l.rate;const mp=gm(matC,bidC);
   const resEl=document.querySelector(`.lres[data-lyr="${sid2}-${lid2}"]`);
   const gmEl=document.querySelector(`.gmbadge[data-lyr="${sid2}-${lid2}"]`);
   if(resEl) resEl.innerHTML=sf>0?`<b>${t.toFixed(2)}t</b> &middot; mat <b>$${fi(matC)}</b> &middot; bid <b>$${fi(bidC)}</b>`:'<span style="opacity:.5">enter SF above</span>';
-  if(gmEl){gmEl.textContent=sf>0&&bidC>0?mp.toFixed(1)+'% MU':'';gmEl.className=`gmbadge ${mp>=0?'p':'n'}`;}
+  if(gmEl){gmEl.textContent=sf>0&&bidC>0?mp.toFixed(1)+'% GM':'';gmEl.className=`gmbadge ${mp>=0?'p':'n'}`;}
   // Update footer too
   updateSecFooter(sid2);
 }
 
 function secTot(s){
   const wfv=wf();let tt=0,tm=0,tb=0;
-  s.layers.forEach(l=>{const t=s.sf>0?tons(s.sf,l.depth,LBS[l.type])*wfv:0;const mf=l.type==="Mill & Pave"?(l.mill_days||0)*(l.mill_rate||0):0;tt+=t;tm+=t*MAT[l.type];tb+=t*l.rate+mf;});
+  s.layers.forEach(l=>{const t=s.sf>0?tons(s.sf,l.depth,LBS[l.type])*wfv:0;tt+=t;tm+=t*MAT[l.type];tb+=t*l.rate;});
   return{tons:tt,mat:tm,bid:tb};
 }
 
@@ -533,14 +557,12 @@ function renderAll(){
       const gmHTML=sf>0&&bidC>0?`<span class="gmbadge ${lmp>=0?'p':'n'}" data-lyr="${s.id}-${l.id}">${lmp.toFixed(1)}% GM</span>`:`<span class="gmbadge" data-lyr="${s.id}-${l.id}"></span>`;
       lrows+=`<div class="lyr-row">
         <select onchange="updLyrType(${s.id},${l.id},this.value)">${LTYPES.map(t2=>`<option${t2===l.type?' selected':''}>${t2}</option>`).join('')}</select>
-        ${l.type==='Mill & Pave'?`<label>Days</label><input type="number" value="${l.mill_days||''}" placeholder="0" min="0" step="1" style="width:50px" onchange="updMillDays(${s.id},${l.id},this.value)"><label>$/day</label><input type="number" value="${l.mill_rate||''}" placeholder="0" min="0" step="any" style="width:70px" onchange="updMillRate(${s.id},${l.id},this.value)">`:``}
         <label>Depth (in)</label>
         <input type="number" value="${l.depth}" min=".5" step="any" style="width:60px"
                onchange="updLyrDepth(${s.id},${l.id},this.value)">
         <label>$/ton</label>
-        <input type="number" value="${l.rate}" min="0" step="any" style="width:62px" class="lyr-rate" data-lyr="${s.id}-${l.id}" onchange="updLyrRate(${s.id},${l.id},this.value)">
-        <label>MU%</label>
-        <input type="number" value="${l.markup||0}" min="-100" step="1" style="width:52px" class="lyr-markup" data-lyr="${s.id}-${l.id}" onchange="updLyrMarkup(${s.id},${l.id},this.value)">
+        <input type="number" value="${l.rate}" min="0" step="any" style="width:68px"
+               onchange="updLyrRate(${s.id},${l.id},this.value)">
         ${gmHTML}<span class="lres" data-lyr="${s.id}-${l.id}">${resHTML}</span>
         <button class="btn-ico" onclick="remLyr(${s.id},${l.id})">✕</button>
       </div>`;
@@ -565,7 +587,7 @@ function renderAll(){
         <span>Tons: <b>${sf>0?st.tons.toFixed(2):'—'}</b></span>
         <span>Mat: <b>${sf>0?'$'+fi(st.mat):'—'}</b></span>
         <span>Bid: <b>${sf>0?'$'+fi(st.bid):'—'}</b></span>
-        <span>GM: <b class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'% MU':'—'}</b></span>
+        <span>GM: <b class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'%':'—'}</b></span>
       </div>`;
     c.appendChild(div);
   });
@@ -589,7 +611,7 @@ function updateConcResult(id){
   const resEl=document.querySelector(`.lres[data-conc="${id}"]`);
   const gmEl=document.querySelector(`.gmbadge[data-conc="${id}"]`);
   if(resEl) resEl.innerHTML=item.qty>0&&item.sub>0?`<b>$${bR.toFixed(2)}/${ct.unit}</b> &middot; sub <b>$${fi(subC)}</b> &middot; bid <b>$${fi(bidC)}</b>`:'<span style="opacity:.5">enter qty & sub rate</span>';
-  if(gmEl){gmEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'';gmEl.className=`gmbadge ${mp>=0?'p':'n'}`;}
+  if(gmEl){gmEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'% GM':'';gmEl.className=`gmbadge ${mp>=0?'p':'n'}`;}
 }
 
 function renderConc(){
@@ -681,7 +703,7 @@ function recalc(){
         <td>${l.depth}"</td><td>ton</td><td>${sf>0?rawT.toFixed(2):'—'}</td><td>${sf>0?t.toFixed(2):'—'}</td>
         <td>$${MAT[l.type]}</td><td>${sf>0?'$'+fi(mC):'—'}</td>
         <td>$${l.rate}</td><td>${sf>0?'$'+fi(bC):'—'}</td>
-        <td class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'% MU':'—'}</td>`;
+        <td class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'%':'—'}</td>`;
       bk.appendChild(tr);
     });
   });
@@ -779,6 +801,7 @@ async function exportPDF(){
   btn.disabled=true;btn.textContent='Generating...';
   try{
     const p=buildPayload();
+    if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
     const r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
     if(!r.ok){const e=await r.json();throw new Error(e.error||'Server error');}
     const blob=await r.blob();
