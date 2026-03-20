@@ -317,7 +317,7 @@ def total_line(total):
                           textColor=DGRAY, alignment=TA_RIGHT)
     val = ParagraphStyle('tv', fontName='Helvetica-Bold', fontSize=13,
                           textColor=BLACK, alignment=TA_RIGHT)
-    t = Table([[Paragraph('Total Package Price:', lbl),
+    t = Table([[Paragraph('TOTAL BID PRICE:', lbl),
                 Paragraph(f'${total:,.2f}', val)]],
               colWidths=[cw * 0.68, cw * 0.32])
     t.setStyle(TableStyle([
