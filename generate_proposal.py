@@ -156,7 +156,7 @@ class CoverPage(Flowable):
 
 def info_block(data, st):
     """Three-column stacked layout. Each column has a header row then
-    label-above-value pairs â no side-by-side label/value split, so
+    label-above-value pairs Ã¢ÂÂ no side-by-side label/value split, so
     long emails and addresses never wrap awkwardly."""
 
     lbl_s  = ParagraphStyle('ibl', fontName='Helvetica-Bold', fontSize=7,
@@ -170,7 +170,7 @@ def info_block(data, st):
         parts = [Paragraph(title, hdr_s)]
         for lbl, val in pairs:
             parts.append(Paragraph(lbl, lbl_s))
-            parts.append(Paragraph(val or 'â', val_s))
+            parts.append(Paragraph(val or 'Ã¢ÂÂ', val_s))
         return parts
 
     from reportlab.platypus import Frame
@@ -309,7 +309,7 @@ def bid_table(items, st):
     return t
 
 def total_line(total):
-    """Clean right-aligned total â label in regular weight, amount in bold black.
+    """Clean right-aligned total Ã¢ÂÂ label in regular weight, amount in bold black.
     No box, no background. Just a subtle top rule and generous spacing so it
     reads as a natural footer to the table above it."""
     cw  = W - inch
@@ -568,14 +568,29 @@ def build(data, out_path):
                              author='HD Hauling & Grading',
                              creator='HD Hauling & Grading',
                              subject=data.get('project_name','Proposal'),
-                             leftMargin=0.5*inch, rightMargin=0.5*inch,
-                             topMargin=0.6*inch, bottomMargin=0.6*inch)
+                             leftMargin=LM, rightMargin=RM,
+                             topMargin=TM, bottomMargin=BM)
     story = []
-    story += cover_page(data, st)
+    story.append(CoverPage(data))
     story.append(PageBreak())
-    story += bid_items_page(data, st)
-    story += site_plan_page(data, st)
+    story.append(info_block(data, st))
+    story.append(Spacer(1, 0.12*inch))
+    story += notes_block(data.get('notes',''), st)
+    story.append(Spacer(1, 0.12*inch))
+    story.append(bid_table(data.get('line_items',[]), st))
+    story.append(Spacer(1, 0.1*inch))
+    story.append(total_line(data.get('total',0)))
+    story.append(PageBreak())
+    story.append(SitePlanPage())
+    story.append(PageBreak())
     story += approval_page(data, st)
     story.append(PageBreak())
     story += tc_pages(st)
-    doc.build(story)
+    doc.build(story, canvasmaker=canvas_maker(data.get('date','')))
+
+if __name__ == '__main__':
+    import json, sys
+    data = json.loads(sys.argv[1])
+    out  = sys.argv[2] if len(sys.argv) > 2 else '/tmp/proposal.pdf'
+    build(data, out)
+    print('OK:', out)
