@@ -171,13 +171,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="topbar-actions">
         <button class="btn btn-sec btn-sm" onclick="saveQuote()">Save</button>
         <button class="btn btn-sec btn-sm" onclick="resetAll()">Reset</button>
-        <input type="file" id="site-plan-input" accept="image/*" style="display:none" onchange="setSitePlan(this)"/>
-        <button class="btn btn-sec btn-sm" onclick="document.getElementById('site-plan-input').click()" id="site-plan-btn" title="Upload site plan image for PDF">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v10H2zm1 9l3-4 2 2 2-3 3 5z"/></svg><span id="site-plan-label">Site Plan</span>
-        </button>
-        <button class="btn btn-sec btn-sm" id="docx-btn" onclick="exportDOCX()">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1z" fill-opacity=".3"/><path d="M4 7h8v1H4zm0 2h8v1H4zm0 2h5v1H4z"/></svg>Word
-        </button>
         <button class="btn btn-dark btn-sm" id="notion-btn" onclick="pushNotion()">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10v12H3z" fill-opacity=".2"/><path d="M5 5h6v1H5zm0 3h6v1H5zm0 3h4v1H5z"/></svg>Notion
         </button>
@@ -355,36 +348,6 @@ var concItems=[], cid=0;
 var extraItems=[], eid=0;
 var savedQuotes=[];
 var clients=[];
-var sitePlanDataUrl=null;
-function setSitePlan(inp){
-  if(!inp.files||!inp.files[0])return;
-  const f=inp.files[0];
-  const reader=new FileReader();
-  reader.onload=e=>{
-    sitePlanDataUrl=e.target.result;
-    document.getElementById('site-plan-label').textContent='✓ '+f.name.substring(0,12);
-    document.getElementById('site-plan-btn').style.borderColor='#27500A';
-    toast('Site plan loaded','ok');
-  };
-  reader.readAsDataURL(f);
-}
-async function exportDOCX(){
-  const btn=document.getElementById('docx-btn');
-  btn.disabled=true;btn.textContent='Generating...';
-  try{
-    const p=buildPayload();
-    if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
-    const r=await fetch('/generate-docx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
-    if(!r.ok){const e=await r.json();throw new Error(e.error||'Server error');}
-    const blob=await r.blob();
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;a.download='HD_Proposal_'+p.project_name.replace(/\s+/g,'_')+'.docx';
-    a.click();URL.revokeObjectURL(url);
-    toast('Word doc downloaded','ok');
-  }catch(e){toast('Word error: '+e.message,'err');}
-  finally{btn.disabled=false;btn.innerHTML='<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1z" fill-opacity=".3"/><path d="M4 7h8v1H4zm0 2h8v1H4zm0 2h5v1H4z"/></svg>Word';}
-}
 var sender={name:'',email:'',phone:''};
 
 // ── Auth ────────────────────────────────────────────────────────
@@ -501,8 +464,19 @@ function updLyrType(sid2,lid2,v){
   // Type change needs full re-render since defaults change
   renderAll();
 }
+function updLyrMarkup(sid2,lid2,v){
+  const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;
+  l.markup=parseFloat(v)||0;const mat=MAT[l.type]||0;l.rate=parseFloat((mat*(1+l.markup/100)).toFixed(2));
+  const rInp=document.querySelector('.lyr-rate[data-lyr="'+sid2+'-'+lid2+'"]');if(rInp)rInp.value=l.rate;
+  recalc();updateLyrResult(sid2,lid2);
+}
 function updLyrDepth(sid2,lid2,v){const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;l.depth=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);}
-function updLyrRate(sid2,lid2,v){const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;l.rate=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);}
+function updLyrRate(sid2,lid2,v){
+  const s=sections.find(x=>x.id===sid2);if(!s)return;const l=s.layers.find(x=>x.id===lid2);if(!l)return;
+  l.rate=parseFloat(v)||0;const mat=MAT[l.type]||0;l.markup=mat>0?Math.round((l.rate-mat)/mat*100):0;
+  const mInp=document.querySelector('.lyr-markup[data-lyr="'+sid2+'-'+lid2+'"]');if(mInp)mInp.value=l.markup;
+  recalc();updateLyrResult(sid2,lid2);
+}
 
 // Targeted DOM updates — no full re-render
 function updateSecNameDisplay(sid2,name){
@@ -557,12 +531,14 @@ function renderAll(){
       const gmHTML=sf>0&&bidC>0?`<span class="gmbadge ${lmp>=0?'p':'n'}" data-lyr="${s.id}-${l.id}">${lmp.toFixed(1)}% GM</span>`:`<span class="gmbadge" data-lyr="${s.id}-${l.id}"></span>`;
       lrows+=`<div class="lyr-row">
         <select onchange="updLyrType(${s.id},${l.id},this.value)">${LTYPES.map(t2=>`<option${t2===l.type?' selected':''}>${t2}</option>`).join('')}</select>
-        <label>Depth (in)</label>
-        <input type="number" value="${l.depth}" min=".5" step="any" style="width:60px"
-               onchange="updLyrDepth(${s.id},${l.id},this.value)">
-        <label>$/ton</label>
-        <input type="number" value="${l.rate}" min="0" step="any" style="width:68px"
-               onchange="updLyrRate(${s.id},${l.id},this.value)">
+        ${l.type==='Mill & Pave'?`
+        <label>Days</label><input type="number" value="${l.mill_days||''}" placeholder="0" min="0" step="1" style="width:54px" onchange="updMillDays(${s.id},${l.id},this.value)">
+        <label>$/day</label><input type="number" value="${l.mill_rate||''}" placeholder="0" min="0" step="any" style="width:74px" onchange="updMillRate(${s.id},${l.id},this.value)">
+        `:`
+        <label>Depth (in)</label><input type="number" value="${l.depth}" min=".5" step="any" style="width:60px" onchange="updLyrDepth(${s.id},${l.id},this.value)">
+        <label>$/ton</label><input type="number" value="${l.rate}" min="0" step="any" style="width:62px" class="lyr-rate" data-lyr="${s.id}-${l.id}" onchange="updLyrRate(${s.id},${l.id},this.value)">
+        <label>MU%</label><input type="number" value="${l.markup||0}" step="1" style="width:52px" class="lyr-markup" data-lyr="${s.id}-${l.id}" onchange="updLyrMarkup(${s.id},${l.id},this.value)">
+        `}
         ${gmHTML}<span class="lres" data-lyr="${s.id}-${l.id}">${resHTML}</span>
         <button class="btn-ico" onclick="remLyr(${s.id},${l.id})">✕</button>
       </div>`;
@@ -801,7 +777,6 @@ async function exportPDF(){
   btn.disabled=true;btn.textContent='Generating...';
   try{
     const p=buildPayload();
-    if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
     const r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
     if(!r.ok){const e=await r.json();throw new Error(e.error||'Server error');}
     const blob=await r.blob();
