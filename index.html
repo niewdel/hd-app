@@ -412,7 +412,7 @@ async function submitPin(){
   const errEl=document.getElementById('pin-error');
   errEl.textContent='';
   try{
-    const r=await fetch('/verify-pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin})});
+    const r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin})});
     const d=await r.json();
     if(d.ok){
       document.getElementById('pin-screen').classList.add('hidden');
