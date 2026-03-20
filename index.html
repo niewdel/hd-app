@@ -171,6 +171,13 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="topbar-actions">
         <button class="btn btn-sec btn-sm" onclick="saveQuote()">Save</button>
         <button class="btn btn-sec btn-sm" onclick="resetAll()">Reset</button>
+        <input type="file" id="site-plan-input" accept="image/*" style="display:none" onchange="setSitePlan(this)"/>
+        <button class="btn btn-sec btn-sm" onclick="document.getElementById('site-plan-input').click()" id="site-plan-btn" title="Upload site plan">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v10H2zm1 9l3-4 2 2 2-3 3 5z"/></svg><span id="site-plan-label">Site Plan</span>
+        </button>
+        <button class="btn btn-sec btn-sm" id="docx-btn" onclick="exportDOCX()">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 7h8v1H4zm0 2h8v1H4zm0 2h5v1H4z"/></svg>Word
+        </button>
         <button class="btn btn-dark btn-sm" id="notion-btn" onclick="pushNotion()">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10v12H3z" fill-opacity=".2"/><path d="M5 5h6v1H5zm0 3h6v1H5zm0 3h4v1H5z"/></svg>Notion
         </button>
@@ -263,7 +270,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div class="card-hdr"><span class="card-title">Full Breakdown</span></div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Section</th><th>Layer</th><th>SF</th><th>SY</th><th>Depth/Qty</th><th>Unit</th><th>Raw Tons</th><th>Tons+Waste</th><th>Mat$/u</th><th>Mat Cost</th><th>Bid$/u</th><th>Bid Total</th><th>GM%</th></tr></thead>
+              <thead><tr><th>Section</th><th>Layer</th><th>SF</th><th>SY</th><th>Depth/Qty</th><th>Unit</th><th>Raw Tons</th><th>Tons+Waste</th><th>Mat$/u</th><th>Mat Cost</th><th>Bid$/u</th><th>Bid Total</th><th>MU%</th></tr></thead>
               <tbody id="breakdown"></tbody>
             </table>
           </div>
@@ -407,7 +414,7 @@ function saveStorage(){localStorage.setItem('hd_quotes',JSON.stringify(savedQuot
 function tons(sf,d,lbs){return(sf*(d/12)*lbs)/2000;}
 function wf(){return 1+(parseFloat(document.getElementById('waste').value)||0)/100;}
 function mob(){return parseFloat(document.getElementById('mob').value)||0;}
-function gm(m,b){return b>0?((b-m)/b*100):0;}
+function gm(m,b){return m>0?((b-m)/m*100):0;}
 function fi(n){return Math.round(n).toLocaleString();}
 function f2(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -494,7 +501,7 @@ function updateSecFooter(sid2){
     <span>Tons: <b>${sf>0?st.tons.toFixed(2):'—'}</b></span>
     <span>Mat: <b>${sf>0?'$'+fi(st.mat):'—'}</b></span>
     <span>Bid: <b>${sf>0?'$'+fi(st.bid):'—'}</b></span>
-    <span>GM: <b class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'%':'—'}</b></span>`;
+    <span>GM: <b class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'% MU':'—'}</b></span>`;
   // Also update all layer results in this section
   s.layers.forEach(l=>updateLyrResult(sid2,l.id));
 }
@@ -507,7 +514,7 @@ function updateLyrResult(sid2,lid2){
   const resEl=document.querySelector(`.lres[data-lyr="${sid2}-${lid2}"]`);
   const gmEl=document.querySelector(`.gmbadge[data-lyr="${sid2}-${lid2}"]`);
   if(resEl) resEl.innerHTML=sf>0?`<b>${t.toFixed(2)}t</b> &middot; mat <b>$${fi(matC)}</b> &middot; bid <b>$${fi(bidC)}</b>`:'<span style="opacity:.5">enter SF above</span>';
-  if(gmEl){gmEl.textContent=sf>0&&bidC>0?mp.toFixed(1)+'% GM':'';gmEl.className=`gmbadge ${mp>=0?'p':'n'}`;}
+  if(gmEl){gmEl.textContent=sf>0&&bidC>0?mp.toFixed(1)+'% MU':'';gmEl.className=`gmbadge ${mp>=0?'p':'n'}`;}
   // Update footer too
   updateSecFooter(sid2);
 }
@@ -563,7 +570,7 @@ function renderAll(){
         <span>Tons: <b>${sf>0?st.tons.toFixed(2):'—'}</b></span>
         <span>Mat: <b>${sf>0?'$'+fi(st.mat):'—'}</b></span>
         <span>Bid: <b>${sf>0?'$'+fi(st.bid):'—'}</b></span>
-        <span>GM: <b class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'%':'—'}</b></span>
+        <span>GM: <b class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'% MU':'—'}</b></span>
       </div>`;
     c.appendChild(div);
   });
@@ -587,7 +594,7 @@ function updateConcResult(id){
   const resEl=document.querySelector(`.lres[data-conc="${id}"]`);
   const gmEl=document.querySelector(`.gmbadge[data-conc="${id}"]`);
   if(resEl) resEl.innerHTML=item.qty>0&&item.sub>0?`<b>$${bR.toFixed(2)}/${ct.unit}</b> &middot; sub <b>$${fi(subC)}</b> &middot; bid <b>$${fi(bidC)}</b>`:'<span style="opacity:.5">enter qty & sub rate</span>';
-  if(gmEl){gmEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'% GM':'';gmEl.className=`gmbadge ${mp>=0?'p':'n'}`;}
+  if(gmEl){gmEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'';gmEl.className=`gmbadge ${mp>=0?'p':'n'}`;}
 }
 
 function renderConc(){
@@ -679,7 +686,7 @@ function recalc(){
         <td>${l.depth}"</td><td>ton</td><td>${sf>0?rawT.toFixed(2):'—'}</td><td>${sf>0?t.toFixed(2):'—'}</td>
         <td>$${MAT[l.type]}</td><td>${sf>0?'$'+fi(mC):'—'}</td>
         <td>$${l.rate}</td><td>${sf>0?'$'+fi(bC):'—'}</td>
-        <td class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'%':'—'}</td>`;
+        <td class="${mp>=0?'gp':'gn'}">${sf>0?mp.toFixed(1)+'% MU':'—'}</td>`;
       bk.appendChild(tr);
     });
   });
@@ -777,6 +784,7 @@ async function exportPDF(){
   btn.disabled=true;btn.textContent='Generating...';
   try{
     const p=buildPayload();
+    if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
     const r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
     if(!r.ok){const e=await r.json();throw new Error(e.error||'Server error');}
     const blob=await r.blob();
