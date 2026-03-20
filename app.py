@@ -1,6 +1,7 @@
 import os, tempfile, functools
 from flask import Flask, request, jsonify, session
 from generate_proposal import build
+import generate_docx
 import requests as http
 
 app = Flask(__name__, static_folder='.', static_url_path='')
@@ -79,14 +80,9 @@ def generate_pdf():
 def generate_docx_route():
     try:
         data = request.get_json(force=True)
-        buf = generate_docx.build(data)
+        buf  = generate_docx.build(data)
         fname = (data.get('project_name','Proposal') or 'Proposal').replace(' ','_')
-        return send_file(
-            buf,
-            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            as_attachment=True,
-            download_name=f'HD_Proposal_{fname}.docx'
-        )
+        return send_file(buf, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document', as_attachment=True, download_name=f'HD_Proposal_{fname}.docx')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
