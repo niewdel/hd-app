@@ -848,12 +848,7 @@ function saveSenderSettings(){
   localStorage.setItem('hd_sender',JSON.stringify(senderSettings));toast('Sender settings saved','success');
 }
 function saveNotionSettings(){
-  notionKey=document.getElementById('notion-key').value;
-  notionDBPipeline=document.getElementById('notion-db-pipeline').value;
-  notionDBClients=document.getElementById('notion-db-clients').value;
-  localStorage.setItem('hd_notion',JSON.stringify({key:notionKey,pipeline:notionDBPipeline,clients:notionDBClients}));
-  toast('Notion settings saved','success');
-  if(notionKey&&notionDBClients)loadClientCache();
+  toast('Notion credentials are managed server-side via Railway environment variables','ok');
 }
 function loadSettings(){
   try{
@@ -873,14 +868,18 @@ function loadSettingsUI(){
 
 // ── Notion ────────────────────────────────────────────────────
 async function testNotion(){
-  const key=document.getElementById('notion-key').value;const db=document.getElementById('notion-db-pipeline').value;
-  const el=document.getElementById('notion-conn-status');
-  el.innerHTML='<div class="conn-row"><div class="conn-dot gray"></div><div class="conn-label">Testing...</div></div>';
+  const el=document.getElementById('notion-status')||document.querySelector('[id*="notion"]');
+  if(el) el.innerHTML='<div style="color:#888;font-size:13px;">Testing...</div>';
   try{
-    const r=await fetch('https://api.notion.com/v1/databases/'+db,{headers:{'Authorization':'Bearer '+key,'Notion-Version':'2022-06-28'}});
-    if(r.ok)el.innerHTML='<div class="conn-row"><div class="conn-dot green"></div><div class="conn-label">Connected</div><span class="conn-meta">Estimating Pipeline found</span></div>';
-    else el.innerHTML='<div class="conn-row"><div class="conn-dot red"></div><div class="conn-label">Failed</div><span class="conn-meta">Check key and DB ID</span></div>';
-  }catch(e){el.innerHTML='<div class="conn-row"><div class="conn-dot red"></div><div class="conn-label">Error</div><span class="conn-meta">'+e.message+'</span></div>';}
+    const r=await fetch('/notion/clients');
+    if(r.ok){
+      if(el) el.innerHTML='<div style="color:#3B6D11;font-weight:500;font-size:13px;">✓ Notion connected</div>';
+    } else {
+      if(el) el.innerHTML='<div style="color:#CC0000;font-size:13px;">Connection failed — check credentials</div>';
+    }
+  }catch(e){
+    if(el) el.innerHTML='<div style="color:#CC0000;font-size:13px;">Error: '+e.message+'</div>';
+  }
 }
 
 async function pushToNotion(silent=false){
