@@ -4,8 +4,7 @@ from flask import Flask, request, send_file, jsonify, redirect
 from flask_cors import CORS
 from generate_proposal import build
 
-app = Flask(__name__, static_folder='static', static_url_path='')
-CORS(app)
+app = Flask(__name__, static_folder='.', static_url_path='')CORS(app)
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 APP_PIN = os.environ.get('APP_PIN', '1234')   # Set APP_PIN env var on Railway to change
