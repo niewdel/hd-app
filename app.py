@@ -1,5 +1,5 @@
 import os, tempfile, functools
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, send_file
 from generate_proposal import build
 import generate_docx
 import requests as http
