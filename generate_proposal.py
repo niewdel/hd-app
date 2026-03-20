@@ -21,7 +21,7 @@ TBLBORD = colors.HexColor('#CCCCCC')
 ROWALT  = colors.HexColor('#EEEEEE')
 
 W, H    = letter
-LOGO    = os.path.join(os.path.dirname(__file__), "assets", "hd_logo.png")
+LOGO    = os.path.join(os.path.dirname(__file__), "hd_logo.png")
 LM = RM = 0.5 * inch
 TM = 1.05 * inch
 BM = 0.6  * inch
