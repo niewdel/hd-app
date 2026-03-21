@@ -1274,9 +1274,10 @@ function showPanel(id,el){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
-  document.getElementById('topbar-title').textContent={build:'Build Proposal',saved:'Saved Proposals',settings:'Settings'}[id]||id;
+  document.getElementById('topbar-title').textContent={build:'Build Proposal',saved:'Saved Proposals',settings:'Settings',co:'Change Orders',analytics:'Analytics'}[id]||id;
   if(id==='saved')renderSaved();
   if(id==='settings'){loadSenderUI();renderPresetMgr();renderMatPriceInputs();}
+  if(id==='analytics')setTimeout(renderAnalytics,50);
 }
 
 // -- Material Prices -----------------------------------------------------------
