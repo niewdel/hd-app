@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>HD Hauling &amp; Grading — Quote Tool</title>
+<title>HD Hauling &amp; Grading â Quote Tool</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -141,12 +141,12 @@ tr:nth-child(even) td{background:#FAFAFA;}
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-bar">
-    <img src="/assets/hd_logo.png" alt="HD Hauling and Grading"/>
+    <img src="/hd_logo.png" alt="HD Hauling and Grading"/>
   </div>
   <div class="pin-box">
     <h2>Quote Tool</h2>
     <p>Enter your access PIN to continue</p>
-    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="••••"
+    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="â¢â¢â¢â¢"
            onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="pin-btn" onclick="doLogin()">Access Tool</button>
     <div class="pin-err" id="pin-err"></div>
@@ -157,7 +157,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 <div id="app">
   <aside class="sb">
     <div class="sb-logo">
-      <img src="/assets/hd_logo.png" alt="HD Hauling &amp; Grading"/>
+      <img src="/hd_logo.png" alt="HD Hauling &amp; Grading"/>
       <p>Quote Tool</p>
     </div>
     <nav>
@@ -277,15 +277,15 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
 
         <div class="metrics">
-          <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">—</div></div>
-          <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">—</div></div>
-          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">—</div><div class="metric-sub">w/ waste</div></div>
-          <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">—</div></div>
-          <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">—</div></div>
+          <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">â</div></div>
+          <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">â</div></div>
+          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">â</div><div class="metric-sub">w/ waste</div></div>
+          <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">â</div></div>
+          <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">â</div></div>
           <div class="metric"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">$0</div></div>
-          <div class="metric" id="m-cont-card" style="display:none"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">—</div></div>
-          <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">—</div></div>
-          <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">—</div></div>
+          <div class="metric" id="m-cont-card" style="display:none"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">â</div></div>
+          <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">â</div></div>
+          <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">â</div></div>
         </div>
 
         <div class="card">
@@ -358,10 +358,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ââ Constants âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 var LTYPES = ['ABC base','Binder','Surface','Mill & Pave','B25.0C','I19.0C','S9.5C'];
 var LBS    = {'ABC base':150,'Binder':115,'Surface':115,'Mill & Pave':115,'B25.0C':115,'I19.0C':115,'S9.5C':115};
-// MAT is a live variable — editable via Settings and persisted to localStorage
+// MAT is a live variable â editable via Settings and persisted to localStorage
 var MAT    = {'ABC base':45,'Binder':92,'Surface':95,'Mill & Pave':35,'B25.0C':85,'I19.0C':92,'S9.5C':95};
 var MAT_DEFAULT = {'ABC base':45,'Binder':92,'Surface':95,'Mill & Pave':35,'B25.0C':85,'I19.0C':92,'S9.5C':95};
 var DDEPTH = {'ABC base':6,'Binder':2,'Surface':2,'Mill & Pave':2,'B25.0C':5,'I19.0C':4,'S9.5C':3};
@@ -389,7 +389,7 @@ var PRESETS = [
   {name:'NCDOT Asphalt Pavement',layers:[{type:'B25.0C',depth:5,rate:150},{type:'I19.0C',depth:4,rate:150},{type:'S9.5C',depth:3,rate:150}]},
 ];
 
-// ── State ─────────────────────────────────────────────────────────────────────
+// ââ State âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 var sections=[], sid=0, lid=0;
 var concItems=[], cid=0;
 var extraItems=[], eid=0;
@@ -398,7 +398,7 @@ var clients=[];
 var sender={name:'',email:'',phone:''};
 var sitePlanDataUrl=null;
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
+// ââ Auth ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function doLogin(){
   document.getElementById('pin-err').textContent='';
   var pin=document.getElementById('pin-inp').value;
@@ -421,7 +421,7 @@ async function doLogout(){
   }catch(e){}
 })();
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
+// ââ Boot ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function boot(){
   loadStorage();
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
@@ -442,7 +442,7 @@ function boot(){
   });
 }
 
-// ── Storage ───────────────────────────────────────────────────────────────────
+// ââ Storage âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function loadStorage(){
   try{
     var s=localStorage.getItem('hd_sender');if(s)sender=JSON.parse(s);
@@ -454,7 +454,7 @@ function loadStorage(){
 }
 function saveStorage(){localStorage.setItem('hd_quotes',JSON.stringify(savedQuotes));}
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ââ Helpers âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function tons(sf,d,lbs){return(sf*(d/12)*lbs)/2000;}
 function wf(){return 1+(parseFloat(document.getElementById('waste').value)||0)/100;}
 function mob(){return parseFloat(document.getElementById('mob').value)||0;}
@@ -471,7 +471,7 @@ function toast(msg,type){
   setTimeout(function(){t.classList.remove('on');},3500);
 }
 
-// ── Panel nav ─────────────────────────────────────────────────────────────────
+// ââ Panel nav âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function showPanel(id,el){
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
@@ -482,7 +482,7 @@ function showPanel(id,el){
   if(id==='settings'){loadSenderUI();renderPresetMgr();renderMatPriceInputs();}
 }
 
-// ── Material Prices ───────────────────────────────────────────────────────────
+// ââ Material Prices âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function updateMatIndicator(){
   var a=document.getElementById('mp-abc');
   var b=document.getElementById('mp-asp');
@@ -543,7 +543,7 @@ function resetMatPrices(){
   renderAll();renderConc();renderExtra();
 }
 
-// ── Presets ───────────────────────────────────────────────────────────────────
+// ââ Presets âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderPresets(){
   var c=document.getElementById('presets');c.innerHTML='';
   PRESETS.forEach(function(p){
@@ -553,7 +553,7 @@ function renderPresets(){
   });
 }
 
-// ── Sections ──────────────────────────────────────────────────────────────────
+// ââ Sections ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function mkLayer(l){
   var mat=MAT[l.type]||0;
   var def_mu=mat>0?Math.round((l.rate-mat)/mat*100):0;
@@ -636,11 +636,11 @@ function updateSecFooter(sid2){
   var foot=document.querySelector('.sec-foot[data-sid="'+sid2+'"]');if(!foot)return;
   var sf=s.sf||0,sy=sf/9,st=secTot(s),mp=mu(st.mat,st.bid);
   foot.innerHTML='<span>SF: <b>'+sf.toLocaleString()+'</b></span>'
-    +'<span>SY: <b>'+(sf>0?sy.toFixed(1):'—')+'</b></span>'
-    +'<span>Tons: <b>'+(sf>0?st.tons.toFixed(2):'—')+'</b></span>'
-    +'<span>Mat: <b>'+(sf>0?'$'+fi(st.mat):'—')+'</b></span>'
-    +'<span>Bid: <b>'+(sf>0?'$'+fi(st.bid):'—')+'</b></span>'
-    +'<span>MU: <b class="'+(mp>=0?'gp':'gn')+'">'+(sf>0?mp.toFixed(1)+'%':'—')+'</b></span>';
+    +'<span>SY: <b>'+(sf>0?sy.toFixed(1):'â')+'</b></span>'
+    +'<span>Tons: <b>'+(sf>0?st.tons.toFixed(2):'â')+'</b></span>'
+    +'<span>Mat: <b>'+(sf>0?'$'+fi(st.mat):'â')+'</b></span>'
+    +'<span>Bid: <b>'+(sf>0?'$'+fi(st.bid):'â')+'</b></span>'
+    +'<span>MU: <b class="'+(mp>=0?'gp':'gn')+'">'+(sf>0?mp.toFixed(1)+'%':'â')+'</b></span>';
   s.layers.forEach(function(l){updateLyrResult(sid2,l.id);});
 }
 
@@ -691,7 +691,7 @@ function renderAll(){
       +'<div style="display:flex;align-items:center;gap:6px;">'
       +'<label style="margin:0;font-size:11px;color:var(--dgray);text-transform:none;letter-spacing:0;font-weight:normal;">SF</label>'
       +'<input type="number" value="'+(sf||'')+'" placeholder="0" min="0" step="1" style="width:95px" onchange="updSecSF('+s.id+',this.value)">'
-      +'<span style="font-size:12px;color:var(--dgray);">= <b>'+(sf>0?sy.toFixed(1):'—')+'</b> SY</span>'
+      +'<span style="font-size:12px;color:var(--dgray);">= <b>'+(sf>0?sy.toFixed(1):'â')+'</b> SY</span>'
       +'</div>'
       +'<button class="btn btn-sec btn-sm" onclick="addLyr('+s.id+')">+ Layer</button>'
       +'<button class="btn-ico" onclick="remSec('+s.id+')" style="margin-left:auto;">&#10005; Remove</button>'
@@ -699,18 +699,18 @@ function renderAll(){
       +'<div>'+lrows+'</div>'
       +'<div class="sec-foot" data-sid="'+s.id+'">'
       +'<span>SF: <b>'+sf.toLocaleString()+'</b></span>'
-      +'<span>SY: <b>'+(sf>0?sy.toFixed(1):'—')+'</b></span>'
-      +'<span>Tons: <b>'+(sf>0?st.tons.toFixed(2):'—')+'</b></span>'
-      +'<span>Mat: <b>'+(sf>0?'$'+fi(st.mat):'—')+'</b></span>'
-      +'<span>Bid: <b>'+(sf>0?'$'+fi(st.bid):'—')+'</b></span>'
-      +'<span>MU: <b class="'+(mp>=0?'gp':'gn')+'">'+(sf>0?mp.toFixed(1)+'%':'—')+'</b></span>'
+      +'<span>SY: <b>'+(sf>0?sy.toFixed(1):'â')+'</b></span>'
+      +'<span>Tons: <b>'+(sf>0?st.tons.toFixed(2):'â')+'</b></span>'
+      +'<span>Mat: <b>'+(sf>0?'$'+fi(st.mat):'â')+'</b></span>'
+      +'<span>Bid: <b>'+(sf>0?'$'+fi(st.bid):'â')+'</b></span>'
+      +'<span>MU: <b class="'+(mp>=0?'gp':'gn')+'">'+(sf>0?mp.toFixed(1)+'%':'â')+'</b></span>'
       +'</div>';
     c.appendChild(div);
   });
   recalc();
 }
 
-// ── Concrete ──────────────────────────────────────────────────────────────────
+// ââ Concrete ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function addConc(){concItems.push({id:cid++,type:'18sg',qty:0,sub:0,markup:20});renderConc();}
 function remConc(id){concItems=concItems.filter(function(x){return x.id!==id;});renderConc();recalc();}
 function updConcType(id,v){var i=concItems.find(function(x){return x.id===id;});if(!i)return;i.type=v;renderConc();}
@@ -749,7 +749,7 @@ function renderConc(){
   recalc();
 }
 
-// ── Extra items ───────────────────────────────────────────────────────────────
+// ââ Extra items âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function addExtra(){extraItems.push({id:eid++,name:'',qty:1,unit:'LS',price:0,subtotal:0});renderExtra();}
 function remExtra(id){extraItems=extraItems.filter(function(x){return x.id!==id;});renderExtra();recalc();}
 function updExtraName(id,v){var i=extraItems.find(function(x){return x.id===id;});if(i)i.name=v;}
@@ -778,7 +778,7 @@ function renderExtra(){
   recalc();
 }
 
-// ── Recalc ────────────────────────────────────────────────────────────────────
+// ââ Recalc ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function recalc(){
   var bk=document.getElementById('breakdown');bk.innerHTML='';
   var wfv=wf(),mobv=mob();
@@ -794,17 +794,17 @@ function recalc(){
       var tr=document.createElement('tr');
       tr.innerHTML='<td><small>'+esc(s.name)+'</small></td>'
         +'<td><span class="badge '+(LBADGE[l.type]||'')+'">'+esc(l.type)+'</span></td>'
-        +'<td>'+(sf>0?sf.toLocaleString():'—')+'</td>'
-        +'<td>'+(sf>0?sy.toFixed(1):'—')+'</td>'
-        +'<td>'+(!isMill?l.depth+'"':'—')+'</td>'
+        +'<td>'+(sf>0?sf.toLocaleString():'â')+'</td>'
+        +'<td>'+(sf>0?sy.toFixed(1):'â')+'</td>'
+        +'<td>'+(!isMill?l.depth+'"':'â')+'</td>'
         +'<td>'+(!isMill?'ton':'day')+'</td>'
-        +'<td>'+(sf>0&&!isMill?rawT.toFixed(2):'—')+'</td>'
-        +'<td>'+(sf>0&&!isMill?t.toFixed(2):isMill&&millFlat>0?'$'+fi(millFlat)+' flat':'—')+'</td>'
-        +'<td>'+(mC>0?'$'+(MAT[l.type]||0):'—')+'</td>'
-        +'<td>'+(mC>0?'$'+fi(mC):'—')+'</td>'
-        +'<td>'+(bC>0?'$'+l.rate:'—')+'</td>'
-        +'<td>'+(bC>0?'$'+fi(bC):'—')+'</td>'
-        +'<td class="'+(mp>=0?'gp':'gn')+'">'+(bC>0?mp.toFixed(1)+'%':'—')+'</td>';
+        +'<td>'+(sf>0&&!isMill?rawT.toFixed(2):'â')+'</td>'
+        +'<td>'+(sf>0&&!isMill?t.toFixed(2):isMill&&millFlat>0?'$'+fi(millFlat)+' flat':'â')+'</td>'
+        +'<td>'+(mC>0?'$'+(MAT[l.type]||0):'â')+'</td>'
+        +'<td>'+(mC>0?'$'+fi(mC):'â')+'</td>'
+        +'<td>'+(bC>0?'$'+l.rate:'â')+'</td>'
+        +'<td>'+(bC>0?'$'+fi(bC):'â')+'</td>'
+        +'<td class="'+(mp>=0?'gp':'gn')+'">'+(bC>0?mp.toFixed(1)+'%':'â')+'</td>';
       bk.appendChild(tr);
     });
   });
@@ -815,8 +815,8 @@ function recalc(){
     gM+=subC;gB+=bC;
     var tr=document.createElement('tr');
     tr.innerHTML='<td><small>Concrete</small></td><td><span class="badge b-conc">'+esc(ct.name)+'</span></td>'
-      +'<td>—</td><td>—</td><td>'+i.qty.toLocaleString()+' '+ct.unit+'</td><td>'+ct.unit+'</td>'
-      +'<td>—</td><td>—</td><td>$'+i.sub.toFixed(2)+'</td><td>$'+fi(subC)+'</td>'
+      +'<td>â</td><td>â</td><td>'+i.qty.toLocaleString()+' '+ct.unit+'</td><td>'+ct.unit+'</td>'
+      +'<td>â</td><td>â</td><td>$'+i.sub.toFixed(2)+'</td><td>$'+fi(subC)+'</td>'
       +'<td>$'+concBid(i).toFixed(2)+'</td><td>$'+fi(bC)+'</td>'
       +'<td class="'+(mp>=0?'gp':'gn')+'">'+mp.toFixed(1)+'%</td>';
     bk.appendChild(tr);
@@ -826,28 +826,28 @@ function recalc(){
     gB+=i.subtotal;
     var tr=document.createElement('tr');
     tr.innerHTML='<td><small>Additional</small></td><td>'+esc(i.name)+'</td>'
-      +'<td>—</td><td>—</td><td>'+i.qty+' '+i.unit+'</td><td>'+i.unit+'</td>'
-      +'<td>—</td><td>—</td><td>—</td><td>—</td>'
-      +'<td>$'+f2(i.price)+'</td><td>$'+fi(i.subtotal)+'</td><td>—</td>';
+      +'<td>â</td><td>â</td><td>'+i.qty+' '+i.unit+'</td><td>'+i.unit+'</td>'
+      +'<td>â</td><td>â</td><td>â</td><td>â</td>'
+      +'<td>$'+f2(i.price)+'</td><td>$'+fi(i.subtotal)+'</td><td>â</td>';
     bk.appendChild(tr);
   });
   var contPct=cont(),contv=gB>0?Math.round(gB*contPct/100*100)/100:0;
   var total=gB+mobv+contv,gp=gB-gM;
-  document.getElementById('m-sf').textContent=gSF>0?gSF.toLocaleString():'—';
+  document.getElementById('m-sf').textContent=gSF>0?gSF.toLocaleString():'â';
   var ccEl=document.getElementById('m-cont-card');
   if(ccEl)ccEl.style.display=contAmt>0?'':'none';
   var cmEl=document.getElementById('m-cont');
-  if(cmEl)cmEl.textContent=contAmt>0?'$'+fi(contAmt):'—';
-  document.getElementById('m-sy').textContent=gSY>0?gSY.toFixed(1):'—';
-  document.getElementById('m-tons').textContent=gT>0?gT.toFixed(2):'—';
-  document.getElementById('m-mat').textContent=gM>0?'$'+fi(gM):'—';
+  if(cmEl)cmEl.textContent=contAmt>0?'$'+fi(contAmt):'â';
+  document.getElementById('m-sy').textContent=gSY>0?gSY.toFixed(1):'â';
+  document.getElementById('m-tons').textContent=gT>0?gT.toFixed(2):'â';
+  document.getElementById('m-mat').textContent=gM>0?'$'+fi(gM):'â';
   document.getElementById('m-mob').textContent=mobv>0?'$'+fi(mobv):'$0';
   var ce=document.getElementById('m-cont');if(ce)ce.textContent=contv>0?'$'+fi(contv)+' ('+contPct+'%)':'$0';
-  document.getElementById('m-bid').textContent=total>0?'$'+fi(total):'—';
-  document.getElementById('m-gp').textContent=gp>0?'$'+fi(gp)+' ('+mu(gM,gB).toFixed(1)+'%)':'—';
+  document.getElementById('m-bid').textContent=total>0?'$'+fi(total):'â';
+  document.getElementById('m-gp').textContent=gp>0?'$'+fi(gp)+' ('+mu(gM,gB).toFixed(1)+'%)':'â';
 }
 
-// ── Build payload ─────────────────────────────────────────────────────────────
+// ââ Build payload âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function buildPayload(){
   var wfv=wf(),mobv=mob();
   var name=document.getElementById('proj-name').value||'Unnamed Project';
@@ -911,7 +911,7 @@ function buildPayload(){
   };
 }
 
-// ── PDF export ────────────────────────────────────────────────────────────────
+// ââ PDF export ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function exportPDF(){
   var btn=document.getElementById('pdf-btn');
   btn.disabled=true;btn.textContent='Generating...';
@@ -933,7 +933,7 @@ async function exportPDF(){
   }
 }
 
-// ── Word export ───────────────────────────────────────────────────────────────
+// ââ Word export âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function exportDOCX(){
   var btn=document.getElementById('docx-btn');
   btn.disabled=true;btn.textContent='Generating...';
@@ -955,20 +955,20 @@ async function exportDOCX(){
   }
 }
 
-// ── Site plan ─────────────────────────────────────────────────────────────────
+// ââ Site plan âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function setSitePlan(inp){
   if(!inp.files||!inp.files[0])return;
   var reader=new FileReader();
   reader.onload=function(e){
     sitePlanDataUrl=e.target.result;
-    document.getElementById('site-plan-label').textContent='✓ Plan';
+    document.getElementById('site-plan-label').textContent='â Plan';
     document.getElementById('site-plan-btn').style.borderColor='#27500A';
     toast('Site plan loaded','ok');
   };
   reader.readAsDataURL(inp.files[0]);
 }
 
-// ── Notion ────────────────────────────────────────────────────────────────────
+// ââ Notion ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function pushNotion(){
   var btn=document.getElementById('notion-btn');
   btn.disabled=true;btn.textContent='Saving...';
@@ -998,7 +998,7 @@ async function testNotion(){
   }catch(e){el.innerHTML='<span style="color:#CC0000">Error: '+e.message+'</span>';}
 }
 
-// ── Client autocomplete ───────────────────────────────────────────────────────
+// ââ Client autocomplete âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function loadClients(){
   try{
     var r=await fetch('/notion/clients');
@@ -1040,7 +1040,7 @@ function selectClient(c){
   else bar.style.display='none';
 }
 
-// ── Save / Load ───────────────────────────────────────────────────────────────
+// ââ Save / Load âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function saveQuote(){
   var name=document.getElementById('proj-name').value||('Quote '+(savedQuotes.length+1));
   var snap={name:name,client:document.getElementById('proj-client').value,
@@ -1098,7 +1098,7 @@ function resetAll(){
   toast('Reset');
 }
 
-// ── Settings ──────────────────────────────────────────────────────────────────
+// ââ Settings ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function saveSender(){
   sender={name:document.getElementById('s-name').value,email:document.getElementById('s-email').value,phone:document.getElementById('s-phone').value};
   localStorage.setItem('hd_sender',JSON.stringify(sender));
