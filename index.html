@@ -735,15 +735,34 @@ function renderCOLines(){
     var typeLabel = line.type==='add'?'Add':line.type==='deduct'?'Deduct':'No Cost';
     var typeClass = 'co-type-'+line.type;
     var sub = line.type==='nocost'?'--':'$'+(((parseFloat(line.qty)||1)*(parseFloat(line.price)||0)).toFixed(2));
-    var units = ['LS','SY','SF','TN','LF','EA','HR','DAY'];
-    var unitOpts = units.map(function(u){return '<option'+(u===line.unit?' selected':'')+'>'+u+'</option>';}).join('');
-    tr.innerHTML = '<td style="padding:6px 12px;"><span class="'+typeClass+'">'+typeLabel+'</span></td>'
-      +'<td style="padding:6px 8px;"><input style="width:100%;min-width:180px;" value="'+esc(line.desc)+'" onchange="updateCOLine('+line.id+','desc',this.value)" placeholder="Description..."/></td>'
-      +'<td style="padding:6px 8px;"><input type="number" style="width:70px;text-align:right;" value="'+line.qty+'" onchange="updateCOLine('+line.id+','qty',parseFloat(this.value)||1)"/></td>'
-      +'<td style="padding:6px 8px;"><select onchange="updateCOLine('+line.id+','unit',this.value)" style="width:70px;">'+unitOpts+'</select></td>'
-      +'<td style="padding:6px 8px;"><input type="number" style="width:90px;text-align:right;" value="'+line.price+'" onchange="updateCOLine('+line.id+','price',parseFloat(this.value)||0)"'+(line.type==='nocost'?' disabled':'')+'/></td>'
-      +'<td style="padding:6px 12px;text-align:right;font-weight:600;">'+sub+'</td>'
-      +'<td style="padding:6px 6px;"><button class="btn-ico" onclick="removeCOLine('+line.id+')">&#10005;</button></td>';
+    var lid = line.id;
+    var td0=document.createElement('td'); td0.style.cssText='padding:6px 12px;';
+    var sp=document.createElement('span'); sp.className=typeClass; sp.textContent=typeLabel;
+    td0.appendChild(sp); tr.appendChild(td0);
+    var td1=document.createElement('td'); td1.style.cssText='padding:6px 8px;';
+    var inp1=document.createElement('input'); inp1.style.cssText='width:100%;min-width:180px;';
+    inp1.value=line.desc||''; inp1.placeholder='Description';
+    inp1.addEventListener('change',function(){updateCOLine(lid,'desc',this.value);});
+    td1.appendChild(inp1); tr.appendChild(td1);
+    var td2=document.createElement('td'); td2.style.cssText='padding:6px 8px;';
+    var inp2=document.createElement('input'); inp2.type='number'; inp2.style.cssText='width:70px;text-align:right;'; inp2.value=line.qty||1;
+    inp2.addEventListener('change',function(){updateCOLine(lid,'qty',parseFloat(this.value)||1);});
+    td2.appendChild(inp2); tr.appendChild(td2);
+    var td3=document.createElement('td'); td3.style.cssText='padding:6px 8px;';
+    var sel=document.createElement('select'); sel.style.width='70px';
+    ['LS','SY','SF','TN','LF','EA','HR','DAY'].forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;if(u===line.unit)o.selected=true;sel.appendChild(o);});
+    sel.addEventListener('change',function(){updateCOLine(lid,'unit',this.value);});
+    td3.appendChild(sel); tr.appendChild(td3);
+    var td4=document.createElement('td'); td4.style.cssText='padding:6px 8px;';
+    var inp4=document.createElement('input'); inp4.type='number'; inp4.style.cssText='width:90px;text-align:right;'; inp4.value=line.price||0;
+    if(line.type==='nocost') inp4.disabled=true;
+    inp4.addEventListener('change',function(){updateCOLine(lid,'price',parseFloat(this.value)||0);});
+    td4.appendChild(inp4); tr.appendChild(td4);
+    var td5=document.createElement('td'); td5.style.cssText='padding:6px 12px;text-align:right;font-weight:600;'; td5.textContent=sub; tr.appendChild(td5);
+    var td6=document.createElement('td'); td6.style.cssText='padding:6px 6px;';
+    var remBtn=document.createElement('button'); remBtn.className='btn-ico'; remBtn.innerHTML='&#10005;';
+    remBtn.addEventListener('click',function(){removeCOLine(lid);});
+    td6.appendChild(remBtn); tr.appendChild(td6);
     tbody.appendChild(tr);
   });
   recalcCO();
