@@ -698,7 +698,7 @@ function boot(){
   document.getElementById('contingency').addEventListener('change',function(){recalc();});
   var coD=document.getElementById('co-date');if(coD)coD.value=new Date().toISOString().split('T')[0];
   initEquip();
-  setTimeout(initJobCost, 100);
+  setTimeout(initJobCost, 300);
   var coOA=document.getElementById('co-orig-amount');if(coOA)coOA.addEventListener('input',function(){recalcCO();});
   document.getElementById('contingency').addEventListener('change',function(){recalc();});
   var coD=document.getElementById('co-date');if(coD)coD.value=new Date().toISOString().split('T')[0];
