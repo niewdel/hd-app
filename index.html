@@ -148,6 +148,12 @@ tr:nth-child(even) td{background:#FAFAFA;}
 .modal-body input:focus,.modal-body textarea:focus{outline:none;border-color:#888;}
 .modal-body textarea{resize:vertical;min-height:180px;line-height:1.6;}
 
+.co-type-add{color:#27500A;font-weight:600;}
+.co-type-deduct{color:#A32D2D;font-weight:600;}
+.co-type-nocost{color:#555;font-weight:600;}
+.co-summary{background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;padding:12px 15px;margin-top:10px;}
+.co-summary-row{display:flex;justify-content:space-between;font-size:13px;padding:2px 0;}
+.co-summary-row.total{font-weight:700;font-size:14px;border-top:1px solid var(--bdr);margin-top:4px;padding-top:6px;}
 </style>
 </head>
 <body>
@@ -158,7 +164,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
     <img src="/assets/hd_logo.png" alt="HD Hauling and Grading"/>
   </div>
   <div class="pin-box">
-    <h2>Proposal Generator</h2>
+    <h2>Quote Tool</h2>
     <p>Enter your access PIN to continue</p>
     <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="••••"
            onkeydown="if(event.key==='Enter')doLogin()"/>
@@ -172,12 +178,12 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <aside class="sb">
     <div class="sb-logo">
       <img src="/assets/hd_logo.png" alt="HD Hauling &amp; Grading"/>
-      <p>Proposal Generator</p>
+      <p>Quote Tool</p>
     </div>
     <nav>
       <div class="nav-grp">Quote</div>
       <div class="nav-item on" onclick="showPanel('build',this)">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Build Proposal
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Build Quote
       </div>
       <div class="nav-item" onclick="showPanel('saved',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Quotes
@@ -192,7 +198,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
   <div class="main">
     <div class="topbar">
-      <span class="topbar-title" id="topbar-title">Build Proposal</span>
+      <span class="topbar-title" id="topbar-title">Build Quote</span>
       <div class="topbar-actions">
         <button class="btn btn-sec btn-sm" onclick="saveQuote()">Save</button>
         <button class="btn btn-sec btn-sm" onclick="resetAll()">Reset</button>
@@ -248,7 +254,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div><label>Waste Factor %</label><input id="waste" type="number" value="5" min="0" max="30" step="0.25"/></div>
               <div><label>Contingency %</label><input id="contingency" type="number" value="0" min="0" max="50" step="0.5" title="Applied to total bid as a separate line item on the proposal"/></div>
             <div><label>Mobilization / Flat Fee ($)</label><input id="mob" type="number" value="0" min="0" step="50"/></div>
-              
+              <div><label>Contingency %</label><input id="contingency" type="number" value="0" min="0" max="50" step="0.5"/></div>
               <div><label>Project Notes</label><input id="proj-notes" type="text" placeholder="Notes for the proposal..."/></div>
             </div>
             <div style="margin-top:10px;">
@@ -395,6 +401,79 @@ tr:nth-child(even) td{background:#FAFAFA;}
   </div>
 </div>
 
+
+<!-- Change Orders Panel -->
+<div class="panel" id="co-panel">
+  <div class="topbar">
+    <div class="topbar-title">Change Orders</div>
+    <div class="topbar-actions">
+      <button class="btn btn-sec btn-sm" onclick="resetCO()">Reset</button>
+      <button class="btn btn-red btn-sm" id="co-pdf-btn" onclick="exportCOPDF()">Export CO PDF</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Change Order Info</span></div>
+      <div class="card-body">
+        <div class="fg fg4">
+          <div><label>Project Name</label><input id="co-project" type="text" placeholder="Project name..."/></div>
+          <div><label>Client Name</label><input id="co-client" type="text" placeholder="Client name..."/></div>
+          <div><label>Change Order #</label><input id="co-number" type="number" value="1" min="1"/></div>
+          <div><label>Date</label><input id="co-date" type="date"/></div>
+        </div>
+        <div class="fg fg2" style="margin-top:11px;">
+          <div><label>Original Contract Date</label><input id="co-orig-date" type="date"/></div>
+          <div><label>Original Contract Amount ($)</label><input id="co-orig-amount" type="number" value="0" min="0" step="0.01"/></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Description of Change</span></div>
+      <div class="card-body">
+        <textarea id="co-description" style="width:100%;min-height:80px;" placeholder="Describe the change in scope, reason for change, and any relevant site conditions..."></textarea>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">Change Order Line Items</span>
+        <div style="display:flex;gap:7px;">
+          <button class="btn btn-sec btn-sm" onclick="addCOLine('add')">+ Add</button>
+          <button class="btn btn-sec btn-sm" onclick="addCOLine('deduct')">- Deduct</button>
+          <button class="btn btn-sec btn-sm" onclick="addCOLine('nocost')">No Cost</button>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);">
+              <th style="padding:8px 12px;text-align:left;font-weight:600;">Type</th>
+              <th style="padding:8px 12px;text-align:left;font-weight:600;">Description</th>
+              <th style="padding:8px 12px;text-align:right;font-weight:600;">Qty</th>
+              <th style="padding:8px 12px;text-align:left;font-weight:600;">Unit</th>
+              <th style="padding:8px 12px;text-align:right;font-weight:600;">Unit Price</th>
+              <th style="padding:8px 12px;text-align:right;font-weight:600;">Subtotal</th>
+              <th style="padding:8px 6px;"></th>
+            </tr>
+          </thead>
+          <tbody id="co-lines"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Cost Summary</span></div>
+      <div class="card-body">
+        <div class="co-summary" id="co-summary">
+          <div class="co-summary-row"><span>Original Contract Amount</span><span id="cos-orig">$0</span></div>
+          <div class="co-summary-row co-type-add"><span>This Change Order (Add)</span><span id="cos-add">$0</span></div>
+          <div class="co-summary-row co-type-deduct"><span>This Change Order (Deduct)</span><span id="cos-deduct">$0</span></div>
+          <div class="co-summary-row co-type-nocost"><span>No Cost Changes</span><span id="cos-nocost">--</span></div>
+          <div class="co-summary-row total"><span>Revised Contract Total</span><span id="cos-total">$0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /app -->
 
 <div class="toast" id="toast"></div>
@@ -469,7 +548,11 @@ function boot(){
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('waste').addEventListener('change',function(){renderAll();});
   document.getElementById('contingency').addEventListener('change',function(){recalc();});
+  var coD=document.getElementById('co-date');if(coD)coD.value=new Date().toISOString().split('T')[0];
+  var coOA=document.getElementById('co-orig-amount');if(coOA)coOA.addEventListener('input',function(){recalcCO();});
   document.getElementById('contingency').addEventListener('change',function(){recalc();});
+  var coD=document.getElementById('co-date');if(coD)coD.value=new Date().toISOString().split('T')[0];
+  var coOA=document.getElementById('co-orig-amount');if(coOA)coOA.addEventListener('input',function(){recalcCO();});
   document.getElementById('mob').addEventListener('change',function(){recalc();});
   renderPresets();
   if(!sections.length){
@@ -620,12 +703,140 @@ document.addEventListener('click', function(e){
   if(e.target.id === 'email-modal') closeEmailModal();
 });
 // -- Panel nav -----------------------------------------------------------------
+
+// ---- Change Orders ----
+var coLines = [];
+
+function addCOLine(type){
+  var id = Date.now();
+  coLines.push({id:id,type:type,desc:'',qty:1,unit:'LS',price:0});
+  renderCOLines();
+}
+
+function removeCOLine(id){
+  coLines = coLines.filter(function(l){return l.id!==id;});
+  renderCOLines();
+}
+
+function renderCOLines(){
+  var tbody = document.getElementById('co-lines');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+  if(!coLines.length){
+    var empty = document.createElement('tr');
+    empty.innerHTML = '<td colspan="7" style="padding:16px;text-align:center;color:var(--dgray);">No line items yet. Use Add, Deduct, or No Cost above.</td>';
+    tbody.appendChild(empty);
+    recalcCO();
+    return;
+  }
+  coLines.forEach(function(line){
+    var tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--bdr)';
+    var typeLabel = line.type==='add'?'Add':line.type==='deduct'?'Deduct':'No Cost';
+    var typeClass = 'co-type-'+line.type;
+    var sub = line.type==='nocost'?'--':'$'+(((parseFloat(line.qty)||1)*(parseFloat(line.price)||0)).toFixed(2));
+    var units = ['LS','SY','SF','TN','LF','EA','HR','DAY'];
+    var unitOpts = units.map(function(u){return '<option'+(u===line.unit?' selected':'')+'>'+u+'</option>';}).join('');
+    tr.innerHTML = '<td style="padding:6px 12px;"><span class="'+typeClass+'">'+typeLabel+'</span></td>'
+      +'<td style="padding:6px 8px;"><input style="width:100%;min-width:180px;" value="'+esc(line.desc)+'" onchange="updateCOLine('+line.id+','desc',this.value)" placeholder="Description..."/></td>'
+      +'<td style="padding:6px 8px;"><input type="number" style="width:70px;text-align:right;" value="'+line.qty+'" onchange="updateCOLine('+line.id+','qty',parseFloat(this.value)||1)"/></td>'
+      +'<td style="padding:6px 8px;"><select onchange="updateCOLine('+line.id+','unit',this.value)" style="width:70px;">'+unitOpts+'</select></td>'
+      +'<td style="padding:6px 8px;"><input type="number" style="width:90px;text-align:right;" value="'+line.price+'" onchange="updateCOLine('+line.id+','price',parseFloat(this.value)||0)"'+(line.type==='nocost'?' disabled':'')+'/></td>'
+      +'<td style="padding:6px 12px;text-align:right;font-weight:600;">'+sub+'</td>'
+      +'<td style="padding:6px 6px;"><button class="btn-ico" onclick="removeCOLine('+line.id+')">&#10005;</button></td>';
+    tbody.appendChild(tr);
+  });
+  recalcCO();
+}
+
+function updateCOLine(id,field,val){
+  var line = coLines.find(function(l){return l.id===id;});
+  if(line) line[field]=val;
+  recalcCO();
+}
+
+function recalcCO(){
+  var origAmt = parseFloat(document.getElementById('co-orig-amount')?document.getElementById('co-orig-amount').value:0)||0;
+  var addTotal=0,deductTotal=0,hasNocost=false;
+  coLines.forEach(function(l){
+    var sub=(parseFloat(l.qty)||1)*(parseFloat(l.price)||0);
+    if(l.type==='add') addTotal+=sub;
+    else if(l.type==='deduct') deductTotal+=sub;
+    else hasNocost=true;
+  });
+  var revised=origAmt+addTotal-deductTotal;
+  var g=function(id){return document.getElementById(id);};
+  if(g('cos-orig')) g('cos-orig').textContent='$'+fi(origAmt);
+  if(g('cos-add')) g('cos-add').textContent=addTotal>0?'+$'+fi(addTotal):'$0';
+  if(g('cos-deduct')) g('cos-deduct').textContent=deductTotal>0?'-$'+fi(deductTotal):'$0';
+  if(g('cos-nocost')) g('cos-nocost').textContent=hasNocost?'Yes':'--';
+  if(g('cos-total')) g('cos-total').textContent='$'+fi(revised);
+}
+
+function resetCO(){
+  coLines=[];
+  renderCOLines();
+  ['co-project','co-client','co-description'].forEach(function(id){
+    var e=document.getElementById(id);if(e)e.value='';
+  });
+  var e=document.getElementById('co-number');if(e)e.value=1;
+  var e2=document.getElementById('co-orig-amount');if(e2)e2.value=0;
+  var d=new Date().toISOString().split('T')[0];
+  var e3=document.getElementById('co-date');if(e3)e3.value=d;
+  recalcCO();
+}
+
+function buildCOPayload(){
+  var g=function(id){return document.getElementById(id);};
+  var coNum=parseInt(g('co-number')?g('co-number').value:1)||1;
+  var project=g('co-project')?g('co-project').value:'';
+  var client=g('co-client')?g('co-client').value:'';
+  var date=g('co-date')?g('co-date').value:'';
+  var origDate=g('co-orig-date')?g('co-orig-date').value:'';
+  var origAmt=parseFloat(g('co-orig-amount')?g('co-orig-amount').value:0)||0;
+  var desc=g('co-description')?g('co-description').value:'';
+  var fmt=function(d){if(!d)return '';var p=d.split('-');return p[1]+'/'+p[2]+'/'+p[0];};
+  var addTotal=0,deductTotal=0;
+  var items=coLines.map(function(l){
+    var sub=l.type==='nocost'?0:(parseFloat(l.qty)||1)*(parseFloat(l.price)||0);
+    if(l.type==='add') addTotal+=sub;
+    else if(l.type==='deduct') deductTotal+=sub;
+    return {type:l.type,description:l.desc,qty:parseFloat(l.qty)||1,unit:l.unit,price:parseFloat(l.price)||0,subtotal:sub};
+  });
+  return {
+    co_number:coNum,project_name:project,client_name:client,
+    date:fmt(date),orig_contract_date:fmt(origDate),orig_contract_amount:origAmt,
+    description:desc,line_items:items,
+    add_total:addTotal,deduct_total:deductTotal,
+    revised_total:origAmt+addTotal-deductTotal,
+    sender_name:sender.name,sender_phone:sender.phone,sender_email:sender.email
+  };
+}
+
+async function exportCOPDF(){
+  var btn=document.getElementById('co-pdf-btn');
+  var p=buildCOPayload();
+  if(!p.project_name){alert('Please enter a project name.');return;}
+  if(!p.line_items.length){alert('Please add at least one line item.');return;}
+  btn.textContent='Generating...';btn.disabled=true;
+  try{
+    var r=await fetch('/generate-co-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+    if(!r.ok){var e=await r.json().catch(function(){return {};});throw new Error(e.error||r.status);}
+    var blob=await r.blob();
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download='HD_CO_'+p.co_number+'_'+p.project_name.replace(/\s+/g,'_')+'.pdf';
+    a.click();URL.revokeObjectURL(url);
+  }catch(e){alert('Error: '+e.message);}
+  btn.textContent='Export CO PDF';btn.disabled=false;
+}
+
 function showPanel(id,el){
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
-  document.getElementById('topbar-title').textContent={build:'Build Proposal',saved:'Saved Quotes',settings:'Settings'}[id]||id;
+  document.getElementById('topbar-title').textContent={build:'Build Quote',saved:'Saved Quotes',settings:'Settings'}[id]||id;
   if(id==='saved')renderSaved();
   if(id==='settings'){loadSenderUI();renderPresetMgr();renderMatPriceInputs();}
 }
