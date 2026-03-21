@@ -388,7 +388,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <!-- SAVED PANEL -->
       <div class="panel" id="panel-saved">
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Saved Quotes</span></div>
+          <div class="card-hdr"><span class="card-title">Saved Proposals</span></div>
           <div class="card-body" id="saved-list"><p style="color:var(--dgray);font-size:13px;">No saved quotes yet.</p></div>
         </div>
       </div>
@@ -698,7 +698,7 @@ function boot(){
   document.getElementById('contingency').addEventListener('change',function(){recalc();});
   var coD=document.getElementById('co-date');if(coD)coD.value=new Date().toISOString().split('T')[0];
   initEquip();
-  initJobCost();
+  setTimeout(initJobCost, 100);
   var coOA=document.getElementById('co-orig-amount');if(coOA)coOA.addEventListener('input',function(){recalcCO();});
   document.getElementById('contingency').addEventListener('change',function(){recalc();});
   var coD=document.getElementById('co-date');if(coD)coD.value=new Date().toISOString().split('T')[0];
