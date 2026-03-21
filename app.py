@@ -177,6 +177,25 @@ def notion_push():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/generate-co-pdf', methods=['POST'])
+@require_auth
+def generate_co_pdf():
+    data = request.get_json(force=True)
+    try:
+        from generate_change_order import build as co_build
+        tmp = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+        tmp.close()
+        co_build(data, tmp.name)
+        with open(tmp.name, 'rb') as f:
+            pdf_bytes = f.read()
+        os.unlink(tmp.name)
+        from flask import Response
+        return Response(pdf_bytes, mimetype='application/pdf',
+            headers={'Content-Disposition': 'attachment; filename=change_order.pdf'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/health')
 def health():
     return jsonify({'status': 'ok'})
