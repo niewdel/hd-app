@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>HD Hauling &amp; Grading — Proposal Generator</title>
+<title>HD Hauling &amp; Grading - Proposal Generator</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -993,8 +993,8 @@ async function testNotion(){
   try{
     var r=await fetch('/notion/clients');
     var d=await r.json();
-    if(r.ok&&d.results)el.innerHTML='<span style="color:#3B6D11;font-weight:600">&#10003; Connected — '+d.results.length+' clients loaded</span>';
-    else el.innerHTML='<span style="color:#CC0000">Failed — check NOTION_KEY in Railway variables</span>';
+    if(r.ok&&d.results)el.innerHTML='<span style="color:#3B6D11;font-weight:600">&#10003; Connected - '+d.results.length+' clients loaded</span>';
+    else el.innerHTML='<span style="color:#CC0000">Failed - check NOTION_KEY in Railway variables</span>';
   }catch(e){el.innerHTML='<span style="color:#CC0000">Error: '+e.message+'</span>';}
 }
 
