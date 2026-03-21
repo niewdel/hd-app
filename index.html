@@ -158,7 +158,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
     <img src="/assets/hd_logo.png" alt="HD Hauling and Grading"/>
   </div>
   <div class="pin-box">
-    <h2>Quote Tool</h2>
+    <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
     <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="••••"
            onkeydown="if(event.key==='Enter')doLogin()"/>
@@ -172,12 +172,12 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <aside class="sb">
     <div class="sb-logo">
       <img src="/assets/hd_logo.png" alt="HD Hauling &amp; Grading"/>
-      <p>Quote Tool</p>
+      <p>Proposal Generator</p>
     </div>
     <nav>
       <div class="nav-grp">Quote</div>
       <div class="nav-item on" onclick="showPanel('build',this)">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Build Quote
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Build Proposal
       </div>
       <div class="nav-item" onclick="showPanel('saved',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Quotes
@@ -192,7 +192,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
   <div class="main">
     <div class="topbar">
-      <span class="topbar-title" id="topbar-title">Build Quote</span>
+      <span class="topbar-title" id="topbar-title">Build Proposal</span>
       <div class="topbar-actions">
         <button class="btn btn-sec btn-sm" onclick="saveQuote()">Save</button>
         <button class="btn btn-sec btn-sm" onclick="resetAll()">Reset</button>
@@ -248,7 +248,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div><label>Waste Factor %</label><input id="waste" type="number" value="5" min="0" max="30" step="0.25"/></div>
               <div><label>Contingency %</label><input id="contingency" type="number" value="0" min="0" max="50" step="0.5" title="Applied to total bid as a separate line item on the proposal"/></div>
             <div><label>Mobilization / Flat Fee ($)</label><input id="mob" type="number" value="0" min="0" step="50"/></div>
-              <div><label>Contingency %</label><input id="contingency" type="number" value="0" min="0" max="50" step="0.5"/></div>
+              
               <div><label>Project Notes</label><input id="proj-notes" type="text" placeholder="Notes for the proposal..."/></div>
             </div>
             <div style="margin-top:10px;">
@@ -625,7 +625,7 @@ function showPanel(id,el){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
-  document.getElementById('topbar-title').textContent={build:'Build Quote',saved:'Saved Quotes',settings:'Settings'}[id]||id;
+  document.getElementById('topbar-title').textContent={build:'Build Proposal',saved:'Saved Quotes',settings:'Settings'}[id]||id;
   if(id==='saved')renderSaved();
   if(id==='settings'){loadSenderUI();renderPresetMgr();renderMatPriceInputs();}
 }
