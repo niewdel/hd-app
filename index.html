@@ -812,7 +812,7 @@ function cont(){return parseFloat(document.getElementById('contingency').value)|
 function mu(m,b){return m>0?((b-m)/m*100):0;}
 function fi(n){return Math.round(n).toLocaleString();}
 function f2(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function esc(s){return(s||'').replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function toast(msg,type){
   var t=document.getElementById('toast');
   t.textContent=msg;t.className='toast '+(type==='ok'?'ok':type==='err'?'err':'');
@@ -1096,7 +1096,7 @@ function renderPhaseTabs(){
     ni.addEventListener('click',function(e){e.stopPropagation();});
     (function(idx){ni.addEventListener('change',function(){renamePhase(idx,this.value);});})(i);
     tab.appendChild(ni);
-    if(phases.length>1){var rem=document.createElement('span');rem.innerHTML='&times;';rem.style.cssText='cursor:pointer;opacity:.7;font-size:13px;';(function(idx){rem.addEventListener('click',function(e){e.stopPropagation();removePhase(idx);});})(i);tab.appendChild(rem);}
+    if(phases.length>1){var rem=document.createElement('span');rem.innerHTML='\u00D7';rem.style.cssText='cursor:pointer;opacity:.7;font-size:13px;';(function(idx){rem.addEventListener('click',function(e){e.stopPropagation();removePhase(idx);});})(i);tab.appendChild(rem);}
     (function(idx){tab.addEventListener('click',function(){switchPhase(idx);});})(i);
     c.appendChild(tab);
   });
@@ -1118,7 +1118,7 @@ function addPhase(){var num=phases.length+1;phases.push({id:phaseSid++,name:'Pha
 function switchPhase(idx){phases[activePhaseIdx].sections=sections.slice();phases[activePhaseIdx].concItems=concItems.slice();phases[activePhaseIdx].extraItems=extraItems.slice();activePhaseIdx=idx;sections=phases[idx].sections;concItems=phases[idx].concItems;extraItems=phases[idx].extraItems;renderPhaseTabs();renderAll();renderConc();renderExtra();recalc();}
 function renamePhase(idx,n){phases[idx].name=n||('Phase '+(idx+1));renderPhaseTabs();updatePhaseMetric();}
 function removePhase(idx){if(phases.length<=1){toast('Need at least one phase','err');return;}phases.splice(idx,1);if(activePhaseIdx>=phases.length)activePhaseIdx=phases.length-1;sections=phases[activePhaseIdx].sections;concItems=phases[activePhaseIdx].concItems;extraItems=phases[activePhaseIdx].extraItems;var btn=document.getElementById('phase-toggle-btn');if(btn)btn.textContent=phases.length+' Phases';renderPhaseTabs();renderAll();renderConc();renderExtra();recalc();}
-function renderPhaseTabs(){var c=document.getElementById('phase-tabs');if(!c)return;c.innerHTML='';phases.forEach(function(ph,i){var tab=document.createElement('div');tab.className='phase-tab'+(i===activePhaseIdx?' on':'');var ni=document.createElement('input');ni.type='text';ni.value=ph.name;ni.className='phase-tab-name';ni.style.cssText='width:'+Math.max(60,ph.name.length*8)+'px;';ni.addEventListener('click',function(e){e.stopPropagation();});(function(idx){ni.addEventListener('change',function(){renamePhase(idx,this.value);});})(i);tab.appendChild(ni);if(phases.length>1){var rem=document.createElement('span');rem.innerHTML='&times;';rem.style.cssText='cursor:pointer;opacity:.7;font-size:13px;';(function(idx){rem.addEventListener('click',function(e){e.stopPropagation();removePhase(idx);});})(i);tab.appendChild(rem);}(function(idx){tab.addEventListener('click',function(){switchPhase(idx);});})(i);c.appendChild(tab);});}
+function renderPhaseTabs(){var c=document.getElementById('phase-tabs');if(!c)return;c.innerHTML='';phases.forEach(function(ph,i){var tab=document.createElement('div');tab.className='phase-tab'+(i===activePhaseIdx?' on':'');var ni=document.createElement('input');ni.type='text';ni.value=ph.name;ni.className='phase-tab-name';ni.style.cssText='width:'+Math.max(60,ph.name.length*8)+'px;';ni.addEventListener('click',function(e){e.stopPropagation();});(function(idx){ni.addEventListener('change',function(){renamePhase(idx,this.value);});})(i);tab.appendChild(ni);if(phases.length>1){var rem=document.createElement('span');rem.innerHTML='\u00D7';rem.style.cssText='cursor:pointer;opacity:.7;font-size:13px;';(function(idx){rem.addEventListener('click',function(e){e.stopPropagation();removePhase(idx);});})(i);tab.appendChild(rem);}(function(idx){tab.addEventListener('click',function(){switchPhase(idx);});})(i);c.appendChild(tab);});}
 function updatePhaseMetric(){if(!multiPhase)return;var lbl=document.getElementById('m-phase-lbl');if(lbl)lbl.textContent=phases[activePhaseIdx].name;}
 function checkMobile(){
   isMobile = window.innerWidth <= 768;
