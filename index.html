@@ -200,6 +200,11 @@ tr:nth-child(even) td{background:#FAFAFA;}
   .mobile-bar { display:flex !important; }
 }
 
+.phase-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:#fff;color:var(--dgray);transition:all .12s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
+.phase-tab.on{background:var(--blk);color:#fff;border-color:var(--blk);}
+.phase-tab:hover:not(.on){border-color:#999;color:var(--blk);}
+.phase-tab-name{background:none;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);padding:0;color:inherit;outline:none;}
+.phase-tab.on .phase-tab-name{color:#fff;}
 </style>
 </head>
 <body>
@@ -260,6 +265,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="topbar-actions">
         <button class="btn btn-sec btn-sm" onclick="saveQuote()">Save</button>
         <button class="btn btn-sec btn-sm" onclick="resetAll()">Reset</button>
+        <button class="btn btn-sec btn-sm" id="phase-toggle-btn" onclick="toggleMultiPhase()" title="Toggle multi-phase bidding">1 Phase</button>
         <input type="file" id="site-plan-input" accept="image/*" style="display:none" onchange="setSitePlan(this)"/>
         <button class="btn btn-sec btn-sm" onclick="document.getElementById('site-plan-input').click()" id="site-plan-btn" title="Upload site plan image for PDF">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v10H2zm1 9l3-4 2 2 2-3 3 5z"/></svg>
@@ -325,7 +331,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
 
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Pavement Sections</span></div>
+                <div id="phase-tabs-bar" style="display:none;margin-bottom:10px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><div id="phase-tabs" style="display:flex;gap:6px;flex-wrap:wrap;"></div><button class="btn btn-sec btn-sm" onclick="addPhase()" style="white-space:nowrap;">+ Phase</button></div></div>
+      <div class="card-hdr"><span class="card-title">Pavement Sections</span></div>
           <div class="card-body" style="padding-bottom:8px;">
             <div class="preset-strip" id="presets"></div>
             <div id="sections"></div>
@@ -364,6 +371,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div class="metric"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">$0</div></div>
           <div class="metric" id="m-equip-card" style="display:none"><div class="metric-lbl">Equip Cost</div><div class="metric-val" id="m-equip">-</div></div>
           <div class="metric-val" id="m-cont">—</div></div>
+          <div class="metric" id="m-phase-card" style="display:none;"><div class="metric-lbl" id="m-phase-lbl">Phase 1</div><div class="metric-val" id="m-phase">-</div></div>
           <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">—</div></div>
           <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">—</div></div>
         </div>
@@ -708,6 +716,10 @@ var PRESETS = [
 
 // -- State ---------------------------------------------------------------------
 var sections=[], sid=0, lid=0;
+var multiPhase=false;
+var phases=[{id:1,name:'Phase 1',sections:[],concItems:[],extraItems:[]}];
+var activePhaseIdx=0;
+var phaseSid=1;
 var concItems=[], cid=0;
 var extraItems=[], eid=0;
 var savedQuotes=[];
@@ -1029,6 +1041,58 @@ function initJobCost(){
 
 // ---- Mobile Responsive (#15) ----
 var isMobile = false;
+
+// ---- Multi-Phase Bidding (#14) ----
+function toggleMultiPhase(){
+  multiPhase=!multiPhase;
+  var btn=document.getElementById('phase-toggle-btn');var bar=document.getElementById('phase-tabs-bar');
+  if(multiPhase){
+    phases[0].sections=sections.slice();phases[0].concItems=concItems.slice();phases[0].extraItems=extraItems.slice();
+    if(btn)btn.textContent=phases.length+' Phases';if(bar)bar.style.display='block';
+    renderPhaseTabs();var mc=document.getElementById('m-phase-card');if(mc)mc.style.display='';
+  }else{
+    sections=phases[activePhaseIdx].sections;concItems=phases[activePhaseIdx].concItems;extraItems=phases[activePhaseIdx].extraItems;
+    if(btn)btn.textContent='1 Phase';if(bar)bar.style.display='none';
+    var mc=document.getElementById('m-phase-card');if(mc)mc.style.display='none';
+  }
+  renderAll();renderConc();renderExtra();recalc();
+}
+function addPhase(){
+  var num=phases.length+1;phases.push({id:phaseSid++,name:'Phase '+num,sections:[],concItems:[],extraItems:[]});
+  var btn=document.getElementById('phase-toggle-btn');if(btn)btn.textContent=phases.length+' Phases';
+  renderPhaseTabs();switchPhase(phases.length-1);
+}
+function switchPhase(idx){
+  phases[activePhaseIdx].sections=sections.slice();phases[activePhaseIdx].concItems=concItems.slice();phases[activePhaseIdx].extraItems=extraItems.slice();
+  activePhaseIdx=idx;sections=phases[idx].sections;concItems=phases[idx].concItems;extraItems=phases[idx].extraItems;
+  renderPhaseTabs();renderAll();renderConc();renderExtra();recalc();
+}
+function renamePhase(idx,n){phases[idx].name=n||('Phase '+(idx+1));renderPhaseTabs();updatePhaseMetric();}
+function removePhase(idx){
+  if(phases.length<=1){toast('Need at least one phase','err');return;}
+  phases.splice(idx,1);if(activePhaseIdx>=phases.length)activePhaseIdx=phases.length-1;
+  sections=phases[activePhaseIdx].sections;concItems=phases[activePhaseIdx].concItems;extraItems=phases[activePhaseIdx].extraItems;
+  var btn=document.getElementById('phase-toggle-btn');if(btn)btn.textContent=phases.length+' Phases';
+  renderPhaseTabs();renderAll();renderConc();renderExtra();recalc();
+}
+function renderPhaseTabs(){
+  var c=document.getElementById('phase-tabs');if(!c)return;c.innerHTML='';
+  phases.forEach(function(ph,i){
+    var tab=document.createElement('div');tab.className='phase-tab'+(i===activePhaseIdx?' on':'');
+    var ni=document.createElement('input');ni.type='text';ni.value=ph.name;ni.className='phase-tab-name';
+    ni.style.cssText='width:'+Math.max(60,ph.name.length*8)+'px;';
+    ni.addEventListener('click',function(e){e.stopPropagation();});
+    (function(idx){ni.addEventListener('change',function(){renamePhase(idx,this.value);});})(i);
+    tab.appendChild(ni);
+    if(phases.length>1){var rem=document.createElement('span');rem.innerHTML='&times;';rem.style.cssText='cursor:pointer;opacity:.7;font-size:13px;';(function(idx){rem.addEventListener('click',function(e){e.stopPropagation();removePhase(idx);});})(i);tab.appendChild(rem);}
+    (function(idx){tab.addEventListener('click',function(){switchPhase(idx);});})(i);
+    c.appendChild(tab);
+  });
+}
+function updatePhaseMetric(){
+  if(!multiPhase)return;
+  var lbl=document.getElementById('m-phase-lbl');if(lbl)lbl.textContent=phases[activePhaseIdx].name;
+}
 function checkMobile(){
   isMobile = window.innerWidth <= 768;
   var bar = document.getElementById('mobile-bar');
@@ -1654,6 +1718,7 @@ function renderExtra(){
 // -- Recalc --------------------------------------------------------------------
 function recalc(){
   var bk=document.getElementById('breakdown');bk.innerHTML='';
+  if(multiPhase){phases[activePhaseIdx].sections=sections;phases[activePhaseIdx].concItems=concItems;phases[activePhaseIdx].extraItems=extraItems;}
   var wfv=wf(),mobv=mob();
   var gSF=0,gSY=0,gT=0,gM=0,gB=0;
   sections.forEach(function(s){
@@ -1707,6 +1772,7 @@ function recalc(){
   var contPct=cont(),contv=gB>0?Math.round(gB*contPct/100*100)/100:0;
   var total=gB+mobv+contv,gp=gB-gM;
   document.getElementById('m-sf').textContent=gSF>0?gSF.toLocaleString():'-';
+  updatePhaseMetric();
   var ccEl=document.getElementById('m-cont-card');
   renderJobCost();
   if(ccEl)ccEl.style.display=contAmt>0?'':'none';
@@ -1925,6 +1991,7 @@ function saveQuote(){
   var p=buildPayload();
   var equipGT=0;try{var eEl=document.getElementById('equip-grand-total');if(eEl){equipGT=parseFloat(eEl.textContent.replace(/[$,]/g,''))||0;}}catch(e){}
   snap.equip_cost=equipGT;
+  if(multiPhase){phases[activePhaseIdx].sections=sections;phases[activePhaseIdx].concItems=concItems;phases[activePhaseIdx].extraItems=extraItems;snap.phases=phases.map(function(ph){return {id:ph.id,name:ph.name};});snap.multi_phase=true;}
   var jcData=calcJobCost();snap.jc_labor_cost=jcData.laborCost;snap.jc_overhead_pct=jcData.ovhPct;snap.jc_total_cost=jcData.totalCost;snap.jc_margin_pct=jcData.marginPct;
   savedQuotes.push({id:Date.now(),name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});
   saveStorage();renderSaved();
