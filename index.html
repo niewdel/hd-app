@@ -257,6 +257,37 @@ tr:nth-child(even) td{background:#FAFAFA;}
 .phase-tab:hover:not(.on){border-color:#999;color:var(--blk);}
 .phase-tab-name{background:none;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);padding:0;color:inherit;outline:none;}
 .phase-tab.on .phase-tab-name{color:#fff;}
+
+/* Pipeline Kanban */
+.kb-col{background:#F4F4F4;border-radius:8px;min-width:210px;max-width:210px;display:flex;flex-direction:column;flex-shrink:0;}
+.kb-col-hdr{padding:10px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;color:#fff;}
+.kb-col-hdr .kb-count{background:rgba(255,255,255,.3);border-radius:10px;padding:1px 7px;font-size:11px;}
+.kb-cards{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:100px;flex:1;}
+.kb-card{background:#fff;border:1px solid var(--bdr);border-radius:6px;padding:10px 12px;cursor:default;transition:box-shadow .12s;}
+.kb-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.kb-card-name{font-weight:600;font-size:13px;margin-bottom:3px;}
+.kb-card-client{font-size:11px;color:var(--dgray);margin-bottom:4px;}
+.kb-card-total{font-size:12px;font-weight:700;}
+.kb-card-date{font-size:10px;color:var(--dgray);margin-top:3px;}
+.kb-card-moves{margin-top:7px;display:flex;flex-wrap:wrap;gap:3px;}
+.kb-move-btn{background:none;border:1px solid var(--bdr);border-radius:4px;font-size:10px;padding:2px 6px;cursor:pointer;color:var(--dgray);}
+.kb-move-btn:hover{background:var(--lgray);color:var(--blk);}
+.kb-open-btn{font-size:10px;padding:2px 7px;}
+.kb-add-btn{margin:6px 8px 8px;padding:6px;background:none;border:1px dashed var(--bdr);border-radius:6px;color:var(--dgray);font-size:12px;cursor:pointer;text-align:center;}
+.kb-add-btn:hover{border-color:#999;background:#fafafa;}
+.kb-won{border-left:3px solid #27500A;}
+.kb-lost{border-left:3px solid #A32D2D;}
+.kb-disq{border-left:3px solid #888;opacity:.65;}
+.kb-stat-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.kb-stat{background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:10px 14px;flex:1;min-width:110px;}
+.kb-stat-lbl{font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;}
+.kb-stat-val{font-size:19px;font-weight:700;margin-top:2px;}
+/* Client cards */
+.client-card{background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:11px;}
+.client-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.client-info{flex:1;}
+.client-name{font-weight:600;font-size:13px;}
+.client-sub{font-size:11px;color:var(--dgray);margin-top:2px;}
 </style>
 </head>
 <body>
@@ -306,6 +337,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" onclick="showPanel('saved',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Proposals
       </div>
+      <div class="nav-item" onclick="showPanel('pipeline',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 3h3v10H1zm4 0h3v10H5zm4 0h3v10H9zm4 0h2v10h-2z"/></svg>Pipeline</div>
+      <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
       <div class="nav-item" onclick="showPanel('analytics',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v3H1zm4-4h3v7H5zm4-4h3v11H9zm4-6h2v17h-2z"/></svg>Analytics</div>
       <div class="nav-grp">Admin</div>
       <div class="nav-item" onclick="showPanel('settings',this)">
@@ -481,6 +514,34 @@ tr:nth-child(even) td{background:#FAFAFA;}
             </div>
             <div class="card-body" id="saved-list"><p style="color:var(--dgray);font-size:13px;">No saved quotes yet.</p></div>
           </div>
+        </div>
+      </div>
+
+      <!-- PIPELINE PANEL -->
+      <div class="panel" id="panel-pipeline">
+        <div class="topbar">
+          <span class="topbar-title">Pipeline</span>
+          <div class="topbar-actions">
+            <button class="btn btn-sec btn-sm" onclick="renderPipeline()">Refresh</button>
+          </div>
+        </div>
+        <div class="content" style="padding:16px;max-width:none;">
+          <div id="pipeline-board" style="overflow-x:auto;">
+            <div style="color:var(--dgray);font-size:13px;padding:20px;">Loading pipeline...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENTS PANEL -->
+      <div class="panel" id="panel-clients">
+        <div class="topbar">
+          <span class="topbar-title">Clients</span>
+          <div class="topbar-actions">
+            <button class="btn btn-red btn-sm" onclick="openClientModal()">+ New Client</button>
+          </div>
+        </div>
+        <div class="content">
+          <div id="clients-list"></div>
         </div>
       </div>
 
@@ -1389,10 +1450,12 @@ function showPanel(id,el){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
-  document.getElementById('topbar-title').textContent={build:'Build Proposal',saved:'Saved Proposals',settings:'Settings',co:'Change Orders',analytics:'Analytics'}[id]||id;
+  document.getElementById('topbar-title').textContent={build:'Build Proposal',saved:'Saved Proposals',settings:'Settings',co:'Change Orders',analytics:'Analytics',pipeline:'Pipeline',clients:'Clients'}[id]||id;
   if(id==='saved')renderSaved();
   if(id==='settings'){loadSenderUI();renderPresetMgr();renderMatPriceInputs();}
   if(id==='analytics')setTimeout(renderAnalytics,50);
+  if(id==='pipeline')setTimeout(renderPipeline,50);
+  if(id==='clients')setTimeout(renderClients,50);
   if(typeof isMobile!=='undefined'&&isMobile)closeMobileNav();
 }
 
@@ -2097,6 +2160,224 @@ function renderPresetMgr(){
       +'</div>';
   }).join('');
 }
+
+// == Pipeline ==
+var pipelineStages = [];
+var pipelineProposals = [];
+
+async function renderPipeline() {
+  var board = document.getElementById('pipeline-board');
+  if (!board) return;
+  board.innerHTML = '<div style="color:var(--dgray);font-size:13px;padding:20px;">Loading...</div>';
+  try {
+    var rs = await fetch('/pipeline/stages');
+    var rp = await fetch('/pipeline/list');
+    var ds = await rs.json();
+    var dp = await rp.json();
+    if (!ds.ok || !dp.ok) throw new Error('Failed to load');
+    pipelineStages = ds.stages;
+    pipelineProposals = dp.proposals;
+
+    var won   = pipelineProposals.filter(function(p){ return p.pipeline_stages && p.pipeline_stages.name==='Won'; });
+    var lost  = pipelineProposals.filter(function(p){ return p.pipeline_stages && p.pipeline_stages.name==='Lost'; });
+    var active = pipelineProposals.filter(function(p){ return !p.pipeline_stages || !p.pipeline_stages.is_closed; });
+    var wonTotal = won.reduce(function(s,p){return s+(parseFloat(p.total)||0);},0);
+    var winRate = (won.length+lost.length)>0 ? Math.round(won.length/(won.length+lost.length)*100) : 0;
+
+    board.innerHTML = '';
+
+    var statRow = document.createElement('div');
+    statRow.className = 'kb-stat-row';
+    [{lbl:'Active Leads',val:active.length,col:'var(--blk)'},
+     {lbl:'Win Rate',val:winRate+'%',col:winRate>=50?'#27500A':winRate>=30?'#B25000':'#A32D2D'},
+     {lbl:'Won Revenue',val:'$'+Math.round(wonTotal).toLocaleString(),col:'#27500A'},
+     {lbl:'Total Proposals',val:pipelineProposals.length,col:'var(--blk)'},
+    ].forEach(function(s){
+      var d=document.createElement('div');d.className='kb-stat';
+      d.innerHTML='<div class="kb-stat-lbl">'+s.lbl+'</div>'
+        +'<div class="kb-stat-val" style="color:'+s.col+'">'+s.val+'</div>';
+      statRow.appendChild(d);
+    });
+    board.appendChild(statRow);
+
+    var cols = document.createElement('div');
+    cols.style.cssText = 'display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;align-items:flex-start;';
+
+    pipelineStages.forEach(function(stage){
+      var cards = pipelineProposals.filter(function(p){return p.stage_id===stage.id;});
+      var col = document.createElement('div');
+      col.className = 'kb-col';
+
+      var hdr = document.createElement('div');
+      hdr.className = 'kb-col-hdr';
+      hdr.style.background = stage.color||'#888';
+      hdr.innerHTML = '<span>'+esc(stage.name)+'</span><span class="kb-count">'+cards.length+'</span>';
+      col.appendChild(hdr);
+
+      var cardsDiv = document.createElement('div');
+      cardsDiv.className = 'kb-cards';
+
+      cards.forEach(function(p){
+        var card = document.createElement('div');
+        var sn = p.pipeline_stages ? p.pipeline_stages.name : '';
+        card.className = 'kb-card'+(sn==='Won'?' kb-won':sn==='Lost'?' kb-lost':sn==='Disqualified'?' kb-disq':'');
+        var moveOpts = pipelineStages.filter(function(s){return s.id!==stage.id;})
+          .map(function(s){return '<button class="kb-move-btn" onclick="moveCard('+p.id+','+s.id+')">'+esc(s.name)+'</button>';}).join('');
+        card.innerHTML = '<div class="kb-card-name">'+esc(p.name||'Untitled')+'</div>'
+          +'<div class="kb-card-client">'+esc(p.client||'')+'</div>'
+          +'<div class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'-')+'</div>'
+          +'<div class="kb-card-date">'+(p.date||((p.created_at||'').split('T')[0])||'')+'</div>'
+          +'<div class="kb-card-moves">'
+          +'<button class="btn btn-sec btn-sm kb-open-btn" onclick="loadProposalFromPipeline('+p.id+')">Open</button>'
+          +moveOpts+'</div>';
+        cardsDiv.appendChild(card);
+      });
+      col.appendChild(cardsDiv);
+
+      var addBtn = document.createElement('button');
+      addBtn.className = 'kb-add-btn';
+      addBtn.textContent = '+ Add to stage';
+      addBtn.onclick = function(){showPanel('build',document.querySelector('.nav-item'));};
+      col.appendChild(addBtn);
+      cols.appendChild(col);
+    });
+    board.appendChild(cols);
+  } catch(e) {
+    board.innerHTML = '<div style="color:var(--red);padding:20px;">Error: '+e.message+'</div>';
+  }
+}
+
+async function moveCard(proposalId, stageId) {
+  try {
+    await fetch('/pipeline/move/'+proposalId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage_id:stageId})});
+    renderPipeline();
+    toast('Moved','ok');
+  } catch(e){toast('Move failed: '+e.message,'err');}
+}
+
+function loadProposalFromPipeline(id) {
+  loadQuote(id);
+  showPanel('build', document.querySelector('.nav-item'));
+}
+
+// == Clients ==
+var clientsList = [];
+var editingClientId = null;
+
+async function renderClients() {
+  var container = document.getElementById('clients-list');
+  if (!container) return;
+  container.innerHTML = '<p style="color:var(--dgray);font-size:13px;">Loading...</p>';
+  try {
+    var r = await fetch('/clients/list');
+    var d = await r.json();
+    if (!d.ok) throw new Error(d.error);
+    clientsList = d.clients;
+    container.innerHTML = '';
+    if (!clientsList.length) {
+      container.innerHTML = '<p style="color:var(--dgray);font-size:13px;">No clients yet. Add your first client above.</p>';
+      return;
+    }
+    clientsList.forEach(function(c){
+      var card = document.createElement('div');
+      card.className = 'client-card';
+      var initials = (c.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+      card.innerHTML = '<div class="client-avatar">'+initials+'</div>'
+        +'<div class="client-info">'
+        +'<div class="client-name">'+esc(c.name)+(c.company?' <span style="font-weight:400;color:var(--dgray);">- '+esc(c.company)+'</span>':'')+'</div>'
+        +'<div class="client-sub">'+[c.phone,c.email,c.city_state].filter(Boolean).map(esc).join(' | ')+'</div>'
+        +'</div>'
+        +'<button class="btn btn-sec btn-sm" onclick="editClient('+c.id+')">Edit</button>'
+        +'<button class="btn-ico" onclick="deleteClient('+c.id+')">x</button>';
+      container.appendChild(card);
+    });
+    clients = clientsList.map(function(c){return {name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||''};});
+  } catch(e){container.innerHTML='<p style="color:var(--red);font-size:13px;">Error: '+e.message+'</p>';}
+}
+
+function openClientModal(prefill) {
+  editingClientId = null;
+  document.getElementById('client-modal-title').textContent = 'New Client';
+  ['name','company','phone','email','address','city','notes'].forEach(function(f){
+    var el = document.getElementById('cm-'+f); if(el) el.value = (prefill&&prefill[f])||'';
+  });
+  document.getElementById('client-modal').classList.remove('hidden');
+}
+
+function editClient(id) {
+  var c = clientsList.find(function(x){return x.id===id;}); if(!c) return;
+  editingClientId = id;
+  document.getElementById('client-modal-title').textContent = 'Edit Client';
+  document.getElementById('cm-name').value    = c.name||'';
+  document.getElementById('cm-company').value = c.company||'';
+  document.getElementById('cm-phone').value   = c.phone||'';
+  document.getElementById('cm-email').value   = c.email||'';
+  document.getElementById('cm-address').value = c.address||'';
+  document.getElementById('cm-city').value    = c.city_state||'';
+  document.getElementById('cm-notes').value   = c.notes||'';
+  document.getElementById('client-modal').classList.remove('hidden');
+}
+
+function closeClientModal() {
+  document.getElementById('client-modal').classList.add('hidden');
+  editingClientId = null;
+}
+
+async function saveClient() {
+  var name = document.getElementById('cm-name').value.trim();
+  if (!name){toast('Name is required','err');return;}
+  var data = {
+    name:       name,
+    company:    document.getElementById('cm-company').value.trim(),
+    phone:      document.getElementById('cm-phone').value.trim(),
+    email:      document.getElementById('cm-email').value.trim(),
+    address:    document.getElementById('cm-address').value.trim(),
+    city_state: document.getElementById('cm-city').value.trim(),
+    notes:      document.getElementById('cm-notes').value.trim(),
+  };
+  try {
+    if (editingClientId) {
+      await fetch('/clients/update/'+editingClientId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      toast('Client updated','ok');
+    } else {
+      await fetch('/clients/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      toast('Client saved','ok');
+    }
+    closeClientModal();
+    renderClients();
+  } catch(e){toast('Error: '+e.message,'err');}
+}
+
+async function deleteClient(id) {
+  if(!confirm('Delete this client?')) return;
+  try {
+    await fetch('/clients/delete/'+id,{method:'DELETE'});
+    toast('Client deleted','ok');
+    renderClients();
+  } catch(e){toast('Error: '+e.message,'err');}
+}
+
+document.addEventListener('click',function(e){if(e.target.id==='client-modal')closeClientModal();});
 </script>
+
+<!-- Client Modal -->
+<div id="client-modal" class="modal-overlay hidden">
+  <div class="modal" style="width:460px;">
+    <div class="modal-hdr"><h3 id="client-modal-title">New Client</h3><button class="btn-ico" onclick="closeClientModal()">x</button></div>
+    <div class="modal-body">
+      <label>Full Name *</label><input id="cm-name" type="text" placeholder="Client full name"/>
+      <label>Company</label><input id="cm-company" type="text" placeholder="Company name"/>
+      <label>Phone</label><input id="cm-phone" type="tel" placeholder="(555) 000-0000"/>
+      <label>Email</label><input id="cm-email" type="email" placeholder="email@example.com"/>
+      <label>Address</label><input id="cm-address" type="text" placeholder="Street address"/>
+      <label>City, State</label><input id="cm-city" type="text" placeholder="Charlotte, NC"/>
+      <label>Notes</label><textarea id="cm-notes" style="min-height:70px;"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-sec" onclick="closeClientModal()">Cancel</button>
+      <button class="btn btn-red" onclick="saveClient()">Save Client</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
