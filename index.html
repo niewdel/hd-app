@@ -14,18 +14,24 @@
 body{font-family:var(--font);background:#EBEBEB;color:var(--blk);font-size:14px;line-height:1.5;}
 
 /* Login */
-#login-screen{position:fixed;inset:0;background:#0f0f0f;display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:20px;}
-.login-bar{position:absolute;top:0;left:0;right:0;background:#fff;padding:12px 24px;display:flex;align-items:center;}
-.login-bar img{height:40px;width:auto;}
-.pin-box{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:32px 40px;width:320px;text-align:center;}
-.pin-box h2{color:#fff;font-size:15px;font-weight:600;margin-bottom:4px;}
-.pin-box p{color:#666;font-size:12px;margin-bottom:20px;}
-.pin-input{width:100%;padding:11px;text-align:center;font-size:22px;font-weight:700;letter-spacing:8px;background:#111;border:1px solid #333;border-radius:8px;color:#fff;margin-bottom:12px;font-family:var(--font);}
-.pin-input:focus{outline:none;border-color:var(--red);}
-.pin-btn{width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);}
-.pin-btn:hover{background:#aa0000;}
-.pin-err{font-size:12px;color:var(--red);margin-top:8px;min-height:16px;}
-
+#login-screen{position:fixed;inset:0;background:#080808;z-index:1000;display:flex;flex-direction:column;overflow:hidden;}
+#login-canvas{position:absolute;inset:0;z-index:0;pointer-events:none;}
+.login-bar{position:relative;z-index:2;background:#ffffff;padding:10px 28px;display:flex;align-items:center;}
+.login-bar img{height:42px;width:auto;display:block;}
+.login-body{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;}
+.login-card{width:340px;text-align:center;}
+.login-eyebrow{font-size:10px;font-weight:700;letter-spacing:4px;color:var(--red);text-transform:uppercase;margin-bottom:18px;}
+.login-heading{font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;margin-bottom:6px;}
+.login-sub{font-size:12px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;margin-bottom:36px;}
+.login-rule{width:32px;height:2px;background:var(--red);margin:0 auto 36px;border-radius:2px;}
+.pin-input{width:100%;padding:15px 20px;text-align:center;font-size:26px;font-weight:700;letter-spacing:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:#fff;margin-bottom:12px;font-family:var(--font);box-sizing:border-box;transition:border-color .2s,background .2s;}
+.pin-input:focus{outline:none;border-color:var(--red);background:rgba(204,0,0,0.04);}
+.pin-input::placeholder{color:rgba(255,255,255,0.12);letter-spacing:10px;font-size:18px;}
+.pin-btn{width:100%;padding:14px 20px;background:var(--red);color:#fff;border:none;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-family:var(--font);transition:background .2s,opacity .2s;}
+.pin-btn:hover{background:#b30000;}
+.pin-btn:active{opacity:.85;}
+.pin-err{font-size:11px;color:#ff6b6b;margin-top:12px;min-height:16px;letter-spacing:0.3px;}
+.login-footer{position:relative;z-index:2;text-align:center;padding:20px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.12);}
 /* App */
 #app{display:none;}
 #app.on{display:grid;grid-template-columns:210px 1fr;min-height:100vh;}
@@ -297,18 +303,25 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
 <!-- LOGIN -->
 <div id="login-screen">
+  <canvas id="login-canvas"></canvas>
   <div class="login-bar">
-    <img src="/hd_logo.png" alt="HD Hauling and Grading" style="height:44px;width:auto;display:block;"/>
+    <img src="/hd_logo.png" alt="HD Hauling and Grading" style="height:42px;width:auto;display:block;"/>
   </div>
-  <div class="pin-box">
-    <h2>Proposal Generator</h2>
-    <p>Enter your access PIN to continue</p>
-    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢"
-           onkeydown="if(event.key==='Enter')doLogin()"/>
-    <button class="pin-btn" onclick="doLogin()">Access Tool</button>
-    <div class="pin-err" id="pin-err"></div>
+  <div class="login-body">
+    <div class="login-card">
+      <div class="login-eyebrow">HD Hauling &amp; Grading</div>
+      <div class="login-heading">Proposal Generator</div>
+      <div class="login-sub">Internal use only &nbsp;&middot;&nbsp; Authorized access required</div>
+      <div class="login-rule"></div>
+      <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="&bull;&bull;&bull;&bull;" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off"/>
+      <button class="pin-btn" onclick="doLogin()">Access Tool</button>
+      <div class="pin-err" id="pin-err"></div>
+    </div>
   </div>
+  <div class="login-footer">Confidential &nbsp;&middot;&nbsp; Not for distribution</div>
 </div>
+
+
 
 <!-- APP -->
 <!-- Mobile top bar -->
@@ -2450,6 +2463,7 @@ async function deleteClient(id) {
 }
 
 document.addEventListener('click',function(e){if(e.target.id==='client-modal')closeClientModal();});
+function initLoginCanvas(){var cv=document.getElementById('login-canvas');if(!cv)return;var ctx=cv.getContext('2d');var W,H,pts;var N=55;function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}function rr(a,b){return a+Math.random()*(b-a);}function init(){resize();pts=[];for(var i=0;i<N;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:rr(-0.15,0.15),vy:rr(-0.15,0.15),r:rr(1,2)});}function draw(){ctx.clearRect(0,0,W,H);for(var i=0;i<N;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;}for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){var dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<150){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(170,170,170,'+(1-dist/150)*0.15+')';ctx.lineWidth=0.5;ctx.stroke();}if(dist<75){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(204,0,0,'+(1-dist/75)*0.2+')';ctx.lineWidth=0.6;ctx.stroke();}}for(var i=0;i<N;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,6.28);ctx.fillStyle='rgba(255,255,255,0.22)';ctx.fill();}requestAnimationFrame(draw);}window.addEventListener('resize',resize);init();draw();}initLoginCanvas();
 </script>
 
 <!-- Client Modal -->
