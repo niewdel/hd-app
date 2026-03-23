@@ -303,7 +303,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <div class="pin-box">
     <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
-    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="â¢â¢â¢â¢"
+    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="Ã¢ÂÂ¢Ã¢ÂÂ¢Ã¢ÂÂ¢Ã¢ÂÂ¢"
            onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="pin-btn" onclick="doLogin()">Access Tool</button>
     <div class="pin-err" id="pin-err"></div>
@@ -873,33 +873,30 @@ function toast(msg,type){
 
 // -- Email --------------------------------------------------------------------
 function openEmailModal(){
-  var p = buildPayload();
-  var client = document.getElementById('proj-client').value || '';
-  var firstName = client.split(' ')[0] || client;
-  var addr = [p.address, p.city_state].filter(Boolean).join(', ');
-  var total = p.total ? '$' + Math.round(p.total).toLocaleString() : '';
-
-  document.getElementById('email-subject').value =
-    'HD Hauling & Grading - Paving Proposal: ' + (p.project_name || 'Project');
-
-  var body = (firstName || 'Hello') + ',\n\n'
-    + 'Thank you for the opportunity to work with you. Please find attached our Paving Proposal '
-    + 'and Contract for ' + (p.project_name || 'your project')
-    + (addr ? ' located at ' + addr : '') + '.\n\n'
-    + 'Total Bid Price: ' + total + '\n\n'
-    + 'Please review the attached proposal, including the Terms and Conditions, at your earliest '
-    + 'convenience. This proposal is valid for thirty (30) days from the date of issuance.\n\n'
-    + 'To move forward, please sign and return the attached contract or reach out with any '
-    + 'questions. We look forward to working with you.\n\n'
-    + 'Best regards,\n'
-    + (sender.name || 'HD Hauling & Grading') + '\n'
-    + (sender.phone ? sender.phone + '\n' : '')
-    + (sender.email ? sender.email : '');
-
-  document.getElementById('email-body').value = body;
-  document.getElementById('email-status').textContent = '';
+  var p=buildPayload();
+  var client=document.getElementById('proj-client').value||'';
+  var firstName=client.split(' ')[0]||client;
+  var addr=[p.address,p.city_state].filter(Boolean).join(', ');
+  var total=p.total?'$'+Math.round(p.total).toLocaleString():'';
+  document.getElementById('email-subject').value='HD Hauling & Grading - Paving Proposal: '+(p.project_name||'Project');
+  var nl='\n';
+  var body=(firstName||'Hello')+','+nl+nl
+    +'Thank you for the opportunity to work with you. Please find attached our Paving Proposal '
+    +'and Contract for '+(p.project_name||'your project')
+    +(addr?' located at '+addr:'')+'.'+nl+nl
+    +'Total Bid Price: '+total+nl+nl
+    +'Please review the attached proposal, including the Terms and Conditions, at your earliest '
+    +'convenience. This proposal is valid for thirty (30) days from the date of issuance.'+nl+nl
+    +'To move forward, please sign and return the attached contract or reach out with any '
+    +'questions. We look forward to working with you.'+nl+nl
+    +'Best regards,'+nl
+    +(sender.name||'HD Hauling & Grading')+nl
+    +(sender.phone?sender.phone+nl:'')
+    +(sender.email?sender.email:'');
+  document.getElementById('email-body').value=body;
+  document.getElementById('email-status').textContent='';
   document.getElementById('email-modal').classList.remove('hidden');
-  setTimeout(function(){ document.getElementById('email-body').focus(); }, 100);
+  setTimeout(function(){document.getElementById('email-body').focus();},100);
 }
 function closeEmailModal(){
   document.getElementById('email-modal').classList.add('hidden');
@@ -917,9 +914,21 @@ function copyEmailField(id){
 }
 
 function copyEmailAll(){
-  var subj = document.getElementById('email-subject').value;
-  var body = document.getElementById('email-body').value;
-  var all = 'Subject: ' + subj + '
+  var subj=document.getElementById('email-subject').value;
+  var body=document.getElementById('email-body').value;
+  var all='Subject: '+subj+'\n\n'+body;
+  try{
+    navigator.clipboard.writeText(all).then(function(){
+      var st=document.getElementById('email-status');
+      if(st){st.textContent='Copied!';setTimeout(function(){st.textContent='';},2000);}
+    });
+  }catch(e){
+    var ta=document.createElement('textarea');ta.value=all;ta.style.cssText='position:fixed;opacity:0;';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    var st=document.getElementById('email-status');
+    if(st){st.textContent='Copied!';setTimeout(function(){st.textContent='';},2000);}
+  }
+}
 
 ' + body;
   try {
