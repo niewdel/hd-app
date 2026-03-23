@@ -545,6 +545,118 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
       </div>
 
+      <!-- CHANGE ORDERS PANEL -->
+      <div class="panel" id="panel-co">
+              <div class="topbar">
+                <div class="topbar-title">Change Orders</div>
+                <div class="topbar-actions">
+                  <button class="btn btn-sec btn-sm" onclick="resetCO()">Reset</button>
+                  <button class="btn btn-red btn-sm" id="co-pdf-btn" onclick="exportCOPDF()">Export CO PDF</button>
+                </div>
+              </div>
+              <div class="content">
+                <div class="card">
+                  <div class="card-hdr"><span class="card-title">Change Order Info</span></div>
+                  <div class="card-body">
+                    <div class="fg fg4">
+                      <div><label>Project Name</label><input id="co-project" type="text" placeholder="Project name..."/></div>
+                      <div><label>Client Name</label><input id="co-client" type="text" placeholder="Client name..."/></div>
+                      <div><label>Change Order #</label><input id="co-number" type="number" value="1" min="1"/></div>
+                      <div><label>Date</label><input id="co-date" type="date"/></div>
+                    </div>
+                    <div class="fg fg2" style="margin-top:11px;">
+                      <div><label>Original Contract Date</label><input id="co-orig-date" type="date"/></div>
+                      <div><label>Original Contract Amount ($)</label><input id="co-orig-amount" type="number" value="0" min="0" step="0.01"/></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-hdr"><span class="card-title">Description of Change</span></div>
+                  <div class="card-body">
+                    <textarea id="co-description" style="width:100%;min-height:80px;" placeholder="Describe the change in scope, reason for change, and any relevant site conditions..."></textarea>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-hdr">
+                    <span class="card-title">Change Order Line Items</span>
+                    <div style="display:flex;gap:7px;">
+                      <button class="btn btn-sec btn-sm" onclick="addCOLine('add')">+ Add</button>
+                      <button class="btn btn-sec btn-sm" onclick="addCOLine('deduct')">- Deduct</button>
+                      <button class="btn btn-sec btn-sm" onclick="addCOLine('nocost')">No Cost</button>
+                    </div>
+                  </div>
+                  <div class="card-body" style="padding:0;">
+                    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                      <thead>
+                        <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);">
+                          <th style="padding:8px 12px;text-align:left;font-weight:600;">Type</th>
+                          <th style="padding:8px 12px;text-align:left;font-weight:600;">Description</th>
+                          <th style="padding:8px 12px;text-align:right;font-weight:600;">Qty</th>
+                          <th style="padding:8px 12px;text-align:left;font-weight:600;">Unit</th>
+                          <th style="padding:8px 12px;text-align:right;font-weight:600;">Unit Price</th>
+                          <th style="padding:8px 12px;text-align:right;font-weight:600;">Subtotal</th>
+                          <th style="padding:8px 6px;"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="co-lines"></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-hdr"><span class="card-title">Cost Summary</span></div>
+                  <div class="card-body">
+                    <div class="co-summary" id="co-summary">
+                      <div class="co-summary-row"><span>Original Contract Amount</span><span id="cos-orig">$0</span></div>
+                      <div class="co-summary-row co-type-add"><span>This Change Order (Add)</span><span id="cos-add">$0</span></div>
+                      <div class="co-summary-row co-type-deduct"><span>This Change Order (Deduct)</span><span id="cos-deduct">$0</span></div>
+                      <div class="co-summary-row co-type-nocost"><span>No Cost Changes</span><span id="cos-nocost">--</span></div>
+                      <div class="co-summary-row total"><span>Revised Contract Total</span><span id="cos-total">$0</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+      <!-- ANALYTICS PANEL -->
+      <div class="panel" id="panel-analytics">
+              <div class="topbar">
+                <div class="topbar-title">Analytics</div>
+                <div class="topbar-actions">
+                  <button class="btn btn-sec btn-sm" onclick="renderAnalytics()">Refresh</button>
+                </div>
+              </div>
+              <div class="content">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px;" id="analytics-summary"></div>
+                <div class="card">
+                  <div class="card-hdr">
+                    <span class="card-title">Bid vs Equipment Cost</span>
+                    <span style="font-size:11px;color:var(--dgray);">Equipment cost only - does not include labor, materials, or overhead</span>
+                  </div>
+                  <div class="card-body" style="padding:0;">
+                    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                      <thead>
+                        <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);">
+                          <th style="padding:8px 12px;text-align:left;font-weight:600;">Project</th>
+                          <th style="padding:8px 12px;text-align:left;font-weight:600;">Client</th>
+                          <th style="padding:8px 12px;text-align:left;font-weight:600;">Date</th>
+                          <th style="padding:8px 12px;text-align:right;font-weight:600;">Bid Price</th>
+                                        <th style="padding:8px 12px;text-align:right;font-weight:600;">Margin $</th>
+                          <th style="padding:8px 12px;text-align:right;font-weight:600;">Margin %</th>
+                        </tr>
+                      </thead>
+                      <tbody id="analytics-tbody"></tbody>
+                    </table>
+                    <div id="analytics-empty" style="padding:24px;text-align:center;color:var(--dgray);font-size:13px;display:none;">No saved quotes yet. Save proposals from Build Proposal to see analytics here.</div>
+                  </div>
+                </div>
+                <div style="font-size:11px;color:var(--dgray);margin-top:8px;text-align:center;">
+                  <span style="color:#27500A;">Green = 30%+</span> &nbsp;
+                  <span style="color:#B25000;">Yellow = 15-30%</span> &nbsp;
+                  <span style="color:#A32D2D;">Red = under 15%</span>
+                </div>
+              </div>
+            </div>
+
       <!-- SETTINGS PANEL -->
       <div class="panel" id="panel-settings">
         <div class="card">
@@ -560,116 +672,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
 
       <!-- Change Orders Panel -->
-      <div class="panel" id="panel-co">
-        <div class="topbar">
-          <div class="topbar-title">Change Orders</div>
-          <div class="topbar-actions">
-            <button class="btn btn-sec btn-sm" onclick="resetCO()">Reset</button>
-            <button class="btn btn-red btn-sm" id="co-pdf-btn" onclick="exportCOPDF()">Export CO PDF</button>
-          </div>
-        </div>
-        <div class="content">
-          <div class="card">
-            <div class="card-hdr"><span class="card-title">Change Order Info</span></div>
-            <div class="card-body">
-              <div class="fg fg4">
-                <div><label>Project Name</label><input id="co-project" type="text" placeholder="Project name..."/></div>
-                <div><label>Client Name</label><input id="co-client" type="text" placeholder="Client name..."/></div>
-                <div><label>Change Order #</label><input id="co-number" type="number" value="1" min="1"/></div>
-                <div><label>Date</label><input id="co-date" type="date"/></div>
-              </div>
-              <div class="fg fg2" style="margin-top:11px;">
-                <div><label>Original Contract Date</label><input id="co-orig-date" type="date"/></div>
-                <div><label>Original Contract Amount ($)</label><input id="co-orig-amount" type="number" value="0" min="0" step="0.01"/></div>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-hdr"><span class="card-title">Description of Change</span></div>
-            <div class="card-body">
-              <textarea id="co-description" style="width:100%;min-height:80px;" placeholder="Describe the change in scope, reason for change, and any relevant site conditions..."></textarea>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-hdr">
-              <span class="card-title">Change Order Line Items</span>
-              <div style="display:flex;gap:7px;">
-                <button class="btn btn-sec btn-sm" onclick="addCOLine('add')">+ Add</button>
-                <button class="btn btn-sec btn-sm" onclick="addCOLine('deduct')">- Deduct</button>
-                <button class="btn btn-sec btn-sm" onclick="addCOLine('nocost')">No Cost</button>
-              </div>
-            </div>
-            <div class="card-body" style="padding:0;">
-              <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                <thead>
-                  <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);">
-                    <th style="padding:8px 12px;text-align:left;font-weight:600;">Type</th>
-                    <th style="padding:8px 12px;text-align:left;font-weight:600;">Description</th>
-                    <th style="padding:8px 12px;text-align:right;font-weight:600;">Qty</th>
-                    <th style="padding:8px 12px;text-align:left;font-weight:600;">Unit</th>
-                    <th style="padding:8px 12px;text-align:right;font-weight:600;">Unit Price</th>
-                    <th style="padding:8px 12px;text-align:right;font-weight:600;">Subtotal</th>
-                    <th style="padding:8px 6px;"></th>
-                  </tr>
-                </thead>
-                <tbody id="co-lines"></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-hdr"><span class="card-title">Cost Summary</span></div>
-            <div class="card-body">
-              <div class="co-summary" id="co-summary">
-                <div class="co-summary-row"><span>Original Contract Amount</span><span id="cos-orig">$0</span></div>
-                <div class="co-summary-row co-type-add"><span>This Change Order (Add)</span><span id="cos-add">$0</span></div>
-                <div class="co-summary-row co-type-deduct"><span>This Change Order (Deduct)</span><span id="cos-deduct">$0</span></div>
-                <div class="co-summary-row co-type-nocost"><span>No Cost Changes</span><span id="cos-nocost">--</span></div>
-                <div class="co-summary-row total"><span>Revised Contract Total</span><span id="cos-total">$0</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- Analytics Panel -->
-      <div class="panel" id="panel-analytics">
-        <div class="topbar">
-          <div class="topbar-title">Analytics</div>
-          <div class="topbar-actions">
-            <button class="btn btn-sec btn-sm" onclick="renderAnalytics()">Refresh</button>
-          </div>
-        </div>
-        <div class="content">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px;" id="analytics-summary"></div>
-          <div class="card">
-            <div class="card-hdr">
-              <span class="card-title">Bid vs Equipment Cost</span>
-              <span style="font-size:11px;color:var(--dgray);">Equipment cost only - does not include labor, materials, or overhead</span>
-            </div>
-            <div class="card-body" style="padding:0;">
-              <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                <thead>
-                  <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);">
-                    <th style="padding:8px 12px;text-align:left;font-weight:600;">Project</th>
-                    <th style="padding:8px 12px;text-align:left;font-weight:600;">Client</th>
-                    <th style="padding:8px 12px;text-align:left;font-weight:600;">Date</th>
-                    <th style="padding:8px 12px;text-align:right;font-weight:600;">Bid Price</th>
-                                  <th style="padding:8px 12px;text-align:right;font-weight:600;">Margin $</th>
-                    <th style="padding:8px 12px;text-align:right;font-weight:600;">Margin %</th>
-                  </tr>
-                </thead>
-                <tbody id="analytics-tbody"></tbody>
-              </table>
-              <div id="analytics-empty" style="padding:24px;text-align:center;color:var(--dgray);font-size:13px;display:none;">No saved quotes yet. Save proposals from Build Proposal to see analytics here.</div>
-            </div>
-          </div>
-          <div style="font-size:11px;color:var(--dgray);margin-top:8px;text-align:center;">
-            <span style="color:#27500A;">Green = 30%+</span> &nbsp;
-            <span style="color:#B25000;">Yellow = 15-30%</span> &nbsp;
-            <span style="color:#A32D2D;">Red = under 15%</span>
-          </div>
-        </div>
-      </div>
         <div class="card">
           <div class="card-hdr">
             <span class="card-title">Material Prices ($/ton)</span>
