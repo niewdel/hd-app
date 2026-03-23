@@ -303,7 +303,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <div class="pin-box">
     <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
-    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="â¢â¢â¢â¢"
+    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="Ã¢ÂÂ¢Ã¢ÂÂ¢Ã¢ÂÂ¢Ã¢ÂÂ¢"
            onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="pin-btn" onclick="doLogin()">Access Tool</button>
     <div class="pin-err" id="pin-err"></div>
@@ -1808,7 +1808,7 @@ function updateConcResult(id){
   var matCost=item.qty*(parseFloat(item.mat)||0),subC=item.qty*item.sub,bR=concBid(item),bidC=item.qty*bR,mp=mu(matCost+subC,bidC);
   var resEl=document.querySelector('.lres[data-conc="'+id+'"]');
   var muEl=document.querySelector('.mubadge[data-conc="'+id+'"]');
-  if(resEl)resEl.innerHTML=item.qty>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  mat+sub <b>$'+fi(matCost+subC)+'</b>  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty and rates</span>'; sub rate</span>';
+  if(resEl)resEl.innerHTML=item.qty>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  mat+sub <b>$'+fi(matCost+subC)+'</b>  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty and rates</span>';
   if(muEl){muEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
 }
 function renderConc(){
