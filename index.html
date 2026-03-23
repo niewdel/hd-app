@@ -791,12 +791,11 @@ function loadStorage(){
   try{
     var s=localStorage.getItem('hd_sender');if(s)sender=JSON.parse(s);
     var p=localStorage.getItem('hd_presets');if(p)PRESETS=JSON.parse(p);
-    var q=localStorage.getItem('hd_quotes');if(q)savedQuotes=JSON.parse(q);
     var mp=localStorage.getItem('hd_mat_prices');
     if(mp){var mpd=JSON.parse(mp);if(mpd.prices)Object.assign(MAT,mpd.prices);}
   }catch(e){}
 }
-function saveStorage(){localStorage.setItem('hd_quotes',JSON.stringify(savedQuotes));}
+function saveStorage(){} // quotes now stored server-side
 
 // -- Helpers -------------------------------------------------------------------
 function tons(sf,d,lbs){return(sf*(d/12)*lbs)/2000;}
@@ -1182,7 +1181,7 @@ function renderAnalytics(){
   if(!tbody||!summary) return;
   var quotes=[];
   if(typeof savedQuotes!=='undefined'&&savedQuotes.length) quotes=savedQuotes;
-  else{try{var s=localStorage.getItem('hd_quotes');if(s)quotes=JSON.parse(s);}catch(e){}}
+  // quotes loaded from server via renderSaved
   tbody.innerHTML=''; summary.innerHTML='';
   if(!quotes.length){
     if(emptyMsg)emptyMsg.style.display='block';
