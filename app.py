@@ -1,4 +1,4 @@
-import os, tempfile, functools
+import os, tempfile, functools, json
 from flask import Flask, request, jsonify, session, send_file
 from generate_proposal import build
 try:
@@ -9,12 +9,13 @@ except ImportError:
     GMAIL_AVAILABLE = False
 import generate_docx
 import requests as http
+import db  # quote storage
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 app.secret_key = os.environ.get('SECRET_KEY', 'hd-hauling-dev-key')
 
 APP_PIN         = os.environ.get('APP_PIN', '2025')
-NOTION_KEY      = os.environ.get('NOTION_KEY', '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')
+NOTION_KEY      = os.environ.get('NOTION_KEY', '')
 NOTION_PIPELINE = os.environ.get('NOTION_PIPELINE', '2ada1cc5891b80bebe53fde6c337bf8b')
 NOTION_CLIENTS  = os.environ.get('NOTION_CLIENTS',  '2ada1cc5891b804cbaa1c4d2577b674c')
 NOTION_VER      = '2022-06-28'
@@ -26,6 +27,8 @@ def require_auth(f):
             return jsonify({'error': 'Unauthorized'}), 401
         return f(*args, **kwargs)
     return decorated
+
+# ── Static / Auth ─────────────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
@@ -49,175 +52,200 @@ def logout():
 def auth_check():
     return jsonify({'authenticated': bool(session.get('authenticated'))})
 
+# ── Quote Storage ─────────────────────────────────────────────────────────────
+
+@app.route('/quotes/save', methods=['POST'])
+@require_auth
+def quotes_save():
+    data = request.get_json() or {}
+    try:
+        qid = db.save_quote(
+            name   = data.get('name', 'Unnamed'),
+            client = data.get('client', ''),
+            date   = data.get('date', ''),
+            total  = data.get('total', 0),
+            snap   = json.dumps(data.get('snap', {}))
+        )
+        return jsonify({'ok': True, 'id': qid})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/quotes/list')
+@require_auth
+def quotes_list():
+    try:
+        quotes = db.list_quotes()
+        # Parse snap back to object so the client gets it as JSON
+        for q in quotes:
+            try:
+                q['snap'] = json.loads(q['snap'])
+            except Exception:
+                pass
+        return jsonify({'ok': True, 'quotes': quotes})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/quotes/delete/<int:qid>', methods=['DELETE'])
+@require_auth
+def quotes_delete(qid):
+    try:
+        db.delete_quote(qid)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ── PDF / DOCX ────────────────────────────────────────────────────────────────
+
 @app.route('/generate-pdf', methods=['POST'])
 @require_auth
 def generate_pdf():
-    tmp_path = None
+    data = request.get_json()
+    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+        out = f.name
     try:
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'No data provided'}), 400
-        if not data.get('project_name'):
-            return jsonify({'error': 'project_name is required'}), 400
-        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
-            tmp_path = tmp.name
-        build(data, tmp_path)
-        with open(tmp_path, 'rb') as f:
-            pdf_bytes = f.read()
-        project_name = data.get('project_name', 'Proposal').replace(' ', '_')
-        return app.response_class(
-            pdf_bytes,
-            mimetype='application/pdf',
-            headers={
-                'Content-Disposition': f'attachment; filename="HD_Proposal_{project_name}.pdf"',
-                'Content-Length': len(pdf_bytes),
-            }
-        )
+        build(data, out)
+        return send_file(out, mimetype='application/pdf',
+                         as_attachment=True,
+                         download_name='HD_Proposal.pdf')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        if tmp_path and os.path.exists(tmp_path):
-            try: os.unlink(tmp_path)
-            except: pass
-
 
 @app.route('/generate-docx', methods=['POST'])
 @require_auth
 def generate_docx_route():
+    data = request.get_json()
+    with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as f:
+        out = f.name
     try:
-        data = request.get_json(force=True)
-        buf  = generate_docx.build(data)
-        fname = (data.get('project_name','Proposal') or 'Proposal').replace(' ','_')
-        return send_file(buf, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document', as_attachment=True, download_name=f'HD_Proposal_{fname}.docx')
+        generate_docx.build(data, out)
+        return send_file(out, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                         as_attachment=True,
+                         download_name='HD_Proposal.docx')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
-@app.route('/send-email', methods=['POST'])
-@require_auth
-def send_email_route():
-    if not GMAIL_AVAILABLE:
-        return jsonify({'error': 'Gmail API not installed on server.'}), 500
-    data       = request.get_json(force=True)
-    to         = data.get('to','').strip()
-    subject    = data.get('subject','').strip()
-    body_text  = data.get('body','').strip()
-    pdf_b64    = data.get('pdf_b64','')
-    pdf_fn     = data.get('pdf_filename','HD_Proposal.pdf')
-    if not to or not subject:
-        return jsonify({'error': 'Recipient and subject required'}), 400
-    token_json = os.environ.get('GMAIL_TOKEN_JSON','')
-    if not token_json:
-        return jsonify({'error': 'Gmail not configured. Add GMAIL_TOKEN_JSON to Railway environment variables.'}), 500
-    try:
-        import json as _j
-        td = _j.loads(token_json)
-        creds = Credentials(
-            token=td.get('token'), refresh_token=td.get('refresh_token'),
-            token_uri=td.get('token_uri','https://oauth2.googleapis.com/token'),
-            client_id=td.get('client_id'), client_secret=td.get('client_secret'),
-            scopes=td.get('scopes',['https://www.googleapis.com/auth/gmail.send'])
-        )
-        msg = MIMEMultipart()
-        msg['to'] = to; msg['subject'] = subject
-        msg.attach(MIMEText(body_text, 'plain'))
-        if pdf_b64:
-            pdf_bytes = base64.b64decode(pdf_b64)
-            part = MIMEBase('application','pdf'); part.set_payload(pdf_bytes)
-            email_encoders.encode_base64(part)
-            part.add_header('Content-Disposition', f'attachment; filename="{pdf_fn}"')
-            msg.attach(part)
-        svc = gmail_build('gmail','v1',credentials=creds)
-        raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
-        svc.users().messages().send(userId='me', body={'raw': raw}).execute()
-        return jsonify({'ok': True})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/notion/clients')
-@require_auth
-def notion_clients():
-    try:
-        r = http.post(
-            f'https://api.notion.com/v1/databases/{NOTION_CLIENTS}/query',
-            headers={'Authorization': f'Bearer {NOTION_KEY}', 'Notion-Version': NOTION_VER, 'Content-Type': 'application/json'},
-            json={'page_size': 100}, timeout=10
-        )
-        return jsonify(r.json()), r.status_code
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/notion/push', methods=['POST'])
-@require_auth
-def notion_push():
-    try:
-        data = request.get_json() or {}
-        payload = {
-            'parent': {'database_id': NOTION_PIPELINE},
-            'properties': {
-                'Project Name': {'title': [{'text': {'content': data.get('project_name','')}}]},
-                'Scope Notes':  {'rich_text': [{'text': {'content': data.get('client_name','') + ' | ' + data.get('address','')}}]},
-                
-                'Due Date':     {'date': {'start': data.get('date_iso', '')}} if data.get('date_iso') else None,
-                'Status':    {'select': {'name': 'Quoted'}},
-                
-                
-            }
-        }
-        r = http.post(
-            'https://api.notion.com/v1/pages',
-            headers={'Authorization': f'Bearer {NOTION_KEY}', 'Notion-Version': NOTION_VER, 'Content-Type': 'application/json'},
-            json=payload, timeout=10
-        )
-        resp = r.json()
-        if r.ok:
-            pid = resp.get('id','').replace('-','')
-            return jsonify({'ok': True, 'url': f'https://notion.so/{pid}'})
-        return jsonify({'error': resp.get('message','Notion error')}), r.status_code
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/generate-jc-pdf', methods=['POST'])
-@require_auth
-def generate_jc_pdf():
-    data = request.get_json(force=True)
-    try:
-        from generate_job_cost import build as jc_build
-        tmp = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
-        tmp.close()
-        jc_build(data, tmp.name)
-        with open(tmp.name, 'rb') as f:
-            pdf_bytes = f.read()
-        os.unlink(tmp.name)
-        from flask import Response
-        return Response(pdf_bytes, mimetype='application/pdf',
-            headers={'Content-Disposition': 'attachment; filename=job_cost.pdf'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 
 @app.route('/generate-co-pdf', methods=['POST'])
 @require_auth
 def generate_co_pdf():
-    data = request.get_json(force=True)
+    from generate_change_order import build as co_build
+    data = request.get_json()
+    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+        out = f.name
     try:
-        from generate_change_order import build as co_build
-        tmp = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
-        tmp.close()
-        co_build(data, tmp.name)
-        with open(tmp.name, 'rb') as f:
-            pdf_bytes = f.read()
-        os.unlink(tmp.name)
-        from flask import Response
-        return Response(pdf_bytes, mimetype='application/pdf',
-            headers={'Content-Disposition': 'attachment; filename=change_order.pdf'})
+        co_build(data, out)
+        return send_file(out, mimetype='application/pdf',
+                         as_attachment=True,
+                         download_name='HD_ChangeOrder.pdf')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/health')
-def health():
-    return jsonify({'status': 'ok'})
+@app.route('/generate-jc-pdf', methods=['POST'])
+@require_auth
+def generate_jc_pdf():
+    from generate_job_cost import build as jc_build
+    data = request.get_json()
+    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+        out = f.name
+    try:
+        jc_build(data, out)
+        return send_file(out, mimetype='application/pdf',
+                         as_attachment=True,
+                         download_name='HD_JobCost.pdf')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ── Email ─────────────────────────────────────────────────────────────────────
+
+@app.route('/send-email', methods=['POST'])
+@require_auth
+def send_email():
+    if not GMAIL_AVAILABLE:
+        return jsonify({'ok': False, 'error': 'Gmail not configured'}), 500
+    import base64
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from email.mime.base import MIMEBase
+    from email import encoders
+
+    data    = request.get_json() or {}
+    to      = data.get('to', '')
+    subject = data.get('subject', '')
+    body    = data.get('body', '')
+    pdf_b64 = data.get('pdf_b64', '')
+    fname   = data.get('pdf_filename', 'HD_Proposal.pdf')
+
+    try:
+        token_json = os.environ.get('GMAIL_TOKEN_JSON', '')
+        if not token_json:
+            return jsonify({'ok': False, 'error': 'Gmail token not configured'}), 500
+        creds = Credentials.from_authorized_user_info(json.loads(token_json))
+        service = gmail_build('gmail', 'v1', credentials=creds)
+
+        msg = MIMEMultipart()
+        msg['to'] = to
+        msg['subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+
+        if pdf_b64:
+            part = MIMEBase('application', 'pdf')
+            part.set_payload(base64.b64decode(pdf_b64))
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', f'attachment; filename="{fname}"')
+            msg.attach(part)
+
+        raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+        service.users().messages().send(userId='me', body={'raw': raw}).execute()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ── Notion ────────────────────────────────────────────────────────────────────
+
+def notion_headers():
+    return {
+        'Authorization': f'Bearer {NOTION_KEY}',
+        'Notion-Version': NOTION_VER,
+        'Content-Type': 'application/json'
+    }
+
+@app.route('/notion/push', methods=['POST'])
+@require_auth
+def notion_push():
+    if not NOTION_KEY:
+        return jsonify({'ok': False, 'error': 'Notion not configured'}), 500
+    data = request.get_json() or {}
+    payload = {
+        'parent': {'database_id': NOTION_PIPELINE},
+        'properties': {
+            'Name': {'title': [{'text': {'content': data.get('project_name','')}}]},
+            'Client': {'rich_text': [{'text': {'content': data.get('client_name','')}}]},
+            'Address': {'rich_text': [{'text': {'content': data.get('address','')}}]},
+            'Date': {'date': {'start': data.get('date_iso','')} if data.get('date_iso') else None},
+            'Total': {'number': float(data.get('total', 0))},
+        }
+    }
+    try:
+        r = http.post('https://api.notion.com/v1/pages',
+                      headers=notion_headers(), json=payload, timeout=10)
+        if r.ok:
+            return jsonify({'ok': True})
+        return jsonify({'ok': False, 'error': r.text}), 500
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/notion/clients')
+@require_auth
+def notion_clients():
+    if not NOTION_KEY:
+        return jsonify({'results': []}), 200
+    try:
+        r = http.post(f'https://api.notion.com/v1/databases/{NOTION_CLIENTS}/query',
+                      headers=notion_headers(), json={}, timeout=10)
+        return jsonify(r.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ── Run ───────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
+    app.run(debug=True, port=5000)
