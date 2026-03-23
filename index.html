@@ -300,7 +300,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <div class="pin-box">
     <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
-    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="â¢â¢â¢â¢"
+    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="Ã¢ÂÂ¢Ã¢ÂÂ¢Ã¢ÂÂ¢Ã¢ÂÂ¢"
            onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="pin-btn" onclick="doLogin()">Access Tool</button>
     <div class="pin-err" id="pin-err"></div>
@@ -434,15 +434,15 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
 
         <div class="metrics">
-          <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">â</div></div>
-          <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">â</div></div>
-          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">â</div><div class="metric-sub">w/ waste</div></div>
-          <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">â</div></div>
-          <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">â</div></div>
+          <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">Ã¢ÂÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">Ã¢ÂÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">Ã¢ÂÂ</div><div class="metric-sub">w/ waste</div></div>
+          <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">Ã¢ÂÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">Ã¢ÂÂ</div></div>
           <div class="metric"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">$0</div></div>
           <div class="metric" id="m-phase-card" style="display:none;"><div class="metric-lbl" id="m-phase-lbl">Phase 1</div><div class="metric-val" id="m-phase">-</div></div>
-          <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">â</div></div>
-          <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">â</div></div>
+          <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">Ã¢ÂÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">Ã¢ÂÂ</div></div>
         </div>
 
       <!-- Job Costing Card (Internal) -->
@@ -500,14 +500,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       </div>
 
       <!-- PIPELINE PANEL -->
-      <div class="panel" id="panel-pipeline">
-        <div class="topbar">
-          <span class="topbar-title">Pipeline</span>
-          <div class="topbar-actions">
-            <button class="btn btn-sec btn-sm" onclick="renderPipeline()">Refresh</button>
-          </div>
-        </div>
-        <div class="content" style="padding:16px;max-width:none;">
+      <div class="panel" id="panel-pipeline"><div class="content" style="padding:16px;max-width:none;">
           <div id="pipeline-board" style="overflow-x:auto;">
             <div style="color:var(--dgray);font-size:13px;padding:20px;">Loading pipeline...</div>
           </div>
@@ -515,28 +508,13 @@ tr:nth-child(even) td{background:#FAFAFA;}
       </div>
 
       <!-- CLIENTS PANEL -->
-      <div class="panel" id="panel-clients">
-        <div class="topbar">
-          <span class="topbar-title">Clients</span>
-          <div class="topbar-actions">
-            <button class="btn btn-red btn-sm" onclick="openClientModal()">+ New Client</button>
-          </div>
-        </div>
-        <div class="content">
+      <div class="panel" id="panel-clients"><div class="content">
           <div id="clients-list"></div>
         </div>
       </div>
 
       <!-- CHANGE ORDERS PANEL -->
-      <div class="panel" id="panel-co">
-              <div class="topbar">
-                <div class="topbar-title">Change Orders</div>
-                <div class="topbar-actions">
-                  <button class="btn btn-sec btn-sm" onclick="resetCO()">Reset</button>
-                  <button class="btn btn-red btn-sm" id="co-pdf-btn" onclick="exportCOPDF()">Export CO PDF</button>
-                </div>
-              </div>
-              <div class="content">
+      <div class="panel" id="panel-co"><div class="content">
                 <div class="card">
                   <div class="card-hdr"><span class="card-title">Change Order Info</span></div>
                   <div class="card-body">
@@ -600,14 +578,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
             </div>
 
       <!-- ANALYTICS PANEL -->
-      <div class="panel" id="panel-analytics">
-              <div class="topbar">
-                <div class="topbar-title">Analytics</div>
-                <div class="topbar-actions">
-                  <button class="btn btn-sec btn-sm" onclick="renderAnalytics()">Refresh</button>
-                </div>
-              </div>
-              <div class="content">
+      <div class="panel" id="panel-analytics"><div class="content">
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px;" id="analytics-summary"></div>
                 <div class="card">
                   <div class="card-hdr">
