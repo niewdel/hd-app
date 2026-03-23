@@ -49,7 +49,7 @@ body{font-family:var(--font);background:#EBEBEB;color:var(--blk);font-size:14px;
 .content{padding:22px;max-width:1080px;}
 
 /* Panels */
-.panel{display:none;}.panel.on{display:block;}
+.panel{display:none;}.panel.on{display:block;width:100%;box-sizing:border-box;}
 
 /* Cards */
 .card{background:#fff;border:1px solid var(--bdr);border-radius:var(--rad);margin-bottom:14px;overflow:hidden;}
@@ -1433,7 +1433,7 @@ var TOPBAR_CFG={
     {id:"site-plan-btn",html:"Site Plan",cls:"btn btn-sec btn-sm",fn:"document.getElementById('site-plan-input').click()"},
     {id:"docx-btn",html:"Word",cls:"btn btn-sec btn-sm",fn:"exportDOCX()"},
     {id:"email-btn",html:"Email",cls:"btn btn-sec btn-sm",fn:"openEmailModal()"},
-    {id:"notion-btn",html:"Notion",cls:"btn btn-dark btn-sm",fn:"pushNotion()"},
+    
     {id:"pdf-btn",html:"Export PDF",cls:"btn btn-red btn-sm",fn:"exportPDF()"}
   ],
   co:[
@@ -1995,10 +1995,10 @@ async function testNotion(){
 // -- Client autocomplete -------------------------------------------------------
 async function loadClients(){
   try{
-    var r=await fetch('/notion/clients');
+    var r=await fetch('/clients/list');
     if(!r.ok)return;
     var d=await r.json();
-    clients=(d.results||[]).map(function(p){
+    clients=(d.clients||[]).map(function(p){
       var props=p.properties||{};
       function getName(){for(var k in props){if(props[k].type==='title'&&props[k].title&&props[k].title.length)return props[k].title.map(function(t){return t.plain_text;}).join('');} return '';}
       function getV(k){var p2=props[k];if(!p2)return'';if(p2.type==='rich_text')return(p2.rich_text||[]).map(function(t){return t.plain_text;}).join('');if(p2.type==='phone_number')return p2.phone_number||'';if(p2.type==='email')return p2.email||'';return'';}
