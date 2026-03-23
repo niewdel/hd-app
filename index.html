@@ -1529,31 +1529,64 @@ function renderMatPriceInputs(){
 function renderMatTable(){
   var tbody = document.getElementById('mat-tbody');
   if(!tbody) return;
-  var keys = Object.keys(MAT_DEFAULT);
-  // include any custom materials not in defaults
+  var keys = Object.keys(MAT_DEFAULT).slice();
   Object.keys(MAT).forEach(function(k){ if(keys.indexOf(k)<0) keys.push(k); });
   var badges = ['b-base','b-millings','b-binder','b-surface','b-conc',''];
   var badgeLabels = ['Base','Millings','Binder','Surface','Concrete','None'];
   tbody.innerHTML = '';
   keys.forEach(function(k){
+    var isDefault = MAT_DEFAULT.hasOwnProperty(k);
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid var(--bdr)';
-    var isDefault = MAT_DEFAULT.hasOwnProperty(k);
-    var idSafe = 'mat_'+k.replace(/[^a-z0-9]/gi,'_');
-    var badgeSel = badges.map(function(b,i){
-      return '<option value="'+b+'"'+(( LBADGE[k]||'')=== b?' selected':'')+'>'+badgeLabels[i]+'</option>';
-    }).join('');
-    tr.innerHTML = 
-      '<td style="padding:6px 10px;">'+(isDefault
-        ? '<span style="font-size:12px;font-weight:600;">'+k+'</span>'
-        : '<input type="text" id="matname_'+idSafe+'" value="'+k+'" style="width:110px;font-size:12px;" placeholder="Name" onchange="renameMaterial(''+k+'',this.value)"/>'
-      )+'</td>'
-      +'<td style="padding:6px 10px;text-align:right;"><input type="number" id="'+idSafe+'" value="'+(MAT[k]||0)+'" min="0" step="1" style="width:70px;text-align:right;" onchange="MAT[''+k+'']=parseFloat(this.value)||0;renderAll();renderConc();renderExtra();"/></td>'
-      +'<td style="padding:6px 10px;text-align:right;"><input type="number" id="drate_'+idSafe+'" value="'+(DRATE[k]||0)+'" min="0" step="1" style="width:70px;text-align:right;" onchange="DRATE[''+k+'']=parseFloat(this.value)||0;"/></td>'
-      +'<td style="padding:6px 10px;text-align:right;"><input type="number" id="lbs_'+idSafe+'" value="'+(LBS[k]||115)+'" min="1" step="1" style="width:70px;text-align:right;" onchange="LBS[''+k+'']=parseFloat(this.value)||115;"/></td>'
-      +'<td style="padding:6px 10px;text-align:right;"><input type="number" id="ddepth_'+idSafe+'" value="'+(DDEPTH[k]||3)+'" min="0" step="0.5" style="width:60px;text-align:right;" onchange="DDEPTH[''+k+'']=parseFloat(this.value)||3;"/></td>'
-      +'<td style="padding:6px 10px;text-align:center;"><select id="badge_'+idSafe+'" style="font-size:11px;width:80px;" onchange="LBADGE[''+k+'']=this.value;">'+badgeSel+'</select></td>'
-      +'<td style="padding:6px 4px;text-align:center;">'+(isDefault?'':'<button class="btn-ico" onclick="removeMaterial(''+k+'')">x</button>')+'</td>';
+    // Name
+    var td0 = document.createElement('td'); td0.style.cssText='padding:6px 10px;';
+    if(isDefault){
+      var sp=document.createElement('span');sp.style.cssText='font-size:12px;font-weight:600;';sp.textContent=k;td0.appendChild(sp);
+    } else {
+      var ni=document.createElement('input');ni.type='text';ni.value=k;ni.placeholder='Name';
+      ni.style.cssText='width:110px;font-size:12px;';
+      (function(kk){ni.addEventListener('change',function(){renameMaterial(kk,this.value);});})(k);
+      td0.appendChild(ni);
+    }
+    tr.appendChild(td0);
+    // Cost $/ton
+    var td1=document.createElement('td');td1.style.cssText='padding:6px 10px;text-align:right;';
+    var i1=document.createElement('input');i1.type='number';i1.value=MAT[k]||0;i1.min=0;i1.step=1;i1.style.cssText='width:70px;text-align:right;';
+    (function(kk){i1.addEventListener('change',function(){MAT[kk]=parseFloat(this.value)||0;renderAll();renderConc();renderExtra();});})(k);
+    td1.appendChild(i1);tr.appendChild(td1);
+    // Default rate $/ton
+    var td2=document.createElement('td');td2.style.cssText='padding:6px 10px;text-align:right;';
+    var i2=document.createElement('input');i2.type='number';i2.value=DRATE[k]||0;i2.min=0;i2.step=1;i2.style.cssText='width:70px;text-align:right;';
+    (function(kk){i2.addEventListener('change',function(){DRATE[kk]=parseFloat(this.value)||0;});})(k);
+    td2.appendChild(i2);tr.appendChild(td2);
+    // Density lbs/ton
+    var td3=document.createElement('td');td3.style.cssText='padding:6px 10px;text-align:right;';
+    var i3=document.createElement('input');i3.type='number';i3.value=LBS[k]||115;i3.min=1;i3.step=1;i3.style.cssText='width:70px;text-align:right;';
+    (function(kk){i3.addEventListener('change',function(){LBS[kk]=parseFloat(this.value)||115;});})(k);
+    td3.appendChild(i3);tr.appendChild(td3);
+    // Default depth
+    var td4=document.createElement('td');td4.style.cssText='padding:6px 10px;text-align:right;';
+    var i4=document.createElement('input');i4.type='number';i4.value=DDEPTH[k]||3;i4.min=0;i4.step=0.5;i4.style.cssText='width:60px;text-align:right;';
+    (function(kk){i4.addEventListener('change',function(){DDEPTH[kk]=parseFloat(this.value)||3;});})(k);
+    td4.appendChild(i4);tr.appendChild(td4);
+    // Badge
+    var td5=document.createElement('td');td5.style.cssText='padding:6px 10px;text-align:center;';
+    var sel=document.createElement('select');sel.style.cssText='font-size:11px;width:80px;';
+    badges.forEach(function(b,i){
+      var opt=document.createElement('option');opt.value=b;opt.textContent=badgeLabels[i];
+      if((LBADGE[k]||'')=== b) opt.selected=true;
+      sel.appendChild(opt);
+    });
+    (function(kk){sel.addEventListener('change',function(){LBADGE[kk]=this.value;});})(k);
+    td5.appendChild(sel);tr.appendChild(td5);
+    // Remove
+    var td6=document.createElement('td');td6.style.cssText='padding:6px 4px;text-align:center;';
+    if(!isDefault){
+      var rb=document.createElement('button');rb.className='btn-ico';rb.textContent='x';
+      (function(kk){rb.addEventListener('click',function(){removeMaterial(kk);});})(k);
+      td6.appendChild(rb);
+    }
+    tr.appendChild(td6);
     tbody.appendChild(tr);
   });
 }
@@ -1597,18 +1630,8 @@ function renameMaterial(oldName, newName){
 function saveMatPrices(){
   var keys = Object.keys(MAT);
   var saved = {mat:{},drate:{},lbs:{},ddepth:{},lbadge:{},ltypes:LTYPES.slice()};
+  // Values already updated in-memory via input event listeners
   keys.forEach(function(k){
-    var idSafe = 'mat_'+k.replace(/[^a-z0-9]/gi,'_');
-    var matInp = document.getElementById(idSafe);
-    var drateInp = document.getElementById('drate_'+idSafe);
-    var lbsInp = document.getElementById('lbs_'+idSafe);
-    var ddepthInp = document.getElementById('ddepth_'+idSafe);
-    var badgeInp = document.getElementById('badge_'+idSafe);
-    if(matInp) MAT[k] = parseFloat(matInp.value)||0;
-    if(drateInp) DRATE[k] = parseFloat(drateInp.value)||0;
-    if(lbsInp) LBS[k] = parseFloat(lbsInp.value)||115;
-    if(ddepthInp) DDEPTH[k] = parseFloat(ddepthInp.value)||3;
-    if(badgeInp) LBADGE[k] = badgeInp.value;
     saved.mat[k]=MAT[k]; saved.drate[k]=DRATE[k];
     saved.lbs[k]=LBS[k]; saved.ddepth[k]=DDEPTH[k]; saved.lbadge[k]=LBADGE[k];
   });
