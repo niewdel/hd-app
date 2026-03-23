@@ -303,7 +303,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <div class="pin-box">
     <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
-    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="Ã¢ÂÂ¢Ã¢ÂÂ¢Ã¢ÂÂ¢Ã¢ÂÂ¢"
+    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="â¢â¢â¢â¢"
            onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="pin-btn" onclick="doLogin()">Access Tool</button>
     <div class="pin-err" id="pin-err"></div>
@@ -690,41 +690,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
   </div><!-- /main -->
 
 <!-- Email Modal -->
-<div class="modal-overlay hidden" id="email-modal">
-  <div class="modal" style="max-width:560px;">
-    <div class="modal-hdr">
-      <h3>Email Proposal</h3>
-      <button class="btn-ico" onclick="closeEmailModal()" style="font-size:18px;">&#10005;</button>
-    </div>
-    <div class="modal-body">
-      <div style="background:#f0f7ff;border:1px solid #c0d8f0;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1a4a7a;">
-        <b>How to send:</b> Copy the subject &amp; body below &rarr; open Gmail &rarr; paste &rarr; attach the PDF (Export PDF button) &rarr; send.
-      </div>
-      <label style="display:flex;align-items:center;justify-content:space-between;">
-        Subject
-        <button class="btn btn-sec btn-sm" onclick="copyEmailField('email-subject')" style="font-size:10px;padding:2px 8px;">Copy</button>
-      </label>
-      <input type="text" id="email-subject" style="margin-bottom:10px;"/>
-      <label style="display:flex;align-items:center;justify-content:space-between;">
-        Email Body
-        <button class="btn btn-sec btn-sm" onclick="copyEmailField('email-body')" style="font-size:10px;padding:2px 8px;">Copy</button>
-      </label>
-      <textarea id="email-body" style="min-height:220px;font-size:12px;line-height:1.5;"></textarea>
-      <div id="email-status" style="font-size:12px;margin-top:6px;min-height:16px;color:#27500A;"></div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-sec btn-sm" onclick="closeEmailModal()">Close</button>
-      <button class="btn btn-sec btn-sm" onclick="copyEmailAll()">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 4h8v10H4zm2-2h8v10"/></svg>
-        Copy All
-      </button>
-      <button class="btn btn-red btn-sm" onclick="exportPDF();closeEmailModal();">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1z"/></svg>
-        Export PDF
-      </button>
-    </div>
-  </div>
-</div>
+<div class="modal-overlay hidden" id="email-modal"><div class="modal" style="max-width:560px;"><div class="modal-hdr"><h3>Email Proposal</h3><button class="btn-ico" onclick="closeEmailModal()" style="font-size:18px;">&#10005;</button></div><div class="modal-body"><div style="background:#f0f7ff;border:1px solid #c0d8f0;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1a4a7a;"><b>How to send:</b> Copy subject &amp; body, open Gmail, paste, attach PDF, send.</div><label style="display:flex;align-items:center;justify-content:space-between;">Subject <button class="btn btn-sec btn-sm" onclick="copyEmailField('email-subject')" style="font-size:10px;padding:2px 8px;">Copy</button></label><input type="text" id="email-subject" style="margin-bottom:10px;"/><label style="display:flex;align-items:center;justify-content:space-between;">Email Body <button class="btn btn-sec btn-sm" onclick="copyEmailField('email-body')" style="font-size:10px;padding:2px 8px;">Copy</button></label><textarea id="email-body" style="min-height:200px;font-size:12px;line-height:1.5;"></textarea><div id="email-status" style="font-size:12px;margin-top:6px;min-height:16px;color:#27500A;"></div></div><div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeEmailModal()">Close</button><button class="btn btn-sec btn-sm" onclick="copyEmailAll()">Copy All</button><button class="btn btn-red btn-sm" onclick="exportPDF();closeEmailModal();">Export PDF</button></div></div></div>
 
 </div><!-- /app -->
 
@@ -872,82 +838,13 @@ function toast(msg,type){
 
 
 // -- Email --------------------------------------------------------------------
-function openEmailModal(){
-  var p=buildPayload();
-  var client=document.getElementById('proj-client').value||'';
-  var firstName=client.split(' ')[0]||client;
-  var addr=[p.address,p.city_state].filter(Boolean).join(', ');
-  var total=p.total?'$'+Math.round(p.total).toLocaleString():'';
-  document.getElementById('email-subject').value='HD Hauling & Grading - Paving Proposal: '+(p.project_name||'Project');
-  var nl='\n';
-  var body=(firstName||'Hello')+','+nl+nl
-    +'Thank you for the opportunity to work with you. Please find attached our Paving Proposal '
-    +'and Contract for '+(p.project_name||'your project')
-    +(addr?' located at '+addr:'')+'.'+nl+nl
-    +'Total Bid Price: '+total+nl+nl
-    +'Please review the attached proposal, including the Terms and Conditions, at your earliest '
-    +'convenience. This proposal is valid for thirty (30) days from the date of issuance.'+nl+nl
-    +'To move forward, please sign and return the attached contract or reach out with any '
-    +'questions. We look forward to working with you.'+nl+nl
-    +'Best regards,'+nl
-    +(sender.name||'HD Hauling & Grading')+nl
-    +(sender.phone?sender.phone+nl:'')
-    +(sender.email?sender.email:'');
-  document.getElementById('email-body').value=body;
-  document.getElementById('email-status').textContent='';
-  document.getElementById('email-modal').classList.remove('hidden');
-  setTimeout(function(){document.getElementById('email-body').focus();},100);
-}
+function openEmailModal(){var p=buildPayload(),c=document.getElementById('proj-client').value||'',fn=c.split(' ')[0]||c,addr=[p.address,p.city_state].filter(Boolean).join(', '),tot=p.total?'$'+Math.round(p.total).toLocaleString():'',nl=String.fromCharCode(10);document.getElementById('email-subject').value='HD Hauling & Grading - Paving Proposal: '+(p.project_name||'Project');document.getElementById('email-body').value=(fn||'Hello')+','+nl+nl+'Thank you for the opportunity to work with you. Please find attached our Paving Proposal and Contract for '+(p.project_name||'your project')+(addr?' located at '+addr:'')+'.'+nl+nl+'Total Bid Price: '+tot+nl+nl+'Please review the attached proposal, including the Terms and Conditions, at your earliest convenience. This proposal is valid for thirty (30) days from the date of issuance.'+nl+nl+'To move forward, please sign and return the attached contract or reach out with any questions. We look forward to working with you.'+nl+nl+'Best regards,'+nl+(sender.name||'HD Hauling & Grading')+nl+(sender.phone?sender.phone+nl:'')+(sender.email?sender.email:'');document.getElementById('email-status').textContent='';document.getElementById('email-modal').classList.remove('hidden');setTimeout(function(){document.getElementById('email-body').focus();},100);}
 function closeEmailModal(){
   document.getElementById('email-modal').classList.add('hidden');
 }
 
-function copyEmailField(id){
-  var el = document.getElementById(id);
-  if(!el) return;
-  el.select();
-  try {
-    document.execCommand('copy');
-    var status = document.getElementById('email-status');
-    if(status){ status.textContent = (id==='email-subject'?'Subject':'Body') + ' copied to clipboard!'; setTimeout(function(){status.textContent='';},2000); }
-  } catch(e) {}
-}
-
-function copyEmailAll(){
-  var subj=document.getElementById('email-subject').value;
-  var body=document.getElementById('email-body').value;
-  var all='Subject: '+subj+'\n\n'+body;
-  try{
-    navigator.clipboard.writeText(all).then(function(){
-      var st=document.getElementById('email-status');
-      if(st){st.textContent='Copied!';setTimeout(function(){st.textContent='';},2000);}
-    });
-  }catch(e){
-    var ta=document.createElement('textarea');ta.value=all;ta.style.cssText='position:fixed;opacity:0;';
-    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-    var st=document.getElementById('email-status');
-    if(st){st.textContent='Copied!';setTimeout(function(){st.textContent='';},2000);}
-  }
-}
-
-' + body;
-  try {
-    navigator.clipboard.writeText(all).then(function(){
-      var status = document.getElementById('email-status');
-      if(status){ status.textContent = 'Subject + body copied!'; setTimeout(function(){status.textContent='';},2000); }
-    });
-  } catch(e) {
-    var ta = document.createElement('textarea');
-    ta.value = all; ta.style.position='fixed'; ta.style.opacity='0';
-    document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta);
-    var status = document.getElementById('email-status');
-    if(status){ status.textContent = 'Copied!'; setTimeout(function(){status.textContent='';},2000); }
-  }
-}
-
-
-
+function copyEmailField(id){var el=document.getElementById(id);if(!el)return;el.select();try{document.execCommand('copy');}catch(e){}var st=document.getElementById('email-status');if(st){st.textContent=(id==='email-subject'?'Subject':'Body')+' copied!';setTimeout(function(){st.textContent='';},2000);}}
+function copyEmailAll(){var nl=String.fromCharCode(10),all='Subject: '+document.getElementById('email-subject').value+nl+nl+document.getElementById('email-body').value;try{navigator.clipboard.writeText(all).then(function(){var st=document.getElementById('email-status');if(st){st.textContent='Copied!';setTimeout(function(){st.textContent='';},2000);}});}catch(e){var ta=document.createElement('textarea');ta.value=all;ta.style.cssText='position:fixed;opacity:0;';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);var st=document.getElementById('email-status');if(st){st.textContent='Copied!';setTimeout(function(){st.textContent='';},2000);}}}
 // Close modal on overlay click
 document.addEventListener('click', function(e){
   if(e.target.id === 'email-modal') closeEmailModal();
