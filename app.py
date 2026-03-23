@@ -16,10 +16,6 @@ app.secret_key = os.environ.get('SECRET_KEY', 'hd-hauling-dev-key')
 APP_PIN        = os.environ.get('APP_PIN', '2025')
 SUPABASE_URL   = os.environ.get('SUPABASE_URL', '')
 SUPABASE_KEY   = os.environ.get('SUPABASE_KEY', '')
-NOTION_KEY     = os.environ.get('NOTION_KEY', '')
-NOTION_PIPELINE= os.environ.get('NOTION_PIPELINE', '2ada1cc5891b80bebe53fde6c337bf8b')
-NOTION_CLIENTS = os.environ.get('NOTION_CLIENTS',  '2ada1cc5891b804cbaa1c4d2577b674c')
-NOTION_VER     = '2022-06-28'
 
 def sb_headers():
     return {
@@ -62,7 +58,7 @@ def logout():
 def auth_check():
     return jsonify({'authenticated': bool(session.get('authenticated'))})
 
-# ── Proposals ─────────────────────────────────────────────────────────────────
+# ââ Proposals âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @app.route('/quotes/save', methods=['POST'])
 @require_auth
@@ -104,7 +100,7 @@ def quotes_delete(qid):
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-# ── Pipeline ──────────────────────────────────────────────────────────────────
+# ââ Pipeline ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @app.route('/pipeline/stages')
 @require_auth
@@ -145,7 +141,7 @@ def pipeline_move(proposal_id):
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-# ── Clients ───────────────────────────────────────────────────────────────────
+# ââ Clients âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @app.route('/clients/list')
 @require_auth
@@ -200,7 +196,7 @@ def clients_delete(client_id):
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-# ── PDF / DOCX ────────────────────────────────────────────────────────────────
+# ââ PDF / DOCX ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @app.route('/generate-pdf', methods=['POST'])
 @require_auth
@@ -253,7 +249,7 @@ def generate_jc_pdf():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ── Email ─────────────────────────────────────────────────────────────────────
+# ââ Email âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @app.route('/send-email', methods=['POST'])
 @require_auth
@@ -289,7 +285,7 @@ def send_email():
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-# ── Notion ────────────────────────────────────────────────────────────────────
+# ââ Notion ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @app.route('/notion/push', methods=['POST'])
 @require_auth
