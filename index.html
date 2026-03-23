@@ -2172,8 +2172,8 @@ async function renderPipeline() {
     pipelineStages = ds.stages;
     pipelineProposals = dp.proposals;
 
-    var won   = pipelineProposals.filter(function(p){ return p.pipeline_stages && p.pipeline_stages.name==='Won'; });
-    var lost  = pipelineProposals.filter(function(p){ return p.pipeline_stages && p.pipeline_stages.name==='Lost'; });
+    var won   = pipelineProposals.filter(function(p){ return p.pipeline_stages && p.pipeline_stages.counts_in_ratio && p.pipeline_stages.name==='Won'; });
+    var lost  = pipelineProposals.filter(function(p){ return p.pipeline_stages && p.pipeline_stages.counts_in_ratio && p.pipeline_stages.name==='Lost'; });
     var active = pipelineProposals.filter(function(p){ return !p.pipeline_stages || !p.pipeline_stages.is_closed; });
     var wonTotal = won.reduce(function(s,p){return s+(parseFloat(p.total)||0);},0);
     var winRate = (won.length+lost.length)>0 ? Math.round(won.length/(won.length+lost.length)*100) : 0;
