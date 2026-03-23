@@ -658,10 +658,33 @@ tr:nth-child(even) td{background:#FAFAFA;}
           </div>
         </div>
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Spec Presets</span></div>
+          <div class="card-hdr">
+            <span class="card-title">Material Prices</span>
+            <button class="btn btn-sec btn-sm" onclick="addMaterial()">+ Add Material</button>
+          </div>
           <div class="card-body">
-            <div id="preset-mgr"></div>
-            <button class="btn btn-sec btn-sm" onclick="addPreset()" style="margin-top:8px;">+ Add Preset</button>
+            <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Manage materials used in proposals. Changes update all MU% calculations instantly.</p>
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:12px;" id="mat-table">
+                <thead>
+                  <tr style="background:var(--lgray);">
+                    <th style="padding:7px 10px;text-align:left;font-weight:600;">Material</th>
+                    <th style="padding:7px 10px;text-align:right;font-weight:600;">Cost $/ton</th>
+                    <th style="padding:7px 10px;text-align:right;font-weight:600;">Default Rate $/ton</th>
+                    <th style="padding:7px 10px;text-align:right;font-weight:600;">Density lbs/ton</th>
+                    <th style="padding:7px 10px;text-align:right;font-weight:600;">Default Depth"</th>
+                    <th style="padding:7px 10px;text-align:center;font-weight:600;">Badge</th>
+                    <th style="padding:7px 4px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="mat-tbody"></tbody>
+              </table>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+              <button class="btn btn-red btn-sm" onclick="saveMatPrices()">Save Prices</button>
+              <button class="btn btn-sec btn-sm" onclick="resetMatPrices()">Reset to Defaults</button>
+              <span id="mat-prices-updated" style="font-size:11px;color:var(--dgray);"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -710,6 +733,11 @@ var JC_OVERHEAD_PCT_DEFAULT = 15;
 var jcCrewRate = JC_CREW_RATE_DEFAULT;
 var jcOverheadPct = JC_OVERHEAD_PCT_DEFAULT;
 var MAT_DEFAULT = {'ABC base':45,'Mill & Pave':35,'B25.0C':85,'I19.0C':92,'S9.5B':95,'S9.5C':95};
+var DRATE_DEFAULT = {'ABC base':50,'Mill & Pave':150,'B25.0C':150,'I19.0C':150,'S9.5B':150,'S9.5C':150};
+var LBS_DEFAULT = {'ABC base':150,'Mill & Pave':115,'B25.0C':115,'I19.0C':115,'S9.5B':115,'S9.5C':115};
+var DDEPTH_DEFAULT = {'ABC base':6,'Mill & Pave':2,'B25.0C':5,'I19.0C':4,'S9.5B':3,'S9.5C':3};
+var LBADGE_DEFAULT = {'ABC base':'b-base','Mill & Pave':'b-millings','B25.0C':'b-base','I19.0C':'b-binder','S9.5B':'b-surface','S9.5C':'b-surface'};
+var LTYPES_DEFAULT = ['ABC base','Mill & Pave','B25.0C','I19.0C','S9.5B','S9.5C'];
 var DDEPTH = {'ABC base':6,'Mill & Pave':2,'B25.0C':5,'I19.0C':4,'S9.5B':3,'S9.5C':3};
 var DRATE  = {'ABC base':50,'Mill & Pave':150,'B25.0C':150,'I19.0C':150,'S9.5B':150,'S9.5C':150};
 var LBADGE = {'ABC base':'b-base','Mill & Pave':'b-millings','B25.0C':'b-base','I19.0C':'b-binder','S9.5B':'b-surface','S9.5C':'b-surface'};
@@ -802,7 +830,14 @@ function loadStorage(){
     var s=localStorage.getItem('hd_sender');if(s)sender=JSON.parse(s);
     var p=localStorage.getItem('hd_presets');if(p)PRESETS=JSON.parse(p);
     var mp=localStorage.getItem('hd_mat_prices');
-    if(mp){var mpd=JSON.parse(mp);if(mpd.prices)Object.assign(MAT,mpd.prices);}
+    if(mp){try{var mpd=JSON.parse(mp);
+      if(mpd.mat){Object.assign(MAT,mpd.mat);}else if(mpd.prices){Object.assign(MAT,mpd.prices);}
+      if(mpd.drate)Object.assign(DRATE,mpd.drate);
+      if(mpd.lbs)Object.assign(LBS,mpd.lbs);
+      if(mpd.ddepth)Object.assign(DDEPTH,mpd.ddepth);
+      if(mpd.lbadge)Object.assign(LBADGE,mpd.lbadge);
+      if(mpd.ltypes&&mpd.ltypes.length){LTYPES.length=0;mpd.ltypes.forEach(function(t){LTYPES.push(t);});}
+    }catch(e){}}
   }catch(e){}
 }
 function saveStorage(){} // quotes now stored server-side
@@ -1488,55 +1523,116 @@ function updateMatIndicator(){
 }
 
 function renderMatPriceInputs(){
-  var c=document.getElementById('mat-price-inputs');
-  if(!c)return;
-  var keys=Object.keys(MAT_DEFAULT);
-  var html='';
-  for(var i=0;i<keys.length;i++){
-    var k=keys[i];
-    var id='mat_'+k.replace(/[^a-z0-9]/gi,'_');
-    var val=MAT[k]!==undefined?MAT[k]:MAT_DEFAULT[k];
-    html+='<div>';
-    html+='<label>'+esc(k)+'</label>';
-    html+='<div style="display:flex;align-items:center;gap:4px;">';
-    html+='<span style="font-size:13px;color:var(--dgray);">$</span>';
-    html+='<input type="number" id="'+id+'" value="'+val+'" min="0" step="0.50" style="width:80px"/>';
-    html+='<span style="font-size:11px;color:var(--dgray);">/ton</span>';
-    html+='</div></div>';
-  }
-  c.innerHTML=html;
-  var mp=localStorage.getItem('hd_mat_prices');
-  var el=document.getElementById('mat-prices-updated');
-  if(el&&mp){
-    try{var d=JSON.parse(mp);if(d.updated)el.textContent='Last updated: '+new Date(d.updated).toLocaleDateString();}
-    catch(e){}
-  }
+  renderMatTable();
 }
 
+function renderMatTable(){
+  var tbody = document.getElementById('mat-tbody');
+  if(!tbody) return;
+  var keys = Object.keys(MAT_DEFAULT);
+  // include any custom materials not in defaults
+  Object.keys(MAT).forEach(function(k){ if(keys.indexOf(k)<0) keys.push(k); });
+  var badges = ['b-base','b-millings','b-binder','b-surface','b-conc',''];
+  var badgeLabels = ['Base','Millings','Binder','Surface','Concrete','None'];
+  tbody.innerHTML = '';
+  keys.forEach(function(k){
+    var tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--bdr)';
+    var isDefault = MAT_DEFAULT.hasOwnProperty(k);
+    var idSafe = 'mat_'+k.replace(/[^a-z0-9]/gi,'_');
+    var badgeSel = badges.map(function(b,i){
+      return '<option value="'+b+'"'+(( LBADGE[k]||'')=== b?' selected':'')+'>'+badgeLabels[i]+'</option>';
+    }).join('');
+    tr.innerHTML = 
+      '<td style="padding:6px 10px;">'+(isDefault
+        ? '<span style="font-size:12px;font-weight:600;">'+k+'</span>'
+        : '<input type="text" id="matname_'+idSafe+'" value="'+k+'" style="width:110px;font-size:12px;" placeholder="Name" onchange="renameMaterial(''+k+'',this.value)"/>'
+      )+'</td>'
+      +'<td style="padding:6px 10px;text-align:right;"><input type="number" id="'+idSafe+'" value="'+(MAT[k]||0)+'" min="0" step="1" style="width:70px;text-align:right;" onchange="MAT[''+k+'']=parseFloat(this.value)||0;renderAll();renderConc();renderExtra();"/></td>'
+      +'<td style="padding:6px 10px;text-align:right;"><input type="number" id="drate_'+idSafe+'" value="'+(DRATE[k]||0)+'" min="0" step="1" style="width:70px;text-align:right;" onchange="DRATE[''+k+'']=parseFloat(this.value)||0;"/></td>'
+      +'<td style="padding:6px 10px;text-align:right;"><input type="number" id="lbs_'+idSafe+'" value="'+(LBS[k]||115)+'" min="1" step="1" style="width:70px;text-align:right;" onchange="LBS[''+k+'']=parseFloat(this.value)||115;"/></td>'
+      +'<td style="padding:6px 10px;text-align:right;"><input type="number" id="ddepth_'+idSafe+'" value="'+(DDEPTH[k]||3)+'" min="0" step="0.5" style="width:60px;text-align:right;" onchange="DDEPTH[''+k+'']=parseFloat(this.value)||3;"/></td>'
+      +'<td style="padding:6px 10px;text-align:center;"><select id="badge_'+idSafe+'" style="font-size:11px;width:80px;" onchange="LBADGE[''+k+'']=this.value;">'+badgeSel+'</select></td>'
+      +'<td style="padding:6px 4px;text-align:center;">'+(isDefault?'':'<button class="btn-ico" onclick="removeMaterial(''+k+'')">x</button>')+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function addMaterial(){
+  var name = prompt('New material name (e.g. "S9.5D"):');
+  if(!name || name.trim()==='') return;
+  name = name.trim();
+  if(MAT.hasOwnProperty(name)){toast('Material already exists','err');return;}
+  MAT[name]=0; DRATE[name]=150; LBS[name]=115; DDEPTH[name]=3; LBADGE[name]='b-surface';
+  if(LTYPES.indexOf(name)<0) LTYPES.push(name);
+  renderMatTable();
+  renderPresets();
+  toast('Material added - set prices and save','ok');
+}
+
+function removeMaterial(name){
+  if(!confirm('Remove "'+name+'" from materials? This will affect any sections using it.')) return;
+  delete MAT[name]; delete DRATE[name]; delete LBS[name]; delete DDEPTH[name]; delete LBADGE[name];
+  var idx = LTYPES.indexOf(name);
+  if(idx>=0) LTYPES.splice(idx,1);
+  renderMatTable();
+  renderPresets();
+  renderAll();
+  toast('Material removed','ok');
+}
+
+function renameMaterial(oldName, newName){
+  newName = (newName||'').trim();
+  if(!newName || newName===oldName) return;
+  if(MAT.hasOwnProperty(newName)){toast('Name already in use','err');return;}
+  MAT[newName]=MAT[oldName]; DRATE[newName]=DRATE[oldName];
+  LBS[newName]=LBS[oldName]; DDEPTH[newName]=DDEPTH[oldName]; LBADGE[newName]=LBADGE[oldName]||'';
+  delete MAT[oldName]; delete DRATE[oldName]; delete LBS[oldName]; delete DDEPTH[oldName]; delete LBADGE[oldName];
+  var idx=LTYPES.indexOf(oldName); if(idx>=0) LTYPES[idx]=newName;
+  renderMatTable(); renderPresets(); renderAll();
+}
+
+
+
 function saveMatPrices(){
-  var keys=Object.keys(MAT_DEFAULT);
-  var updated={};
-  for(var i=0;i<keys.length;i++){
-    var k=keys[i];
-    var id='mat_'+k.replace(/[^a-z0-9]/gi,'_');
-    var inp=document.getElementById(id);
-    if(inp)updated[k]=parseFloat(inp.value)||MAT_DEFAULT[k];
-  }
-  Object.assign(MAT,updated);
-  localStorage.setItem('hd_mat_prices',JSON.stringify({prices:updated,updated:Date.now()}));
+  var keys = Object.keys(MAT);
+  var saved = {mat:{},drate:{},lbs:{},ddepth:{},lbadge:{},ltypes:LTYPES.slice()};
+  keys.forEach(function(k){
+    var idSafe = 'mat_'+k.replace(/[^a-z0-9]/gi,'_');
+    var matInp = document.getElementById(idSafe);
+    var drateInp = document.getElementById('drate_'+idSafe);
+    var lbsInp = document.getElementById('lbs_'+idSafe);
+    var ddepthInp = document.getElementById('ddepth_'+idSafe);
+    var badgeInp = document.getElementById('badge_'+idSafe);
+    if(matInp) MAT[k] = parseFloat(matInp.value)||0;
+    if(drateInp) DRATE[k] = parseFloat(drateInp.value)||0;
+    if(lbsInp) LBS[k] = parseFloat(lbsInp.value)||115;
+    if(ddepthInp) DDEPTH[k] = parseFloat(ddepthInp.value)||3;
+    if(badgeInp) LBADGE[k] = badgeInp.value;
+    saved.mat[k]=MAT[k]; saved.drate[k]=DRATE[k];
+    saved.lbs[k]=LBS[k]; saved.ddepth[k]=DDEPTH[k]; saved.lbadge[k]=LBADGE[k];
+  });
+  saved.updated = Date.now();
+  localStorage.setItem('hd_mat_prices', JSON.stringify(saved));
   var el=document.getElementById('mat-prices-updated');
-  if(el)el.textContent='Last updated: '+new Date().toLocaleDateString();
+  if(el) el.textContent='Last updated: '+new Date().toLocaleDateString();
   updateMatIndicator();
   toast('Material prices saved','ok');
   renderAll();renderConc();renderExtra();
 }
 
 function resetMatPrices(){
-  Object.assign(MAT,MAT_DEFAULT);
+  if(!confirm('Reset all materials to defaults? Custom materials will be removed.')) return;
+  Object.keys(MAT).forEach(function(k){delete MAT[k];delete DRATE[k];delete LBS[k];delete DDEPTH[k];delete LBADGE[k];});
+  Object.assign(MAT,JSON.parse(JSON.stringify(MAT_DEFAULT)));
+  Object.assign(DRATE,JSON.parse(JSON.stringify(DRATE_DEFAULT)));
+  Object.assign(LBS,JSON.parse(JSON.stringify(LBS_DEFAULT)));
+  Object.assign(DDEPTH,JSON.parse(JSON.stringify(DDEPTH_DEFAULT)));
+  Object.assign(LBADGE,JSON.parse(JSON.stringify(LBADGE_DEFAULT)));
+  LTYPES.length=0; LTYPES_DEFAULT.forEach(function(t){LTYPES.push(t);});
   localStorage.removeItem('hd_mat_prices');
-  renderMatPriceInputs();
-  updateMatIndicator();
-  toast('Material prices reset to defaults');
+  renderMatTable(); updateMatIndicator();
+  toast('Materials reset to defaults');
   renderAll();renderConc();renderExtra();
 }
 
