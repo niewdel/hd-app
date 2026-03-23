@@ -470,16 +470,15 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
       <!-- SAVED PANEL -->
       <div class="panel" id="panel-saved">
-        <div class="topbar">
-          <span class="topbar-title">Saved Proposals</span>
-          <div class="topbar-actions">
-            <button class="btn btn-sec btn-sm" onclick="exportAllQuotes()">Export All</button>
-            <button class="btn btn-sec btn-sm" onclick="importQuotes()">Import</button>
-          </div>
-        </div>
         <div class="content">
           <div class="card">
-            <div class="card-hdr"><span class="card-title">Saved Proposals</span></div>
+            <div class="card-hdr">
+              <span class="card-title">Saved Proposals</span>
+              <div style="display:flex;gap:7px;">
+                <button class="btn btn-sec btn-sm" onclick="exportAllQuotes()">Export All</button>
+                <button class="btn btn-sec btn-sm" onclick="importQuotes()">Import</button>
+              </div>
+            </div>
             <div class="card-body" id="saved-list"><p style="color:var(--dgray);font-size:13px;">No saved quotes yet.</p></div>
           </div>
         </div>
