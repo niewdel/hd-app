@@ -301,7 +301,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <div class="pin-box">
     <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
-    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="••••"
+    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="â¢â¢â¢â¢"
            onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="pin-btn" onclick="doLogin()">Access Tool</button>
     <div class="pin-err" id="pin-err"></div>
@@ -435,15 +435,15 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
 
         <div class="metrics">
-          <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">—</div></div>
-          <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">—</div></div>
-          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">—</div><div class="metric-sub">w/ waste</div></div>
-          <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">—</div></div>
-          <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">—</div></div>
+          <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">â</div></div>
+          <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">â</div></div>
+          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">â</div><div class="metric-sub">w/ waste</div></div>
+          <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">â</div></div>
+          <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">â</div></div>
           <div class="metric"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">$0</div></div>
           <div class="metric" id="m-phase-card" style="display:none;"><div class="metric-lbl" id="m-phase-lbl">Phase 1</div><div class="metric-val" id="m-phase">-</div></div>
-          <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">—</div></div>
-          <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">—</div></div>
+          <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">â</div></div>
+          <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">â</div></div>
         </div>
 
       <!-- Job Costing Card (Internal) -->
@@ -650,13 +650,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
       </div>
 
-    <div class="card">
-          <div class="card-hdr"><span class="card-title">Notion Integration</span></div>
-          <div class="card-body">
-            <div style="font-size:12px;padding:7px 12px;background:var(--lgray);border-radius:6px;margin-bottom:10px;" id="notion-conn-status">Credentials managed server-side via Railway environment variables.</div>
-            <button class="btn btn-sec btn-sm" onclick="testNotion()">Test Connection</button>
-          </div>
-        </div>
+    
         <div class="card">
           <div class="card-hdr">
             <span class="card-title">Material Prices</span>
@@ -2082,36 +2076,6 @@ function setSitePlan(inp){
 }
 
 // -- Notion --------------------------------------------------------------------
-async function pushNotion(){
-  var btn=document.getElementById('notion-btn');
-  btn.disabled=true;btn.textContent='Saving...';
-  try{
-    var p=buildPayload();
-    var r=await fetch('/notion/push',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({project_name:p.project_name,client_name:p.client_name,
-        address:p.address,date_iso:p._date_iso||'',total:p.total,total_sf:0})});
-    var d=await r.json();
-    if(d.ok)toast('Saved to Notion','ok');
-    else toast('Notion error: '+(d.error||'unknown'),'err');
-  }catch(e){toast('Error: '+e.message,'err');}
-  finally{
-    btn.disabled=false;
-    btn.innerHTML='<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10v12H3z" fill-opacity=".2"/><path d="M5 5h6v1H5zm0 3h6v1H5zm0 3h4v1H5z"/></svg>Notion';
-  }
-}
-
-async function testNotion(){
-  var el=document.getElementById('notion-conn-status');
-  el.textContent='Testing...';
-  try{
-    var r=await fetch('/notion/clients');
-    var d=await r.json();
-    if(r.ok&&d.results)el.innerHTML='<span style="color:#3B6D11;font-weight:600">[ok] Connected  --  '+d.results.length+' clients loaded</span>';
-    else el.innerHTML='<span style="color:#CC0000">Failed  --  check NOTION_KEY in Railway variables</span>';
-  }catch(e){el.innerHTML='<span style="color:#CC0000">Error: '+e.message+'</span>';}
-}
-
-// -- Client autocomplete -------------------------------------------------------
 async function loadClients(){
   try{
     var r=await fetch('/clients/list');
