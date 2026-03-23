@@ -470,8 +470,16 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
       <!-- SAVED PANEL -->
       <div class="panel" id="panel-saved">
+        <div class="topbar">
+          <span class="topbar-title">Saved Proposals</span>
+          <div class="topbar-actions">
+            <button class="btn btn-sec btn-sm" onclick="exportAllQuotes()">Export All</button>
+            <button class="btn btn-sec btn-sm" onclick="importQuotes()">Import</button>
+          </div>
+        </div>
         <div class="content">
           <div class="card">
+            <div class="card-hdr"><span class="card-title">Saved Proposals</span></div>
             <div class="card-body" id="saved-list"><p style="color:var(--dgray);font-size:13px;">No saved quotes yet.</p></div>
           </div>
         </div>
@@ -1945,7 +1953,7 @@ function selectClient(c){
 }
 
 // -- Save / Load ---------------------------------------------------------------
-function saveQuote(){
+async function saveQuote(){
   var name=document.getElementById('proj-name').value||('Quote '+(savedQuotes.length+1));
   var snap={name:name,client:document.getElementById('proj-client').value,
     date:document.getElementById('proj-date').value,addr:document.getElementById('proj-addr').value,
@@ -1954,13 +1962,17 @@ function saveQuote(){
     sections:sections,concItems:concItems,extraItems:extraItems};
   var p=buildPayload();
   var jcData=calcJobCost();snap.jc_labor_cost=jcData.laborCost;snap.jc_overhead_pct=jcData.ovhPct;snap.jc_total_cost=jcData.totalCost;snap.jc_margin_pct=jcData.marginPct;
-  savedQuotes.push({id:Date.now(),name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});
-  saveStorage();renderSaved();
-  toast('Quote saved','ok');
+  try{
+    var r=await fetch('/quotes/save',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:name,client:snap.client,date:snap.date,total:p.total,snap:snap})});
+    var d=await r.json();
+    if(d.ok){savedQuotes.push({id:d.id,name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});toast('Quote saved','ok');}
+    else{toast('Save failed: '+(d.error||'unknown'),'err');}
+  }catch(e){toast('Save error: '+e.message,'err');}
 }
 function loadQuote(id){
   var q=savedQuotes.find(function(x){return x.id===id;});if(!q)return;
-  var d=JSON.parse(q.snap);
+  var d=typeof q.snap==='string'?JSON.parse(q.snap):q.snap;
   document.getElementById('proj-name').value=d.name||'';
   document.getElementById('proj-client').value=d.client||'';
   document.getElementById('proj-date').value=d.date||'';
@@ -1979,19 +1991,67 @@ function loadQuote(id){
   renderAll();renderConc();renderExtra();
   toast('Quote loaded');
 }
-function delSaved(id){savedQuotes=savedQuotes.filter(function(x){return x.id!==id;});saveStorage();renderSaved();}
-function renderSaved(){
-  var c=document.getElementById('saved-list');c.innerHTML='';
-  if(!savedQuotes.length){c.innerHTML='<p style="color:var(--dgray);font-size:13px;">No saved quotes yet.</p>';return;}
-  savedQuotes.forEach(function(q){
-    var div=document.createElement('div');
-    div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
-    div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+esc(q.name)+'</div>'
-      +'<div style="font-size:11px;color:var(--dgray);">'+(q.client?esc(q.client)+'  -  ':'')+(q.date||'')+'  -  $'+Math.round(q.total).toLocaleString()+'</div></div>'
-      +'<button class="btn btn-sec btn-sm" onclick="loadQuote('+q.id+')">Load</button>'
-      +'<button class="btn-ico" onclick="delSaved('+q.id+')">x</button>';
-    c.appendChild(div);
-  });
+async function delSaved(id){
+  try{await fetch('/quotes/delete/'+id,{method:'DELETE'});renderSaved();}
+  catch(e){toast('Delete error: '+e.message,'err');}
+}
+
+function exportAllQuotes(){
+  if(!savedQuotes.length){toast('No saved quotes to export','err');return;}
+  var data={exported:new Date().toISOString(),count:savedQuotes.length,quotes:savedQuotes};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='HD_Proposals_Backup_'+new Date().toISOString().split('T')[0]+'.json';
+  a.click();URL.revokeObjectURL(url);
+  toast('Exported '+savedQuotes.length+' quotes','ok');
+}
+
+async function importQuotes(){
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='.json';
+  inp.onchange=async function(e){
+    var file=e.target.files[0];if(!file)return;
+    try{
+      var text=await file.text();
+      var data=JSON.parse(text);
+      var quotes=Array.isArray(data)?data:(data.quotes||[]);
+      if(!quotes.length)throw new Error('No quotes found in file');
+      var count=0;
+      for(var i=0;i<quotes.length;i++){
+        var q=quotes[i];
+        var snap=typeof q.snap==='string'?JSON.parse(q.snap):q.snap||{};
+        var r=await fetch('/quotes/save',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({name:q.name||'Imported',client:q.client||'',date:q.date||'',total:q.total||0,snap:snap})});
+        var d=await r.json();if(d.ok)count++;
+      }
+      toast('Imported '+count+' of '+quotes.length+' quotes','ok');
+      renderSaved();
+    }catch(err){toast('Import error: '+err.message,'err');}
+  };
+  inp.click();
+}
+
+async function renderSaved(){
+  var c=document.getElementById('saved-list');
+  c.innerHTML='<p style="color:var(--dgray);font-size:13px;">Loading...</p>';
+  try{
+    var r=await fetch('/quotes/list');
+    var d=await r.json();
+    if(!d.ok)throw new Error(d.error||'Failed to load');
+    savedQuotes=d.quotes;
+    c.innerHTML='';
+    if(!savedQuotes.length){c.innerHTML='<p style="color:var(--dgray);font-size:13px;">No saved quotes yet.</p>';return;}
+    savedQuotes.forEach(function(q){
+      var div=document.createElement('div');
+      div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
+      div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+esc(q.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--dgray);">'+(q.client?esc(q.client)+'  -  ':'')+(q.date||'')+'  -  $'+Math.round(q.total).toLocaleString()+'</div></div>'
+        +'<button class="btn btn-sec btn-sm" onclick="loadQuote('+q.id+')">Load</button>'
+        +'<button class="btn-ico" onclick="delSaved('+q.id+')">x</button>';
+      c.appendChild(div);
+    });
+  }catch(e){c.innerHTML='<p style="color:var(--red);font-size:13px;">Error: '+e.message+'</p>';}
 }
 function resetAll(){
   sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;
