@@ -49,7 +49,7 @@ body{font-family:var(--font);background:#EBEBEB;color:var(--blk);font-size:14px;
 .content{padding:22px;max-width:1080px;}
 
 /* Panels */
-.panel{display:none;}.panel.on{display:block;}
+.panel{max-width:none;display:none;}.panel.on{display:block;}
 
 /* Cards */
 .card{background:#fff;border:1px solid var(--bdr);border-radius:var(--rad);margin-bottom:14px;overflow:hidden;}
@@ -302,7 +302,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <div class="pin-box">
     <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
-    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢"
+    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢"
            onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="pin-btn" onclick="doLogin()">Access Tool</button>
     <div class="pin-err" id="pin-err"></div>
@@ -436,15 +436,15 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
 
         <div class="metrics">
-          <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div></div>
-          <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div></div>
-          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div><div class="metric-sub">w/ waste</div></div>
-          <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div></div>
-          <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ</div><div class="metric-sub">w/ waste</div></div>
+          <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ</div></div>
           <div class="metric"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">$0</div></div>
           <div class="metric" id="m-phase-card" style="display:none;"><div class="metric-lbl" id="m-phase-lbl">Phase 1</div><div class="metric-val" id="m-phase">-</div></div>
-          <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div></div>
-          <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</div></div>
+          <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ</div></div>
         </div>
 
       <!-- Job Costing Card (Internal) -->
@@ -2229,7 +2229,7 @@ async function renderClients() {
     clientsList = d.clients;
     container.innerHTML = '';
     if (!clientsList.length) {
-      container.innerHTML = '<p style="color:var(--dgray);font-size:13px;">No clients yet. Use the '+ Add Client' button in the toolbar to add your first client.</p>';
+      container.innerHTML = '<p style="color:var(--dgray);font-size:13px;">No clients yet. Use the + Add Client button in the toolbar to add your first client.</p>';
       return;
     }
     clientsList.forEach(function(c){
