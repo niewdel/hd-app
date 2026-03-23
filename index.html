@@ -303,7 +303,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <div class="pin-box">
     <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
-    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="ÃÂ¢ÃÂÃÂ¢ÃÂ¢ÃÂÃÂ¢ÃÂ¢ÃÂÃÂ¢ÃÂ¢ÃÂÃÂ¢"
+    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢"
            onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="pin-btn" onclick="doLogin()">Access Tool</button>
     <div class="pin-err" id="pin-err"></div>
@@ -2004,6 +2004,7 @@ function buildPayload(){
     company:'HD Hauling & Grading',client_name:client,client_email:'',client_phone:'',client_company:'',
     notes:notes,total:parseFloat(total.toFixed(2)),line_items:line_items,
     unit_prices:[
+      {name:'ABC Stone (per ton)',rate:60},
       {name:'Additional asphalt tonnage (prevailing market rate)',rate:150},
       {name:'Cold patch / temporary repair (per ton)',rate:200},
       {name:'Milling overage (per SY)',rate:4.50},
