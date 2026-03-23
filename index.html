@@ -69,7 +69,9 @@ textarea{resize:vertical;min-height:52px;}
 
 /* Buttons */
 .btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .12s;font-family:var(--font);}
-.btn-red{background:var(--red);color:#fff;}.btn-red:hover{background:#aa0000;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-blue{background:#0055B2;color:#fff;border-color:#0055B2;}
+.btn-blue:hover{background:#0044A0;border-color:#0044A0;}.btn-red:hover{background:#aa0000;}
 .btn-sec{background:#fff;color:var(--blk);border:1px solid var(--bdr);}.btn-sec:hover{background:var(--lgray);}
 .btn-dark{background:#1e1e1e;color:#fff;}.btn-dark:hover{background:#333;}
 .btn-sm{padding:4px 10px;font-size:12px;}
@@ -403,7 +405,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
 
         <div class="card">
-                <div id="phase-tabs-bar" style="display:none;margin-bottom:10px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><div id="phase-tabs" style="display:flex;gap:6px;flex-wrap:wrap;"></div><button class="btn btn-sec btn-sm" onclick="addPhase()">+ Phase</button></div></div>
+                <div id="phase-tabs-bar" style="display:none !important;margin-bottom:10px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><div id="phase-tabs" style="display:flex;gap:6px;flex-wrap:wrap;"></div><button class="btn btn-sec btn-sm" onclick="addPhase()">+ Phase</button></div></div>
       <div class="card-hdr"><span class="card-title">Pavement Sections</span></div>
           <div class="card-body" style="padding-bottom:8px;">
             <div class="preset-strip" id="presets"></div>
@@ -1427,14 +1429,12 @@ async function exportCOPDF(){
 
 var TOPBAR_CFG = {
   build:[
-    {id:'phase-toggle-btn',html:'1 Phase',cls:'btn btn-sec btn-sm',fn:'toggleMultiPhase()'},
-    {html:'Save',cls:'btn btn-sec btn-sm',fn:'saveQuote()'},
-    {html:'Reset',cls:'btn btn-sec btn-sm',fn:'resetAll()'},
-    {id:'site-plan-btn',html:'Site Plan',cls:'btn btn-sec btn-sm',fn:"document.getElementById('site-plan-input').click()"},
-    {id:'docx-btn',html:'Word',cls:'btn btn-sec btn-sm',fn:'exportDOCX()'},
-    {id:'email-btn',html:'Email',cls:'btn btn-sec btn-sm',fn:'openEmailModal()'},
-    {id:'notion-btn',html:'Notion',cls:'btn btn-dark btn-sm',fn:'pushNotion()'},
-    {id:'pdf-btn',html:'Export PDF',cls:'btn btn-red btn-sm',fn:'exportPDF()'}
+    {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
+    {html:"Reset",cls:"btn btn-sec btn-sm",fn:"resetAll()"},
+    {id:"site-plan-btn",html:"<svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path d=\"M8 1v10M4 7l4-5 4 5\"/><path d=\"M2 13h12\"/></svg> Upload Site Plan",cls:"btn btn-sec btn-sm",fn:"document.getElementById('site-plan-input').click()"},
+    {id:"email-btn",html:"Email",cls:"btn btn-sec btn-sm",fn:"openEmailModal()"},
+    {id:"docx-btn",html:"<svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path d=\"M4 7h8v1H4zm0 2h8v1H4zm0 2h5v1H4z\"/></svg> Export Word",cls:"btn btn-blue btn-sm",fn:"exportDOCX()"},
+    {id:"pdf-btn",html:"<svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path d=\"M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1z\"/></svg> Export PDF",cls:"btn btn-red btn-sm",fn:"exportPDF()"}
   ],
   co:[
     {html:'Reset CO',cls:'btn btn-sec btn-sm',fn:'resetCO()'},
@@ -1464,7 +1464,7 @@ function renderTopbar(panelId){
 
 var TOPBAR_CFG={
   build:[
-    {id:"phase-toggle-btn",html:"1 Phase",cls:"btn btn-sec btn-sm",fn:"toggleMultiPhase()"},
+    
     {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
     {html:"Reset",cls:"btn btn-sec btn-sm",fn:"resetAll()"},
     {id:"site-plan-btn",html:"Site Plan",cls:"btn btn-sec btn-sm",fn:"document.getElementById('site-plan-input').click()"},
@@ -1910,21 +1910,21 @@ function renderAll(){
 }
 
 // -- Concrete ------------------------------------------------------------------
-function addConc(){concItems.push({id:cid++,type:'18sg',qty:0,sub:0,markup:20});renderConc();}
+function addConc(){concItems.push({id:cid++,type:'18sg',qty:0,mat:200,sub:0,markup:20});renderConc();}
 function remConc(id){concItems=concItems.filter(function(x){return x.id!==id;});renderConc();recalc();}
 function updConcType(id,v){var i=concItems.find(function(x){return x.id===id;});if(!i)return;i.type=v;renderConc();}
 function updConcField(id,f,v){
   var i=concItems.find(function(x){return x.id===id;});if(!i)return;
   i[f]=parseFloat(v)||0;recalc();updateConcResult(id);
 }
-function concBid(i){return i.sub*(1+(i.markup/100));}
+function concBid(i){var m=parseFloat(i.mat)||0;return (m+i.sub)*(1+(i.markup/100));}
 function updateConcResult(id){
   var item=concItems.find(function(x){return x.id===id;});if(!item)return;
   var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];
-  var bR=concBid(item),bidC=item.qty*bR,subC=item.qty*item.sub,mp=mu(subC,bidC);
+  var matCost=item.qty*(parseFloat(item.mat)||0),subC=item.qty*item.sub,bR=concBid(item),bidC=item.qty*bR,mp=mu(matCost+subC,bidC);
   var resEl=document.querySelector('.lres[data-conc="'+id+'"]');
   var muEl=document.querySelector('.mubadge[data-conc="'+id+'"]');
-  if(resEl)resEl.innerHTML=item.qty>0&&item.sub>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  -  sub <b>$'+fi(subC)+'</b>  -  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty &amp; sub rate</span>';
+  if(resEl)resEl.innerHTML=item.qty>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  mat+sub <b>$'+fi(matCost+subC)+'</b>  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty and rates</span>'; sub rate</span>';
   if(muEl){muEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
 }
 function renderConc(){
@@ -1939,6 +1939,7 @@ function renderConc(){
     var row=document.createElement('div');row.className='lyr-row';
     row.innerHTML='<select onchange="updConcType('+item.id+',this.value)" style="min-width:138px">'+ctOpts+'</select>'
       +'<label>'+ct.unit+'</label><input type="number" value="'+(item.qty||'')+'" placeholder="0" min="0" step="1" style="width:74px" onchange="updConcField('+item.id+',\'qty\',this.value)">'
+      +'<label>Mat $/'+ct.unit+'</label><input type="number" value="'+(item.mat!==undefined?item.mat:200)+'" placeholder="200" min="0" step="1" style="width:72px" onchange="updConcField('+item.id+',\'mat\',parseFloat(this.value)||0)"/>'
       +'<label>Sub $/'+ct.unit+'</label><input type="number" value="'+(item.sub||'')+'" placeholder="0.00" min="0" step=".25" style="width:76px" onchange="updConcField('+item.id+',\'sub\',this.value)">'
       +'<label>Markup %</label><input type="number" value="'+item.markup+'" min="0" step="1" style="width:58px" onchange="updConcField('+item.id+',\'markup\',this.value)">'
       +muBadge+'<span class="lres" data-conc="'+item.id+'">'+resHTML+'</span>'
@@ -2030,8 +2031,8 @@ function recalc(){
   concItems.forEach(function(i){
     if(!i.qty||!i.sub)return;
     var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];
-    var subC=i.qty*i.sub,bC=i.qty*concBid(i),mp=mu(subC,bC);
-    gM+=subC;gB+=bC;
+    var matC=i.qty*(parseFloat(i.mat)||0),subC=i.qty*i.sub,bC=i.qty*concBid(i),mp=mu(matC+subC,bC);
+    gM+=matC+subC;gB+=bC;
     var tr=document.createElement('tr');
     tr.innerHTML='<td><small>Concrete</small></td><td><span class="badge b-conc">'+esc(ct.name)+'</span></td>'
       +'<td>-</td><td>-</td><td>'+i.qty.toLocaleString()+' '+ct.unit+'</td><td>'+ct.unit+'</td>'
