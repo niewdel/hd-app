@@ -301,7 +301,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <div class="pin-box">
     <h2>Proposal Generator</h2>
     <p>Enter your access PIN to continue</p>
-    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="â¢â¢â¢â¢"
+    <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="Ã¢ÂÂ¢Ã¢ÂÂ¢Ã¢ÂÂ¢Ã¢ÂÂ¢"
            onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="pin-btn" onclick="doLogin()">Access Tool</button>
     <div class="pin-err" id="pin-err"></div>
@@ -435,15 +435,15 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
 
         <div class="metrics">
-          <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">â</div></div>
-          <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">â</div></div>
-          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">â</div><div class="metric-sub">w/ waste</div></div>
-          <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">â</div></div>
-          <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">â</div></div>
+          <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">Ã¢ÂÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">Ã¢ÂÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">Ã¢ÂÂ</div><div class="metric-sub">w/ waste</div></div>
+          <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">Ã¢ÂÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">Ã¢ÂÂ</div></div>
           <div class="metric"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">$0</div></div>
           <div class="metric" id="m-phase-card" style="display:none;"><div class="metric-lbl" id="m-phase-lbl">Phase 1</div><div class="metric-val" id="m-phase">-</div></div>
-          <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">â</div></div>
-          <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">â</div></div>
+          <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">Ã¢ÂÂ</div></div>
+          <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">Ã¢ÂÂ</div></div>
         </div>
 
       <!-- Job Costing Card (Internal) -->
@@ -1532,59 +1532,37 @@ function renderMatTable(){
     var isDefault = MAT_DEFAULT.hasOwnProperty(k);
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid var(--bdr)';
-    // Name
-    var td0 = document.createElement('td'); td0.style.cssText='padding:6px 10px;';
-    if(isDefault){
-      var sp=document.createElement('span');sp.style.cssText='font-size:12px;font-weight:600;';sp.textContent=k;td0.appendChild(sp);
-    } else {
-      var ni=document.createElement('input');ni.type='text';ni.value=k;ni.placeholder='Name';
-      ni.style.cssText='width:110px;font-size:12px;';
-      (function(kk){ni.addEventListener('change',function(){renameMaterial(kk,this.value);});})(k);
-      td0.appendChild(ni);
-    }
+    var td0=document.createElement('td');td0.style.cssText='padding:6px 10px;';
+    if(isDefault){var sp=document.createElement('span');sp.style.cssText='font-size:12px;font-weight:600;';sp.textContent=k;td0.appendChild(sp);}
+    else{var ni=document.createElement('input');ni.type='text';ni.value=k;ni.placeholder='Name';ni.style.cssText='width:110px;font-size:12px;';(function(kk){ni.addEventListener('change',function(){renameMaterial(kk,this.value);});})(k);td0.appendChild(ni);}
     tr.appendChild(td0);
-    // Cost $/ton
     var td1=document.createElement('td');td1.style.cssText='padding:6px 10px;text-align:right;';
     var i1=document.createElement('input');i1.type='number';i1.value=MAT[k]||0;i1.min=0;i1.step=1;i1.style.cssText='width:70px;text-align:right;';
     (function(kk){i1.addEventListener('change',function(){MAT[kk]=parseFloat(this.value)||0;renderAll();renderConc();renderExtra();});})(k);
     td1.appendChild(i1);tr.appendChild(td1);
-    // Default rate $/ton
     var td2=document.createElement('td');td2.style.cssText='padding:6px 10px;text-align:right;';
     var i2=document.createElement('input');i2.type='number';i2.value=DRATE[k]||0;i2.min=0;i2.step=1;i2.style.cssText='width:70px;text-align:right;';
     (function(kk){i2.addEventListener('change',function(){DRATE[kk]=parseFloat(this.value)||0;});})(k);
     td2.appendChild(i2);tr.appendChild(td2);
-    // Density lbs/ton
     var td3=document.createElement('td');td3.style.cssText='padding:6px 10px;text-align:right;';
     var i3=document.createElement('input');i3.type='number';i3.value=LBS[k]||115;i3.min=1;i3.step=1;i3.style.cssText='width:70px;text-align:right;';
     (function(kk){i3.addEventListener('change',function(){LBS[kk]=parseFloat(this.value)||115;});})(k);
     td3.appendChild(i3);tr.appendChild(td3);
-    // Default depth
     var td4=document.createElement('td');td4.style.cssText='padding:6px 10px;text-align:right;';
     var i4=document.createElement('input');i4.type='number';i4.value=DDEPTH[k]||3;i4.min=0;i4.step=0.5;i4.style.cssText='width:60px;text-align:right;';
     (function(kk){i4.addEventListener('change',function(){DDEPTH[kk]=parseFloat(this.value)||3;});})(k);
     td4.appendChild(i4);tr.appendChild(td4);
-    // Badge
     var td5=document.createElement('td');td5.style.cssText='padding:6px 10px;text-align:center;';
     var sel=document.createElement('select');sel.style.cssText='font-size:11px;width:80px;';
-    badges.forEach(function(b,i){
-      var opt=document.createElement('option');opt.value=b;opt.textContent=badgeLabels[i];
-      if((LBADGE[k]||'')=== b) opt.selected=true;
-      sel.appendChild(opt);
-    });
+    badges.forEach(function(b,i){var opt=document.createElement('option');opt.value=b;opt.textContent=badgeLabels[i];if((LBADGE[k]||'')=== b)opt.selected=true;sel.appendChild(opt);});
     (function(kk){sel.addEventListener('change',function(){LBADGE[kk]=this.value;});})(k);
     td5.appendChild(sel);tr.appendChild(td5);
-    // Remove
     var td6=document.createElement('td');td6.style.cssText='padding:6px 4px;text-align:center;';
-    if(!isDefault){
-      var rb=document.createElement('button');rb.className='btn-ico';rb.textContent='x';
-      (function(kk){rb.addEventListener('click',function(){removeMaterial(kk);});})(k);
-      td6.appendChild(rb);
-    }
+    if(!isDefault){var rb=document.createElement('button');rb.className='btn-ico';rb.textContent='x';(function(kk){rb.addEventListener('click',function(){removeMaterial(kk);});})(k);td6.appendChild(rb);}
     tr.appendChild(td6);
     tbody.appendChild(tr);
   });
 }
-
 function addMaterial(){
   var name = prompt('New material name (e.g. "S9.5D"):');
   if(!name || name.trim()==='') return;
