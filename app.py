@@ -136,6 +136,26 @@ def quotes_save():
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
+@app.route('/quotes/update/<int:qid>', methods=['PATCH'])
+@require_auth
+def quotes_update(qid):
+    data = request.get_json() or {}
+    try:
+        snap = data.get('snap', {})
+        payload = {
+            'name':   data.get('name', 'Unnamed'),
+            'client': data.get('client', ''),
+            'date':   data.get('date', ''),
+            'total':  float(data.get('total', 0)),
+            'snap':   snap if isinstance(snap, dict) else json.loads(snap),
+            'created_by': session.get('username', ''),
+        }
+        r = http.patch(sb_url('proposals', f'?id=eq.{qid}'), headers=sb_headers(), json=payload, timeout=10)
+        r.raise_for_status()
+        return jsonify({'ok': True, 'id': qid})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 @app.route('/quotes/list')
 @require_auth
 def quotes_list():

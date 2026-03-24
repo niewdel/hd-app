@@ -2454,11 +2454,25 @@ async function saveQuote(){
     sections:sections,concItems:concItems,extraItems:extraItems};
   var p=buildPayload();
   var jcData=calcJobCost();snap.jc_labor_cost=jcData.laborCost;snap.jc_overhead_pct=jcData.ovhPct;snap.jc_total_cost=jcData.totalCost;snap.jc_margin_pct=jcData.marginPct;
+  var body={name:name,client:snap.client,date:snap.date,total:p.total,snap:snap};
   try{
-    var r=await fetch('/quotes/save',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({name:name,client:snap.client,date:snap.date,total:p.total,snap:snap,stage_id:pipelineStages.length?pipelineStages[0].id:null})});
+    var url,method;
+    if(lastSavedQuoteId){
+      url='/quotes/update/'+lastSavedQuoteId;method='PATCH';
+    } else {
+      url='/quotes/save';method='POST';
+      if(pipelineStages.length)body.stage_id=pipelineStages[0].id;
+    }
+    var r=await fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     var d=await r.json();
-    if(d.ok){lastSavedQuoteId=d.id;savedQuotes.push({id:d.id,name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});toast('Quote saved','ok');}
+    if(d.ok){
+      lastSavedQuoteId=d.id;
+      // Update local cache
+      var existing=savedQuotes.find(function(q){return q.id===d.id;});
+      if(existing){existing.name=name;existing.client=snap.client;existing.date=snap.date;existing.total=p.total;existing.snap=JSON.stringify(snap);}
+      else{savedQuotes.push({id:d.id,name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});}
+      toast(method==='PATCH'?'Quote updated':'Quote saved','ok');
+    }
     else{toast('Save failed: '+(d.error||'unknown'),'err');}
   }catch(e){toast('Save error: '+e.message,'err');}
 }
@@ -2487,6 +2501,7 @@ function loadQuote(id){
   lid=sections.reduce(function(m,s){return s.layers.reduce(function(m2,l){return Math.max(m2,l.id+1);},m);},0);
   concItems=d.concItems||[];cid=concItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
   extraItems=d.extraItems||[];eid=extraItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
+  lastSavedQuoteId=q.id;
   showPanel('build',document.querySelector('.nav-item'));
   renderAll();renderConc();renderExtra();
   toast('Quote loaded');
@@ -2608,8 +2623,9 @@ async function renderSaved(){
       var div=document.createElement('div');
       div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
       var createdBy=q.created_by?'<span style="background:#eee;color:var(--dgray);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase;margin-left:6px;">'+esc(q.created_by)+'</span>':'';
+      var ts=q.created_at?new Date(q.created_at).toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}):'';
       div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+esc(q.name)+createdBy+'</div>'
-        +'<div style="font-size:11px;color:var(--dgray);">'+(q.client?esc(q.client)+'  -  ':'')+(q.date||'')+'  -  $'+Math.round(q.total).toLocaleString()+'</div></div>'
+        +'<div style="font-size:11px;color:var(--dgray);">'+(q.client?esc(q.client)+' &middot; ':'')+ts+' &middot; $'+Math.round(q.total).toLocaleString()+'</div></div>'
         +'<button class="btn btn-sec btn-sm" onclick="loadQuote('+q.id+')">Load</button>'
         +'<button class="btn btn-sec btn-sm" onclick="generateWorkOrder('+q.id+')" title="Generate crew work order">Work Order</button>'
         +'<button class="btn btn-sec btn-sm" onclick="generateJobCostFromSaved('+q.id+')" title="Generate job cost report">Job Cost</button>'
@@ -2619,7 +2635,7 @@ async function renderSaved(){
   }catch(e){c.innerHTML='<p style="color:var(--red);font-size:13px;">Error: '+e.message+'</p>';}
 }
 function resetAll(){
-  sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;
+  sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;lastSavedQuoteId=null;
   ['proj-name','proj-client','proj-addr','proj-cs'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('proj-notes').value='All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice. See Exhibit A on Page 2 for Site Plan and Takeoffs.';
   document.getElementById('waste').value=5;document.getElementById('mob').value=0;document.getElementById('contingency').value=0;
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
