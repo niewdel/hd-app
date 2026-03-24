@@ -298,6 +298,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 .client-sub{font-size:11px;color:var(--dgray);margin-top:2px;}
 .kb-stage-select{font-size:11px;padding:2px 5px;border:1px solid var(--bdr);border-radius:4px;background:#fff;cursor:pointer;max-width:130px;}
 .admin-table{width:100%;border-collapse:collapse;font-size:13px;}.admin-table th{background:var(--lgray);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--dgray);border-bottom:2px solid var(--bdr);letter-spacing:.5px;text-transform:uppercase;}.admin-table td{padding:9px 12px;border-bottom:1px solid var(--bdr);vertical-align:middle;}.admin-table tr:hover td{background:var(--lgray);}.role-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}.role-admin{background:#2d1a1a;color:var(--red);}.role-user{background:#f0f0f0;color:#555;}.status-active{color:#27500A;font-weight:600;font-size:11px;}.status-inactive{color:#999;font-size:11px;}.log-row-fail td{color:#cc4444;}.log-ip{font-family:monospace;font-size:11px;color:var(--dgray);}
+.admin-only{display:none}
 </style>
 </head>
 <body>
@@ -385,7 +386,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" onclick="showPanel('settings',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings
       </div>
-      <div class="nav-item admin-only" id="nav-admin" onclick="showPanel('admin',this);loadUsers();loadLogs();" style="display:none;">
+      <div class="nav-item admin-only" id="nav-admin" onclick="showPanel('admin',this);loadUsers();loadLogs();">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg>
         Admin
       </div>
@@ -814,6 +815,7 @@ async function doLogin(){
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
       boot();
+      showAdminElements();
       if(window._userRole==='admin'){var _an=document.getElementById('nav-admin');if(_an)_an.style.display='';}
     } else {
       document.getElementById('pin-err').textContent=d.error||'Incorrect username or PIN.';
@@ -823,6 +825,10 @@ async function doLogin(){
   finally{if(btn){btn.disabled=false;btn.textContent='Access Tool';}}
 }
 
+
+function showAdminElements(){
+  if(window._userRole==='admin'){document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='';});}
+}
 function boot(){
   loadStorage();
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
