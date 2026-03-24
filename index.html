@@ -810,7 +810,7 @@ async function doLogin(){
     if(d.ok){
       window._userRole=d.role||'user';
       window._userName=d.full_name||username;
-      window._userUsername=username;
+      window._userUsername=d.username||username;
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
       boot();
