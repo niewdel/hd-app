@@ -19,8 +19,8 @@ body{font-family:var(--font);background:#EBEBEB;color:var(--blk);font-size:14px;
 .login-bar{position:relative;z-index:2;background:#ffffff;padding:10px 28px;display:flex;align-items:center;box-shadow:0 1px 0 rgba(255,255,255,0.06);}
 .login-bar img{height:42px;width:auto;display:block;}
 .login-body{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;}
-.login-card{width:340px;text-align:center;}
-.login-eyebrow{font-size:30px;font-weight:700;letter-spacing:4px;color:var(--red);text-transform:uppercase;margin-bottom:18px;}
+.login-card{width:420px;text-align:center;}
+.login-eyebrow{font-size:30px;font-weight:700;letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:18px;white-space:nowrap;}
 .login-heading{font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;margin-bottom:6px;line-height:1.2;}
 .login-sub{font-size:12px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;margin-bottom:36px;}
 .login-rule{width:32px;height:2px;background:var(--red);margin:0 auto 36px;border-radius:2px;}
@@ -1151,32 +1151,46 @@ function saveLibrary(){
 // ── Library picker for proposals ──────────────────────────────────
 function openLibraryPicker(){
   if(!BID_LIBRARY.length){toast('Library is empty — add items in Settings first','err');return;}
-  var existing = document.getElementById('lib-picker-modal');
+  var existing=document.getElementById('lib-picker-modal');
   if(existing) existing.remove();
-  var modal = document.createElement('div');
-  modal.id = 'lib-picker-modal';
+  var modal=document.createElement('div');
+  modal.id='lib-picker-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
-  var box = document.createElement('div');
+  var box=document.createElement('div');
   box.style.cssText='background:#fff;border-radius:10px;padding:20px;min-width:480px;max-width:600px;max-height:70vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18);';
-  box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">'
-    +'<span style="font-weight:700;font-size:15px;">Insert from Library</span>'
-    +'<button class="btn-ico" onclick="document.getElementById('lib-picker-modal').remove()">&#215;</button>'
-    +'</div>';
+  // Header
+  var hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;';
+  var title=document.createElement('span');
+  title.style.cssText='font-weight:700;font-size:15px;';
+  title.textContent='Insert from Library';
+  var closeBtn=document.createElement('button');
+  closeBtn.className='btn-ico';
+  closeBtn.textContent='×';
+  closeBtn.addEventListener('click',function(){modal.remove();});
+  hdr.appendChild(title); hdr.appendChild(closeBtn);
+  box.appendChild(hdr);
+  // Items
   BID_LIBRARY.forEach(function(item){
-    var row = document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr);cursor:pointer;';
-    row.innerHTML='<div style="flex:1;">'
-      +'<div style="font-weight:600;font-size:13px;">'+esc(item.name)+'</div>'
-      +'<div style="font-size:11px;color:var(--dgray);">'+esc(item.desc||'')+'  ·  '+item.unit+(item.rate?' · $'+item.rate:'')+'</div>'
-      +'</div>'
-      +'<button class="btn btn-red btn-sm">Insert</button>';
-    row.querySelector('button').addEventListener('click',function(){
-      extraItems.push({id:eid++,name:item.name,desc:item.desc||'',qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0});
-      renderExtra();
-      recalc();
-      document.getElementById('lib-picker-modal').remove();
-      toast('Item added','ok');
-    });
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr);';
+    var info=document.createElement('div');
+    info.style.flex='1';
+    var name=document.createElement('div');
+    name.style.cssText='font-weight:600;font-size:13px;';
+    name.textContent=item.name;
+    var sub=document.createElement('div');
+    sub.style.cssText='font-size:11px;color:var(--dgray);';
+    sub.textContent=(item.desc?item.desc+' · ':'')+item.unit+(item.rate?' · $'+item.rate:'');
+    info.appendChild(name); info.appendChild(sub);
+    var ins=document.createElement('button');
+    ins.className='btn btn-red btn-sm';
+    ins.textContent='Insert';
+    ins.addEventListener('click',(function(it){return function(){
+      extraItems.push({id:eid++,name:it.name,desc:it.desc||'',qty:1,unit:it.unit,price:it.rate||0,subtotal:it.rate||0});
+      renderExtra(); recalc(); modal.remove(); toast('Item added','ok');
+    };})(item));
+    row.appendChild(info); row.appendChild(ins);
     box.appendChild(row);
   });
   modal.appendChild(box);
