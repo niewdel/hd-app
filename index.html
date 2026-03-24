@@ -20,7 +20,7 @@ body{font-family:var(--font);background:#EBEBEB;color:var(--blk);font-size:14px;
 .login-bar img{height:42px;width:auto;display:block;}
 .login-body{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;}
 .login-card{width:340px;text-align:center;}
-.login-eyebrow{font-size:10px;font-weight:700;letter-spacing:4px;color:var(--red);text-transform:uppercase;margin-bottom:18px;}
+.login-eyebrow{font-size:30px;font-weight:700;letter-spacing:4px;color:var(--red);text-transform:uppercase;margin-bottom:18px;}
 .login-heading{font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;margin-bottom:6px;line-height:1.2;}
 .login-sub{font-size:12px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;margin-bottom:36px;}
 .login-rule{width:32px;height:2px;background:var(--red);margin:0 auto 36px;border-radius:2px;}
@@ -2132,6 +2132,85 @@ async function deactivateUser(uid,username,active){
   var d=await r.json();
   if(d.ok){loadUsers();toast('User '+(active?'deactivated':'reactivated'),'ok');}
   else toast('Error: '+(d.error||'failed'),'err');
+}
+
+
+// ── Login canvas network animation ────────────────────────────────────────────
+function initLoginCanvas(){
+  var canvas = document.getElementById('login-canvas');
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W, H, nodes = [], animId;
+  var NODE_COUNT = 60;
+  var MAX_DIST = 160;
+  var RED = '#CC0000';
+
+  function resize(){
+    W = canvas.width  = canvas.offsetWidth  || window.innerWidth;
+    H = canvas.height = canvas.offsetHeight || window.innerHeight;
+  }
+
+  function Node(){
+    this.x  = Math.random() * W;
+    this.y  = Math.random() * H;
+    this.vx = (Math.random() - 0.5) * 0.5;
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.r  = Math.random() * 2 + 1;
+    this.alpha = Math.random() * 0.5 + 0.2;
+  }
+
+  function init(){
+    resize();
+    nodes = [];
+    for(var i = 0; i < NODE_COUNT; i++) nodes.push(new Node());
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+
+    // Update positions
+    nodes.forEach(function(n){
+      n.x += n.vx;
+      n.y += n.vy;
+      if(n.x < 0 || n.x > W) n.vx *= -1;
+      if(n.y < 0 || n.y > H) n.vy *= -1;
+    });
+
+    // Draw edges
+    for(var i = 0; i < nodes.length; i++){
+      for(var j = i + 1; j < nodes.length; j++){
+        var dx = nodes[i].x - nodes[j].x;
+        var dy = nodes[i].y - nodes[j].y;
+        var dist = Math.sqrt(dx*dx + dy*dy);
+        if(dist < MAX_DIST){
+          var alpha = (1 - dist / MAX_DIST) * 0.25;
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.strokeStyle = 'rgba(180,20,20,' + alpha + ')';
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Draw nodes
+    nodes.forEach(function(n){
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(200,30,30,' + n.alpha + ')';
+      ctx.fill();
+    });
+
+    animId = requestAnimationFrame(draw);
+  }
+
+  init();
+  draw();
+
+  window.addEventListener('resize', function(){
+    resize();
+  });
 }
 
 </script>
