@@ -813,7 +813,7 @@ async function doLogin(){
       window._userUsername=d.username||username;
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
-      boot();
+      try{boot();}catch(e){console.warn('boot error:',e.message);}
       showAdminElements();
     } else {
       document.getElementById('pin-err').textContent=d.error||'Incorrect username or PIN.';
@@ -935,8 +935,8 @@ function resetJCDefaults(){
 function renderJCDefaults(){
   var cr=document.getElementById('jc-default-crew-rate');if(cr)cr.value=jcCrewRate;
   var op=document.getElementById('jc-default-overhead-pct');if(op)op.value=jcOverheadPct;
-  var pr=document.getElementById('jc-default-productivity');if(pr)pr.value=jcProductivity;
-  var prEl=document.getElementById('jc-default-productivity');if(prEl)prEl.value=productivity;
+  var pr=document.getElementById('jc-default-jcProductivity');if(pr)pr.value=jcProductivity;
+  var prEl=document.getElementById('jc-default-jcProductivity');if(prEl)prEl.value=jcProductivity;
   // Also update the build panel fields if they are at default
   var bcr=document.getElementById('jc-crew-rate');if(bcr)bcr.value=jcCrewRate;
   var bop=document.getElementById('jc-overhead-pct');if(bop)bop.value=jcOverheadPct;
@@ -2525,7 +2525,7 @@ async function deactivateUser(uid,username,active){if(!confirm((active?'Deactiva
       window._userUsername=d.username||'';
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
-      boot();
+      try{boot();}catch(e){console.warn('boot error:',e.message);}
       showAdminElements();
     }
   }catch(e){}
