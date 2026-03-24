@@ -110,6 +110,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 .b-surface{background:#EAF3DE;color:#27500A;}
 .b-millings{background:#FAEEDA;color:#633806;}
 .b-conc{background:#F0F0F0;color:#444;}
+.b-misc{background:#F5F0E8;color:#6B5B3E;}
 .gp{color:#27500A;font-weight:600;}
 .gn{color:#A32D2D;font-weight:600;}
 
@@ -354,6 +355,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item on" onclick="showPanel('build',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Build Proposal
       </div>
+      <div class="nav-item" onclick="showPanel('lineitems',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v2H2zm0 4h8v1H2zm0 3h10v1H2zm0 3h6v1H2z"/><path d="M13 7l2 2-2 2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Line Items</div>
       <div class="nav-item" onclick="showPanel('jobcost',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3v1.5H10v1H8.5V9H10v1H8.5V11.5h-1V10H6V9h1.5V6.5H6v-1h1.5V4h1z"/></svg>Job Cost</div>
       <div class="nav-item" onclick="showPanel('co',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h8l3 3v9H2V2zm5 4H4v1h3V6zm5 2H4v1h6V8zm0 2H4v1h6v-1z"/></svg>Change Orders</div>
       <div class="nav-item" onclick="showPanel('saved',this)">
@@ -485,6 +487,20 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
 
       </div><!-- /panel-build -->
+
+      <!-- LINE ITEMS PANEL -->
+      <div class="panel" id="panel-lineitems"><div class="content">
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Proposal Line Items</span>
+            <span style="font-size:11px;color:var(--dgray);margin-left:8px;">Edit names, descriptions, units &amp; rates before exporting PDF</span>
+          </div>
+          <div id="li-table-wrap" style="overflow-x:auto;"></div>
+          <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn btn-sec btn-sm" onclick="refreshLineItems()">Refresh from Build</button>
+          </div>
+        </div>
+      </div></div>
 
       <!-- JOB COST PANEL -->
       <div class="panel" id="panel-jobcost">
@@ -868,6 +884,7 @@ var savedQuotes=[];
 var lastSavedQuoteId=null; // track last saved proposal for pipeline auto-move
 var clients=[];
 var sender={name:'',email:'',phone:''};
+var selectedClient={name:'',company:'',phone:'',email:''};
 var sitePlanDataUrl=null;
 var gM=0;
 
@@ -1577,10 +1594,11 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={build:'Build Proposal',jobcost:'Job Cost',saved:'Saved Proposals',settings:'Settings',co:'Change Orders',analytics:'Analytics',pipeline:'Pipeline',clients:'Clients',admin:'Admin Panel',workorders:'Work Orders'}[id]||id;
+  var _panelTitle={build:'Build Proposal',lineitems:'Line Items',jobcost:'Job Cost',saved:'Saved Proposals',settings:'Settings',co:'Change Orders',analytics:'Analytics',pipeline:'Pipeline',clients:'Clients',admin:'Admin Panel',workorders:'Work Orders'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved')renderSaved();
+  if(id==='lineitems')renderLineItems();
   if(id==='co'){populateCOProposalDropdown();loadCOList();}
   if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');}
   if(id==='jobcost')renderJobCost();
@@ -2132,47 +2150,12 @@ function buildPayload(){
   var date=document.getElementById('proj-date').value||'';
   var notes=document.getElementById('proj-notes').value||'';
   var fmtDate=date?new Date(date+'T12:00:00').toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}):'';
-  var line_items=[],total=0;
-  sections.forEach(function(s){
-    var sf=s.sf||0,sy=calcSY(sf);
-    s.layers.forEach(function(l){
-      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
-      var t=rawT*wfv;
-      var bC=calcLayerBid(t,l);
-      total+=bC;
-      var autoDesc='Install '+l.depth+'" '+(l.name||l.type);
-      var desc=l.description||autoDesc;
-      if(sf>0)line_items.push({
-        name:s.name+' \u2014 '+(l.name||l.type),
-        description:desc,
-        qty:sy,
-        unit:'SY',
-        price:parseFloat(sy>0?(bC/sy).toFixed(2):'0'),
-        subtotal:parseFloat(bC.toFixed(2))
-      });
-    });
-  });
-  concItems.forEach(function(i){
-    if(!i.qty||!i.sub)return;
-    var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];
-    var bR=concBid(i),bC=i.qty*bR;total+=bC;
-    line_items.push({name:ct.name,description:i.description||ct.desc,qty:i.qty,unit:ct.unit,price:parseFloat(bR.toFixed(2)),subtotal:parseFloat(bC.toFixed(2))});
-  });
-  extraItems.forEach(function(i){
-    if(!i.name||!i.subtotal)return;
-    total+=i.subtotal;
-    line_items.push({name:i.name,description:i.desc||'',qty:i.qty,unit:i.unit,price:i.price,subtotal:i.subtotal});
-  });
-  var contPct2=cont(),contv2=contPct2>0?parseFloat((total*contPct2/100).toFixed(2)):0;
-  if(contv2>0){
-    total+=contv2;
-    line_items.push({name:'Contingency ('+contPct2.toFixed(1)+'%)',description:'Project contingency',qty:1,unit:'LS',price:contv2,subtotal:contv2});
-  }
-  if(mobv>0){total+=mobv;line_items.push({name:'Mobilization',description:'Project mobilization & setup',qty:1,unit:'LS',price:mobv,subtotal:mobv});}
+  var line_items=getLineItemsForPayload();
+  var total=line_items.reduce(function(s,x){return s+x.subtotal;},0);
   return{
     project_name:name,address:addr,city_state:cs,date:fmtDate,
     sender_name:sender.name||'HD Hauling & Grading',sender_email:sender.email||'',sender_phone:sender.phone||'',
-    company:'HD Hauling & Grading',client_name:client,client_email:'',client_phone:'',client_company:'',
+    company:'HD Hauling & Grading',client_name:client,client_email:selectedClient.email||'',client_phone:selectedClient.phone||'',client_company:selectedClient.company||'',
     notes:notes,total:parseFloat(total.toFixed(2)),line_items:line_items,
     unit_prices:[
       {name:'ABC Stone (per ton)',rate:60},
@@ -2184,6 +2167,183 @@ function buildPayload(){
     ],
     _date_iso:date,
   };
+}
+
+// -- Line Items tab ------------------------------------------------------------
+var liOverrides={}; // key: 'sec-{sid}-{lid}' or 'conc-{id}' or 'extra-{id}', val: {name,description,qty,unit,price}
+
+function buildRawLineItems(){
+  var wfv=wf(),mobv=mob(),items=[];
+  sections.forEach(function(s){
+    var sf=s.sf||0,sy=calcSY(sf);
+    s.layers.forEach(function(l){
+      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
+      var t=rawT*wfv;
+      var bC=calcLayerBid(t,l);
+      var autoDesc='Install '+l.depth+'" '+(l.name||l.type);
+      if(sf>0)items.push({
+        key:'sec-'+s.id+'-'+l.id,
+        badge:s.name,badgeCls:LBADGE[l.type]||'b-misc',
+        name:s.name+' \u2014 '+(l.name||l.type),
+        description:l.description||autoDesc,
+        qty:sy,unit:'SY',
+        price:parseFloat(sy>0?(bC/sy).toFixed(2):'0'),
+        subtotal:parseFloat(bC.toFixed(2)),
+        src:'asphalt'
+      });
+    });
+  });
+  concItems.forEach(function(i){
+    if(!i.qty||!i.sub)return;
+    var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];
+    var bR=concBid(i),bC=i.qty*bR;
+    items.push({
+      key:'conc-'+i.id,badge:'Concrete',badgeCls:'b-conc',
+      name:ct.name,description:i.description||ct.desc,
+      qty:i.qty,unit:ct.unit,
+      price:parseFloat(bR.toFixed(2)),subtotal:parseFloat(bC.toFixed(2)),
+      src:'concrete'
+    });
+  });
+  extraItems.forEach(function(i){
+    if(!i.name||!i.subtotal)return;
+    items.push({
+      key:'extra-'+i.id,badge:'Additional',badgeCls:'b-misc',
+      name:i.name,description:i.desc||'',
+      qty:i.qty,unit:i.unit,
+      price:i.price,subtotal:i.subtotal,
+      src:'extra'
+    });
+  });
+  var contPct2=cont(),total=items.reduce(function(s,x){return s+x.subtotal;},0);
+  var contv2=contPct2>0?parseFloat((total*contPct2/100).toFixed(2)):0;
+  if(contv2>0)items.push({key:'_contingency',badge:'',name:'Contingency ('+contPct2.toFixed(1)+'%)',description:'Project contingency',qty:1,unit:'LS',price:contv2,subtotal:contv2,src:'auto'});
+  var mobv2=mob();
+  if(mobv2>0)items.push({key:'_mobilization',badge:'',name:'Mobilization',description:'Project mobilization & setup',qty:1,unit:'LS',price:mobv2,subtotal:mobv2,src:'auto'});
+  return items;
+}
+
+function renderLineItems(){
+  var wrap=document.getElementById('li-table-wrap');if(!wrap)return;
+  var raw=buildRawLineItems();
+  var tbl=document.createElement('table');
+  tbl.className='tbl';tbl.style.width='100%';tbl.style.fontSize='12px';
+  var thead=document.createElement('thead');
+  thead.innerHTML='<tr><th style="text-align:left;width:30px">#</th><th style="text-align:left;">Badge</th><th style="text-align:left;min-width:160px;">Item Name</th><th style="text-align:left;min-width:180px;">Description</th><th style="width:60px;">Qty</th><th style="width:55px;">Unit</th><th style="width:80px;">Price</th><th style="width:90px;">Subtotal</th></tr>';
+  tbl.appendChild(thead);
+  var tbody=document.createElement('tbody');
+  var grand=0;
+  raw.forEach(function(item,idx){
+    var ov=liOverrides[item.key]||{};
+    var nm=ov.name!==undefined?ov.name:item.name;
+    var desc=ov.description!==undefined?ov.description:item.description;
+    var qty=ov.qty!==undefined?ov.qty:item.qty;
+    var unit=ov.unit!==undefined?ov.unit:item.unit;
+    var price=ov.price!==undefined?ov.price:item.price;
+    var sub=qty*price;
+    grand+=sub;
+    var isAuto=item.src==='auto';
+    var tr=document.createElement('tr');
+    if(idx%2)tr.style.background='var(--lgray)';
+    var badgeHtml=item.badge?'<span class="badge '+(item.badgeCls||'b-misc')+'" style="font-size:10px;">'+esc(item.badge)+'</span>':'';
+    tr.innerHTML='<td>'+(idx+1)+'</td><td>'+badgeHtml+'</td>';
+    // Name cell
+    var tdN=document.createElement('td');
+    if(!isAuto){
+      var inN=document.createElement('input');inN.type='text';inN.value=nm;
+      inN.style.cssText='width:100%;font-size:12px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;';
+      inN.setAttribute('data-key',item.key);inN.setAttribute('data-field','name');
+      inN.addEventListener('change',liFieldChange);
+      tdN.appendChild(inN);
+    } else {tdN.textContent=nm;}
+    tr.appendChild(tdN);
+    // Description cell
+    var tdD=document.createElement('td');
+    if(!isAuto){
+      var inD=document.createElement('input');inD.type='text';inD.value=desc;
+      inD.style.cssText='width:100%;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;color:var(--dgray);';
+      inD.setAttribute('data-key',item.key);inD.setAttribute('data-field','description');
+      inD.addEventListener('change',liFieldChange);
+      tdD.appendChild(inD);
+    } else {tdD.textContent=desc;tdD.style.color='var(--dgray)';}
+    tr.appendChild(tdD);
+    // Qty cell
+    var tdQ=document.createElement('td');tdQ.style.textAlign='right';
+    if(!isAuto){
+      var inQ=document.createElement('input');inQ.type='number';inQ.value=qty;inQ.min='0';inQ.step='1';
+      inQ.style.cssText='width:55px;font-size:12px;padding:2px 4px;text-align:right;border:1px solid #ddd;border-radius:3px;';
+      inQ.setAttribute('data-key',item.key);inQ.setAttribute('data-field','qty');
+      inQ.addEventListener('change',liFieldChange);
+      tdQ.appendChild(inQ);
+    } else {tdQ.textContent=qty;}
+    tr.appendChild(tdQ);
+    // Unit cell
+    var tdU=document.createElement('td');tdU.style.textAlign='center';
+    if(!isAuto){
+      var sel=document.createElement('select');
+      sel.style.cssText='font-size:11px;padding:1px 2px;border:1px solid #ddd;border-radius:3px;';
+      ['SY','LF','SF','TON','EA','LS','HR','DAY'].forEach(function(u){
+        var opt=document.createElement('option');opt.value=u;opt.textContent=u;
+        if(u===unit)opt.selected=true;
+        sel.appendChild(opt);
+      });
+      sel.setAttribute('data-key',item.key);sel.setAttribute('data-field','unit');
+      sel.addEventListener('change',liFieldChange);
+      tdU.appendChild(sel);
+    } else {tdU.textContent=unit;}
+    tr.appendChild(tdU);
+    // Price cell
+    var tdP=document.createElement('td');tdP.style.textAlign='right';
+    if(!isAuto){
+      var inP=document.createElement('input');inP.type='number';inP.value=price.toFixed(2);inP.min='0';inP.step='0.01';
+      inP.style.cssText='width:72px;font-size:12px;padding:2px 4px;text-align:right;border:1px solid #ddd;border-radius:3px;';
+      inP.setAttribute('data-key',item.key);inP.setAttribute('data-field','price');
+      inP.addEventListener('change',liFieldChange);
+      tdP.appendChild(inP);
+    } else {tdP.textContent='$'+fi(price);}
+    tr.appendChild(tdP);
+    // Subtotal cell
+    var tdS=document.createElement('td');
+    tdS.style.cssText='text-align:right;font-weight:600;';
+    tdS.textContent='$'+fi(sub);
+    tr.appendChild(tdS);
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+  // Grand total row
+  var tfoot=document.createElement('tfoot');
+  tfoot.innerHTML='<tr style="border-top:2px solid #333;font-weight:700;"><td colspan="7" style="text-align:right;padding:8px 6px;">TOTAL</td><td style="text-align:right;padding:8px 6px;">$'+fi(grand)+'</td></tr>';
+  tbl.appendChild(tfoot);
+  wrap.innerHTML='';wrap.appendChild(tbl);
+}
+
+function liFieldChange(e){
+  var key=e.target.getAttribute('data-key');
+  var field=e.target.getAttribute('data-field');
+  if(!liOverrides[key])liOverrides[key]={};
+  var v=e.target.value;
+  if(field==='qty'||field==='price')v=parseFloat(v)||0;
+  liOverrides[key][field]=v;
+  renderLineItems();
+}
+
+function refreshLineItems(){
+  liOverrides={};
+  renderLineItems();
+  toast('Line items refreshed from Build');
+}
+
+function getLineItemsForPayload(){
+  var raw=buildRawLineItems();
+  return raw.map(function(item){
+    var ov=liOverrides[item.key]||{};
+    var nm=ov.name!==undefined?ov.name:item.name;
+    var desc=ov.description!==undefined?ov.description:item.description;
+    var qty=ov.qty!==undefined?ov.qty:item.qty;
+    var unit=ov.unit!==undefined?ov.unit:item.unit;
+    var price=ov.price!==undefined?ov.price:item.price;
+    return {name:nm,description:desc,qty:qty,unit:unit,price:price,subtotal:qty*price};
+  });
 }
 
 // -- PDF export ----------------------------------------------------------------
@@ -2272,6 +2432,7 @@ function selectClientById(id){
   if(!c)return;
   document.getElementById('proj-client').value=c.name;
   document.getElementById('client-sug').style.display='none';
+  selectedClient={name:c.name,company:c.company||'',phone:c.phone||'',email:c.email||''};
   // Auto-fill address fields
   if(c.address){var addrEl=document.getElementById('proj-addr');if(addrEl)addrEl.value=c.address;}
   if(c.city_state){var csEl=document.getElementById('proj-cs');if(csEl)csEl.value=c.city_state;}
@@ -2289,6 +2450,7 @@ async function saveQuote(){
     date:document.getElementById('proj-date').value,addr:document.getElementById('proj-addr').value,
     cs:document.getElementById('proj-cs').value,notes:document.getElementById('proj-notes').value,
     waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,contingency:document.getElementById('contingency').value,
+    selectedClient:selectedClient,liOverrides:liOverrides,
     sections:sections,concItems:concItems,extraItems:extraItems};
   var p=buildPayload();
   var jcData=calcJobCost();snap.jc_labor_cost=jcData.laborCost;snap.jc_overhead_pct=jcData.ovhPct;snap.jc_total_cost=jcData.totalCost;snap.jc_margin_pct=jcData.marginPct;
@@ -2313,6 +2475,13 @@ function loadQuote(id){
   document.getElementById('waste').value=d.waste||5;
   document.getElementById('mob').value=d.mob||0;
   document.getElementById('contingency').value=d.contingency||0;
+  selectedClient=d.selectedClient||{name:d.client||'',company:'',phone:'',email:''};
+  liOverrides=d.liOverrides||{};
+  // Show client bar if we have client info
+  var bar=document.getElementById('client-bar');
+  var cparts=[selectedClient.company,selectedClient.phone,selectedClient.email].filter(Boolean);
+  if(cparts.length){bar.style.display='block';bar.textContent=cparts.join(' \u00b7 ');}
+  else bar.style.display='none';
   sections=d.sections||[];
   sid=sections.reduce(function(m,s){return Math.max(m,s.id+1);},0);
   lid=sections.reduce(function(m,s){return s.layers.reduce(function(m2,l){return Math.max(m2,l.id+1);},m);},0);
@@ -2455,6 +2624,8 @@ function resetAll(){
   document.getElementById('waste').value=5;document.getElementById('mob').value=0;document.getElementById('contingency').value=0;
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('client-bar').style.display='none';
+  selectedClient={name:'',company:'',phone:'',email:''};
+  liOverrides={};
   renderAll();renderConc();renderExtra();
   toast('Reset');
 }

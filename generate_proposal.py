@@ -201,12 +201,17 @@ def info_block(data, st):
         Paragraph(data.get('sender_phone', ''), detail_s),
     ]
 
-    for_cell = [
+    for_parts = [
         Paragraph('PREPARED FOR', sec_s),
         Paragraph(data.get('client_name',  ''), name_s),
-        Paragraph(data.get('client_email', ''), detail_s),
-        Paragraph(data.get('client_phone', ''), detail_s),
     ]
+    if data.get('client_company'):
+        for_parts.append(Paragraph(data['client_company'], detail_s))
+    if data.get('client_email'):
+        for_parts.append(Paragraph(data['client_email'], detail_s))
+    if data.get('client_phone'):
+        for_parts.append(Paragraph(data['client_phone'], detail_s))
+    for_cell = for_parts
 
     cw_proj = FW * 0.42
     cw_by   = FW * 0.27
