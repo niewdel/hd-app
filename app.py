@@ -124,8 +124,11 @@ def quotes_save():
             'client': data.get('client', ''),
             'date':   data.get('date', ''),
             'total':  float(data.get('total', 0)),
-            'snap':   snap if isinstance(snap, dict) else json.loads(snap)
+            'snap':   snap if isinstance(snap, dict) else json.loads(snap),
+            'created_by': session.get('username', ''),
         }
+        if data.get('stage_id'):
+            payload['stage_id'] = data['stage_id']
         r = http.post(sb_url('proposals'), headers=sb_headers(), json=payload, timeout=10)
         r.raise_for_status()
         result = r.json()
@@ -289,6 +292,9 @@ def update_user(uid):
     data = request.get_json() or {}
     update = {}
     if 'full_name' in data: update['full_name'] = data['full_name']
+    if 'username' in data and data['username']:
+        new_un = str(data['username']).strip().lower()
+        if new_un: update['username'] = new_un
     if 'role' in data and data['role'] in ('admin','user'): update['role'] = data['role']
     if 'active' in data: update['active'] = bool(data['active'])
     if 'pin' in data and data['pin']: update['pin_hash'] = hash_pin(data['pin'])
@@ -368,6 +374,67 @@ def generate_jc_pdf():
         return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_JobCost.pdf')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/generate-wo-pdf', methods=['POST'])
+@require_auth
+def generate_wo_pdf():
+    from generate_work_order import build as wo_build
+    data = request.get_json()
+    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+        out = f.name
+    try:
+        wo_build(data, out)
+        return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_WorkOrder.pdf')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/change-orders/save', methods=['POST'])
+@require_auth
+def co_save():
+    data = request.get_json() or {}
+    try:
+        snap = {
+            'line_items': data.get('line_items', []),
+            'orig_contract_amount': data.get('orig_contract_amount', 0),
+            'description': data.get('description', ''),
+        }
+        payload = {
+            'co_number': data.get('co_number', 1),
+            'project_name': data.get('project_name', ''),
+            'client_name': data.get('client_name', ''),
+            'date': data.get('date', ''),
+            'description': data.get('description', ''),
+            'snap': snap,
+            'add_total': float(data.get('add_total', 0)),
+            'deduct_total': float(data.get('deduct_total', 0)),
+            'revised_total': float(data.get('revised_total', 0)),
+            'created_by': session.get('username', ''),
+        }
+        if data.get('proposal_id'):
+            payload['proposal_id'] = data['proposal_id']
+        r = http.post(sb_url('change_orders'), headers=sb_headers(), json=payload, timeout=10)
+        if r.status_code in (200, 201):
+            result = r.json()
+            return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
+        return jsonify({'ok': False, 'error': 'Supabase error: ' + str(r.status_code)}), 400
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/change-orders/list')
+@require_auth
+def co_list():
+    try:
+        proposal_id = request.args.get('proposal_id', '')
+        params = '?select=*&order=created_at.desc'
+        if proposal_id:
+            params += f'&proposal_id=eq.{proposal_id}'
+        r = http.get(sb_url('change_orders', params), headers=sb_headers(), timeout=10)
+        if r.status_code == 200:
+            return jsonify({'ok': True, 'change_orders': r.json()})
+        return jsonify({'ok': True, 'change_orders': []})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 # ââ Email âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 

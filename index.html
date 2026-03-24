@@ -465,6 +465,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">-</div></div>
           <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">-</div><div class="metric-sub">w/ waste</div></div>
           <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">-</div></div>
+          <div class="metric"><div class="metric-lbl">Crew Cost</div><div class="metric-val" id="m-crew">-</div></div>
+          <div class="metric"><div class="metric-lbl">Trucking</div><div class="metric-val" id="m-truck">-</div></div>
           <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">-</div></div>
           <div class="metric" id="m-cont-card"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">$0</div></div>
           <div class="metric" id="m-phase-card" style="display:none;"><div class="metric-lbl" id="m-phase-lbl">Phase 1</div><div class="metric-val" id="m-phase">-</div></div>
@@ -476,7 +478,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
         <div class="card-hdr"><span class="card-title">Full Breakdown</span></div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Section</th><th>Layer</th><th>SF</th><th>SY</th><th>Depth/Qty</th><th>Unit</th><th>Raw Tons</th><th>Tons+Waste</th><th>Mat$/u</th><th>Mat Cost</th><th>Bid$/u</th><th>Bid Total</th><th>MU%</th></tr></thead>
+              <thead><tr><th>Section</th><th>Layer</th><th>SF</th><th>SY</th><th>Depth/Qty</th><th>Unit</th><th>Tons</th><th>Days</th><th>Mat Cost</th><th>Crew Cost</th><th>Trucking</th><th>Bid Total</th><th>MU%</th></tr></thead>
               <tbody id="breakdown"></tbody>
             </table>
           </div>
@@ -540,6 +542,12 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 <div class="card">
                   <div class="card-hdr"><span class="card-title">Change Order Info</span></div>
                   <div class="card-body">
+                    <div style="margin-bottom:10px;">
+                      <label>Link to Proposal</label>
+                      <select id="co-proposal-link" onchange="linkCOToProposal(this.value)" style="width:100%;">
+                        <option value="">-- Select a saved proposal (optional) --</option>
+                      </select>
+                    </div>
                     <div class="fg fg4">
                       <div><label>Project Name</label><input id="co-project" type="text" placeholder="Project name..."/></div>
                       <div><label>Client Name</label><input id="co-client" type="text" placeholder="Client name..."/></div>
@@ -594,7 +602,15 @@ tr:nth-child(even) td{background:#FAFAFA;}
                       <div class="co-summary-row co-type-nocost"><span>No Cost Changes</span><span id="cos-nocost">--</span></div>
                       <div class="co-summary-row total"><span>Revised Contract Total</span><span id="cos-total">$0</span></div>
                     </div>
+                    <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;">
+                      <button class="btn btn-sec btn-sm" onclick="saveCO()">Save Change Order</button>
+                      <button class="btn btn-red btn-sm" onclick="exportCO()">Export PDF</button>
+                    </div>
                   </div>
+                </div>
+                <div class="card" id="co-saved-list-card">
+                  <div class="card-hdr"><span class="card-title">Saved Change Orders</span></div>
+                  <div class="card-body" id="co-saved-list"><p style="color:var(--dgray);font-size:12px;">No saved change orders yet.</p></div>
                 </div>
               </div>
             </div>
@@ -663,6 +679,12 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 <div><label>DEFAULT CREW DAY RATE ($)</label><input id="jc-default-crew-rate" type="number" min="0" step="100"/></div>
                 <div><label>DEFAULT OVERHEAD %</label><input id="jc-default-overhead-pct" type="number" min="0" step="1"/></div>
                 <div><label>PRODUCTIVITY (t/day)</label><input id="jc-default-productivity" type="number" min="1" step="10"/></div>
+              </div>
+              <div class="fg fg4" style="margin-top:10px;">
+                <div><label>MILL FEE ($/day)</label><input id="jc-default-mill-fee" type="number" min="0" step="500" value="6000"/></div>
+                <div><label>DEFAULT TRUCKS</label><input id="jc-default-truck-count" type="number" min="0" step="1" value="3"/></div>
+                <div><label>TRUCK RATE ($/hr)</label><input id="jc-default-truck-rate" type="number" min="0" step="5" value="85"/></div>
+                <div><label>TRUCK HOURS/DAY</label><input id="jc-default-truck-hours" type="number" min="0" step="0.5" value="8"/></div>
               </div>
               <div id="jc-settings-indicator" style="margin-top:8px;font-size:11px;color:var(--dgray);"></div>
             </div>
@@ -792,6 +814,14 @@ var jcProductivity = JC_PRODUCTIVITY_DEFAULT;
 var JC_OVERHEAD_PCT_DEFAULT = 15;
 var jcCrewRate = JC_CREW_RATE_DEFAULT;
 var jcOverheadPct = JC_OVERHEAD_PCT_DEFAULT;
+var MILL_FEE_DEFAULT = 6000; // $/day for milling
+var jcMillFee = MILL_FEE_DEFAULT;
+var TRUCK_RATE_DEFAULT = 85; // $/hr per truck
+var TRUCK_COUNT_DEFAULT = 3;
+var jcTruckRate = TRUCK_RATE_DEFAULT;
+var jcTruckCount = TRUCK_COUNT_DEFAULT;
+var TRUCK_HOURS_DEFAULT = 8; // hours per day
+var jcTruckHours = TRUCK_HOURS_DEFAULT;
 var MAT_DEFAULT = {'ABC base':45,'Mill & Pave':35,'B25.0C':85,'I19.0C':92,'S9.5B':95,'S9.5C':95};
 var DRATE_DEFAULT = {'ABC base':50,'Mill & Pave':150,'B25.0C':150,'I19.0C':150,'S9.5B':150,'S9.5C':150};
 var LBS_DEFAULT = {'ABC base':150,'Mill & Pave':115,'B25.0C':115,'I19.0C':115,'S9.5B':115,'S9.5C':115};
@@ -835,6 +865,7 @@ var phaseSid=1;
 var concItems=[], cid=0;
 var extraItems=[], eid=0;
 var savedQuotes=[];
+var lastSavedQuoteId=null; // track last saved proposal for pipeline auto-move
 var clients=[];
 var sender={name:'',email:'',phone:''};
 var sitePlanDataUrl=null;
@@ -903,6 +934,8 @@ function boot(){
   updateMatIndicator();
   checkMobile();
   renderTopbar('build');
+  // Pre-load pipeline stages for auto-move
+  fetch('/pipeline/stages').then(function(r){return r.json();}).then(function(d){if(d.ok)pipelineStages=d.stages;}).catch(function(){});
   
   document.addEventListener('click',function(e){
     if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))
@@ -969,7 +1002,7 @@ function safeId(s){return s.split('').filter(function(c){return (c>='a'&&c<='z')
 function loadJCDefaults(){
   try{
     var s=localStorage.getItem('hd_jc_defaults');
-    if(s){var d=JSON.parse(s);jcCrewRate=d.crew_rate||JC_CREW_RATE_DEFAULT;jcOverheadPct=d.overhead_pct||JC_OVERHEAD_PCT_DEFAULT;if(d.productivity)jcProductivity=d.productivity;}
+    if(s){var d=JSON.parse(s);jcCrewRate=d.crew_rate||JC_CREW_RATE_DEFAULT;jcOverheadPct=d.overhead_pct||JC_OVERHEAD_PCT_DEFAULT;if(d.productivity)jcProductivity=d.productivity;if(d.mill_fee)jcMillFee=d.mill_fee;if(d.truck_count!==undefined)jcTruckCount=d.truck_count;if(d.truck_rate)jcTruckRate=d.truck_rate;if(d.truck_hours)jcTruckHours=d.truck_hours;}
   }catch(e){}
 }
 
@@ -978,7 +1011,11 @@ function saveJCDefaults(){
   var op=parseFloat(document.getElementById('jc-default-overhead-pct')?document.getElementById('jc-default-overhead-pct').value:jcOverheadPct)||jcOverheadPct;
   jcCrewRate=cr; jcOverheadPct=op;
   var pr=parseFloat(document.getElementById('jc-default-productivity')?document.getElementById('jc-default-productivity').value:JC_PRODUCTIVITY_DEFAULT)||JC_PRODUCTIVITY_DEFAULT;jcProductivity=pr;
-  try{localStorage.setItem('hd_jc_defaults',JSON.stringify({crew_rate:cr,overhead_pct:op,productivity:jcProductivity}));}catch(e){}
+  var mf=parseFloat(document.getElementById('jc-default-mill-fee')?document.getElementById('jc-default-mill-fee').value:jcMillFee)||jcMillFee;jcMillFee=mf;
+  var tc=parseFloat(document.getElementById('jc-default-truck-count')?document.getElementById('jc-default-truck-count').value:jcTruckCount);jcTruckCount=tc;
+  var tr2=parseFloat(document.getElementById('jc-default-truck-rate')?document.getElementById('jc-default-truck-rate').value:jcTruckRate)||jcTruckRate;jcTruckRate=tr2;
+  var th=parseFloat(document.getElementById('jc-default-truck-hours')?document.getElementById('jc-default-truck-hours').value:jcTruckHours)||jcTruckHours;jcTruckHours=th;
+  try{localStorage.setItem('hd_jc_defaults',JSON.stringify({crew_rate:cr,overhead_pct:op,productivity:jcProductivity,mill_fee:jcMillFee,truck_count:jcTruckCount,truck_rate:jcTruckRate,truck_hours:jcTruckHours}));}catch(e){}
   renderJCDefaults();
   var ind=document.getElementById('jc-settings-indicator');
   if(ind){ind.textContent='Saved.';setTimeout(function(){ind.textContent='';},2000);}
@@ -986,6 +1023,7 @@ function saveJCDefaults(){
 
 function resetJCDefaults(){
   jcCrewRate=JC_CREW_RATE_DEFAULT; jcOverheadPct=JC_OVERHEAD_PCT_DEFAULT; jcProductivity=JC_PRODUCTIVITY_DEFAULT;
+  jcMillFee=MILL_FEE_DEFAULT; jcTruckCount=TRUCK_COUNT_DEFAULT; jcTruckRate=TRUCK_RATE_DEFAULT; jcTruckHours=TRUCK_HOURS_DEFAULT;
   try{localStorage.removeItem('hd_jc_defaults');}catch(e){}
   renderJCDefaults();
 }
@@ -994,6 +1032,10 @@ function renderJCDefaults(){
   var cr=document.getElementById('jc-default-crew-rate');if(cr)cr.value=jcCrewRate;
   var op=document.getElementById('jc-default-overhead-pct');if(op)op.value=jcOverheadPct;
   var pr=document.getElementById('jc-default-productivity');if(pr)pr.value=jcProductivity;
+  var mf=document.getElementById('jc-default-mill-fee');if(mf)mf.value=jcMillFee;
+  var tc=document.getElementById('jc-default-truck-count');if(tc)tc.value=jcTruckCount;
+  var tr2=document.getElementById('jc-default-truck-rate');if(tr2)tr2.value=jcTruckRate;
+  var th=document.getElementById('jc-default-truck-hours');if(th)th.value=jcTruckHours;
   // Also update the build panel fields if they are at default
   var bcr=document.getElementById('jc-crew-rate');if(bcr)bcr.value=jcCrewRate;
   var bop=document.getElementById('jc-overhead-pct');if(bop)bop.value=jcOverheadPct;
@@ -1420,6 +1462,77 @@ async function exportCOPDF(){
 }
 
 
+function linkCOToProposal(qid){
+  if(!qid)return;
+  var q=savedQuotes.find(function(x){return x.id==qid;});
+  if(!q)return;
+  var snap=typeof q.snap==='string'?JSON.parse(q.snap):q.snap;
+  var el=document.getElementById;
+  document.getElementById('co-project').value=snap.name||q.name||'';
+  document.getElementById('co-client').value=snap.client||q.client||'';
+  document.getElementById('co-orig-amount').value=q.total||0;
+  recalcCO();
+}
+
+function populateCOProposalDropdown(){
+  var sel=document.getElementById('co-proposal-link');
+  if(!sel)return;
+  sel.innerHTML='<option value="">-- Select a saved proposal (optional) --</option>';
+  savedQuotes.forEach(function(q){
+    var opt=document.createElement('option');
+    opt.value=q.id;
+    opt.textContent=(q.name||'Unnamed')+' - $'+Math.round(q.total||0).toLocaleString();
+    sel.appendChild(opt);
+  });
+}
+
+async function saveCO(){
+  var p=buildCOPayload();
+  if(!p.project_name){toast('Enter a project name','err');return;}
+  var proposalId=document.getElementById('co-proposal-link')?document.getElementById('co-proposal-link').value:'';
+  var body={
+    project_name:p.project_name,client_name:p.client_name,co_number:p.co_number,
+    date:p.date,description:p.description,
+    line_items:p.line_items,
+    orig_contract_amount:p.orig_contract_amount,
+    add_total:p.add_total,deduct_total:p.deduct_total,
+    revised_total:p.revised_total,
+    created_by:window._userUsername||''
+  };
+  if(proposalId)body.proposal_id=parseInt(proposalId);
+  try{
+    var r=await fetch('/change-orders/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var d=await r.json();
+    if(d.ok){toast('Change order saved','ok');loadCOList();}
+    else toast('Save failed: '+(d.error||'unknown'),'err');
+  }catch(e){toast('Save error: '+e.message,'err');}
+}
+
+async function exportCO(){
+  exportCOPDF();
+}
+
+async function loadCOList(){
+  var c=document.getElementById('co-saved-list');
+  if(!c)return;
+  try{
+    var r=await fetch('/change-orders/list');
+    var d=await r.json();
+    if(!d.ok||!d.change_orders||!d.change_orders.length){
+      c.innerHTML='<p style="color:var(--dgray);font-size:12px;">No saved change orders yet.</p>';
+      return;
+    }
+    c.innerHTML='';
+    d.change_orders.forEach(function(co){
+      var div=document.createElement('div');
+      div.style.cssText='display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--bdr);';
+      div.innerHTML='<div style="flex:1"><span style="font-weight:600;font-size:13px;">CO #'+(co.co_number||1)+' - '+esc(co.project_name||'')+'</span>'
+        +'<span style="font-size:11px;color:var(--dgray);margin-left:8px;">'+esc(co.client_name||'')+' | $'+Math.round(co.revised_total||0).toLocaleString()+'</span></div>';
+      c.appendChild(div);
+    });
+  }catch(e){c.innerHTML='<p style="color:var(--dgray);font-size:12px;">Error loading change orders.</p>';}
+}
+
 var TOPBAR_CFG = {
   build:[
     {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
@@ -1463,10 +1576,11 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={build:'Build Proposal',jobcost:'Job Cost',saved:'Saved Proposals',settings:'Settings',co:'Change Orders',analytics:'Analytics',pipeline:'Pipeline',clients:'Clients',admin:'Admin Panel'}[id]||id;
+  var _panelTitle={build:'Build Proposal',jobcost:'Job Cost',saved:'Saved Proposals',settings:'Settings',co:'Change Orders',analytics:'Analytics',pipeline:'Pipeline',clients:'Clients',admin:'Admin Panel',workorders:'Work Orders'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved')renderSaved();
+  if(id==='co'){populateCOProposalDropdown();loadCOList();}
   if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');}
   if(id==='jobcost')renderJobCost();
   if(id==='analytics')setTimeout(renderAnalytics,50);
@@ -1632,14 +1746,18 @@ function mkLayer(l){
     rate:l.rate!==undefined?l.rate:DRATE[l.type],
     markup:l.markup!==undefined?l.markup:20,
     days_override:l.days_override!==undefined?l.days_override:null,
-  overhead:l.overhead!==undefined?l.overhead:jcOverheadPct,
-  rate_override:l.rate_override!==undefined?l.rate_override:null,
-  mill_days:l.mill_days||0,mill_rate:l.mill_rate||0};
+    overhead:l.overhead!==undefined?l.overhead:jcOverheadPct,
+    rate_override:l.rate_override!==undefined?l.rate_override:null,
+    mill_days:l.mill_days||0,mill_rate:l.mill_rate||jcMillFee,
+    trucks:l.trucks!==undefined?l.trucks:jcTruckCount,
+    truck_rate:l.truck_rate!==undefined?l.truck_rate:jcTruckRate,
+    truck_hours:l.truck_hours!==undefined?l.truck_hours:jcTruckHours,
+    description:l.description||''};
 }
 
 function addSection(name,lds){
   var s={id:sid++,name:name||('Section '+(sid)),sf:0,layers:[]};
-  (lds||[{type:'ABC base'},{type:'Surface'}]).forEach(function(l){s.layers.push(mkLayer(l));});
+  (lds||[{type:'ABC base'},{type:'S9.5C'}]).forEach(function(l){s.layers.push(mkLayer(l));});
   sections.push(s);renderAll();
 }
 function remSec(id){sections=sections.filter(function(s){return s.id!==id;});renderAll();}
@@ -1702,6 +1820,26 @@ function updMillRate(sid2,lid2,v){
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   l.mill_rate=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
 }
+function updTrucks(sid2,lid2,v){
+  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
+  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
+  l.trucks=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
+}
+function updTruckRate(sid2,lid2,v){
+  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
+  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
+  l.truck_rate=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
+}
+function updTruckHours(sid2,lid2,v){
+  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
+  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
+  l.truck_hours=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
+}
+function updLyrDesc(sid2,lid2,v){
+  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
+  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
+  l.description=v;
+}
 
 
 
@@ -1710,8 +1848,7 @@ function secTot(s){
   s.layers.forEach(function(l){
     var isMill=l.type==='Mill & Pave';
     var t=(!isMill&&s.sf>0)?tons(s.sf,l.depth,LBS[l.type])*wfv:0;
-    var mf=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
-    tt+=t;tm+=t*(MAT[l.type]||0);tb+=calcLayerBid(t,l);
+    tt+=t;tm+=isMill?0:t*(MAT[l.type]||0);tb+=calcLayerBid(t,l);
   });
   return {tons:tt,mat:tm,bid:tb};
 }
@@ -1736,16 +1873,19 @@ function updateLyrResult(sid2,lid2){
   var isMill=l.type==='Mill & Pave';
   var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
   var t=rawT*wfv;
-  var millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
-  var matC=t*(MAT[l.type]||0),bidC=calcLayerBid(t,l),mp=mu(matC,bidC);
-  var lDays=(!isMill&&t>0)?calcLayerDays(t,l):0;
+  var bidC=calcLayerBid(t,l);
+  var matC=isMill?0:t*(MAT[l.type]||0);
+  var mp=mu(matC,bidC);
+  var lDays=isMill?(l.mill_days||0):calcLayerDays(t,l);
+  var truckCost=calcTrucking(l,lDays);
+  var crewCost=lDays*jcCrewRate;
   var resEl=document.querySelector('.lres[data-lyr="'+sid2+'-'+lid2+'"]');
   var muEl=document.querySelector('.mubadge[data-lyr="'+sid2+'-'+lid2+'"]');
   if(resEl){
-    if(isMill) resEl.innerHTML=millFlat>0?'Milling: <b>$'+fi(millFlat)+'</b>':'<span style="opacity:.5">enter days &amp; rate</span>';
-    else resEl.innerHTML=sf>0?('<b>'+t.toFixed(2)+'t</b> - <b>'+lDays.toFixed(2)+'d</b> - mat:<b>$'+fi(matC)+'</b> - bid:<b>$'+fi(bidC)+'</b> - <b>$'+(t>0?(bidC/t).toFixed(2):'0')+'/t</b>'):'<span style="opacity:.5">enter SF above</span>';
+    if(isMill){var millCost=(l.mill_days||0)*(l.mill_rate||jcMillFee);resEl.innerHTML=(l.mill_days>0)?'Mill: <b>$'+fi(millCost)+'</b> + Crew: <b>$'+fi(crewCost)+'</b> + Truck: <b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter days</span>';}
+    else resEl.innerHTML=sf>0?('<b>'+t.toFixed(2)+'t</b> <b>'+lDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter SF above</span>';
   }
-  if(muEl){muEl.textContent=(!isMill&&sf>0&&bidC>0)?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
+  if(muEl){muEl.textContent=bidC>0?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
   updateSecFooter(sid2);
 }
 
@@ -1758,21 +1898,37 @@ function renderAll(){
     s.layers.forEach(function(l){
       var wfv=wf(),isMill=l.type==='Mill & Pave';
       var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
-      var t=rawT*wfv,millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
-      var matC=t*(MAT[l.type]||0),bidC=calcLayerBid(t,l),lmp=mu(matC,bidC);
-      var resHTML=isMill?(millFlat>0?'Milling: <b>$'+fi(millFlat)+'</b>':'<span style="opacity:.5">enter days &amp; rate</span>'):(sf>0?'<b>'+t.toFixed(2)+'t</b>  -  mat <b>$'+fi(matC)+'</b>  -  bid <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter SF above</span>');
-      var muBadge='<span class="mubadge '+(lmp>=0?'p':'n')+'" data-lyr="'+s.id+'-'+l.id+'">'+((!isMill&&sf>0&&bidC>0)?lmp.toFixed(1)+'% MU':'')+'</span>';
+      var t=rawT*wfv;
+      var bidC=calcLayerBid(t,l);
+      var matC=isMill?0:t*(MAT[l.type]||0);
+      var lmp=mu(matC,bidC);
+      var layerDays=isMill?(l.mill_days||0):calcLayerDays(t,l);
+      var truckCost=calcTrucking(l,layerDays);
+      var crewCost=layerDays*jcCrewRate;
+      var resHTML;
+      if(isMill){
+        var millCost=(l.mill_days||0)*(l.mill_rate||jcMillFee);
+        resHTML=(l.mill_days>0)?'Mill: <b>$'+fi(millCost)+'</b> + Crew: <b>$'+fi(crewCost)+'</b> + Truck: <b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter days</span>';
+      } else {
+        resHTML=sf>0?'<b>'+t.toFixed(2)+'t</b> <b>'+layerDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter SF above</span>';
+      }
+      var muBadge='<span class="mubadge '+(lmp>=0?'p':'n')+'" data-lyr="'+s.id+'-'+l.id+'">'+(bidC>0?lmp.toFixed(1)+'% MU':'')+'</span>';
       var typeOpts=LTYPES.map(function(t2){return '<option'+(t2===l.type?' selected':'')+'>'+t2+'</option>';}).join('');
-      var millFields=isMill?('<label>Days</label><input type="number" value="'+(l.mill_days||'')+'" placeholder="0" min="0" step="1" style="width:54px" onchange="updMillDays('+s.id+','+l.id+',this.value)"><label>$/day</label><input type="number" value="'+(l.mill_rate||'')+'" placeholder="0" min="0" step="any" style="width:74px" onchange="updMillRate('+s.id+','+l.id+',this.value)">'):'';
-      var layerTons=(!isMill&&s.sf>0)?tons(s.sf,l.depth,LBS[l.type])*wf():0;
-    var layerDays=calcLayerDays(layerTons,l);
-    var layerRate=calcLayerRate(layerTons,l);
-    var stdFields=!isMill?('<label>Depth (in)</label><input type="number" value="'+l.depth+'" min=".5" step=".5" style="width:55px" onchange="updLyrDepth('+s.id+','+l.id+',this.value)"/>'+'<label>Days</label><input type="number" value="'+(l.days_override!==null&&l.days_override!==undefined?l.days_override:layerDays.toFixed(2))+'" min="0" step="0.25" style="width:60px" title="Auto: '+layerDays.toFixed(2)+'d" onchange="updLyrDays('+s.id+','+l.id+',this.value,true)"/>'+'<label title="Calc rate: $'+layerRate.toFixed(2)+'/t">$/t</label><input type="number" value="'+layerRate.toFixed(2)+'" min="0" step="1" style="width:65px;color:'+(l.rate_override!==null?'#B25000':'var(--dgray)')+';" title="'+(l.rate_override!==null?'Manual override':'Auto-calculated')+': $'+layerRate.toFixed(2)+'/t" onchange="updLyrRate('+s.id+','+l.id+',this.value)"/>'+'<label>MU%</label><input type="number" value="'+l.markup+'" min="0" step="1" style="width:52px" class="lyr-markup" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrMarkup('+s.id+','+l.id+',this.value)"/>'):''
-      lrows+='<div class="lyr-row">'
+      var millFields=isMill?('<label>Days</label><input type="number" value="'+(l.mill_days||'')+'" placeholder="0" min="0" step="0.5" style="width:54px" onchange="updMillDays('+s.id+','+l.id+',this.value)"><label>$/day</label><input type="number" value="'+(l.mill_rate||jcMillFee)+'" min="0" step="any" style="width:74px" onchange="updMillRate('+s.id+','+l.id+',this.value)">'):'';
+      var layerRate=calcLayerRate(t,l);
+      var stdFields=!isMill?('<label>Depth (in)</label><input type="number" value="'+l.depth+'" min=".5" step=".5" style="width:55px" onchange="updLyrDepth('+s.id+','+l.id+',this.value)"/>'+'<label>Days</label><input type="number" value="'+(l.days_override!==null&&l.days_override!==undefined?l.days_override:layerDays.toFixed(1))+'" min="0" step="0.5" style="width:60px" title="Auto: '+layerDays.toFixed(2)+'d" onchange="updLyrDays('+s.id+','+l.id+',this.value,true)"/>'+'<label>MU%</label><input type="number" value="'+l.markup+'" min="0" step="1" style="width:52px" class="lyr-markup" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrMarkup('+s.id+','+l.id+',this.value)"/>'):''
+      // Trucking fields for all layer types
+      var truckFields='<label>Trucks</label><input type="number" value="'+(l.trucks||jcTruckCount)+'" min="0" step="1" style="width:44px" onchange="updTrucks('+s.id+','+l.id+',this.value)">'
+        +'<label>$/hr</label><input type="number" value="'+(l.truck_rate||jcTruckRate)+'" min="0" step="5" style="width:58px" onchange="updTruckRate('+s.id+','+l.id+',this.value)">'
+        +'<label>Hrs</label><input type="number" value="'+(l.truck_hours||jcTruckHours)+'" min="0" step="0.5" style="width:48px" onchange="updTruckHours('+s.id+','+l.id+',this.value)">';
+      // Description field
+      var descField='<div style="margin-top:3px;"><input type="text" value="'+esc(l.description||'')+'" placeholder="Description for PDF..." style="width:100%;font-size:11px;padding:3px 6px;color:var(--dgray);" onchange="updLyrDesc('+s.id+','+l.id+',this.value)"></div>';
+      lrows+='<div class="lyr-row" style="flex-wrap:wrap;">'
         +'<select onchange="updLyrType('+s.id+','+l.id+',this.value)">'+typeOpts+'</select>'
-        +millFields+stdFields
+        +millFields+stdFields+truckFields
         +muBadge+'<span class="lres" data-lyr="'+s.id+'-'+l.id+'">'+resHTML+'</span>'
         +'<button class="btn-ico" onclick="remLyr('+s.id+','+l.id+')">x</button>'
+        +descField
         +'</div>';
     });
     div.innerHTML='<div class="sec-hdr">'
@@ -1857,18 +2013,35 @@ function updExtraNum(id,f,v){
 
 
 // -- Layer bid price calculator ------------------------------------------------
-// bid = (mat_cost + crew_cost) * (1 + overhead/100) * (1 + markup/100)
+// Regular asphalt: (material + crew + trucking) * (1 + markup/100)
+// Mill & Pave: (surface asphalt + crew*days + mill_fee*days + trucking) * (1 + markup/100)
 function calcLayerDays(tons, layer){
   if(layer.days_override !== null && layer.days_override !== undefined) return layer.days_override;
   return jcProductivity > 0 ? tons / jcProductivity : 0;
 }
+function calcTrucking(layer, days){
+  var trucks = layer.trucks !== undefined ? layer.trucks : jcTruckCount;
+  var rate = layer.truck_rate !== undefined ? layer.truck_rate : jcTruckRate;
+  var hours = layer.truck_hours !== undefined ? layer.truck_hours : jcTruckHours;
+  return trucks * rate * hours * days;
+}
 function calcLayerBid(tons, layer){
+  var isMill = layer.type === 'Mill & Pave';
+  if(isMill){
+    // Mill & Pave: mill fee + trucking + markup (no material tonnage calc)
+    var millDays = layer.mill_days || 0;
+    var millCost = millDays * (layer.mill_rate || jcMillFee);
+    var crewCost = millDays * jcCrewRate;
+    var truckCost = calcTrucking(layer, millDays);
+    var mu = layer.markup / 100;
+    return (millCost + crewCost + truckCost) * (1 + mu);
+  }
   var mat = tons * (MAT[layer.type]||0);
   var days = calcLayerDays(tons, layer);
   var crew = days * jcCrewRate;
-  var ovh = (layer.overhead !== undefined ? layer.overhead : jcOverheadPct) / 100;
+  var truckCost = calcTrucking(layer, days);
   var mu = layer.markup / 100;
-  return (mat + crew) * (1 + ovh) * (1 + mu);
+  return (mat + crew + truckCost) * (1 + mu);
 }
 function calcLayerRate(tons, layer){
   if(tons <= 0) return layer.rate;
@@ -1880,26 +2053,32 @@ function recalc(){
   var bk=document.getElementById('breakdown');bk.innerHTML='';
   var wfv=wf(),mobv=mob();
   var gSF=0,gSY=0,gT=0,gB=0; gM=0;
+  var gCrew=0,gTruck=0;
   sections.forEach(function(s){
     var sf=s.sf||0,sy=sf/9;gSF+=sf;gSY+=sy;
     s.layers.forEach(function(l){
       var isMill=l.type==='Mill & Pave';
       var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
-      var t=rawT*wfv,millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
-      var mC=t*(MAT[l.type]||0),bC=calcLayerBid(t,l),mp=mu(mC,bC);
-      gT+=t;gM+=mC;gB+=bC;
+      var t=rawT*wfv;
+      var mC=isMill?0:t*(MAT[l.type]||0);
+      var bC=calcLayerBid(t,l);
+      var lDays=isMill?(l.mill_days||0):calcLayerDays(t,l);
+      var crewC=lDays*jcCrewRate;
+      var truckC=calcTrucking(l,lDays);
+      var mp=mu(mC,bC);
+      gT+=t;gM+=mC;gB+=bC;gCrew+=crewC;gTruck+=truckC;
       var tr=document.createElement('tr');
       tr.innerHTML='<td><small>'+esc(s.name)+'</small></td>'
         +'<td><span class="badge '+(LBADGE[l.type]||'')+'">'+esc(l.type)+'</span></td>'
         +'<td>'+(sf>0?sf.toLocaleString():'-')+'</td>'
         +'<td>'+(sf>0?sy.toFixed(1):'-')+'</td>'
-        +'<td>'+(!isMill?l.depth+'"':'-')+'</td>'
+        +'<td>'+(!isMill?l.depth+'"':isMill?(l.mill_days||0)+' day(s)':'-')+'</td>'
         +'<td>'+(!isMill?'ton':'day')+'</td>'
-        +'<td>'+(sf>0&&!isMill?rawT.toFixed(2):'-')+'</td>'
-        +'<td>'+(sf>0&&!isMill?t.toFixed(2):isMill&&millFlat>0?'$'+fi(millFlat)+' flat':'-')+'</td>'
-        +'<td>'+(mC>0?'$'+(MAT[l.type]||0):'-')+'</td>'
-        +'<td>'+(mC>0?'$'+fi(mC):'-')+'</td>'
-        +'<td>'+(bC>0?'$'+l.rate:'-')+'</td>'
+        +'<td>'+(t>0?t.toFixed(2):'-')+'</td>'
+        +'<td>'+(lDays>0?lDays.toFixed(1):'-')+'</td>'
+        +'<td>'+(mC>0?'$'+fi(mC):isMill?'$'+fi((l.mill_days||0)*(l.mill_rate||jcMillFee)):'-')+'</td>'
+        +'<td>'+(crewC>0?'$'+fi(crewC):'-')+'</td>'
+        +'<td>'+(truckC>0?'$'+fi(truckC):'-')+'</td>'
         +'<td>'+(bC>0?'$'+fi(bC):'-')+'</td>'
         +'<td class="'+(mp>=0?'gp':'gn')+'">'+(bC>0?mp.toFixed(1)+'%':'-')+'</td>';
       bk.appendChild(tr);
@@ -1913,8 +2092,8 @@ function recalc(){
     var tr=document.createElement('tr');
     tr.innerHTML='<td><small>Concrete</small></td><td><span class="badge b-conc">'+esc(ct.name)+'</span></td>'
       +'<td>-</td><td>-</td><td>'+i.qty.toLocaleString()+' '+ct.unit+'</td><td>'+ct.unit+'</td>'
-      +'<td>-</td><td>-</td><td>$'+i.sub.toFixed(2)+'</td><td>$'+fi(subC)+'</td>'
-      +'<td>$'+concBid(i).toFixed(2)+'</td><td>$'+fi(bC)+'</td>'
+      +'<td>-</td><td>-</td><td>$'+fi(subC)+'</td><td>-</td><td>-</td>'
+      +'<td>$'+fi(bC)+'</td>'
       +'<td class="'+(mp>=0?'gp':'gn')+'">'+mp.toFixed(1)+'%</td>';
     bk.appendChild(tr);
   });
@@ -1924,12 +2103,12 @@ function recalc(){
     var tr=document.createElement('tr');
     tr.innerHTML='<td><small>Additional</small></td><td>'+esc(i.name)+'</td>'
       +'<td>-</td><td>-</td><td>'+i.qty+' '+i.unit+'</td><td>'+i.unit+'</td>'
-      +'<td>-</td><td>-</td><td>-</td><td>-</td>'
-      +'<td>$'+f2(i.price)+'</td><td>$'+fi(i.subtotal)+'</td><td>-</td>';
+      +'<td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>'
+      +'<td>$'+fi(i.subtotal)+'</td><td>-</td>';
     bk.appendChild(tr);
   });
   var contPct=cont(),contv=gB>0?Math.round(gB*contPct/100*100)/100:0;
-  var total=gB+mobv+contv,gp=gB-gM;
+  var total=gB+mobv+contv,gp=gB-gM-gCrew-gTruck;
   document.getElementById('m-sf').textContent=gSF>0?gSF.toLocaleString():'-';
   updatePhaseMetric();
   var ccEl=document.getElementById('m-cont-card');
@@ -1940,9 +2119,11 @@ function recalc(){
   document.getElementById('m-sy').textContent=gSY>0?gSY.toFixed(1):'-';
   document.getElementById('m-tons').textContent=gT>0?gT.toFixed(2):'-';
   document.getElementById('m-mat').textContent=gM>0?'$'+fi(gM):'-';
+  document.getElementById('m-crew').textContent=gCrew>0?'$'+fi(gCrew):'-';
+  document.getElementById('m-truck').textContent=gTruck>0?'$'+fi(gTruck):'-';
   document.getElementById('m-mob').textContent=mobv>0?'$'+fi(mobv):'$0';
   document.getElementById('m-bid').textContent=total>0?'$'+fi(total):'-';
-  document.getElementById('m-gp').textContent=gp>0?'$'+fi(gp)+' ('+mu(gM,gB).toFixed(1)+'%)':'-';
+  document.getElementById('m-gp').textContent=gp>0?'$'+fi(gp)+' ('+mu(gM+gCrew+gTruck,gB).toFixed(1)+'%)':'-';
 }
 
 // -- Build payload -------------------------------------------------------------
@@ -1961,15 +2142,17 @@ function buildPayload(){
     s.layers.forEach(function(l){
       var isMill=l.type==='Mill & Pave';
       var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
-      var t=rawT*wfv,millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
+      var t=rawT*wfv;
       var bC=calcLayerBid(t,l);
       total+=bC;
+      var autoDesc=isMill?'Mill & Pave '+((l.mill_days||0))+' day(s)':('Install '+l.depth+'" '+l.type);
+      var desc=l.description||autoDesc;
       if(sf>0||isMill)line_items.push({
         name:s.name+' \u2014 '+l.type,
-        description:isMill?'Milling '+l.mill_days+' day(s) @ $'+l.mill_rate+'/day':('Install '+l.depth+'" '+l.type),
-        qty:isMill?l.mill_days:parseFloat(sy.toFixed(1)),
+        description:desc,
+        qty:isMill?(l.mill_days||0):parseFloat(sy.toFixed(1)),
         unit:isMill?'day':'SY',
-        price:isMill?l.mill_rate:parseFloat(sy>0?(bC/sy).toFixed(2):'0'),
+        price:isMill?parseFloat((bC/Math.max(l.mill_days||1,1)).toFixed(2)):parseFloat(sy>0?(bC/sy).toFixed(2):'0'),
         subtotal:parseFloat(bC.toFixed(2))
       });
     });
@@ -1978,12 +2161,12 @@ function buildPayload(){
     if(!i.qty||!i.sub)return;
     var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];
     var bR=concBid(i),bC=i.qty*bR;total+=bC;
-    line_items.push({name:ct.name,description:ct.desc,qty:i.qty,unit:ct.unit,price:parseFloat(bR.toFixed(2)),subtotal:parseFloat(bC.toFixed(2))});
+    line_items.push({name:ct.name,description:i.description||ct.desc,qty:i.qty,unit:ct.unit,price:parseFloat(bR.toFixed(2)),subtotal:parseFloat(bC.toFixed(2))});
   });
   extraItems.forEach(function(i){
     if(!i.name||!i.subtotal)return;
     total+=i.subtotal;
-    line_items.push({name:i.name,description:'',qty:i.qty,unit:i.unit,price:i.price,subtotal:i.subtotal});
+    line_items.push({name:i.name,description:i.desc||'',qty:i.qty,unit:i.unit,price:i.price,subtotal:i.subtotal});
   });
   var contPct2=cont(),contv2=contPct2>0?parseFloat((total*contPct2/100).toFixed(2)):0;
   if(contv2>0){
@@ -2023,6 +2206,8 @@ async function exportPDF(){
     a.href=url;a.download='HD_Proposal_'+p.project_name.replace(/\s+/g,'_')+'.pdf';
     a.click();URL.revokeObjectURL(url);
     toast('PDF downloaded','ok');
+    // Auto-move to "Estimate Sent" in pipeline if we have a saved quote
+    if(lastSavedQuoteId) autoMoveToStage(lastSavedQuoteId,'Estimate Sent');
   }catch(e){toast('PDF error: '+e.message,'err');}
   finally{
     btn.disabled=false;
@@ -2111,7 +2296,7 @@ async function saveQuote(){
     var r=await fetch('/quotes/save',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({name:name,client:snap.client,date:snap.date,total:p.total,snap:snap,stage_id:pipelineStages.length?pipelineStages[0].id:null})});
     var d=await r.json();
-    if(d.ok){savedQuotes.push({id:d.id,name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});toast('Quote saved','ok');}
+    if(d.ok){lastSavedQuoteId=d.id;savedQuotes.push({id:d.id,name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});toast('Quote saved','ok');}
     else{toast('Save failed: '+(d.error||'unknown'),'err');}
   }catch(e){toast('Save error: '+e.message,'err');}
 }
@@ -2178,6 +2363,68 @@ async function importQuotes(){
   inp.click();
 }
 
+async function generateWorkOrder(qid){
+  var q=savedQuotes.find(function(x){return x.id===qid;})||pipelineProposals.find(function(x){return x.id===qid;});
+  if(!q){toast('Proposal not found','err');return;}
+  var snap=typeof q.snap==='string'?JSON.parse(q.snap):q.snap;
+  var payload={
+    project_name:snap.name||q.name||'Unnamed',
+    client_name:snap.client||q.client||'',
+    address:snap.addr||'',
+    city_state:snap.cs||'',
+    date:snap.date||'',
+    notes:snap.notes||'',
+    sender_name:sender.name||'HD Hauling & Grading',
+    sender_phone:sender.phone||'',
+    line_items:[],
+    sections:snap.sections||[],
+    concItems:snap.concItems||[],
+    extraItems:snap.extraItems||[]
+  };
+  try{
+    var r=await fetch('/generate-wo-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
+    var blob=await r.blob();
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download='HD_WorkOrder_'+(payload.project_name).replace(/\s+/g,'_')+'.pdf';
+    a.click();URL.revokeObjectURL(url);
+    toast('Work order downloaded','ok');
+  }catch(e){toast('Work order error: '+e.message,'err');}
+}
+
+async function generateJobCostFromSaved(qid){
+  var q=savedQuotes.find(function(x){return x.id===qid;})||pipelineProposals.find(function(x){return x.id===qid;});
+  if(!q){toast('Proposal not found','err');return;}
+  var snap=typeof q.snap==='string'?JSON.parse(q.snap):q.snap;
+  var payload={
+    project_name:snap.name||q.name||'Unnamed',
+    client_name:snap.client||q.client||'',
+    address:snap.addr||'',
+    city_state:snap.cs||'',
+    date:snap.date||'',
+    sender_name:sender.name||'HD Hauling & Grading',
+    bid_total:q.total||0,
+    labor_cost:snap.jc_labor_cost||0,
+    overhead_pct:snap.jc_overhead_pct||jcOverheadPct,
+    total_cost:snap.jc_total_cost||0,
+    margin_pct:snap.jc_margin_pct||0,
+    sections:snap.sections||[],
+    concItems:snap.concItems||[],
+    extraItems:snap.extraItems||[]
+  };
+  try{
+    var r=await fetch('/generate-job-cost',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
+    var blob=await r.blob();
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download='HD_JobCost_'+(payload.project_name).replace(/\s+/g,'_')+'.pdf';
+    a.click();URL.revokeObjectURL(url);
+    toast('Job cost report downloaded','ok');
+  }catch(e){toast('Job cost error: '+e.message,'err');}
+}
+
 async function renderSaved(){
   var c=document.getElementById('saved-list');
   c.innerHTML='<p style="color:var(--dgray);font-size:13px;">Loading...</p>';
@@ -2191,9 +2438,12 @@ async function renderSaved(){
     savedQuotes.forEach(function(q){
       var div=document.createElement('div');
       div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
-      div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+esc(q.name)+'</div>'
+      var createdBy=q.created_by?'<span style="background:#eee;color:var(--dgray);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase;margin-left:6px;">'+esc(q.created_by)+'</span>':'';
+      div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+esc(q.name)+createdBy+'</div>'
         +'<div style="font-size:11px;color:var(--dgray);">'+(q.client?esc(q.client)+'  -  ':'')+(q.date||'')+'  -  $'+Math.round(q.total).toLocaleString()+'</div></div>'
         +'<button class="btn btn-sec btn-sm" onclick="loadQuote('+q.id+')">Load</button>'
+        +'<button class="btn btn-sec btn-sm" onclick="generateWorkOrder('+q.id+')" title="Generate crew work order">Work Order</button>'
+        +'<button class="btn btn-sec btn-sm" onclick="generateJobCostFromSaved('+q.id+')" title="Generate job cost report">Job Cost</button>'
         +'<button class="btn-ico" onclick="delSaved('+q.id+')">x</button>';
       c.appendChild(div);
     });
@@ -2339,6 +2589,14 @@ function renderPresetMgr(){
 // == Pipeline ==
 var pipelineStages = [];
 var pipelineProposals = [];
+
+// Auto-move proposal to a pipeline stage by name
+async function autoMoveToStage(proposalId, stageName){
+  if(!proposalId||!pipelineStages.length) return;
+  var stage=pipelineStages.find(function(s){return s.name===stageName;});
+  if(!stage) return;
+  try{await fetch('/pipeline/move/'+proposalId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage_id:stage.id})});}catch(e){}
+}
 
 async function renderPipeline() {
   var board = document.getElementById('pipeline-board');
@@ -2545,9 +2803,9 @@ var _editingUserId=null;
 async function loadUsers(){var tbody=document.getElementById('users-tbody');if(!tbody)return;try{var r=await fetch('/admin/users');if(r.status===403){tbody.innerHTML='<tr><td colspan="6" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';window._adminUsers={};d.users.forEach(function(u){window._adminUsers[u.id]=u;var tr=document.createElement('tr');var created=u.created_at?new Date(u.created_at).toLocaleDateString():'-';tr.innerHTML='<td><b>'+esc(u.full_name||u.username)+'</b></td><td style="font-family:monospace;font-size:12px;">'+esc(u.username)+'</td><td><span class="role-badge role-'+u.role+'">'+u.role+'</span></td><td><span class="'+(u.active?'status-active':'status-inactive')+'">'+( u.active?'Active':'Inactive')+'</span></td><td style="font-size:12px;color:var(--dgray);">'+created+'</td><td style="white-space:nowrap;"><button class="btn btn-sec btn-sm" style="margin-right:4px;" onclick="openEditUserModal('+u.id+')">Edit</button>'+(u.username!==(window._userUsername||'')? '<button class="btn-ico" style="color:var(--red);" onclick="deactivateUser('+u.id+',\''+esc(u.username)+'\','+u.active+')">'+( u.active?'&#10005;':'&#10003;')+'</button>':'')+'</td>';tbody.appendChild(tr);});var sel=document.getElementById('log-user-filter');if(sel){sel.innerHTML='<option value="">All Users</option>';d.users.forEach(function(u){var o=document.createElement('option');o.value=u.username;o.textContent=u.full_name||u.username;sel.appendChild(o);});}}catch(e){tbody.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
 async function loadLogs(){var tbody=document.getElementById('logs-tbody');if(!tbody)return;tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">Loading...</td></tr>';try{var f=(document.getElementById('log-user-filter')||{}).value||'';var url='/admin/logs?limit=100'+(f?'&username='+encodeURIComponent(f):'');var r=await fetch(url);if(r.status===403){tbody.innerHTML='<tr><td colspan="5" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';if(!d.logs.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">No activity yet.</td></tr>';return;}d.logs.forEach(function(l){var tr=document.createElement('tr');if(!l.success)tr.className='log-row-fail';var ts=l.logged_at?new Date(l.logged_at).toLocaleString():'-';tr.innerHTML='<td style="font-size:12px;white-space:nowrap;">'+ts+'</td><td><b>'+esc(l.full_name||l.username)+'</b><br><span style="font-size:11px;color:var(--dgray);">'+esc(l.username)+'</span></td><td style="text-transform:capitalize;font-size:12px;">'+esc(l.action)+'</td><td>'+(l.success?'<span style="color:#27500A;font-weight:600;font-size:11px;">Success</span>':'<span style="color:var(--red);font-weight:600;font-size:11px;">Failed</span>')+'</td><td class="log-ip">'+esc(l.ip_address||'-')+'</td>';tbody.appendChild(tr);});}catch(e){tbody.innerHTML='<tr><td colspan="5" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
 function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value='user';document.getElementById('pin-hint').textContent='(4-8 digits)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
-function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=true;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value=u.role||'user';document.getElementById('pin-hint').textContent='(leave blank to keep current PIN)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');}
+function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value=u.role||'user';document.getElementById('pin-hint').textContent='(leave blank to keep current PIN)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');}
 function closeUserModal(){document.getElementById('user-modal').classList.add('hidden');_editingUserId=null;}
-async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pin=document.getElementById('edit-pin').value.trim();var role=document.getElementById('edit-role').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,role:role};if(pin)upd.pin=pin;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pin||pin.length<4){errEl.textContent='PIN must be at least 4 digits.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,pin:pin,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
+async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pin=document.getElementById('edit-pin').value.trim();var role=document.getElementById('edit-role').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,role:role};if(pin)upd.pin=pin;var origUser=window._adminUsers&&window._adminUsers[_editingUserId];if(origUser&&un!==origUser.username)upd.username=un;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){if(upd.username&&origUser.username===window._userUsername){window._userUsername=un;}closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pin||pin.length<4){errEl.textContent='PIN must be at least 4 digits.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,pin:pin,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
 async function deactivateUser(uid,username,active){if(!confirm((active?'Deactivate':'Reactivate')+' "'+username+'"?'))return;var r=await fetch('/admin/users/'+uid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!active})});var d=await r.json();if(d.ok){loadUsers();toast('User '+(active?'deactivated':'reactivated'),'ok');}else toast('Error: '+(d.error||'failed'),'err');}
 
 // Startup: check auth on every page load so _userRole is set from server

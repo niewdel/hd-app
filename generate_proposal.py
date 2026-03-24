@@ -327,11 +327,41 @@ def total_line(total):
     return t
 
 class SitePlanPage(Flowable):
+    """Renders the uploaded site plan image, or a placeholder if no image."""
+    def __init__(self, image_data=None):
+        super().__init__()
+        self._image_data = image_data
+        self._tmp_path = None
     def wrap(self, aw, ah):
         self._aw, self._ah = aw, ah
         return aw, ah
     def draw(self):
+        import base64, tempfile
         c = self.canv
+        if self._image_data and ',' in self._image_data:
+            try:
+                img_bytes = base64.b64decode(self._image_data.split(',')[1])
+                ext = self._image_data.split(';')[0].split('/')[1] if ';' in self._image_data else 'png'
+                with tempfile.NamedTemporaryFile(suffix=f'.{ext}', delete=False) as tmp:
+                    tmp.write(img_bytes)
+                    self._tmp_path = tmp.name
+                from reportlab.lib.utils import ImageReader
+                ir = ImageReader(self._tmp_path)
+                iw, ih = ir.getSize()
+                max_w = self._aw
+                max_h = self._ah
+                scale = min(max_w / iw, max_h / ih)
+                dw = iw * scale
+                dh = ih * scale
+                x = (self._aw - dw) / 2
+                y = (self._ah - dh) / 2
+                c.drawImage(self._tmp_path, x, y, width=dw, height=dh,
+                            preserveAspectRatio=True, mask='auto')
+                os.unlink(self._tmp_path)
+                return
+            except Exception:
+                pass
+        # Fallback placeholder
         c.setStrokeColor(MGRAY)
         c.setLineWidth(1)
         c.setDash(6,4)
@@ -670,7 +700,7 @@ def build(data, out_path):
     story.append(PageBreak())
 
     if data.get('site_plan_image'):
-        story.append(SitePlanPage())
+        story.append(SitePlanPage(data['site_plan_image']))
         story.append(PageBreak())
 
     story += tc_pages(st)
