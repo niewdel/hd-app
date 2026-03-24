@@ -40,7 +40,7 @@ body{font-family:var(--font);background:#EBEBEB;color:var(--blk);font-size:14px;
 #app.on{display:grid;grid-template-columns:210px 1fr;min-height:100vh;}
 .sb{background:var(--blk);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
 .sb-logo{padding:18px 14px 14px;border-bottom:1px solid #1e1e1e;}
-.sb-logo img{height:38px;width:auto;}
+.sb-logo img{height:54px;width:auto;}
 .sb-logo p{font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:9px;}
 .sb nav{flex:1;padding:10px 0;overflow-y:auto;}
 .nav-grp{font-size:10px;font-weight:600;color:#444;text-transform:uppercase;letter-spacing:.08em;padding:10px 14px 3px;}
@@ -348,24 +348,23 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <aside class="sb">
     <div class="sb-logo">
       <img src="/hd_logo.png" alt="HD Hauling &amp; Grading"/>
-      <p>Proposal Generator</p>
     </div>
     <nav>
-      <div class="nav-grp">Quote</div>
-      <div class="nav-item on" onclick="showPanel('build',this)">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Build Proposal
+      <div class="nav-item on" onclick="showPanel('dashboard',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg>Dashboard</div>
+      <div class="nav-item" onclick="showPanel('pipeline',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 3h3v10H1zm4 0h3v10H5zm4 0h3v10H9zm4 0h2v10h-2z"/></svg>Project Pipeline</div>
+      <div class="nav-item" onclick="showPanel('build',this)">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Create Proposal
       </div>
-      <div class="nav-item" onclick="showPanel('lineitems',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v2H2zm0 4h8v1H2zm0 3h10v1H2zm0 3h6v1H2z"/><path d="M13 7l2 2-2 2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Line Items</div>
-      <div class="nav-item" onclick="showPanel('crewcosts',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 1v14M8 3v12M12 5v10"/><circle cx="4" cy="1" r="1"/><circle cx="8" cy="3" r="1"/><circle cx="12" cy="5" r="1"/></svg>Crew Costs</div>
-      <div class="nav-item" onclick="showPanel('jobcost',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3v1.5H10v1H8.5V9H10v1H8.5V11.5h-1V10H6V9h1.5V6.5H6v-1h1.5V4h1z"/></svg>Job Cost</div>
-      <div class="nav-item" onclick="showPanel('co',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h8l3 3v9H2V2zm5 4H4v1h3V6zm5 2H4v1h6V8zm0 2H4v1h6v-1z"/></svg>Change Orders</div>
       <div class="nav-item" onclick="showPanel('saved',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Proposals
       </div>
-      <div class="nav-item" onclick="showPanel('pipeline',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 3h3v10H1zm4 0h3v10H5zm4 0h3v10H9zm4 0h2v10h-2z"/></svg>Pipeline</div>
+      <div class="nav-item" onclick="showPanel('co',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h8l3 3v9H2V2zm5 4H4v1h3V6zm5 2H4v1h6V8zm0 2H4v1h6v-1z"/></svg>Create CO</div>
+      <div class="nav-item" onclick="showPanel('savedco',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 1h7l3 3v10a1 1 0 01-1 1H3a1 1 0 01-1-1V2a1 1 0 011-1zm1 5h6v1H4zm0 2h6v1H4zm0 2h4v1H4z"/></svg>Saved CO's</div>
       <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
       <div class="nav-item" onclick="showPanel('analytics',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v3H1zm4-4h3v7H5zm4-4h3v11H9zm4-6h2v17h-2z"/></svg>Analytics</div>
-      <div class="nav-grp">Admin</div>
+      <div class="nav-item" onclick="showPanel('lineitems',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v2H2zm0 4h8v1H2zm0 3h10v1H2zm0 3h6v1H2z"/><path d="M13 7l2 2-2 2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Line Items</div>
+      <div class="nav-item" onclick="showPanel('crewcosts',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 1v14M8 3v12M12 5v10"/><circle cx="4" cy="1" r="1"/><circle cx="8" cy="3" r="1"/><circle cx="12" cy="5" r="1"/></svg>Crew Costs</div>
+      <div class="nav-item" onclick="showPanel('jobcost',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3v1.5H10v1H8.5V9H10v1H8.5V11.5h-1V10H6V9h1.5V6.5H6v-1h1.5V4h1z"/></svg>Job Cost</div>
       <div class="nav-item" onclick="showPanel('settings',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings
       </div>
@@ -379,15 +378,94 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
   <div class="main">
     <div class="topbar">
-      <span class="topbar-title" id="topbar-title">Build Proposal</span>
+      <span class="topbar-title" id="topbar-title">Dashboard</span>
       <div class="topbar-actions" id="topbar-actions"></div>
       <input type="file" id="site-plan-input" accept="image/*" style="display:none" onchange="setSitePlan(this)"/>
     </div>
 
     <div class="content">
 
+      <!-- DASHBOARD PANEL -->
+      <div class="panel on" id="panel-dashboard">
+        <div class="content" style="padding:16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px;" id="dash-stats"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+            <div class="card">
+              <div class="card-hdr"><span class="card-title">Crew Schedule</span></div>
+              <div class="card-body" style="padding:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bdr);">
+                  <button class="btn btn-sec btn-sm" onclick="dashCalNav(-1)">&lsaquo; Prev</button>
+                  <span id="dash-cal-month" style="font-weight:600;font-size:14px;"></span>
+                  <button class="btn btn-sec btn-sm" onclick="dashCalNav(1)">Next &rsaquo;</button>
+                </div>
+                <div id="dash-cal-grid" style="padding:8px;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom:14px;">
+                <div class="card-hdr"><span class="card-title">Schedule for <span id="dash-cal-selected-date"></span></span></div>
+                <div class="card-body" id="dash-day-entries">
+                  <p style="font-size:12px;color:var(--dgray);">Click a date on the calendar to view or add crew assignments.</p>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-hdr"><span class="card-title">Quick Links</span></div>
+                <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
+                  <button class="btn btn-sec btn-sm" style="text-align:left;" onclick="showPanel('build',document.querySelector('[onclick*=build]'))">+ Create New Proposal</button>
+                  <button class="btn btn-sec btn-sm" style="text-align:left;" onclick="showPanel('co',document.querySelector('[onclick*=\\'co\\']'))">+ Create Change Order</button>
+                  <button class="btn btn-sec btn-sm" style="text-align:left;" onclick="showPanel('clients',document.querySelector('[onclick*=clients]'))">View Clients</button>
+                  <button class="btn btn-sec btn-sm" style="text-align:left;" onclick="showPanel('pipeline',document.querySelector('[onclick*=pipeline]'))">View Pipeline</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="card">
+              <div class="card-hdr"><span class="card-title">Company Handbook</span></div>
+              <div class="card-body" id="dash-handbook">
+                <div style="font-size:13px;line-height:1.6;">
+                  <p style="font-weight:600;margin-bottom:8px;color:var(--red);">HD Hauling &amp; Grading — Standard Operating Procedures</p>
+                  <p style="margin-bottom:10px;">All work is performed in accordance with NCDOT standards and specifications.</p>
+                  <p style="font-weight:600;margin-bottom:4px;">Safety Requirements</p>
+                  <ul style="margin:0 0 10px 18px;font-size:12px;">
+                    <li>Hard hats, high-vis vests, and steel-toe boots required on all job sites</li>
+                    <li>Daily safety briefing before operations begin</li>
+                    <li>All equipment inspected before each shift</li>
+                  </ul>
+                  <p style="font-weight:600;margin-bottom:4px;">Job Site Protocol</p>
+                  <ul style="margin:0 0 10px 18px;font-size:12px;">
+                    <li>Crew foreman checks in with site contact upon arrival</li>
+                    <li>Photos taken before, during, and after each phase</li>
+                    <li>Daily progress reports submitted by end of shift</li>
+                  </ul>
+                  <p style="font-weight:600;margin-bottom:4px;">Payment Terms</p>
+                  <ul style="margin:0 0 0 18px;font-size:12px;">
+                    <li>Net 30 on all invoices</li>
+                    <li>Change orders require written approval before work begins</li>
+                    <li>Retainage: 5% held until project completion</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-hdr"><span class="card-title">Email Signature Template</span></div>
+              <div class="card-body" id="dash-signature">
+                <div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.5;border:1px solid var(--bdr);border-radius:6px;padding:14px;background:#FAFAFA;">
+                  <p style="font-weight:700;color:#111;margin-bottom:0;" id="dash-sig-name">Your Name</p>
+                  <p style="color:var(--red);font-size:12px;margin-bottom:6px;">HD Hauling &amp; Grading</p>
+                  <p style="font-size:11px;color:#555;margin-bottom:1px;" id="dash-sig-phone">Phone: (555) 000-0000</p>
+                  <p style="font-size:11px;color:#555;margin-bottom:1px;" id="dash-sig-email">Email: info@hdhauling.com</p>
+                  <p style="font-size:11px;color:#555;">Web: hdhauling.com</p>
+                </div>
+                <button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="copySignature()">Copy Signature to Clipboard</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- BUILD PANEL -->
-      <div class="panel on" id="panel-build">
+      <div class="panel" id="panel-build">
 
         <div class="card">
           <div class="card-hdr"><span class="card-title">Project Information</span></div>
@@ -419,7 +497,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div><label>Contingency %</label><input id="contingency" type="number" value="0" min="0" max="50" step="0.5" title="Applied to total bid as a separate line item on the proposal"/></div>
             <div><label>Mobilization / Flat Fee ($)</label><input id="mob" type="number" value="0" min="0" step="50"/></div>
               
-              <div><label>Project Notes</label><textarea id="proj-notes" rows="3" placeholder="Notes for the proposal..." style="resize:vertical;font-family:inherit;font-size:13px;">All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice. See Exhibit A on Page 2 for Site Plan and Takeoffs.</textarea></div>
+              <div><label>Project Notes</label><textarea id="proj-notes" rows="3" placeholder="Notes for the proposal..." style="resize:vertical;font-family:inherit;font-size:13px;">All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice. See Exhibit A on Page 3 for Site Plan &amp; Takeoffs.</textarea></div>
             </div>
             <div style="margin-top:10px;">
               <div class="mat-indicator" id="mat-indicator" onclick="showPanel('settings',document.querySelectorAll('.nav-item')[2])">
@@ -641,12 +719,16 @@ tr:nth-child(even) td{background:#FAFAFA;}
                     </div>
                   </div>
                 </div>
-                <div class="card" id="co-saved-list-card">
-                  <div class="card-hdr"><span class="card-title">Saved Change Orders</span></div>
-                  <div class="card-body" id="co-saved-list"><p style="color:var(--dgray);font-size:12px;">No saved change orders yet.</p></div>
-                </div>
               </div>
             </div>
+
+      <!-- SAVED CO's PANEL -->
+      <div class="panel" id="panel-savedco"><div class="content">
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Saved Change Orders</span></div>
+          <div class="card-body" id="co-saved-list"><p style="color:var(--dgray);font-size:12px;">No saved change orders yet.</p></div>
+        </div>
+      </div></div>
 
       <!-- ANALYTICS PANEL -->
       <div class="panel" id="panel-analytics"><div class="content">
@@ -1101,7 +1183,9 @@ function boot(){
   loadClientsForAutocomplete();
   updateMatIndicator();
   checkMobile();
-  renderTopbar('build');
+  renderTopbar('dashboard');
+  // Pre-load saved quotes for dashboard stats
+  fetch('/quotes/list').then(function(r){return r.json();}).then(function(d){if(d.ok&&d.quotes){savedQuotes=d.quotes;}setTimeout(renderDashboard,50);}).catch(function(){setTimeout(renderDashboard,50);});
   // Pre-load pipeline stages for auto-move
   fetch('/pipeline/stages').then(function(r){return r.json();}).then(function(d){if(d.ok)pipelineStages=d.stages;}).catch(function(){});
   
@@ -1486,6 +1570,156 @@ function renderAnalytics(){
 }
 
 
+// ---- Dashboard ----
+var dashCalDate = new Date();
+var dashSchedule = JSON.parse(localStorage.getItem('hd_crew_schedule')||'{}');
+var dashSelectedDate = null;
+
+function renderDashboard(){
+  renderDashStats();
+  renderDashCal();
+  renderDashSignature();
+}
+
+function renderDashStats(){
+  var c=document.getElementById('dash-stats');if(!c)return;
+  c.innerHTML='';
+  var totalProposals=typeof savedQuotes!=='undefined'?savedQuotes.length:0;
+  var totalBid=0;
+  if(typeof savedQuotes!=='undefined')savedQuotes.forEach(function(q){totalBid+=parseFloat(q.total)||0;});
+  var totalClients=0;
+  try{fetch('/clients/list').then(function(r){return r.json();}).then(function(d){
+    if(d.ok&&d.clients)totalClients=d.clients.length;
+    var ce=document.getElementById('dash-stat-clients');if(ce)ce.textContent=totalClients;
+  });}catch(e){}
+  [{lbl:'Total Proposals',val:totalProposals,id:'dash-stat-proposals'},
+   {lbl:'Total Pipeline Value',val:'$'+Math.round(totalBid).toLocaleString(),id:'dash-stat-value'},
+   {lbl:'Total Clients',val:'...',id:'dash-stat-clients'}
+  ].forEach(function(s){
+    var div=document.createElement('div');div.className='a-card';
+    div.innerHTML='<div class="a-card-lbl">'+s.lbl+'</div><div class="a-card-val" id="'+s.id+'">'+s.val+'</div>';
+    c.appendChild(div);
+  });
+}
+
+function renderDashCal(){
+  var grid=document.getElementById('dash-cal-grid');
+  var monthEl=document.getElementById('dash-cal-month');
+  if(!grid||!monthEl)return;
+  var y=dashCalDate.getFullYear(),m=dashCalDate.getMonth();
+  monthEl.textContent=new Date(y,m).toLocaleString('en-US',{month:'long',year:'numeric'});
+  var first=new Date(y,m,1).getDay();
+  var daysInMonth=new Date(y,m+1,0).getDate();
+  var today=new Date();
+  grid.innerHTML='';
+  var hdr=document.createElement('div');
+  hdr.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:10px;font-weight:600;color:var(--dgray);margin-bottom:4px;';
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(function(d){var s=document.createElement('span');s.textContent=d;hdr.appendChild(s);});
+  grid.appendChild(hdr);
+  var body=document.createElement('div');
+  body.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:2px;';
+  for(var i=0;i<first;i++){var blank=document.createElement('div');blank.style.padding='8px';body.appendChild(blank);}
+  for(var d=1;d<=daysInMonth;d++){
+    var cell=document.createElement('div');
+    var dateKey=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var isToday=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
+    var hasEntries=dashSchedule[dateKey]&&dashSchedule[dateKey].length>0;
+    var isSelected=dashSelectedDate===dateKey;
+    cell.style.cssText='padding:8px 4px;text-align:center;font-size:12px;border-radius:4px;cursor:pointer;position:relative;'
+      +(isSelected?'background:var(--red);color:#fff;font-weight:700;':(isToday?'background:#FEE;font-weight:600;border:1px solid var(--red);':'background:#FAFAFA;'))
+      +(hasEntries&&!isSelected?'font-weight:600;':'');
+    cell.textContent=d;
+    if(hasEntries){var dot=document.createElement('div');dot.style.cssText='width:5px;height:5px;border-radius:50%;background:'+(isSelected?'#fff':'var(--red)')+';margin:2px auto 0;';cell.appendChild(dot);}
+    (function(dk){cell.addEventListener('click',function(){dashSelectedDate=dk;renderDashCal();renderDayEntries(dk);});})(dateKey);
+    body.appendChild(cell);
+  }
+  grid.appendChild(body);
+  if(dashSelectedDate)renderDayEntries(dashSelectedDate);
+}
+
+function dashCalNav(dir){
+  dashCalDate.setMonth(dashCalDate.getMonth()+dir);
+  renderDashCal();
+}
+
+function renderDayEntries(dateKey){
+  var c=document.getElementById('dash-day-entries');
+  var dateLabel=document.getElementById('dash-cal-selected-date');
+  if(!c)return;
+  var d=new Date(dateKey+'T12:00:00');
+  if(dateLabel)dateLabel.textContent=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  var entries=dashSchedule[dateKey]||[];
+  c.innerHTML='';
+  if(entries.length){
+    entries.forEach(function(e,idx){
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bdr);';
+      var info=document.createElement('div');info.style.flex='1';
+      info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(e.crew||'')+'</div>'
+        +'<div style="font-size:11px;color:var(--dgray);">'+esc(e.project||'')+' — '+esc(e.notes||'')+'</div>';
+      row.appendChild(info);
+      var del=document.createElement('button');del.className='btn-ico';del.style.color='var(--red)';del.textContent='×';
+      (function(dk,i){del.addEventListener('click',function(){dashSchedule[dk].splice(i,1);if(!dashSchedule[dk].length)delete dashSchedule[dk];saveDashSchedule();renderDayEntries(dk);renderDashCal();});})(dateKey,idx);
+      row.appendChild(del);
+      c.appendChild(row);
+    });
+  } else {
+    var empty=document.createElement('p');empty.style.cssText='font-size:12px;color:var(--dgray);margin-bottom:10px;';
+    empty.textContent='No crews scheduled for this date.';c.appendChild(empty);
+  }
+  var addBtn=document.createElement('button');addBtn.className='btn btn-red btn-sm';addBtn.textContent='+ Add Crew Assignment';
+  addBtn.addEventListener('click',function(){openCrewEntryModal(dateKey);});
+  c.appendChild(addBtn);
+}
+
+function openCrewEntryModal(dateKey){
+  var ex=document.getElementById('crew-entry-modal');if(ex)ex.remove();
+  var modal=document.createElement('div');modal.id='crew-entry-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:10px;padding:20px;width:360px;max-width:90vw;';
+  box.innerHTML='<h3 style="margin:0 0 14px;font-size:15px;">Add Crew Assignment</h3>'
+    +'<label style="margin-bottom:3px;">Crew Name</label><input id="ce-crew" type="text" placeholder="e.g. Paving Crew A" style="width:100%;margin-bottom:10px;"/>'
+    +'<label style="margin-bottom:3px;">Project / Location</label><input id="ce-project" type="text" placeholder="e.g. CK Beam - Main St" style="width:100%;margin-bottom:10px;"/>'
+    +'<label style="margin-bottom:3px;">Notes</label><input id="ce-notes" type="text" placeholder="e.g. ABC base, 6 loads" style="width:100%;margin-bottom:14px;"/>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'crew-entry-modal\').remove()">Cancel</button>'
+    +'<button class="btn btn-red btn-sm" id="ce-save">Save</button></div>';
+  modal.appendChild(box);
+  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+  document.getElementById('ce-save').addEventListener('click',function(){
+    var crew=document.getElementById('ce-crew').value.trim();
+    var project=document.getElementById('ce-project').value.trim();
+    var notes=document.getElementById('ce-notes').value.trim();
+    if(!crew){toast('Enter a crew name','err');return;}
+    if(!dashSchedule[dateKey])dashSchedule[dateKey]=[];
+    dashSchedule[dateKey].push({crew:crew,project:project,notes:notes});
+    saveDashSchedule();
+    modal.remove();
+    renderDayEntries(dateKey);renderDashCal();
+  });
+}
+
+function saveDashSchedule(){
+  localStorage.setItem('hd_crew_schedule',JSON.stringify(dashSchedule));
+}
+
+function renderDashSignature(){
+  var nameEl=document.getElementById('dash-sig-name');
+  var phoneEl=document.getElementById('dash-sig-phone');
+  var emailEl=document.getElementById('dash-sig-email');
+  if(nameEl&&window._userName)nameEl.textContent=window._userName;
+  if(phoneEl&&sender.phone)phoneEl.textContent='Phone: '+sender.phone;
+  if(emailEl&&sender.email)emailEl.textContent='Email: '+sender.email;
+}
+
+function copySignature(){
+  var name=window._userName||'Your Name';
+  var sig=name+'\nHD Hauling & Grading\nPhone: '+(sender.phone||'(555) 000-0000')+'\nEmail: '+(sender.email||'info@hdhauling.com')+'\nWeb: hdhauling.com';
+  navigator.clipboard.writeText(sig).then(function(){toast('Signature copied','ok');}).catch(function(){toast('Copy failed','err');});
+}
+
 // ---- Change Orders ----
 var coLines = [];
 
@@ -1705,6 +1939,8 @@ async function loadCOList(){
 }
 
 var TOPBAR_CFG = {
+  dashboard:[],
+  savedco:[],
   build:[
     {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
     {html:"Reset",cls:"btn btn-sec btn-sm",fn:"resetAll()"},
@@ -1747,13 +1983,15 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={build:'Build Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Cost',saved:'Saved Proposals',settings:'Settings',co:'Change Orders',analytics:'Analytics',pipeline:'Pipeline',clients:'Clients',admin:'Admin Panel',workorders:'Work Orders'}[id]||id;
+  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Cost',saved:'Saved Proposals',settings:'Settings',co:'Create CO',savedco:"Saved CO's",analytics:'Analytics',pipeline:'Project Pipeline',clients:'Clients',admin:'Admin Panel'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved')renderSaved();
   if(id==='lineitems')renderLineItems();
   if(id==='crewcosts')renderCrewCosts();
-  if(id==='co'){populateCOProposalDropdown();loadCOList();}
+  if(id==='dashboard')renderDashboard();
+  if(id==='co'){populateCOProposalDropdown();}
+  if(id==='savedco')loadCOList();
   if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');}
   if(id==='jobcost')renderJobCost();
   if(id==='analytics')setTimeout(renderAnalytics,50);
@@ -2870,7 +3108,7 @@ async function renderSaved(){
 }
 function resetAll(){
   sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;lastSavedQuoteId=null;
-  ['proj-name','proj-client','proj-addr','proj-cs'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('proj-notes').value='All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice. See Exhibit A on Page 2 for Site Plan and Takeoffs.';
+  ['proj-name','proj-client','proj-addr','proj-cs'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('proj-notes').value='All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice. See Exhibit A on Page 3 for Site Plan & Takeoffs.';
   document.getElementById('waste').value=5;document.getElementById('mob').value=0;document.getElementById('contingency').value=0;
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('client-bar').style.display='none';
