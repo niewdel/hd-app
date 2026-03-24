@@ -302,6 +302,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
 .kb-stage-select{font-size:11px;padding:2px 5px;border:1px solid var(--bdr);border-radius:4px;background:#fff;cursor:pointer;max-width:130px;}
 .admin-table{width:100%;border-collapse:collapse;font-size:13px;}.admin-table th{background:var(--lgray);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--dgray);border-bottom:2px solid var(--bdr);letter-spacing:.5px;text-transform:uppercase;}.admin-table td{padding:9px 12px;border-bottom:1px solid var(--bdr);vertical-align:middle;}.admin-table tr:hover td{background:var(--lgray);}.role-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}.role-admin{background:#2d1a1a;color:var(--red);}.role-user{background:#f0f0f0;color:#555;}.status-active{color:#27500A;font-weight:600;font-size:11px;}.status-inactive{color:#999;font-size:11px;}.log-row-fail td{color:#cc4444;}.log-ip{font-family:monospace;font-size:11px;color:var(--dgray);}
 [data-admin-hidden]{display:none}
+.settings-tab-bar{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--bdr);padding-bottom:0;}
+.stab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--dgray);cursor:pointer;transition:all .12s;}
+.stab:hover{color:var(--dark);}
+.stab.on{color:var(--red);border-bottom-color:var(--red);font-weight:600;}
 </style>
 </head>
 <body>
@@ -623,74 +627,122 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
       <!-- SETTINGS PANEL -->
       <div class="panel" id="panel-settings">
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Sender Information</span></div>
-          <div class="card-body">
-            <div class="fg fg3">
-              <div><label>Your Name</label><input id="s-name" type="text" placeholder="Justin Ledwein"/></div>
-              <div><label>Your Email</label><input id="s-email" type="text" placeholder="justin@hdgrading.com"/></div>
-              <div><label>Your Phone</label><input id="s-phone" type="text" placeholder="704-900-9722"/></div>
+        <div class="settings-tab-bar">
+          <button class="stab on" id="stab-general" onclick="showSettingsTab('general')">General</button>
+          <button class="stab" id="stab-badges" onclick="showSettingsTab('badges')">Layer Badges</button>
+          <button class="stab" id="stab-presets" onclick="showSettingsTab('presets')">Presets</button>
+          <button class="stab" id="stab-library" onclick="showSettingsTab('library')">Bid Library</button>
+        </div>
+
+        <!-- General Tab -->
+        <div id="stab-content-general">
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Sender Information</span></div>
+            <div class="card-body">
+              <div class="fg fg3">
+                <div><label>Your Name</label><input id="s-name" type="text" placeholder="Justin Ledwein"/></div>
+                <div><label>Your Email</label><input id="s-email" type="text" placeholder="justin@hdgrading.com"/></div>
+                <div><label>Your Phone</label><input id="s-phone" type="text" placeholder="704-900-9722"/></div>
+              </div>
+              <div style="margin-top:11px;"><button class="btn btn-red btn-sm" onclick="saveSender()">Save Settings</button></div>
             </div>
-            <div style="margin-top:11px;"><button class="btn btn-red btn-sm" onclick="saveSender()">Save Settings</button></div>
+          </div>
+          <div class="card" id="jc-settings-card">
+            <div class="card-hdr">
+              <span class="card-title">Job Cost Defaults</span>
+              <div style="display:flex;gap:7px;">
+                <button class="btn btn-sec btn-sm" onclick="saveJCDefaults()">Save</button>
+                <button class="btn btn-sec btn-sm" onclick="resetJCDefaults()">Reset</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="fg fg3">
+                <div><label>DEFAULT CREW DAY RATE ($)</label><input id="jc-default-crew-rate" type="number" min="0" step="100"/></div>
+                <div><label>DEFAULT OVERHEAD %</label><input id="jc-default-overhead-pct" type="number" min="0" step="1"/></div>
+                <div><label>PRODUCTIVITY (t/day)</label><input id="jc-default-productivity" type="number" min="1" step="10"/></div>
+              </div>
+              <div id="jc-settings-indicator" style="margin-top:8px;font-size:11px;color:var(--dgray);"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hdr">
+              <span class="card-title">Material Prices</span>
+              <button class="btn btn-sec btn-sm" onclick="addMaterial()">+ Add Material</button>
+            </div>
+            <div class="card-body">
+              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Manage materials used in proposals. Changes update all MU% calculations instantly.</p>
+              <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;font-size:12px;" id="mat-table">
+                  <thead>
+                    <tr style="background:var(--lgray);">
+                      <th style="padding:7px 10px;text-align:left;font-weight:600;">Material</th>
+                      <th style="padding:7px 10px;text-align:right;font-weight:600;">Cost $/ton</th>
+                      <th style="padding:7px 10px;text-align:right;font-weight:600;">Default Rate $/ton</th>
+                      <th style="padding:7px 10px;text-align:right;font-weight:600;">Default Depth"</th>
+                      <th style="padding:7px 10px;text-align:center;font-weight:600;">Badge</th>
+                      <th style="padding:7px 4px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="mat-tbody"></tbody>
+                </table>
+              </div>
+              <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+                <button class="btn btn-red btn-sm" onclick="saveMatPrices()">Save Prices</button>
+                <button class="btn btn-sec btn-sm" onclick="resetMatPrices()">Reset to Defaults</button>
+                <span id="mat-prices-updated" style="font-size:11px;color:var(--dgray);"></span>
+              </div>
+            </div>
           </div>
         </div>
 
-      <!-- Change Orders Panel -->
-
-      <!-- Analytics Panel -->
-
-      <!-- Job Cost Defaults -->
-      <div class="card" id="jc-settings-card">
-        <div class="card-hdr">
-          <span class="card-title">Job Cost Defaults</span>
-          <div style="display:flex;gap:7px;">
-            <button class="btn btn-sec btn-sm" onclick="saveJCDefaults()">Save</button>
-            <button class="btn btn-sec btn-sm" onclick="resetJCDefaults()">Reset</button>
+        <!-- Layer Badges Tab -->
+        <div id="stab-content-badges" style="display:none;">
+          <div class="card">
+            <div class="card-hdr">
+              <span class="card-title">Layer Badges</span>
+              <button class="btn btn-sec btn-sm" onclick="addBadge()">+ Add Badge</button>
+            </div>
+            <div class="card-body">
+              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Badge colors and labels apply live to all layers in the proposal builder.</p>
+              <div id="badge-list"></div>
+              <div style="margin-top:12px;">
+                <button class="btn btn-red btn-sm" onclick="saveBadges()">Save Badges</button>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="card-body">
-          <div class="fg fg3">
-            <div><label>DEFAULT CREW DAY RATE ($)</label><input id="jc-default-crew-rate" type="number" min="0" step="100"/></div>
-            <div><label>DEFAULT OVERHEAD %</label><input id="jc-default-overhead-pct" type="number" min="0" step="1"/></div>
-            <div><label>PRODUCTIVITY (t/day)</label><input id="jc-default-productivity" type="number" min="1" step="10"/></div>
+
+        <!-- Presets Tab -->
+        <div id="stab-content-presets" style="display:none;">
+          <div class="card">
+            <div class="card-hdr">
+              <span class="card-title">Section Presets</span>
+              <button class="btn btn-sec btn-sm" onclick="openPresetModal()">+ Add Preset</button>
             </div>
-          <div id="jc-settings-indicator" style="margin-top:8px;font-size:11px;color:var(--dgray);"></div>
+            <div class="card-body">
+              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Presets appear as quick-add buttons in the proposal builder. Click any preset to instantly add a pre-configured section.</p>
+              <div id="preset-mgr"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bid Library Tab -->
+        <div id="stab-content-library" style="display:none;">
+          <div class="card">
+            <div class="card-hdr">
+              <span class="card-title">Bid Items Library</span>
+              <button class="btn btn-sec btn-sm" onclick="addLibraryItem()">+ Add Item</button>
+            </div>
+            <div class="card-body">
+              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Reusable line items — insert into proposals with one click from the Additional Items section.</p>
+              <div id="library-list"></div>
+              <div style="margin-top:12px;">
+                <button class="btn btn-red btn-sm" onclick="saveLibrary()">Save Library</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-    
-        <div class="card">
-          <div class="card-hdr">
-            <span class="card-title">Material Prices</span>
-            <button class="btn btn-sec btn-sm" onclick="addMaterial()">+ Add Material</button>
-          </div>
-          <div class="card-body">
-            <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Manage materials used in proposals. Changes update all MU% calculations instantly.</p>
-            <div style="overflow-x:auto;">
-              <table style="width:100%;border-collapse:collapse;font-size:12px;" id="mat-table">
-                <thead>
-                  <tr style="background:var(--lgray);">
-                    <th style="padding:7px 10px;text-align:left;font-weight:600;">Material</th>
-                    <th style="padding:7px 10px;text-align:right;font-weight:600;">Cost $/ton</th>
-                    <th style="padding:7px 10px;text-align:right;font-weight:600;">Default Rate $/ton</th>
-                    <th style="padding:7px 10px;text-align:right;font-weight:600;">Default Depth"</th>
-                    <th style="padding:7px 10px;text-align:center;font-weight:600;">Badge</th>
-                    <th style="padding:7px 4px;"></th>
-                  </tr>
-                </thead>
-                <tbody id="mat-tbody"></tbody>
-              </table>
-            </div>
-            <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
-              <button class="btn btn-red btn-sm" onclick="saveMatPrices()">Save Prices</button>
-              <button class="btn btn-sec btn-sm" onclick="resetMatPrices()">Reset to Defaults</button>
-              <span id="mat-prices-updated" style="font-size:11px;color:var(--dgray);"></span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
       <div class="panel" id="panel-admin">
   <div class="card">
     <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">User Management</span><button class="btn btn-red btn-sm" onclick="openAddUserModal()">+ Add User</button></div>
@@ -715,9 +767,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
   </div>
 </div>
     
-      <div class="card"><div class="card-hdr"><span class="card-title">Layer Badges</span><button class="btn btn-sec btn-sm" onclick="addBadge()">+ Add Badge</button></div><div class="card-body"><p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Manage badge types shown on layer items.</p><div id="badge-list"></div><div style="margin-top:10px;"><button class="btn btn-red btn-sm" onclick="saveBadges()">Save Badges</button></div></div></div>
-      <div class="card"><div class="card-hdr"><span class="card-title">Preset Manager</span><button class="btn btn-sec btn-sm" onclick="addPreset()">+ Add Preset</button></div><div class="card-body"><p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Manage saved pavement section presets.</p><div id="preset-mgr"></div></div></div>
-      <div class="card"><div class="card-hdr"><span class="card-title">Bid Items Library</span><button class="btn btn-sec btn-sm" onclick="addLibraryItem()">+ Add Item</button></div><div class="card-body"><p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Reusable line items — insert into proposals with one click.</p><div id="library-list"></div><div style="margin-top:10px;"><button class="btn btn-red btn-sm" onclick="saveLibrary()">Save Library</button></div></div></div>
     </div><!-- /content -->
   </div><!-- /main -->
 
@@ -821,7 +870,7 @@ function showAdminElements(){
 }
 function renderBadgeList(){var c=document.getElementById("badge-list");if(!c)return;c.innerHTML="";var keys=Object.keys(BADGE_DEFS);if(!keys.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>No badges yet.</p>";return;}keys.forEach(function(cls){var b=BADGE_DEFS[cls];var row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr);";var prev=document.createElement("span");prev.className="badge "+cls;prev.style.minWidth="60px";prev.textContent=b.label;row.appendChild(prev);var li=document.createElement("input");li.type="text";li.value=b.label;li.placeholder="Label";li.style.width="120px";li.addEventListener("change",(function(cc){return function(){BADGE_DEFS[cc].label=this.value;renderBadgeList();};})(cls));row.appendChild(li);var ci=document.createElement("input");ci.type="color";ci.value=b.color;ci.style.cssText="width:40px;height:28px;cursor:pointer;border:1px solid var(--bdr);border-radius:4px;";ci.addEventListener("change",(function(cc){return function(){BADGE_DEFS[cc].color=this.value;};})(cls));row.appendChild(ci);var lbl=document.createElement("span");lbl.style.cssText="font-size:11px;color:var(--dgray);flex:1;";lbl.textContent="CSS: "+cls;row.appendChild(lbl);var del=document.createElement("button");del.className="btn-ico";del.style.color="var(--red)";del.textContent="×";del.addEventListener("click",(function(cc){return function(){delete BADGE_DEFS[cc];renderBadgeList();renderMatTable();};})(cls));row.appendChild(del);c.appendChild(row);});}
 function addBadge(){var label=prompt("Badge label:");if(!label)return;var cls="b-"+label.toLowerCase().replace(/[^a-z0-9]/g,"-");if(BADGE_DEFS[cls]){alert("Badge already exists.");return;}BADGE_DEFS[cls]={label:label,color:"#444"};renderBadgeList();renderMatTable();}
-function saveBadges(){localStorage.setItem("hd_badge_defs",JSON.stringify(BADGE_DEFS));toast("Badges saved","ok");}
+function saveBadges(){localStorage.setItem("hd_badge_defs",JSON.stringify(BADGE_DEFS));applyBadgeStyles();renderMatTable();renderAll();renderConc();toast("Badges saved","ok");}
 function renderLibraryList(){var c=document.getElementById("library-list");if(!c)return;c.innerHTML="";if(!BID_LIBRARY.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>No items yet.</p>";return;}var hdr=document.createElement("div");hdr.style.cssText="display:grid;grid-template-columns:1fr 1fr 70px 90px 28px;gap:6px;padding:0 0 6px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;border-bottom:2px solid var(--bdr);margin-bottom:4px;";hdr.innerHTML="<span>Name</span><span>Description</span><span>Unit</span><span>$/Unit</span><span></span>";c.appendChild(hdr);BID_LIBRARY.forEach(function(item){var row=document.createElement("div");row.style.cssText="display:grid;grid-template-columns:1fr 1fr 70px 90px 28px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);";var ni=document.createElement("input");ni.type="text";ni.value=item.name||"";ni.placeholder="Item name";ni.style.fontSize="12px";ni.addEventListener("change",(function(it){return function(){it.name=this.value;};})(item));row.appendChild(ni);var di=document.createElement("input");di.type="text";di.value=item.desc||"";di.placeholder="Description";di.style.fontSize="12px";di.addEventListener("change",(function(it){return function(){it.desc=this.value;};})(item));row.appendChild(di);var us=document.createElement("select");us.style.fontSize="12px";["LS","EA","LF","SY","SF","TON","CY"].forEach(function(u){var o=document.createElement("option");o.value=u;o.textContent=u;if(u===item.unit)o.selected=true;us.appendChild(o);});us.addEventListener("change",(function(it){return function(){it.unit=this.value;};})(item));row.appendChild(us);var ri=document.createElement("input");ri.type="number";ri.value=item.rate||"";ri.min="0";ri.step="0.01";ri.style.fontSize="12px";ri.addEventListener("change",(function(it){return function(){it.rate=parseFloat(this.value)||0;};})(item));row.appendChild(ri);var db=document.createElement("button");db.className="btn-ico";db.style.color="var(--red)";db.textContent="×";db.addEventListener("click",(function(id){return function(){BID_LIBRARY=BID_LIBRARY.filter(function(x){return x.id!==id;});renderLibraryList();};})(item.id));row.appendChild(db);c.appendChild(row);});}
 function addLibraryItem(){BID_LIBRARY.push({id:_libId++,name:"",desc:"",unit:"LS",rate:0});renderLibraryList();}
 function saveLibrary(){localStorage.setItem("hd_bid_library",JSON.stringify(BID_LIBRARY));toast("Library saved","ok");}
@@ -834,6 +883,7 @@ async function doLogout(){
 
 function boot(){
   loadStorage();
+  applyBadgeStyles();
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('waste').addEventListener('change',function(){renderAll();});
   document.getElementById('contingency').addEventListener('change',function(){recalc();});
@@ -864,6 +914,7 @@ function loadStorage(){
   try{
     var s=localStorage.getItem('hd_sender');if(s)sender=JSON.parse(s);
     var p=localStorage.getItem('hd_presets');if(p)PRESETS=JSON.parse(p);
+    var bd=localStorage.getItem('hd_badge_defs');if(bd){try{Object.assign(BADGE_DEFS,JSON.parse(bd));}catch(e){}}
     var mp=localStorage.getItem('hd_mat_prices');
     if(mp){try{var mpd=JSON.parse(mp);
       if(mpd.mat){Object.assign(MAT,mpd.mat);}else if(mpd.prices){Object.assign(MAT,mpd.prices);}
@@ -1412,7 +1463,7 @@ function showPanel(id,el){
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved')renderSaved();
-  if(id==='settings'){loadSenderUI();renderPresetMgr();renderMatPriceInputs();}
+  if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');}
   if(id==='analytics')setTimeout(renderAnalytics,50);
   if(id==='pipeline')setTimeout(renderPipeline,50);
   if(id==='clients')setTimeout(renderClients,50);
@@ -2164,29 +2215,120 @@ function loadSenderUI(){
   document.getElementById('s-email').value=sender.email||'';
   document.getElementById('s-phone').value=sender.phone||'';
 }
-function addPreset(){
-  var name=prompt('Preset name:');if(!name)return;
-  var t1=prompt('Layer 1 type (ABC base/Binder/Surface/Mill & Pave/B25.0C/I19.0C/S9.5C):');if(!t1)return;
-  var d1=parseFloat(prompt(t1+' depth (in):')||0);var r1=parseFloat(prompt(t1+' $/ton rate:')||0);
-  var layers=[{type:t1,depth:d1,rate:r1}];
-  if(confirm('Add a second layer?')){
-    var t2=prompt('Layer 2 type:');
-    if(t2){layers.push({type:t2,depth:parseFloat(prompt(t2+' depth:')||0),rate:parseFloat(prompt(t2+' rate:')||0)});}
+function showSettingsTab(tab){
+  ['general','badges','presets','library'].forEach(function(t){
+    document.getElementById('stab-content-'+t).style.display=t===tab?'':'none';
+    document.getElementById('stab-'+t).classList.toggle('on',t===tab);
+  });
+  if(tab==='badges'){renderBadgeList();}
+  if(tab==='presets'){renderPresetMgr();}
+  if(tab==='library'){renderLibraryList();}
+}
+
+function applyBadgeStyles(){
+  var el=document.getElementById('badge-dynamic-styles');
+  if(!el){el=document.createElement('style');el.id='badge-dynamic-styles';document.head.appendChild(el);}
+  el.textContent=Object.keys(BADGE_DEFS).map(function(cls){
+    return '.badge.'+cls+'{background:'+BADGE_DEFS[cls].color+';color:#fff;}';
+  }).join('\n');
+}
+
+function openPresetModal(editIdx){
+  var isEdit=editIdx!==undefined;
+  var preset=isEdit?PRESETS[editIdx]:{name:'',layers:[{type:LTYPES[0],depth:4,rate:50}]};
+  var ex=document.getElementById('preset-modal');if(ex)ex.remove();
+  var modal=document.createElement('div');
+  modal.id='preset-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:10px;padding:24px;min-width:520px;max-width:640px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18);';
+  var layers=preset.layers.map(function(l){return {type:l.type,depth:l.depth,rate:l.rate};});
+
+  function renderRows(){
+    var rows=box.querySelector('#pm-layers');rows.innerHTML='';
+    layers.forEach(function(l,i){
+      var row=document.createElement('div');
+      row.style.cssText='display:grid;grid-template-columns:1fr 80px 90px 32px;gap:8px;align-items:center;margin-bottom:8px;';
+      var ts=document.createElement('select');ts.style.fontSize='13px';
+      LTYPES.forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;if(t===l.type)o.selected=true;ts.appendChild(o);});
+      ts.onchange=function(){layers[i].type=this.value;};
+      var di=document.createElement('input');di.type='number';di.value=l.depth;di.placeholder='Depth"';di.min='0';di.step='0.5';di.style.fontSize='13px';
+      di.onchange=function(){layers[i].depth=parseFloat(this.value)||0;};
+      var ri=document.createElement('input');ri.type='number';ri.value=l.rate;ri.placeholder='$/ton';ri.min='0';ri.step='5';ri.style.fontSize='13px';
+      ri.onchange=function(){layers[i].rate=parseFloat(this.value)||0;};
+      var db=document.createElement('button');db.className='btn-ico';db.style.color='var(--red)';db.textContent='×';
+      db.onclick=function(){layers.splice(i,1);renderRows();};
+      row.appendChild(ts);row.appendChild(di);row.appendChild(ri);row.appendChild(db);
+      rows.appendChild(row);
+    });
   }
-  PRESETS.push({name:name,layers:layers});
+
+  box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">'
+    +'<span style="font-weight:700;font-size:15px;">'+(isEdit?'Edit Preset':'New Preset')+'</span>'
+    +'<button class="btn-ico" style="font-size:18px;" onclick="document.getElementById(\'preset-modal\').remove()">&#10005;</button>'
+    +'</div>'
+    +'<div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Preset Name</label>'
+    +'<input id="pm-name" type="text" value="'+esc(preset.name)+'" placeholder="e.g. Light Duty Parking Lot" style="width:100%;"/></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 80px 90px 32px;gap:8px;margin-bottom:6px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;">'
+    +'<span>Material</span><span>Depth (in)</span><span>$/ton Rate</span><span></span></div>'
+    +'<div id="pm-layers"></div>'
+    +'<button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="(function(){layers.push({type:LTYPES[0],depth:4,rate:50});renderRows();}).call(this)">+ Add Layer</button>'
+    +'<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bdr);">'
+    +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'preset-modal\').remove()">Cancel</button>'
+    +'<button class="btn btn-red btn-sm" onclick="savePresetModal()">Save Preset</button>'
+    +'</div>';
+
+  modal.appendChild(box);
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+  renderRows();
+
+  window._presetModalEditIdx=isEdit?editIdx:null;
+  window._presetModalLayers=layers;
+  window._presetModalRenderRows=renderRows;
+}
+
+function savePresetModal(){
+  var name=(document.getElementById('pm-name')||{}).value||'';
+  if(!name.trim()){toast('Please enter a preset name','err');return;}
+  var layers=window._presetModalLayers;
+  if(!layers||!layers.length){toast('Add at least one layer','err');return;}
+  var preset={name:name.trim(),layers:layers.map(function(l){return {type:l.type,depth:l.depth,rate:l.rate};})};
+  if(window._presetModalEditIdx!==null&&window._presetModalEditIdx!==undefined){
+    PRESETS[window._presetModalEditIdx]=preset;
+  } else {
+    PRESETS.push(preset);
+  }
   localStorage.setItem('hd_presets',JSON.stringify(PRESETS));
   renderPresets();renderPresetMgr();
-  toast('Preset added','ok');
+  document.getElementById('preset-modal').remove();
+  toast('Preset saved','ok');
 }
+
 function renderPresetMgr(){
   var c=document.getElementById('preset-mgr');if(!c)return;
-  c.innerHTML=PRESETS.map(function(p,i){
-    return '<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px;">'
-      +'<span style="flex:1;font-weight:600">'+esc(p.name)+'</span>'
-      +'<span style="font-size:11px;color:var(--dgray)">'+p.layers.map(function(l){return l.type+' '+l.depth+'"';}).join(', ')+'</span>'
-      +'<button class="btn-ico" onclick="PRESETS.splice('+i+',1);localStorage.setItem(\'hd_presets\',JSON.stringify(PRESETS));renderPresets();renderPresetMgr()">x</button>'
-      +'</div>';
-  }).join('');
+  if(!PRESETS.length){c.innerHTML='<p style="font-size:12px;color:var(--dgray);">No presets yet. Click + Add Preset to create one.</p>';return;}
+  c.innerHTML='';
+  PRESETS.forEach(function(p,i){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);';
+    var info=document.createElement('div');info.style.flex='1';
+    var nm=document.createElement('div');nm.style.cssText='font-weight:600;font-size:13px;';nm.textContent=p.name;
+    var layers=document.createElement('div');layers.style.cssText='font-size:11px;color:var(--dgray);margin-top:2px;';
+    layers.textContent=p.layers.map(function(l){return l.type+' '+l.depth+'"';}).join(' · ');
+    info.appendChild(nm);info.appendChild(layers);
+    var editBtn=document.createElement('button');editBtn.className='btn btn-sec btn-sm';editBtn.textContent='Edit';
+    editBtn.onclick=(function(idx){return function(){openPresetModal(idx);};})(i);
+    var delBtn=document.createElement('button');delBtn.className='btn-ico';delBtn.style.color='var(--red)';delBtn.textContent='×';
+    delBtn.onclick=(function(idx){return function(){
+      if(!confirm('Delete preset "'+PRESETS[idx].name+'"?'))return;
+      PRESETS.splice(idx,1);
+      localStorage.setItem('hd_presets',JSON.stringify(PRESETS));
+      renderPresets();renderPresetMgr();
+    };})(i);
+    row.appendChild(info);row.appendChild(editBtn);row.appendChild(delBtn);
+    c.appendChild(row);
+  });
 }
 
 // == Pipeline ==
