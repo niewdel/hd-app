@@ -327,7 +327,7 @@ def total_line(total):
     return t
 
 class SitePlanPage(Flowable):
-    """Renders the uploaded site plan image, or a placeholder if no image."""
+    """Renders the uploaded site plan image at top of page with Exhibit A heading."""
     def __init__(self, image_data=None):
         super().__init__()
         self._image_data = image_data
@@ -338,6 +338,15 @@ class SitePlanPage(Flowable):
     def draw(self):
         import base64, tempfile
         c = self.canv
+        heading_h = 0.5*inch
+        # Draw heading at top
+        c.setFont('Helvetica-Bold', 16)
+        c.setFillColor(RED)
+        c.drawCentredString(self._aw/2, self._ah - 0.25*inch, 'Exhibit A — Site Plan')
+        c.setStrokeColor(RED)
+        c.setLineWidth(1)
+        c.line(0, self._ah - heading_h, self._aw, self._ah - heading_h)
+        img_top = self._ah - heading_h - 0.15*inch
         if self._image_data and ',' in self._image_data:
             try:
                 img_bytes = base64.b64decode(self._image_data.split(',')[1])
@@ -349,12 +358,12 @@ class SitePlanPage(Flowable):
                 ir = ImageReader(self._tmp_path)
                 iw, ih = ir.getSize()
                 max_w = self._aw
-                max_h = self._ah
+                max_h = img_top
                 scale = min(max_w / iw, max_h / ih)
                 dw = iw * scale
                 dh = ih * scale
                 x = (self._aw - dw) / 2
-                y = (self._ah - dh) / 2
+                y = img_top - dh  # anchor to top
                 c.drawImage(self._tmp_path, x, y, width=dw, height=dh,
                             preserveAspectRatio=True, mask='auto')
                 os.unlink(self._tmp_path)
@@ -365,14 +374,17 @@ class SitePlanPage(Flowable):
         c.setStrokeColor(MGRAY)
         c.setLineWidth(1)
         c.setDash(6,4)
-        c.rect(0, 0, self._aw, self._ah, stroke=1, fill=0)
+        ph = img_top * 0.6
+        px = 0
+        py = img_top - ph
+        c.rect(px, py, self._aw, ph, stroke=1, fill=0)
         c.setDash()
-        cx, cy = self._aw/2, self._ah/2
+        cx, cy = self._aw/2, py + ph/2
         c.setFont('Helvetica-Bold', 14)
         c.setFillColor(MGRAY)
         c.drawCentredString(cx, cy + 0.2*inch, 'Site Plan / Drawing')
         c.setFont('Helvetica', 10)
-        c.drawCentredString(cx, cy - 0.1*inch, 'Replace this page with site plan image')
+        c.drawCentredString(cx, cy - 0.1*inch, 'Upload a site plan image in the proposal builder')
         c.drawCentredString(cx, cy - 0.32*inch, 'or attach separately before sending to client')
 
 def red_hdr(text, st, cw):
