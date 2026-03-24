@@ -852,6 +852,8 @@ function boot(){
     if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))
       document.getElementById('client-sug').style.display='none';
   });
+  // Show admin-only elements if admin
+  showAdminElements();
 }
 
 // -- Storage -------------------------------------------------------------------
