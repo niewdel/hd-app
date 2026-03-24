@@ -1898,8 +1898,18 @@ function renderDashSignature(){
 }
 
 function copySignature(){
-  var sig='First Name\nCompany Title\nE: email@hdgrading.com\nC: Cell Number | O: 704-791-8982\n\nCONFIDENTIALITY NOTICE: This email and any attachments are intended solely for the named recipient(s) and may contain confidential information. If you have received this email in error, please immediately notify the sender and permanently delete this email and any attachments without reading, forwarding, copying, or disclosing their contents. Any unauthorized use, disclosure, or distribution is prohibited and may be unlawful.';
-  navigator.clipboard.writeText(sig).then(function(){toast('Signature text copied — paste into Gmail, then paste the logo separately','ok');}).catch(function(){toast('Copy failed','err');});
+  var html='<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.6;">'
+    +'<p style="font-weight:700;color:#CC0000;margin:0 0 0 0;font-size:14px;">First Name</p>'
+    +'<p style="color:#555555;font-size:12px;margin:0 0 4px 0;">Company Title</p>'
+    +'<p style="font-size:12px;color:#555555;margin:0 0 1px 0;">E: <a href="mailto:email@hdgrading.com" style="color:#0055B2;">email@hdgrading.com</a></p>'
+    +'<p style="font-size:12px;color:#555555;margin:0 0 8px 0;">C: Cell Number | O: 704-791-8982</p>'
+    +'<p style="font-size:8px;color:#888888;line-height:1.3;margin:0;"><b>CONFIDENTIALITY NOTICE:</b> This email and any attachments are intended solely for the named recipient(s) and may contain confidential information. If you have received this email in error, please immediately notify the sender and permanently delete this email and any attachments without reading, forwarding, copying, or disclosing their contents. Any unauthorized use, disclosure, or distribution is prohibited and may be unlawful.</p>'
+    +'</div>';
+  var plain='First Name\nCompany Title\nE: email@hdgrading.com\nC: Cell Number | O: 704-791-8982\n\nCONFIDENTIALITY NOTICE: This email and any attachments are intended solely for the named recipient(s) and may contain confidential information. If you have received this email in error, please immediately notify the sender and permanently delete this email and any attachments without reading, forwarding, copying, or disclosing their contents. Any unauthorized use, disclosure, or distribution is prohibited and may be unlawful.';
+  navigator.clipboard.write([new ClipboardItem({
+    'text/html':new Blob([html],{type:'text/html'}),
+    'text/plain':new Blob([plain],{type:'text/plain'})
+  })]).then(function(){toast('Signature copied with formatting — paste into Gmail, then paste the logo separately','ok');}).catch(function(){toast('Copy failed','err');});
 }
 
 function copySignatureLogo(){
