@@ -1,4 +1,4 @@
-import os, tempfile, functools, json, hashlib, datetime, hashlib
+import os, tempfile, functools, json, hashlib
 from flask import Flask, request, jsonify, session, send_file
 from generate_proposal import build
 try:
@@ -13,12 +13,17 @@ import requests as http
 app = Flask(__name__, static_folder='.', static_url_path='')
 app.secret_key = os.environ.get('SECRET_KEY', 'hd-hauling-dev-key')
 
-APP_PIN      = os.environ.get('APP_PIN', '2025')
-SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
+APP_PIN        = os.environ.get('APP_PIN', '2025')
+SUPABASE_URL   = os.environ.get('SUPABASE_URL', '')
+SUPABASE_KEY   = os.environ.get('SUPABASE_KEY', '')
 
 def sb_headers():
-    return {'apikey':SUPABASE_KEY,'Authorization':f'Bearer {SUPABASE_KEY}','Content-Type':'application/json','Prefer':'return=representation'}
+    return {
+        'apikey': SUPABASE_KEY,
+        'Authorization': f'Bearer {SUPABASE_KEY}',
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+    }
 
 def sb_url(table, params=''):
     return f'{SUPABASE_URL}/rest/v1/{table}{params}'
@@ -29,8 +34,12 @@ def hash_pin(pin):
 def log_access(username, full_name, action='login', success=True):
     try:
         ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
-        ua = request.headers.get('User-Agent','')[:200]
-        http.post(sb_url('hd_access_log'), headers=sb_headers(), json={'username':username,'full_name':full_name,'action':action,'success':success,'ip_address':ip,'user_agent':ua}, timeout=3)
+        ua = request.headers.get('User-Agent', '')[:200]
+        http.post(sb_url('hd_access_log'), headers=sb_headers(), json={
+            'username': username, 'full_name': full_name,
+            'action': action, 'success': success,
+            'ip_address': ip, 'user_agent': ua
+        }, timeout=3)
     except Exception:
         pass
 
@@ -38,7 +47,7 @@ def require_auth(f):
     @functools.wraps(f)
     def decorated(*args, **kwargs):
         if not session.get('authenticated'):
-            return jsonify({'error':'Unauthorized'}), 401
+            return jsonify({'error': 'Unauthorized'}), 401
         return f(*args, **kwargs)
     return decorated
 
@@ -46,9 +55,9 @@ def require_admin(f):
     @functools.wraps(f)
     def decorated(*args, **kwargs):
         if not session.get('authenticated'):
-            return jsonify({'error':'Unauthorized'}), 401
+            return jsonify({'error': 'Unauthorized'}), 401
         if session.get('role') != 'admin':
-            return jsonify({'error':'Admin access required'}), 403
+            return jsonify({'error': 'Admin access required'}), 403
         return f(*args, **kwargs)
     return decorated
 
@@ -59,11 +68,14 @@ def index():
 @app.route('/auth/login', methods=['POST'])
 def login():
     data = request.get_json() or {}
-    username = str(data.get('username','')).strip().lower()
-    pin = str(data.get('pin','')).strip()
+    username = str(data.get('username', '')).strip().lower()
+    pin = str(data.get('pin', '')).strip()
+    users_ok = False
     try:
-        r = http.get(sb_url('hd_users', f'?username=eq.{username}&active=eq.true&limit=1'), headers=sb_headers(), timeout=5)
+        r = http.get(sb_url('hd_users', f'?username=eq.{username}&active=eq.true&limit=1'),
+                     headers=sb_headers(), timeout=5)
         if r.status_code == 200:
+            users_ok = True
             rows = r.json()
             if rows and rows[0].get('pin_hash') == hash_pin(pin):
                 user = rows[0]
@@ -73,42 +85,183 @@ def login():
                 session['role'] = user.get('role', 'user')
                 session.permanent = True
                 log_access(user['username'], user.get('full_name',''), 'login', True)
-                return jsonify({'ok':True,'role':session['role'],'full_name':session['full_name'],'username':session['username']})
+                return jsonify({'ok': True, 'role': session['role'], 'full_name': session['full_name']})
             else:
                 log_access(username, '', 'login', False)
-                return jsonify({'error':'Incorrect username or PIN'}), 401
+                return jsonify({'error': 'Incorrect username or PIN'}), 401
     except Exception:
         pass
-    if pin == APP_PIN:
+    if not users_ok and pin == APP_PIN:
         session['authenticated'] = True
         session['username'] = 'admin'
         session['full_name'] = 'Admin'
         session['role'] = 'admin'
         session.permanent = True
-        return jsonify({'ok':True,'role':'admin','full_name':'Admin','username':'admin'})
-    return jsonify({'error':'Incorrect username or PIN'}), 401
+        return jsonify({'ok': True, 'role': 'admin', 'full_name': 'Admin'})
+    return jsonify({'error': 'Incorrect username or PIN'}), 401
 
 @app.route('/auth/logout', methods=['POST'])
 def logout():
     if session.get('username'):
         log_access(session.get('username',''), session.get('full_name',''), 'logout', True)
     session.clear()
-    return jsonify({'ok':True})
+    return jsonify({'ok': True})
 
 @app.route('/auth/check')
 def auth_check():
-    return jsonify({'authenticated':bool(session.get('authenticated')),'role':session.get('role','user'),'username':session.get('username',''),'full_name':session.get('full_name','')})
+    return jsonify({'authenticated': bool(session.get('authenticated')), 'role': session.get('role','user'), 'username': session.get('username',''), 'full_name': session.get('full_name','')})
+
+# ââ Proposals âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
+@app.route('/quotes/save', methods=['POST'])
+@require_auth
+def quotes_save():
+    data = request.get_json() or {}
+    try:
+        snap = data.get('snap', {})
+        payload = {
+            'name':   data.get('name', 'Unnamed'),
+            'client': data.get('client', ''),
+            'date':   data.get('date', ''),
+            'total':  float(data.get('total', 0)),
+            'snap':   snap if isinstance(snap, dict) else json.loads(snap)
+        }
+        r = http.post(sb_url('proposals'), headers=sb_headers(), json=payload, timeout=10)
+        r.raise_for_status()
+        result = r.json()
+        return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/quotes/list')
+@require_auth
+def quotes_list():
+    try:
+        r = http.get(sb_url('proposals', '?select=*&order=created_at.desc'), headers=sb_headers(), timeout=10)
+        r.raise_for_status()
+        return jsonify({'ok': True, 'quotes': r.json()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/quotes/delete/<int:qid>', methods=['DELETE'])
+@require_auth
+def quotes_delete(qid):
+    try:
+        r = http.delete(sb_url('proposals', f'?id=eq.{qid}'), headers=sb_headers(), timeout=10)
+        r.raise_for_status()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ââ Pipeline ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
+@app.route('/pipeline/stages')
+@require_auth
+def pipeline_stages():
+    try:
+        r = http.get(sb_url('pipeline_stages', '?select=*&order=position.asc'), headers=sb_headers(), timeout=10)
+        r.raise_for_status()
+        return jsonify({'ok': True, 'stages': r.json()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/pipeline/list')
+@require_auth
+def pipeline_list():
+    try:
+        r = http.get(
+            sb_url('proposals', '?select=*,pipeline_stages(name,color,counts_in_ratio,is_closed)&order=created_at.desc'),
+            headers=sb_headers(), timeout=10
+        )
+        r.raise_for_status()
+        return jsonify({'ok': True, 'proposals': r.json()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/pipeline/move/<int:proposal_id>', methods=['PATCH'])
+@require_auth
+def pipeline_move(proposal_id):
+    data = request.get_json() or {}
+    try:
+        r = http.patch(
+            sb_url('proposals', f'?id=eq.{proposal_id}'),
+            headers=sb_headers(),
+            json={'stage_id': data.get('stage_id')},
+            timeout=10
+        )
+        r.raise_for_status()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ââ Clients âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
+@app.route('/clients/list')
+@require_auth
+def clients_list():
+    try:
+        r = http.get(sb_url('clients', '?select=*&order=name.asc'), headers=sb_headers(), timeout=10)
+        r.raise_for_status()
+        return jsonify({'ok': True, 'clients': r.json()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/clients/save', methods=['POST'])
+@require_auth
+def clients_save():
+    data = request.get_json() or {}
+    try:
+        r = http.post(sb_url('clients'), headers=sb_headers(), json={
+            'name': data.get('name', ''), 'company': data.get('company', ''),
+            'phone': data.get('phone', ''), 'email': data.get('email', ''),
+            'address': data.get('address', ''), 'city_state': data.get('city_state', ''),
+            'notes': data.get('notes', ''),
+        }, timeout=10)
+        r.raise_for_status()
+        result = r.json()
+        return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/clients/update/<int:client_id>', methods=['PATCH'])
+@require_auth
+def clients_update(client_id):
+    data = request.get_json() or {}
+    try:
+        r = http.patch(sb_url('clients', f'?id=eq.{client_id}'), headers=sb_headers(), json={
+            'name': data.get('name', ''), 'company': data.get('company', ''),
+            'phone': data.get('phone', ''), 'email': data.get('email', ''),
+            'address': data.get('address', ''), 'city_state': data.get('city_state', ''),
+            'notes': data.get('notes', ''),
+        }, timeout=10)
+        r.raise_for_status()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/clients/delete/<int:client_id>', methods=['DELETE'])
+@require_auth
+def clients_delete(client_id):
+    try:
+        r = http.delete(sb_url('clients', f'?id=eq.{client_id}'), headers=sb_headers(), timeout=10)
+        r.raise_for_status()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ââ PDF / DOCX ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
 
 @app.route('/admin/users', methods=['GET'])
 @require_admin
 def get_users():
     try:
-        r = http.get(sb_url('hd_users','?order=created_at.asc'), headers=sb_headers(), timeout=5)
-        users = r.json() if r.status_code==200 else []
-        for u in users: u.pop('pin_hash',None)
-        return jsonify({'ok':True,'users':users})
+        r = http.get(sb_url('hd_users', '?order=created_at.asc'), headers=sb_headers(), timeout=5)
+        users = r.json() if r.status_code == 200 else []
+        for u in users: u.pop('pin_hash', None)
+        return jsonify({'ok': True, 'users': users})
     except Exception as e:
-        return jsonify({'ok':False,'error':str(e)}), 500
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/admin/users', methods=['POST'])
 @require_admin
@@ -141,21 +294,8 @@ def update_user(uid):
     if 'pin' in data and data['pin']: update['pin_hash'] = hash_pin(data['pin'])
     if not update: return jsonify({'ok':False,'error':'Nothing to update'}), 400
     try:
-        r = http.patch(sb_url('hd_users',f'?id=eq.{uid}'), headers=sb_headers(), json=update, timeout=5)
-        return jsonify({'ok':r.status_code in (200,204)})
-    except Exception as e:
-        return jsonify({'ok':False,'error':str(e)}), 500
-
-@app.route('/admin/users/<int:uid>', methods=['DELETE'])
-@require_admin
-def delete_user(uid):
-    try:
-        r = http.get(sb_url('hd_users',f'?id=eq.{uid}&limit=1'), headers=sb_headers(), timeout=5)
-        rows = r.json() if r.status_code==200 else []
-        if rows and rows[0].get('username')==session.get('username'):
-            return jsonify({'ok':False,'error':'Cannot deactivate your own account'}), 400
-        r2 = http.patch(sb_url('hd_users',f'?id=eq.{uid}'), headers=sb_headers(), json={'active':False}, timeout=5)
-        return jsonify({'ok':r2.status_code in (200,204)})
+        r = http.patch(sb_url('hd_users', f'?id=eq.{uid}'), headers=sb_headers(), json=update, timeout=5)
+        return jsonify({'ok': r.status_code in (200,204)})
     except Exception as e:
         return jsonify({'ok':False,'error':str(e)}), 500
 
@@ -167,7 +307,7 @@ def get_logs():
         uf = request.args.get('username','')
         params = f'?order=logged_at.desc&limit={limit}'
         if uf: params += f'&username=eq.{uf}'
-        r = http.get(sb_url('hd_access_log',params), headers=sb_headers(), timeout=5)
+        r = http.get(sb_url('hd_access_log', params), headers=sb_headers(), timeout=5)
         return jsonify({'ok':True,'logs':r.json() if r.status_code==200 else []})
     except Exception as e:
         return jsonify({'ok':False,'error':str(e)}), 500
@@ -223,7 +363,7 @@ def generate_jc_pdf():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Ã¢ÂÂÃ¢ÂÂ Email Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+# ââ Email âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @app.route('/send-email', methods=['POST'])
 @require_auth
@@ -259,7 +399,7 @@ def send_email():
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-# Ã¢ÂÂÃ¢ÂÂ Notion Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+# ââ Notion ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @app.route('/notion/push', methods=['POST'])
 @require_auth
