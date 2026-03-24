@@ -1610,19 +1610,14 @@ function renderMatTable(){
   var badgeLabels = ['Base','Millings','Binder','Surface','Concrete','None'];
   tbody.innerHTML = '';
   keys.forEach(function(k){
-    var isDefault = MAT_DEFAULT.hasOwnProperty(k);
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid var(--bdr)';
-    // Name
+    // Name — all materials are editable
     var td0 = document.createElement('td'); td0.style.cssText='padding:6px 10px;';
-    if(isDefault){
-      var sp=document.createElement('span');sp.style.cssText='font-size:12px;font-weight:600;';sp.textContent=k;td0.appendChild(sp);
-    } else {
-      var ni=document.createElement('input');ni.type='text';ni.value=k;ni.placeholder='Name';
-      ni.style.cssText='width:110px;font-size:12px;';
-      (function(kk){ni.addEventListener('change',function(){renameMaterial(kk,this.value);});})(k);
-      td0.appendChild(ni);
-    }
+    var ni=document.createElement('input');ni.type='text';ni.value=k;ni.placeholder='Name';
+    ni.style.cssText='width:110px;font-size:12px;';
+    (function(kk){ni.addEventListener('change',function(){renameMaterial(kk,this.value);});})(k);
+    td0.appendChild(ni);
     tr.appendChild(td0);
     // Cost $/ton
     var td1=document.createElement('td');td1.style.cssText='padding:6px 10px;text-align:right;';
@@ -1649,13 +1644,11 @@ function renderMatTable(){
     });
     (function(kk){sel.addEventListener('change',function(){LBADGE[kk]=this.value;});})(k);
     td5.appendChild(sel);tr.appendChild(td5);
-    // Remove
+    // Remove — all materials are deletable
     var td6=document.createElement('td');td6.style.cssText='padding:6px 4px;text-align:center;';
-    if(!isDefault){
-      var rb=document.createElement('button');rb.className='btn-ico';rb.textContent='x';
-      (function(kk){rb.addEventListener('click',function(){removeMaterial(kk);});})(k);
-      td6.appendChild(rb);
-    }
+    var rb=document.createElement('button');rb.className='btn-ico';rb.textContent='x';
+    (function(kk){rb.addEventListener('click',function(){removeMaterial(kk);});})(k);
+    td6.appendChild(rb);
     tr.appendChild(td6);
     tbody.appendChild(tr);
   });
