@@ -364,7 +364,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" onclick="showPanel('analytics',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v3H1zm4-4h3v7H5zm4-4h3v11H9zm4-6h2v17h-2z"/></svg>Analytics</div>
       <div class="nav-item" onclick="showPanel('lineitems',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v2H2zm0 4h8v1H2zm0 3h10v1H2zm0 3h6v1H2z"/><path d="M13 7l2 2-2 2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Line Items</div>
       <div class="nav-item" onclick="showPanel('crewcosts',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 1v14M8 3v12M12 5v10"/><circle cx="4" cy="1" r="1"/><circle cx="8" cy="3" r="1"/><circle cx="12" cy="5" r="1"/></svg>Crew Costs</div>
-      <div class="nav-item" onclick="showPanel('jobcost',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3v1.5H10v1H8.5V9H10v1H8.5V11.5h-1V10H6V9h1.5V6.5H6v-1h1.5V4h1z"/></svg>Job Cost</div>
+      <div class="nav-item" onclick="showPanel('jobcost',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3v1.5H10v1H8.5V9H10v1H8.5V11.5h-1V10H6V9h1.5V6.5H6v-1h1.5V4h1z"/></svg>Est. vs Actuals</div>
       <div class="nav-item" onclick="showPanel('settings',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings
       </div>
@@ -597,11 +597,11 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
       </div></div>
 
-      <!-- JOB COST PANEL -->
+      <!-- JOB COST / ESTIMATES VS ACTUALS PANEL -->
       <div class="panel" id="panel-jobcost">
-        <div class="card" id="job-cost-card">
+        <div class="card">
           <div class="card-hdr">
-            <span class="card-title">Job Cost Analysis <span style="font-size:10px;font-weight:400;color:var(--dgray);margin-left:6px;">Internal - not on proposal</span></span>
+            <span class="card-title">Estimate Summary <span style="font-size:10px;font-weight:400;color:var(--dgray);margin-left:6px;">Auto-calculated from proposal</span></span>
             <span id="jc-margin-badge" style="font-size:12px;font-weight:600;"></span>
           </div>
           <div class="card-body">
@@ -614,12 +614,53 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Materials Cost</span><span id="jcs-mat">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Labor Cost</span><span id="jcs-labor">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;border-top:1px solid var(--bdr);margin-top:4px;padding-top:4px;"><span style="color:var(--dgray);">Overhead (<span id="jcs-ovh-pct">15</span>%)</span><span id="jcs-overhead">-</span></div>
-              <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;padding:4px 0;border-top:1px solid var(--bdr);margin-top:4px;"><span>Total Cost</span><span id="jcs-total-cost">-</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;padding:4px 0;border-top:1px solid var(--bdr);margin-top:4px;"><span>Total Est. Cost</span><span id="jcs-total-cost">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span style="color:var(--dgray);">Bid Price</span><span id="jcs-bid">-</span></div>
-              <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:4px 0;border-top:2px solid var(--bdr);margin-top:4px;"><span>True Margin</span><span id="jcs-margin">-</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:4px 0;border-top:2px solid var(--bdr);margin-top:4px;"><span>Est. Margin</span><span id="jcs-margin">-</span></div>
             </div>
-            <div style="margin-top:10px;text-align:right;">
-              <button class="btn btn-sec btn-sm" onclick="exportJobCostPDF()">Export Job Cost PDF</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <div class="card-hdr">
+            <span class="card-title">Estimates vs Actuals</span>
+            <button class="btn btn-sec btn-sm" onclick="clearActuals()">Clear Actuals</button>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="tbl-wrap">
+              <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead>
+                  <tr style="background:#FAFAFA;border-bottom:2px solid var(--bdr);">
+                    <th style="padding:8px;text-align:left;" rowspan="2">Line Item</th>
+                    <th style="padding:8px;text-align:center;border-left:1px solid var(--bdr);" colspan="3">Estimated</th>
+                    <th style="padding:8px;text-align:center;border-left:2px solid var(--red);background:#FFF5F5;" colspan="3">Actual</th>
+                    <th style="padding:8px;text-align:center;border-left:1px solid var(--bdr);" colspan="2">Variance</th>
+                  </tr>
+                  <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);font-size:10px;text-transform:uppercase;">
+                    <th style="padding:4px 8px;border-left:1px solid var(--bdr);">Qty</th>
+                    <th style="padding:4px 8px;">Unit</th>
+                    <th style="padding:4px 8px;">Cost</th>
+                    <th style="padding:4px 8px;border-left:2px solid var(--red);background:#FFF5F5;">Qty</th>
+                    <th style="padding:4px 8px;background:#FFF5F5;">Cost</th>
+                    <th style="padding:4px 8px;background:#FFF5F5;">Days</th>
+                    <th style="padding:4px 8px;border-left:1px solid var(--bdr);">Qty +/-</th>
+                    <th style="padding:4px 8px;">Cost +/-</th>
+                  </tr>
+                </thead>
+                <tbody id="eva-tbody"></tbody>
+                <tfoot id="eva-tfoot"></tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <div class="card-hdr"><span class="card-title">Actual Job Summary</span></div>
+          <div class="card-body">
+            <div id="eva-summary" style="background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;padding:12px 15px;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Actual Material Cost</span><span id="eva-actual-mat">-</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Actual Labor Cost</span><span id="eva-actual-labor">-</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;padding:4px 0;border-top:1px solid var(--bdr);margin-top:4px;"><span>Actual Total Cost</span><span id="eva-actual-total">-</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span style="color:var(--dgray);">Bid Price</span><span id="eva-bid-price">-</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:4px 0;border-top:2px solid var(--bdr);margin-top:4px;"><span>Actual Margin</span><span id="eva-actual-margin">-</span></div>
             </div>
           </div>
         </div>
@@ -793,7 +834,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div class="fg fg3">
                 <div><label>DEFAULT CREW DAY RATE ($)</label><input id="jc-default-crew-rate" type="number" min="0" step="100"/></div>
                 <div><label>DEFAULT OVERHEAD %</label><input id="jc-default-overhead-pct" type="number" min="0" step="1"/></div>
-                <div><label>PRODUCTIVITY (t/day)</label><input id="jc-default-productivity" type="number" min="1" step="10"/></div>
+                <div><label>ASPHALT PRODUCTIVITY (t/day)</label><input id="jc-default-productivity" type="number" min="1" step="10"/></div>
               </div>
               <div class="fg fg4" style="margin-top:10px;">
                 <div><label>MILL FEE ($/day)</label><input id="jc-default-mill-fee" type="number" min="0" step="500" value="6000"/></div>
@@ -1378,7 +1419,145 @@ function initJobCost(){
   if(jcOpEl)jcOpEl.addEventListener('input',function(){jcOpEl._edited=true;renderJobCost();});
 }
 
+// ---- Estimates vs Actuals ----
+var evaActuals = {}; // keyed by line item key: {qty, cost, days}
 
+function buildEVAEstimates(){
+  var items=[];
+  var wfv=wf();
+  sections.forEach(function(s){
+    var sf=s.sf||0;
+    s.layers.forEach(function(l){
+      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
+      var t=rawT*wfv;
+      var matC=t*(MAT[l.type]||0);
+      var days=calcLayerDays(t,l);
+      var crewC=days*getCrewParam(l.type,'crew_rate');
+      var truckC=calcTrucking(t,l,days);
+      var isMill=l.type==='Mill & Pave';
+      var millC=isMill?days*(l.mill_rate||jcMillFee):0;
+      var totalCost=matC+crewC+truckC+millC;
+      items.push({key:'lyr-'+s.id+'-'+l.id, name:(l.name||l.type), section:s.name,
+        qty:t, unit:'TON', estCost:totalCost, estDays:days, type:'asphalt'});
+    });
+  });
+  concItems.forEach(function(i){
+    if(!i.qty)return;
+    var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];
+    var cy=calcConcCY(i);
+    var matC=concMatCost(i);var labC=concLaborCost(i);
+    items.push({key:'conc-'+i.id, name:ct.name, section:'Concrete',
+      qty:i.qty, unit:ct.unit, estCost:matC+labC, estDays:0, type:'concrete', cy:cy});
+  });
+  extraItems.forEach(function(i){
+    if(!i.name||!i.subtotal)return;
+    items.push({key:'extra-'+i.id, name:i.name, section:'Additional',
+      qty:i.qty, unit:i.unit, estCost:i.subtotal, estDays:0, type:'extra'});
+  });
+  return items;
+}
+
+function renderEVA(){
+  var tbody=document.getElementById('eva-tbody');
+  var tfoot=document.getElementById('eva-tfoot');
+  if(!tbody)return;
+  tbody.innerHTML='';if(tfoot)tfoot.innerHTML='';
+  var items=buildEVAEstimates();
+  if(!items.length){
+    tbody.innerHTML='<tr><td colspan="9" style="padding:16px;text-align:center;color:var(--dgray);">No line items in proposal yet.</td></tr>';
+    return;
+  }
+  var totEstCost=0,totActCost=0,totEstQty=0,totActQty=0;
+  items.forEach(function(item){
+    var act=evaActuals[item.key]||{};
+    var actQty=act.qty!==undefined?act.qty:null;
+    var actCost=act.cost!==undefined?act.cost:null;
+    var actDays=act.days!==undefined?act.days:null;
+    var qtyVar=actQty!==null?(actQty-item.qty):null;
+    var costVar=actCost!==null?(actCost-item.estCost):null;
+    totEstCost+=item.estCost;
+    if(actCost!==null)totActCost+=actCost;
+    totEstQty+=item.qty;
+    if(actQty!==null)totActQty+=actQty;
+    var tr=document.createElement('tr');tr.style.borderBottom='1px solid var(--bdr)';
+    var varQtyClass=qtyVar!==null?(qtyVar>0?'m-red':qtyVar<0?'m-green':''):'';
+    var varCostClass=costVar!==null?(costVar>0?'m-red':costVar<0?'m-green':''):'';
+    tr.innerHTML='<td style="padding:8px;"><div style="font-weight:600;font-size:12px;">'+esc(item.name)+'</div><div style="font-size:10px;color:var(--dgray);">'+esc(item.section)+'</div></td>'
+      +'<td style="padding:8px;text-align:right;border-left:1px solid var(--bdr);">'+item.qty.toLocaleString()+'</td>'
+      +'<td style="padding:8px;text-align:center;">'+item.unit+'</td>'
+      +'<td style="padding:8px;text-align:right;">$'+fi(item.estCost)+'</td>'
+      +'<td style="padding:8px;text-align:right;border-left:2px solid var(--red);background:#FFF5F5;"><input type="number" value="'+(actQty!==null?actQty:'')+'" placeholder="—" min="0" step="1" style="width:70px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'qty\',this.value)"></td>'
+      +'<td style="padding:8px;text-align:right;background:#FFF5F5;"><input type="number" value="'+(actCost!==null?actCost:'')+'" placeholder="—" min="0" step="1" style="width:80px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'cost\',this.value)"></td>'
+      +'<td style="padding:8px;text-align:right;background:#FFF5F5;"><input type="number" value="'+(actDays!==null?actDays:'')+'" placeholder="—" min="0" step="0.5" style="width:50px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'days\',this.value)"></td>'
+      +'<td style="padding:8px;text-align:right;border-left:1px solid var(--bdr);" class="'+varQtyClass+'">'+(qtyVar!==null?(qtyVar>=0?'+':'')+qtyVar.toLocaleString():'—')+'</td>'
+      +'<td style="padding:8px;text-align:right;" class="'+varCostClass+'">'+(costVar!==null?(costVar>=0?'+$':'-$')+fi(Math.abs(costVar)):'—')+'</td>';
+    tbody.appendChild(tr);
+  });
+  // Totals row
+  if(tfoot){
+    var hasActuals=Object.keys(evaActuals).length>0;
+    var totalCostVar=hasActuals?(totActCost-totEstCost):null;
+    var tcClass=totalCostVar!==null?(totalCostVar>0?'m-red':totalCostVar<0?'m-green':''):'';
+    tfoot.innerHTML='<tr style="background:#FAFAFA;font-weight:600;border-top:2px solid var(--bdr);">'
+      +'<td style="padding:8px;">TOTALS</td>'
+      +'<td style="padding:8px;text-align:right;border-left:1px solid var(--bdr);">'+totEstQty.toLocaleString()+'</td>'
+      +'<td style="padding:8px;"></td>'
+      +'<td style="padding:8px;text-align:right;">$'+fi(totEstCost)+'</td>'
+      +'<td style="padding:8px;text-align:right;border-left:2px solid var(--red);background:#FFF5F5;">'+(hasActuals?totActQty.toLocaleString():'—')+'</td>'
+      +'<td style="padding:8px;text-align:right;background:#FFF5F5;">'+(hasActuals?'$'+fi(totActCost):'—')+'</td>'
+      +'<td style="padding:8px;background:#FFF5F5;"></td>'
+      +'<td style="padding:8px;text-align:right;border-left:1px solid var(--bdr);"></td>'
+      +'<td style="padding:8px;text-align:right;" class="'+tcClass+'">'+(totalCostVar!==null?(totalCostVar>=0?'+$':'-$')+fi(Math.abs(totalCostVar)):'—')+'</td>'
+      +'</tr>';
+  }
+  renderEVASummary(totEstCost,totActCost);
+}
+
+function updEVA(key,field,val){
+  if(!evaActuals[key])evaActuals[key]={};
+  var v=parseFloat(val);
+  if(isNaN(v)||val===''){delete evaActuals[key][field];if(!Object.keys(evaActuals[key]).length)delete evaActuals[key];}
+  else evaActuals[key][field]=v;
+  renderEVA();
+}
+
+function clearActuals(){
+  if(!confirm('Clear all actual values?'))return;
+  evaActuals={};
+  renderEVA();
+  toast('Actuals cleared');
+}
+
+function renderEVASummary(totEstCost,totActCost){
+  var g=function(id){return document.getElementById(id);};
+  var hasActuals=Object.keys(evaActuals).length>0;
+  var actMatCost=0,actLaborCost=0;
+  // Sum actual costs by type
+  var items=buildEVAEstimates();
+  items.forEach(function(item){
+    var act=evaActuals[item.key];
+    if(!act||act.cost===undefined)return;
+    if(item.type==='extra')actLaborCost+=act.cost;
+    else {
+      // Split: use ratio of est mat vs est labor to apportion actual cost
+      // Or simpler: actual cost IS the total actual for that line
+      actMatCost+=act.cost;
+    }
+  });
+  var actTotal=hasActuals?actMatCost+actLaborCost:0;
+  if(g('eva-actual-mat'))g('eva-actual-mat').textContent=hasActuals?'$'+fi(actMatCost):'-';
+  if(g('eva-actual-labor'))g('eva-actual-labor').textContent=hasActuals?'$'+fi(actLaborCost):'-';
+  if(g('eva-actual-total'))g('eva-actual-total').textContent=hasActuals?'$'+fi(actTotal):'-';
+  // Bid price
+  var bidPrice=0;
+  var bidEl=document.getElementById('m-bid');
+  if(bidEl&&bidEl.textContent&&bidEl.textContent!=='-'){var v=parseFloat(bidEl.textContent.replace(/[$,]/g,''));if(!isNaN(v))bidPrice=v;}
+  if(g('eva-bid-price'))g('eva-bid-price').textContent=bidPrice>0?'$'+fi(bidPrice):'-';
+  var actualMargin=hasActuals&&bidPrice>0&&actTotal>0?((bidPrice-actTotal)/bidPrice*100):null;
+  var amText=actualMargin!==null?'$'+fi(bidPrice-actTotal)+' ('+actualMargin.toFixed(1)+'%)':'-';
+  var amClass=actualMargin!==null?(actualMargin>=20?'m-green':'m-red'):'';
+  if(g('eva-actual-margin')){g('eva-actual-margin').textContent=amText;g('eva-actual-margin').className=amClass;}
+}
 
 // ---- Multi-Phase Bidding (#14) ----
 function toggleMultiPhase(){
@@ -1960,7 +2139,7 @@ var TOPBAR_CFG = {
   analytics:[{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderAnalytics()'}],
   pipeline:[{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderPipeline()'}],
   clients:[{html:'+ Add Client',cls:'btn btn-red btn-sm',fn:'openClientModal()'}],
-  jobcost:[{html:'Export Job Cost PDF',cls:'btn btn-red btn-sm',fn:'exportJobCostPDF()'}],
+  jobcost:[{html:'Export Job Cost PDF',cls:'btn btn-red btn-sm',fn:'exportJobCostPDF()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderEVA()'}],
   admin:[],
   settings:[]
 };
@@ -1983,7 +2162,7 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Cost',saved:'Saved Proposals',settings:'Settings',co:'Create CO',savedco:"Saved CO's",analytics:'Analytics',pipeline:'Project Pipeline',clients:'Clients',admin:'Admin Panel'}[id]||id;
+  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Estimates vs Actuals',saved:'Saved Proposals',settings:'Settings',co:'Create CO',savedco:"Saved CO's",analytics:'Analytics',pipeline:'Project Pipeline',clients:'Clients',admin:'Admin Panel'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved')renderSaved();
@@ -1993,7 +2172,7 @@ function showPanel(id,el){
   if(id==='co'){populateCOProposalDropdown();}
   if(id==='savedco')loadCOList();
   if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');}
-  if(id==='jobcost')renderJobCost();
+  if(id==='jobcost'){renderJobCost();renderEVA();}
   if(id==='analytics')setTimeout(renderAnalytics,50);
   if(id==='pipeline')setTimeout(renderPipeline,50);
   if(id==='clients')setTimeout(renderClients,50);
@@ -2926,6 +3105,7 @@ async function saveQuote(){
     sections:sections,concItems:concItems,extraItems:extraItems};
   var p=buildPayload();
   var jcData=calcJobCost();snap.jc_labor_cost=jcData.laborCost;snap.jc_overhead_pct=jcData.ovhPct;snap.jc_total_cost=jcData.totalCost;snap.jc_margin_pct=jcData.marginPct;
+  if(Object.keys(evaActuals).length)snap.eva_actuals=JSON.parse(JSON.stringify(evaActuals));
   var body={name:name,client:snap.client,date:snap.date,total:p.total,snap:snap};
   try{
     var url,method;
@@ -2974,6 +3154,7 @@ function loadQuote(id){
   concItems=d.concItems||[];cid=concItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
   extraItems=d.extraItems||[];eid=extraItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
   lastSavedQuoteId=q.id;
+  evaActuals=d.eva_actuals||{};
   showPanel('build',document.querySelector('.nav-item'));
   renderAll();renderConc();renderExtra();
   toast('Quote loaded');
