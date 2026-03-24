@@ -1754,8 +1754,26 @@ var dashCalDate = new Date();
 var dashSchedule = JSON.parse(localStorage.getItem('hd_crew_schedule')||'{}');
 var dashSelectedDate = null;
 
+var dashBidDueDates = {}; // {dateKey: [{name,client,time,id}]}
+
+function loadDashBidDates(){
+  dashBidDueDates={};
+  fetch('/pipeline/list').then(function(r){return r.json();}).then(function(d){
+    if(!d.ok||!d.proposals)return;
+    d.proposals.forEach(function(p){
+      var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+      if(snap.is_project&&snap.bid_due_date){
+        if(!dashBidDueDates[snap.bid_due_date])dashBidDueDates[snap.bid_due_date]=[];
+        dashBidDueDates[snap.bid_due_date].push({name:p.name||'',client:p.client||'',time:snap.bid_due_time||'',id:p.id});
+      }
+    });
+    renderDashCal();
+  }).catch(function(){});
+}
+
 function renderDashboard(){
   renderDashStats();
+  loadDashBidDates();
   renderDashCal();
   renderDashSignature();
 }
@@ -1803,12 +1821,16 @@ function renderDashCal(){
     var dateKey=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     var isToday=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
     var hasEntries=dashSchedule[dateKey]&&dashSchedule[dateKey].length>0;
+    var hasBids=dashBidDueDates[dateKey]&&dashBidDueDates[dateKey].length>0;
     var isSelected=dashSelectedDate===dateKey;
     cell.style.cssText='padding:8px 4px;text-align:center;font-size:12px;border-radius:4px;cursor:pointer;position:relative;'
-      +(isSelected?'background:var(--red);color:#fff;font-weight:700;':(isToday?'background:#FEE;font-weight:600;border:1px solid var(--red);':'background:#FAFAFA;'))
-      +(hasEntries&&!isSelected?'font-weight:600;':'');
+      +(isSelected?'background:var(--red);color:#fff;font-weight:700;':(isToday?'background:#FEE;font-weight:600;border:1px solid var(--red);':(hasBids?'background:#FFF8E6;border:1px solid #E6A800;':'background:#FAFAFA;')))
+      +((hasEntries||hasBids)&&!isSelected?'font-weight:600;':'');
     cell.textContent=d;
-    if(hasEntries){var dot=document.createElement('div');dot.style.cssText='width:5px;height:5px;border-radius:50%;background:'+(isSelected?'#fff':'var(--red)')+';margin:2px auto 0;';cell.appendChild(dot);}
+    if(hasEntries||hasBids){var dots=document.createElement('div');dots.style.cssText='display:flex;gap:3px;justify-content:center;margin-top:2px;';
+      if(hasEntries){var dot=document.createElement('div');dot.style.cssText='width:5px;height:5px;border-radius:50%;background:'+(isSelected?'#fff':'var(--red)')+';';dots.appendChild(dot);}
+      if(hasBids){var bdot=document.createElement('div');bdot.style.cssText='width:5px;height:5px;border-radius:50%;background:'+(isSelected?'#fff':'#E6A800')+';';dots.appendChild(bdot);}
+      cell.appendChild(dots);}
     (function(dk){cell.addEventListener('click',function(){dashSelectedDate=dk;renderDashCal();renderDayEntries(dk);});})(dateKey);
     body.appendChild(cell);
   }
@@ -1828,8 +1850,25 @@ function renderDayEntries(dateKey){
   var d=new Date(dateKey+'T12:00:00');
   if(dateLabel)dateLabel.textContent=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
   var entries=dashSchedule[dateKey]||[];
+  var bids=dashBidDueDates[dateKey]||[];
   c.innerHTML='';
+  // Bid due dates first
+  if(bids.length){
+    var bidHdr=document.createElement('div');bidHdr.style.cssText='font-size:10px;font-weight:700;color:#E6A800;text-transform:uppercase;letter-spacing:.05em;padding:4px 0 2px;';
+    bidHdr.textContent='Bids Due';c.appendChild(bidHdr);
+    bids.forEach(function(b){
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);background:#FFFBEB;margin:0 -15px;padding-left:15px;padding-right:15px;';
+      row.innerHTML='<div style="flex:1;"><div style="font-weight:600;font-size:13px;color:#B27D00;">'+esc(b.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--dgray);">'+esc(b.client)+(b.time?' — Due by '+b.time:'')+'</div></div>'
+        +'<span style="font-size:18px;">⚠</span>';
+      c.appendChild(row);
+    });
+  }
+  // Crew entries
   if(entries.length){
+    var crewHdr=document.createElement('div');crewHdr.style.cssText='font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.05em;padding:8px 0 2px;';
+    crewHdr.textContent='Crew Schedule';c.appendChild(crewHdr);
     entries.forEach(function(e,idx){
       var row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bdr);';
@@ -1842,9 +1881,10 @@ function renderDayEntries(dateKey){
       row.appendChild(del);
       c.appendChild(row);
     });
-  } else {
+  }
+  if(!entries.length&&!bids.length){
     var empty=document.createElement('p');empty.style.cssText='font-size:12px;color:var(--dgray);margin-bottom:10px;';
-    empty.textContent='No crews scheduled for this date.';c.appendChild(empty);
+    empty.textContent='No entries for this date.';c.appendChild(empty);
   }
   var addBtn=document.createElement('button');addBtn.className='btn btn-red btn-sm';addBtn.textContent='+ Add Crew Assignment';
   addBtn.addEventListener('click',function(){openCrewEntryModal(dateKey);});
@@ -2137,7 +2177,7 @@ var TOPBAR_CFG = {
     {html:'Import',cls:'btn btn-sec btn-sm',fn:'importQuotes()'}
   ],
   analytics:[{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderAnalytics()'}],
-  pipeline:[{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderPipeline()'}],
+  pipeline:[{html:'+ Create Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderPipeline()'}],
   clients:[{html:'+ Add Client',cls:'btn btn-red btn-sm',fn:'openClientModal()'}],
   jobcost:[{html:'Export Job Cost PDF',cls:'btn btn-red btn-sm',fn:'exportJobCostPDF()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderEVA()'}],
   admin:[],
@@ -3498,15 +3538,33 @@ async function renderPipeline() {
       cards.forEach(function(p){
         var card = document.createElement('div');
         var sn = p.pipeline_stages ? p.pipeline_stages.name : '';
+        var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+        var isProject=snap.is_project===true;
         card.className = 'kb-card'+(sn==='Won'?' kb-won':sn==='Lost'?' kb-lost':sn==='Disqualified'?' kb-disq':'');
         var moveOpts = pipelineStages.filter(function(s){return s.id!==stage.id;})
           .map(function(s){return '<option value="'+s.id+'">'+esc(s.name)+'</option>';}).join('');
-        card.innerHTML = '<div class="kb-card-name">'+esc(p.name||'Untitled')+'</div>'
+        var typeBadge=isProject?'<span style="font-size:9px;font-weight:700;color:#fff;background:var(--red);padding:1px 6px;border-radius:3px;text-transform:uppercase;margin-left:6px;">Project</span>':'';
+        var dueStr='';
+        if(isProject&&snap.bid_due_date){
+          var dueParts=snap.bid_due_date.split('-');
+          dueStr='<div style="font-size:10px;color:var(--red);font-weight:600;margin-top:3px;">Bid Due: '+dueParts[1]+'/'+dueParts[2]+'/'+dueParts[0]+(snap.bid_due_time?' @ '+snap.bid_due_time:'')+'</div>';
+        }
+        var actions='';
+        if(isProject){
+          actions='<button class="btn btn-sec btn-sm kb-open-btn" onclick="editProject('+p.id+')">Edit</button>'
+            +'<button class="btn btn-sec btn-sm kb-open-btn" onclick="attachProposalToProject('+p.id+')">Attach Proposal</button>';
+          if(snap.linked_proposals&&snap.linked_proposals.length){
+            actions+='<button class="btn btn-sec btn-sm kb-open-btn" onclick="loadProposalFromPipeline('+snap.linked_proposals[0]+')">Open Proposal</button>';
+          }
+        } else {
+          actions='<button class="btn btn-sec btn-sm kb-open-btn" onclick="loadProposalFromPipeline('+p.id+')">Open</button>';
+        }
+        card.innerHTML = '<div class="kb-card-name">'+esc(p.name||'Untitled')+typeBadge+'</div>'
           +'<div class="kb-card-client">'+esc(p.client||'')+'</div>'
           +'<div class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'-')+'</div>'
-          +'<div class="kb-card-date">'+(p.date||((p.created_at||'').split('T')[0])||'')+'</div>'
+          +'<div class="kb-card-date">'+(p.date||((p.created_at||'').split('T')[0])||'')+dueStr+'</div>'
           +'<div class="kb-card-moves">'
-        +'<button class="btn btn-sec btn-sm kb-open-btn" onclick="loadProposalFromPipeline('+p.id+')">Open</button>'
+        +actions
         +(moveOpts?'<select class="kb-stage-select" onchange="moveCard('+p.id+',parseInt(this.value))"><option value="">Move to...</option>'+moveOpts+'</select>':'')
         +'</div>';
         cardsDiv.appendChild(card);
@@ -3537,6 +3595,126 @@ async function moveCard(proposalId, stageId) {
 function loadProposalFromPipeline(id) {
   loadQuote(id);
   showPanel('build', document.querySelector('.nav-item'));
+}
+
+// -- Project Create / Edit from Pipeline --
+function openProjectModal(existingData, editId){
+  var ex=document.getElementById('project-modal');if(ex)ex.remove();
+  var d=existingData||{};
+  var modal=document.createElement('div');modal.id='project-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:440px;max-width:92vw;max-height:90vh;overflow-y:auto;';
+  var title=editId?'Edit Project':'Create Project';
+  // Build stage options
+  var stageOpts='<option value="">Select stage...</option>';
+  pipelineStages.forEach(function(s){stageOpts+='<option value="'+s.id+'"'+(d.stage_id&&d.stage_id===s.id?' selected':'')+'>'+esc(s.name)+'</option>';});
+  // Build client options
+  var clientOpts='<option value="">Select client...</option>';
+  if(typeof clientsList!=='undefined')clientsList.forEach(function(c){clientOpts+='<option value="'+esc(c.name)+'"'+(d.client===c.name?' selected':'')+'>'+esc(c.name)+(c.company?' ('+esc(c.company)+')':'')+'</option>';});
+  box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">'+title+'</h3>'
+    +'<label>Project Name *</label><input id="pm-proj-name" type="text" value="'+esc(d.name||'')+'" placeholder="e.g. Main St Repaving" style="width:100%;margin-bottom:10px;"/>'
+    +'<label>Client</label><select id="pm-proj-client" style="width:100%;margin-bottom:10px;">'+clientOpts+'</select>'
+    +'<label>Address</label><input id="pm-proj-addr" type="text" value="'+esc(d.address||'')+'" placeholder="123 Main St" style="width:100%;margin-bottom:10px;"/>'
+    +'<label>City / State</label><input id="pm-proj-cs" type="text" value="'+esc(d.city_state||'')+'" placeholder="Charlotte, NC" style="width:100%;margin-bottom:10px;"/>'
+    +'<div class="fg fg2" style="margin-bottom:10px;"><div><label>Bid Due Date</label><input id="pm-proj-due-date" type="date" value="'+(d.bid_due_date||'')+'" style="width:100%;"/></div>'
+    +'<div><label>Bid Due Time</label><input id="pm-proj-due-time" type="time" value="'+(d.bid_due_time||'')+'" style="width:100%;"/></div></div>'
+    +'<label>Pipeline Stage</label><select id="pm-proj-stage" style="width:100%;margin-bottom:10px;">'+stageOpts+'</select>'
+    +'<label>Notes</label><textarea id="pm-proj-notes" rows="2" style="width:100%;margin-bottom:14px;resize:vertical;">'+esc(d.notes||'')+'</textarea>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'project-modal\').remove()">Cancel</button>'
+    +'<button class="btn btn-red btn-sm" id="pm-proj-save">'+(editId?'Update':'Create')+'</button></div>';
+  modal.appendChild(box);
+  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+  document.getElementById('pm-proj-save').addEventListener('click',function(){
+    var name=document.getElementById('pm-proj-name').value.trim();
+    if(!name){toast('Enter a project name','err');return;}
+    var payload={
+      name:name,
+      client:document.getElementById('pm-proj-client').value,
+      address:document.getElementById('pm-proj-addr').value.trim(),
+      city_state:document.getElementById('pm-proj-cs').value.trim(),
+      bid_due_date:document.getElementById('pm-proj-due-date').value,
+      bid_due_time:document.getElementById('pm-proj-due-time').value,
+      stage_id:parseInt(document.getElementById('pm-proj-stage').value)||null,
+      notes:document.getElementById('pm-proj-notes').value.trim(),
+      date:new Date().toISOString().split('T')[0]
+    };
+    if(editId){
+      // Update existing project
+      var snap=d._rawSnap||{};
+      snap.is_project=true;snap.address=payload.address;snap.city_state=payload.city_state;
+      snap.bid_due_date=payload.bid_due_date;snap.bid_due_time=payload.bid_due_time;
+      snap.notes=payload.notes;
+      var updateBody={name:payload.name,client:payload.client,snap:snap};
+      fetch('/projects/update/'+editId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(updateBody)})
+        .then(function(r){return r.json();}).then(function(rd){
+          if(rd.ok){if(payload.stage_id)fetch('/pipeline/move/'+editId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage_id:payload.stage_id})});toast('Project updated','ok');modal.remove();renderPipeline();}
+          else toast(rd.error||'Update failed','err');
+        }).catch(function(e){toast('Error: '+e.message,'err');});
+    } else {
+      fetch('/projects/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+        .then(function(r){return r.json();}).then(function(rd){
+          if(rd.ok){toast('Project created','ok');modal.remove();renderPipeline();}
+          else toast(rd.error||'Create failed','err');
+        }).catch(function(e){toast('Error: '+e.message,'err');});
+    }
+  });
+}
+
+function editProject(id){
+  var p=pipelineProposals.find(function(x){return x.id===id;});
+  if(!p)return;
+  var snap=typeof p.snap==='string'?JSON.parse(p.snap):p.snap||{};
+  openProjectModal({
+    name:p.name,client:p.client,address:snap.address||'',city_state:snap.city_state||'',
+    bid_due_date:snap.bid_due_date||'',bid_due_time:snap.bid_due_time||'',
+    stage_id:p.stage_id,notes:snap.notes||'',_rawSnap:snap
+  },id);
+}
+
+function attachProposalToProject(projectId){
+  // Show a picker of saved proposals to attach
+  var ex=document.getElementById('attach-proposal-modal');if(ex)ex.remove();
+  var modal=document.createElement('div');modal.id='attach-proposal-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:10px;padding:20px;width:400px;max-width:92vw;max-height:80vh;overflow-y:auto;';
+  box.innerHTML='<h3 style="margin:0 0 14px;font-size:15px;">Attach Proposal to Project</h3>';
+  if(!savedQuotes.length){
+    box.innerHTML+='<p style="color:var(--dgray);font-size:12px;">No saved proposals. Create and save a proposal first.</p>'
+      +'<div style="text-align:right;margin-top:12px;"><button class="btn btn-sec btn-sm" onclick="document.getElementById(\'attach-proposal-modal\').remove()">Close</button></div>';
+  } else {
+    var list=document.createElement('div');
+    savedQuotes.forEach(function(q){
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);';
+      row.innerHTML='<div><div style="font-weight:600;font-size:13px;">'+esc(q.name||'Untitled')+'</div><div style="font-size:11px;color:var(--dgray);">'+esc(q.client||'')+' — $'+(q.total?Math.round(q.total).toLocaleString():'0')+'</div></div>';
+      var btn=document.createElement('button');btn.className='btn btn-red btn-sm';btn.textContent='Attach';
+      (function(qid,qtotal){btn.addEventListener('click',function(){
+        var proj=pipelineProposals.find(function(x){return x.id===projectId;});
+        if(!proj)return;
+        var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+        if(!snap.linked_proposals)snap.linked_proposals=[];
+        if(snap.linked_proposals.indexOf(qid)<0)snap.linked_proposals.push(qid);
+        fetch('/projects/update/'+projectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap,total:qtotal})})
+          .then(function(r){return r.json();}).then(function(rd){
+            if(rd.ok){toast('Proposal attached','ok');modal.remove();renderPipeline();}
+            else toast(rd.error||'Failed','err');
+          });
+      });})(q.id,q.total||0);
+      row.appendChild(btn);
+      list.appendChild(row);
+    });
+    box.appendChild(list);
+    var closeDiv=document.createElement('div');closeDiv.style.cssText='text-align:right;margin-top:12px;';
+    closeDiv.innerHTML='<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'attach-proposal-modal\').remove()">Close</button>';
+    box.appendChild(closeDiv);
+  }
+  modal.appendChild(box);
+  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
+  document.body.appendChild(modal);
 }
 
 // == Clients ==

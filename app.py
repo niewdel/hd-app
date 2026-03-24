@@ -217,6 +217,53 @@ def pipeline_move(proposal_id):
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
+@app.route('/projects/create', methods=['POST'])
+@require_auth
+def project_create():
+    data = request.get_json() or {}
+    try:
+        snap = {
+            'is_project': True,
+            'address': data.get('address', ''),
+            'city_state': data.get('city_state', ''),
+            'bid_due_date': data.get('bid_due_date', ''),
+            'bid_due_time': data.get('bid_due_time', ''),
+            'notes': data.get('notes', ''),
+            'linked_proposals': [],
+        }
+        payload = {
+            'name': data.get('name', 'Unnamed Project'),
+            'client': data.get('client', ''),
+            'date': data.get('date', ''),
+            'total': 0,
+            'snap': snap,
+            'created_by': session.get('username', ''),
+        }
+        if data.get('stage_id'):
+            payload['stage_id'] = data['stage_id']
+        r = http.post(sb_url('proposals'), headers=sb_headers(), json=payload, timeout=10)
+        r.raise_for_status()
+        result = r.json()
+        return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/projects/update/<int:pid>', methods=['PATCH'])
+@require_auth
+def project_update(pid):
+    data = request.get_json() or {}
+    try:
+        payload = {}
+        if 'name' in data: payload['name'] = data['name']
+        if 'client' in data: payload['client'] = data['client']
+        if 'snap' in data: payload['snap'] = data['snap']
+        if 'total' in data: payload['total'] = float(data['total'])
+        r = http.patch(sb_url('proposals', f'?id=eq.{pid}'), headers=sb_headers(), json=payload, timeout=10)
+        r.raise_for_status()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 # ââ Clients âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @app.route('/clients/list')
