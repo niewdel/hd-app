@@ -361,7 +361,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" onclick="showPanel('savedco',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 1h7l3 3v10a1 1 0 01-1 1H3a1 1 0 01-1-1V2a1 1 0 011-1zm1 5h6v1H4zm0 2h6v1H4zm0 2h4v1H4z"/></svg>Saved CO's</div>
       <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
       <div class="nav-item" onclick="showPanel('analytics',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v3H1zm4-4h3v7H5zm4-4h3v11H9zm4-6h2v17h-2z"/></svg>Analytics</div>
-      <div class="nav-item" onclick="showPanel('lineitems',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v2H2zm0 4h8v1H2zm0 3h10v1H2zm0 3h6v1H2z"/><path d="M13 7l2 2-2 2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Line Items</div>
+
       <div class="nav-item" onclick="showPanel('crewcosts',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 1v14M8 3v12M12 5v10"/><circle cx="4" cy="1" r="1"/><circle cx="8" cy="3" r="1"/><circle cx="12" cy="5" r="1"/></svg>Crew Costs</div>
       <div class="nav-item" onclick="showPanel('jobcost',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3v1.5H10v1H8.5V9H10v1H8.5V11.5h-1V10H6V9h1.5V6.5H6v-1h1.5V4h1z"/></svg>Job Costing</div>
       <div class="nav-item" onclick="showPanel('settings',this)">
@@ -563,18 +563,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       </div><!-- /panel-build -->
 
       <!-- LINE ITEMS PANEL -->
-      <div class="panel" id="panel-lineitems"><div class="content">
-        <div class="card">
-          <div class="card-hdr">
-            <span class="card-title">Proposal Line Items</span>
-            <span style="font-size:11px;color:var(--dgray);margin-left:8px;">Edit names, descriptions, units &amp; rates before exporting PDF</span>
-          </div>
-          <div id="li-table-wrap" style="overflow-x:auto;"></div>
-          <div style="margin-top:12px;display:flex;gap:8px;">
-            <button class="btn btn-sec btn-sm" onclick="refreshLineItems()">Refresh from Build</button>
-          </div>
-        </div>
-      </div></div>
+      <div class="panel" id="panel-lineitems"></div>
 
       <!-- CREW COSTS PANEL -->
       <div class="panel" id="panel-crewcosts"><div class="content">
@@ -822,6 +811,16 @@ tr:nth-child(even) td{background:#FAFAFA;}
                   <span style="color:#27500A;">Green = 30%+</span> &nbsp;
                   <span style="color:#B25000;">Yellow = 15-30%</span> &nbsp;
                   <span style="color:#A32D2D;">Red = under 15%</span>
+                </div>
+                <div class="card" style="margin-top:14px;">
+                  <div class="card-hdr">
+                    <span class="card-title">Proposal Line Items</span>
+                    <span style="font-size:11px;color:var(--dgray);margin-left:8px;">Edit names, descriptions, units &amp; rates before exporting PDF</span>
+                  </div>
+                  <div id="li-table-wrap" style="overflow-x:auto;"></div>
+                  <div style="margin-top:12px;display:flex;gap:8px;">
+                    <button class="btn btn-sec btn-sm" onclick="refreshLineItems()">Refresh from Build</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2434,7 +2433,7 @@ function showPanel(id,el){
   if(id==='savedco')loadCOList();
   if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');}
   if(id==='jobcost'){renderJobCost();renderEVA();}
-  if(id==='analytics')setTimeout(renderAnalytics,50);
+  if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
   if(id==='pipeline')setTimeout(renderPipeline,50);
   if(id==='clients')setTimeout(renderClients,50);
   if(typeof isMobile!=='undefined'&&isMobile)closeMobileNav();
