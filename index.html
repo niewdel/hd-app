@@ -1,6 +1,3 @@
-<!-- build:1774319296744 -->
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,22 +16,23 @@ body{font-family:var(--font);background:#EBEBEB;color:var(--blk);font-size:14px;
 /* Login */
 #login-screen{position:fixed;inset:0;background:#080808;z-index:1000;display:flex;flex-direction:column;overflow:hidden;}
 #login-canvas{position:absolute;inset:0;z-index:0;pointer-events:none;}
-.login-bar{position:relative;z-index:2;background:#ffffff;padding:10px 28px;display:flex;align-items:center;}
+.login-bar{position:relative;z-index:2;background:#ffffff;padding:10px 28px;display:flex;align-items:center;box-shadow:0 1px 0 rgba(255,255,255,0.06);}
 .login-bar img{height:42px;width:auto;display:block;}
 .login-body{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;}
 .login-card{width:340px;text-align:center;}
 .login-eyebrow{font-size:10px;font-weight:700;letter-spacing:4px;color:var(--red);text-transform:uppercase;margin-bottom:18px;}
-.login-heading{font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;margin-bottom:6px;}
+.login-heading{font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;margin-bottom:6px;line-height:1.2;}
 .login-sub{font-size:12px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;margin-bottom:36px;}
 .login-rule{width:32px;height:2px;background:var(--red);margin:0 auto 36px;border-radius:2px;}
 .pin-input{width:100%;padding:15px 20px;text-align:center;font-size:26px;font-weight:700;letter-spacing:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:#fff;margin-bottom:12px;font-family:var(--font);box-sizing:border-box;transition:border-color .2s,background .2s;}
 .pin-input:focus{outline:none;border-color:var(--red);background:rgba(204,0,0,0.04);}
 .pin-input::placeholder{color:rgba(255,255,255,0.12);letter-spacing:10px;font-size:18px;}
-.pin-btn{width:100%;padding:14px 20px;background:var(--red);color:#fff;border:none;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-family:var(--font);transition:background .2s,opacity .2s;}
+.pin-btn{width:100%;padding:14px 20px;background:var(--red);color:#fff;border:none;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-family:var(--font);transition:background .2s,opacity .2s;margin-bottom:0;}
 .pin-btn:hover{background:#b30000;}
 .pin-btn:active{opacity:.85;}
 .pin-err{font-size:11px;color:#ff6b6b;margin-top:12px;min-height:16px;letter-spacing:0.3px;}
 .login-footer{position:relative;z-index:2;text-align:center;padding:20px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.12);}
+
 /* App */
 #app{display:none;}
 #app.on{display:grid;grid-template-columns:210px 1fr;min-height:100vh;}
@@ -300,8 +298,19 @@ tr:nth-child(even) td{background:#FAFAFA;}
 .client-name{font-weight:600;font-size:13px;}
 .client-sub{font-size:11px;color:var(--dgray);margin-top:2px;}
 .kb-stage-select{font-size:11px;padding:2px 5px;border:1px solid var(--bdr);border-radius:4px;background:#fff;cursor:pointer;max-width:130px;}
-.admin-table{width:100%;border-collapse:collapse;font-size:13px;}.admin-table th{background:var(--lgray);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--dgray);border-bottom:2px solid var(--bdr);letter-spacing:.5px;text-transform:uppercase;}.admin-table td{padding:9px 12px;border-bottom:1px solid var(--bdr);vertical-align:middle;}.admin-table tr:hover td{background:var(--lgray);}.role-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}.role-admin{background:#2d1a1a;color:var(--red);}.role-user{background:#f0f0f0;color:#555;}.status-active{color:#27500A;font-weight:600;font-size:11px;}.status-inactive{color:#999;font-size:11px;}.log-row-fail td{color:#cc4444;}.log-ip{font-family:monospace;font-size:11px;color:var(--dgray);}
-[data-admin-hidden]{display:none}
+
+/* Admin Panel */
+.admin-table{width:100%;border-collapse:collapse;font-size:13px;}
+.admin-table th{background:var(--lgray);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--dgray);border-bottom:2px solid var(--bdr);letter-spacing:.5px;text-transform:uppercase;}
+.admin-table td{padding:9px 12px;border-bottom:1px solid var(--bdr);vertical-align:middle;}
+.admin-table tr:hover td{background:var(--lgray);}
+.role-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.role-admin{background:#2d1a1a;color:var(--red);}
+.role-user{background:#f0f0f0;color:#555;}
+.status-active{color:#27500A;font-weight:600;font-size:11px;}
+.status-inactive{color:#999;font-size:11px;}
+.log-row-fail td{color:#cc4444;}
+.log-ip{font-family:monospace;font-size:11px;color:var(--dgray);}
 </style>
 </head>
 <body>
@@ -317,14 +326,85 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="login-eyebrow">HD Hauling &amp; Grading</div>
       <div class="login-sub">Internal use only &nbsp;&middot;&nbsp; Authorized access required</div>
       <div class="login-rule"></div>
-      <input class="pin-input" id="login-username" type="text" placeholder="Username" style="font-size:14px;letter-spacing:1px;margin-bottom:10px;text-transform:lowercase;" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off" spellcheck="false"/>
-      <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="&bull;&bull;&bull;&bull;" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off"/>
+      <input class="pin-input" id="login-username" type="text" placeholder="Username"
+             style="font-size:14px;letter-spacing:1px;margin-bottom:10px;text-transform:lowercase;"
+             onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off" spellcheck="false"/>
+      <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="&bull;&bull;&bull;&bull;"
+             onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off"/>
       <button class="pin-btn" onclick="doLogin()">Access Tool</button>
       <div class="pin-err" id="pin-err"></div>
     </div>
   </div>
   <div class="login-footer">Confidential &nbsp;&middot;&nbsp; Not for distribution</div>
-</div><!-- APP -->
+</div>
+
+
+  <!-- ADMIN PANEL -->
+  <div class="panel" id="admin-panel">
+    <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--bdr);">
+      <button class="admin-tab active" id="tab-users" onclick="switchAdminTab('users')" style="padding:8px 20px;border:none;background:none;font-weight:600;font-size:13px;border-bottom:2px solid var(--red);margin-bottom:-2px;cursor:pointer;color:var(--red);">Users</button>
+      <button class="admin-tab" id="tab-logs" onclick="switchAdminTab('logs')" style="padding:8px 20px;border:none;background:none;font-weight:600;font-size:13px;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;color:var(--dgray);">Activity Log</button>
+    </div>
+
+    <!-- USERS TAB -->
+    <div id="admin-users-tab">
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Users</span>
+          <button class="btn btn-red btn-sm" onclick="openAddUserModal()">+ Add User</button>
+        </div>
+        <div class="card-body" id="admin-users-list"><p style="color:var(--dgray);font-size:13px;">Loading...</p></div>
+      </div>
+    </div>
+
+    <!-- LOGS TAB -->
+    <div id="admin-logs-tab" style="display:none;">
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Activity Log</span>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="log-user-filter" onchange="loadLogs()" style="font-size:12px;padding:4px 8px;border-radius:4px;border:1px solid var(--bdr);">
+              <option value="">All Users</option>
+            </select>
+            <button class="btn btn-sec btn-sm" onclick="loadLogs()">Refresh</button>
+          </div>
+        </div>
+        <div class="card-body" id="admin-logs-list"><p style="color:var(--dgray);font-size:13px;">Loading...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD USER MODAL -->
+  <div class="modal-overlay hidden" id="add-user-modal">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-hdr">
+        <h3 id="add-user-title">Add User</h3>
+        <button class="btn-ico" onclick="closeAddUserModal()" style="font-size:18px;">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-user-id" value=""/>
+        <label>Full Name</label>
+        <input type="text" id="new-user-fullname" placeholder="e.g. John Smith" style="margin-bottom:10px;"/>
+        <label>Username</label>
+        <input type="text" id="new-user-username" placeholder="e.g. jsmith" style="margin-bottom:10px;text-transform:lowercase;" oninput="this.value=this.value.toLowerCase()"/>
+        <label>PIN <span id="pin-hint" style="font-size:11px;color:var(--dgray);">(4-8 digits)</span></label>
+        <input type="password" id="new-user-pin" placeholder="Set a PIN" maxlength="8" style="margin-bottom:10px;letter-spacing:4px;"/>
+        <label>Role</label>
+        <select id="new-user-role" style="margin-bottom:10px;">
+          <option value="user">Standard User</option>
+          <option value="admin">Admin</option>
+        </select>
+        <div id="add-user-err" style="color:var(--red);font-size:12px;min-height:16px;"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-sec btn-sm" onclick="closeAddUserModal()">Cancel</button>
+        <button class="btn btn-red btn-sm" onclick="saveUser()">Save User</button>
+      </div>
+    </div>
+  </div>
+
+  
+<!-- APP -->
 <!-- Mobile top bar -->
 <div class="mobile-bar" id="mobile-bar" style="display:none;">
   <button class="mob-menu-btn" onclick="toggleMobileNav()" aria-label="Menu">
@@ -361,10 +441,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" onclick="showPanel('settings',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings
       </div>
-      <div class="nav-item admin-only" id="nav-admin" data-admin-hidden onclick="showPanel('admin',this);loadUsers();loadLogs();">
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg>
-        Admin
-      </div>
+    <div class="nav-item" id="nav-admin" onclick="showPanel('admin',this);loadUsers();loadLogs();" style="display:none;">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2.5 14.5s-.5 0-.5-.5c0-1.5 1.5-4 6-4s6 2.5 6 4c0 .5-.5.5-.5.5h-11z"/></svg>
+      Admin
+    </div>
     </nav>
     <div class="sb-foot"><button onclick="doLogout()">Sign out</button></div>
   </aside>
@@ -411,7 +491,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div><label>Contingency %</label><input id="contingency" type="number" value="0" min="0" max="50" step="0.5" title="Applied to total bid as a separate line item on the proposal"/></div>
             <div><label>Mobilization / Flat Fee ($)</label><input id="mob" type="number" value="0" min="0" step="50"/></div>
               
-              <div><label>Project Notes</label><textarea id="proj-notes" rows="3" placeholder="Notes for the proposal..." style="resize:vertical;font-family:inherit;font-size:13px;">All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice.</textarea></div>
+              <div><label>Project Notes</label><input id="proj-notes" type="text" placeholder="Notes for the proposal..."/></div>
             </div>
             <div style="margin-top:10px;">
               <div class="mat-indicator" id="mat-indicator" onclick="showPanel('settings',document.querySelectorAll('.nav-item')[2])">
@@ -704,35 +784,110 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
       </div>
 
-
-      <div class="panel" id="panel-admin">
+      <!-- ADMIN PANEL -->
+<div class="panel" id="panel-admin">
   <div class="card">
-    <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">User Management</span><button class="btn btn-red btn-sm" onclick="openAddUserModal()">+ Add User</button></div>
-    <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
+    <div class="card-hdr" style="display:flex;align-items:center;gap:16px;">
+      <span class="card-title">User Management</span>
+      <button class="btn btn-red btn-sm" onclick="openAddUserModal()">+ Add User</button>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <div id="users-table-wrap" style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead>
+          <tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
   </div>
+
   <div class="card" style="margin-top:16px;">
-    <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">Activity Log</span><select id="log-user-filter" onchange="loadLogs()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:12px;"><option value="">All Users</option></select><button class="btn btn-sec btn-sm" onclick="loadLogs()">Refresh</button></div>
-    <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Result</th><th>IP Address</th></tr></thead><tbody id="logs-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
+    <div class="card-hdr" style="display:flex;align-items:center;gap:16px;">
+      <span class="card-title">Activity Log</span>
+      <select id="log-user-filter" class="btn btn-sec btn-sm" style="padding:4px 8px;" onchange="loadLogs()">
+        <option value="">All Users</option>
+      </select>
+      <button class="btn btn-sec btn-sm" onclick="loadLogs()">Refresh</button>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Result</th><th>IP Address</th></tr></thead>
+          <tbody id="logs-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
+
+<!-- Add/Edit User Modal -->
 <div class="modal-overlay hidden" id="user-modal">
   <div class="modal" style="max-width:420px;">
-    <div class="modal-hdr"><h3 id="user-modal-title">Add User</h3><button class="btn-ico" onclick="closeUserModal()" style="font-size:18px;">&#10005;</button></div>
+    <div class="modal-hdr">
+      <h3 id="user-modal-title">Add User</h3>
+      <button class="btn-ico" onclick="closeUserModal()" style="font-size:18px;">&#10005;</button>
+    </div>
     <div class="modal-body">
-      <label>Full Name</label><input type="text" id="edit-full-name" placeholder="e.g. John Smith"/>
-      <label>Username <span style="font-size:11px;color:var(--dgray);">(lowercase, no spaces)</span></label><input type="text" id="edit-username" placeholder="e.g. jsmith" style="text-transform:lowercase;"/>
-      <label>PIN <span id="pin-hint" style="font-size:11px;color:var(--dgray);">(4-8 digits)</span></label><input type="password" id="edit-pin" placeholder="Enter PIN" maxlength="8"/>
-      <label>Role</label><select id="edit-role"><option value="user">Standard User</option><option value="admin">Admin</option></select>
+      <input type="hidden" id="edit-user-id"/>
+      <label>Full Name</label>
+      <input type="text" id="edit-full-name" placeholder="e.g. John Smith"/>
+      <label>Username <span style="font-size:11px;color:var(--dgray);">(lowercase, no spaces)</span></label>
+      <input type="text" id="edit-username" placeholder="e.g. jsmith" style="text-transform:lowercase;"/>
+      <label>PIN <span id="pin-hint" style="font-size:11px;color:var(--dgray);">(4-8 digits)</span></label>
+      <input type="password" id="edit-pin" placeholder="Enter PIN" maxlength="8"/>
+      <label>Role</label>
+      <select id="edit-role">
+        <option value="user">Standard User</option>
+        <option value="admin">Admin</option>
+      </select>
       <div id="user-modal-err" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
     </div>
-    <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeUserModal()">Cancel</button><button class="btn btn-red btn-sm" onclick="saveUser()">Save User</button></div>
+    <div class="modal-foot">
+      <button class="btn btn-sec btn-sm" onclick="closeUserModal()">Cancel</button>
+      <button class="btn btn-red btn-sm" onclick="saveUser()">Save User</button>
+    </div>
   </div>
 </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 
 <!-- Email Modal -->
-<div class="modal-overlay hidden" id="email-modal"><div class="modal" style="max-width:560px;"><div class="modal-hdr"><h3>Email Proposal</h3><button class="btn-ico" onclick="closeEmailModal()" style="font-size:18px;">&#10005;</button></div><div class="modal-body"><div style="background:#f0f7ff;border:1px solid #c0d8f0;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1a4a7a;"><b>How to send:</b> Copy subject &amp; body, open Gmail, paste, attach PDF, send.</div><label style="display:flex;align-items:center;justify-content:space-between;">Subject <button class="btn btn-sec btn-sm" onclick="copyEmailField('email-subject')" style="font-size:10px;padding:2px 8px;">Copy</button></label><input type="text" id="email-subject" style="margin-bottom:10px;"/><label style="display:flex;align-items:center;justify-content:space-between;">Email Body <button class="btn btn-sec btn-sm" onclick="copyEmailField('email-body')" style="font-size:10px;padding:2px 8px;">Copy</button></label><textarea id="email-body" style="min-height:200px;font-size:12px;line-height:1.5;"></textarea><div id="email-status" style="font-size:12px;margin-top:6px;min-height:16px;color:#27500A;"></div></div><div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeEmailModal()">Close</button><button class="btn btn-sec btn-sm" onclick="copyEmailAll()">Copy All</button><button class="btn btn-red btn-sm" onclick="exportPDF();closeEmailModal();">Export PDF</button></div></div></div>
+<div class="modal-overlay hidden" id="email-modal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-hdr">
+      <h3>Email Proposal</h3>
+      <button class="btn-ico" onclick="closeEmailModal()" style="font-size:18px;">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#f0f7ff;border:1px solid #c0d8f0;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1a4a7a;">
+        <b>How to send:</b> Copy the subject &amp; body below &rarr; open Gmail &rarr; paste &rarr; attach the PDF (Export PDF button) &rarr; send.
+      </div>
+      <label style="display:flex;align-items:center;justify-content:space-between;">
+        Subject
+        <button class="btn btn-sec btn-sm" onclick="copyEmailField('email-subject')" style="font-size:10px;padding:2px 8px;">Copy</button>
+      </label>
+      <input type="text" id="email-subject" style="margin-bottom:10px;"/>
+      <label style="display:flex;align-items:center;justify-content:space-between;">
+        Email Body
+        <button class="btn btn-sec btn-sm" onclick="copyEmailField('email-body')" style="font-size:10px;padding:2px 8px;">Copy</button>
+      </label>
+      <textarea id="email-body" style="min-height:220px;font-size:12px;line-height:1.5;"></textarea>
+      <div id="email-status" style="font-size:12px;margin-top:6px;min-height:16px;color:#27500A;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-sec btn-sm" onclick="closeEmailModal()">Close</button>
+      <button class="btn btn-sec btn-sm" onclick="copyEmailAll()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 4h8v10H4zm2-2h8v10"/></svg>
+        Copy All
+      </button>
+      <button class="btn btn-red btn-sm" onclick="exportPDF();closeEmailModal();">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1z"/></svg>
+        Export PDF
+      </button>
+    </div>
+  </div>
+</div>
 
 </div><!-- /app -->
 
@@ -801,32 +956,43 @@ async function doLogin(){
   document.getElementById('pin-err').textContent='';
   var username=(document.getElementById('login-username')?document.getElementById('login-username').value.trim().toLowerCase():'');
   var pin=document.getElementById('pin-inp').value;
-  var btn=document.querySelector('.pin-btn');
-  if(btn){btn.disabled=true;btn.textContent='Checking...';}
-  if(!username){document.getElementById('pin-err').textContent='Please enter your username.';if(btn){btn.disabled=false;btn.textContent='Access Tool';}return;}
+  if(!username){document.getElementById('pin-err').textContent='Please enter your username.';return;}
   try{
     var r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:username,pin:pin})});
     var d=await r.json();
     if(d.ok){
-      window._userRole=d.role||'user';
-      window._userName=d.full_name||username;
-      window._userUsername=d.username||username;
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
-      try{boot();}catch(e){console.warn('boot error:',e.message);}
-      showAdminElements();
-    } else {
-      document.getElementById('pin-err').textContent=d.error||'Incorrect username or PIN.';
-      document.getElementById('pin-inp').value='';
+      window._userRole=d.role||'user';
+      window._userFullName=d.full_name||'';
+      window._username=d.username||'';
+      updateUserDisplay();
+      boot();
     }
+    else{document.getElementById('pin-err').textContent='Incorrect PIN.';document.getElementById('pin-inp').value='';}
   }catch(e){document.getElementById('pin-err').textContent='Connection error. Try again.';}
-  finally{if(btn){btn.disabled=false;btn.textContent='Access Tool';}}
 }
-
-
-function showAdminElements(){
-  if(window._userRole==='admin'){document.querySelectorAll('[data-admin-hidden]').forEach(function(el){el.removeAttribute('data-admin-hidden');});}
+async function doLogout(){
+  await fetch('/auth/logout',{method:'POST'});
+  location.reload();
 }
+(async function(){
+  try{
+    var r=await fetch('/auth/check');
+    var d=await r.json();
+    if(d.authenticated){
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').className='on';
+      window._userRole=d.role||'user';
+      window._userFullName=d.full_name||'';
+      window._username=d.username||'';
+      updateUserDisplay();
+      boot();
+    }
+  }catch(e){}
+})();
+
+// -- Boot ----------------------------------------------------------------------
 function boot(){
   loadStorage();
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
@@ -845,13 +1011,12 @@ function boot(){
   updateMatIndicator();
   checkMobile();
   renderTopbar('build');
-  
+  // Show admin-only elements if admin
+  if(window._userRole==='admin'){document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='block';});}
   document.addEventListener('click',function(e){
     if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))
       document.getElementById('client-sug').style.display='none';
   });
-  // Show admin-only elements if admin
-  showAdminElements();
 }
 
 // -- Storage -------------------------------------------------------------------
@@ -880,512 +1045,32 @@ function cont(){var el=document.getElementById('contingency');return el?parseFlo
 function mu(m,b){return m>0?((b-m)/m*100):0;}
 function fi(n){return Math.round(n).toLocaleString();}
 function f2(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function toast(msg,type){
-  var t=document.getElementById('toast');
-  t.textContent=msg;t.className='toast '+(type==='ok'?'ok':type==='err'?'err':'');
-  setTimeout(function(){t.classList.add('on');},10);
-  setTimeout(function(){t.classList.remove('on');},3500);
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}\nfunction toast(msg,type){\n  var t=document.getElementById('toast');\n  t.textContent=msg;t.className='toast '+(type==='ok'?'ok':type==='err'?'err':'');\n  setTimeout(function(){t.classList.add('on');},10);\n  setTimeout(function(){t.classList.remove('on');},3500);\n}\n\n\n// -- Email --------------------------------------------------------------------\nfunction openEmailModal(){
+  var p=buildPayload();
+  var client=document.getElementById('proj-client').value||'';
+  var firstName=client.split(' ')[0]||client;
+  var addr=[p.address,p.city_state].filter(Boolean).join(', ');
+  var total=p.total?'$'+Math.round(p.total).toLocaleString():'';
+  var nl=String.fromCharCode(10);
+  document.getElementById('email-subject').value='HD Hauling & Grading - Paving Proposal: '+(p.project_name||'Project');
+  var body=(firstName||'Hello')+','+nl+nl
+    +'Thank you for the opportunity to work with you. Please find attached our Paving Proposal '
+    +'and Contract for '+(p.project_name||'your project')
+    +(addr?' located at '+addr:'')+'.'+nl+nl
+    +'Total Bid Price: '+total+nl+nl
+    +'Please review the attached proposal, including the Terms and Conditions, at your earliest '
+    +'convenience. This proposal is valid for thirty (30) days from the date of issuance.'+nl+nl
+    +'To move forward, please sign and return the attached contract or reach out with any '
+    +'questions. We look forward to working with you.'+nl+nl
+    +'Best regards,'+nl
+    +(sender.name||'HD Hauling & Grading')+nl
+    +(sender.phone?sender.phone+nl:'')
+    +(sender.email?sender.email:'');
+  document.getElementById('email-body').value=body;
+  document.getElementById('email-status').textContent='';
+  document.getElementById('email-modal').classList.remove('hidden');
+  setTimeout(function(){document.getElementById('email-body').focus();},100);
 }
-
-
-// -- Email --------------------------------------------------------------------
-function openEmailModal(){var p=buildPayload(),c=document.getElementById('proj-client').value||'',fn=c.split(' ')[0]||c,addr=[p.address,p.city_state].filter(Boolean).join(', '),tot=p.total?'$'+Math.round(p.total).toLocaleString():'',nl=String.fromCharCode(10);document.getElementById('email-subject').value='HD Hauling & Grading - Paving Proposal: '+(p.project_name||'Project');document.getElementById('email-body').value=(fn||'Hello')+','+nl+nl+'Thank you for the opportunity to work with you. Please find attached our Paving Proposal and Contract for '+(p.project_name||'your project')+(addr?' located at '+addr:'')+'.'+nl+nl+'Total Bid Price: '+tot+nl+nl+'Please review the attached proposal, including the Terms and Conditions, at your earliest convenience. This proposal is valid for thirty (30) days from the date of issuance.'+nl+nl+'To move forward, please sign and return the attached contract or reach out with any questions. We look forward to working with you.'+nl+nl+'Best regards,'+nl+(sender.name||'HD Hauling & Grading')+nl+(sender.phone?sender.phone+nl:'')+(sender.email?sender.email:'');document.getElementById('email-status').textContent='';document.getElementById('email-modal').classList.remove('hidden');setTimeout(function(){document.getElementById('email-body').focus();},100);}
-function closeEmailModal(){
-  document.getElementById('email-modal').classList.add('hidden');
-}
-
-function copyEmailField(id){var el=document.getElementById(id);if(!el)return;el.select();try{document.execCommand('copy');}catch(e){}var st=document.getElementById('email-status');if(st){st.textContent=(id==='email-subject'?'Subject':'Body')+' copied!';setTimeout(function(){st.textContent='';},2000);}}
-function copyEmailAll(){var nl=String.fromCharCode(10),all='Subject: '+document.getElementById('email-subject').value+nl+nl+document.getElementById('email-body').value;try{navigator.clipboard.writeText(all).then(function(){var st=document.getElementById('email-status');if(st){st.textContent='Copied!';setTimeout(function(){st.textContent='';},2000);}});}catch(e){var ta=document.createElement('textarea');ta.value=all;ta.style.cssText='position:fixed;opacity:0;';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);var st=document.getElementById('email-status');if(st){st.textContent='Copied!';setTimeout(function(){st.textContent='';},2000);}}}
-// Close modal on overlay click
-document.addEventListener('click', function(e){
-  if(e.target.id === 'email-modal') closeEmailModal();
-});
-// -- Panel nav -----------------------------------------------------------------
-
-
-function safeId(s){return s.split('').filter(function(c){return (c>='a'&&c<='z')||(c>='A'&&c<='Z');}).join('');}
-
-
-// ---- Job Costing (#10 extension) ----
-function loadJCDefaults(){
-  try{
-    var s=localStorage.getItem('hd_jc_defaults');
-    if(s){var d=JSON.parse(s);jcCrewRate=d.crew_rate||JC_CREW_RATE_DEFAULT;jcOverheadPct=d.overhead_pct||JC_OVERHEAD_PCT_DEFAULT;if(d.productivity)productivity=d.productivity;}
-  }catch(e){}
-}
-
-function saveJCDefaults(){
-  var cr=parseFloat(document.getElementById('jc-default-crew-rate')?document.getElementById('jc-default-crew-rate').value:jcCrewRate)||jcCrewRate;
-  var op=parseFloat(document.getElementById('jc-default-overhead-pct')?document.getElementById('jc-default-overhead-pct').value:jcOverheadPct)||jcOverheadPct;
-  jcCrewRate=cr; jcOverheadPct=op;
-  var pr=parseFloat(document.getElementById('jc-default-productivity')?document.getElementById('jc-default-productivity').value:PRODUCTIVITY_DEFAULT)||PRODUCTIVITY_DEFAULT;productivity=pr;
-  try{localStorage.setItem('hd_jc_defaults',JSON.stringify({crew_rate:cr,overhead_pct:op,productivity:productivity}));}catch(e){}
-  renderJCDefaults();
-  var ind=document.getElementById('jc-settings-indicator');
-  if(ind){ind.textContent='Saved.';setTimeout(function(){ind.textContent='';},2000);}
-}
-
-function resetJCDefaults(){
-  jcCrewRate=JC_CREW_RATE_DEFAULT; jcOverheadPct=JC_OVERHEAD_PCT_DEFAULT; jcProductivity=JC_PRODUCTIVITY_DEFAULT;
-  try{localStorage.removeItem('hd_jc_defaults');}catch(e){}
-  renderJCDefaults();
-}
-
-function renderJCDefaults(){
-  var cr=document.getElementById('jc-default-crew-rate');if(cr)cr.value=jcCrewRate;
-  var op=document.getElementById('jc-default-overhead-pct');if(op)op.value=jcOverheadPct;
-  var pr=document.getElementById('jc-default-jcProductivity');if(pr)pr.value=jcProductivity;
-  var prEl=document.getElementById('jc-default-jcProductivity');if(prEl)prEl.value=jcProductivity;
-  // Also update the build panel fields if they are at default
-  var bcr=document.getElementById('jc-crew-rate');if(bcr)bcr.value=jcCrewRate;
-  var bop=document.getElementById('jc-overhead-pct');if(bop)bop.value=jcOverheadPct;
-}
-
-function calcJobCost(){
-  // Get material cost from recalc global
-  var matCost = typeof gM !== 'undefined' ? gM : 0;
-  // Get labor cost
-  var crewRate=parseFloat(document.getElementById('jc-crew-rate')?document.getElementById('jc-crew-rate').value:0)||0;
-  var days=parseFloat(document.getElementById('jc-days')?document.getElementById('jc-days').value:0)||0;
-  var laborCost=crewRate*days;
-  // Overhead
-  var ovhPct=parseFloat(document.getElementById('jc-overhead-pct')?document.getElementById('jc-overhead-pct').value:jcOverheadPct)||0;
-  var subtotal=matCost+laborCost;
-  var overhead=subtotal*(ovhPct/100);
-  var totalCost=subtotal+overhead;
-  // Bid price
-  var bidPrice = typeof total !== 'undefined' ? total : 0;
-  var bidEl=document.getElementById('m-bid');
-  if(bidEl&&bidEl.textContent&&bidEl.textContent!=='--'){
-    var v=parseFloat(bidEl.textContent.replace(/[$,]/g,''));
-    if(!isNaN(v)) bidPrice=v;
-  }
-  var marginDollar=bidPrice>0?bidPrice-totalCost:null;
-  var marginPct=bidPrice>0&&totalCost>0?((bidPrice-totalCost)/bidPrice*100):null;
-  return {matCost:matCost,laborCost:laborCost,overhead:overhead,ovhPct:ovhPct,totalCost:totalCost,bidPrice:bidPrice,marginDollar:marginDollar,marginPct:marginPct};
-}
-
-function renderJobCost(){
-  var jc=calcJobCost();
-  var g=function(id){return document.getElementById(id);};
-  if(g('jcs-mat'))g('jcs-mat').textContent=jc.matCost>0?'$'+fi(jc.matCost):'-';
-  if(g('jcs-labor'))g('jcs-labor').textContent=jc.laborCost>0?'$'+fi(jc.laborCost):'-';
-  if(g('jcs-ovh-pct'))g('jcs-ovh-pct').textContent=jc.ovhPct.toFixed(0);
-  if(g('jcs-overhead'))g('jcs-overhead').textContent=jc.overhead>0?'$'+fi(jc.overhead):'-';
-  if(g('jcs-total-cost'))g('jcs-total-cost').textContent=jc.totalCost>0?'$'+fi(jc.totalCost):'-';
-  if(g('jcs-bid'))g('jcs-bid').textContent=jc.bidPrice>0?'$'+fi(jc.bidPrice):'-';
-  var mc = jc.marginPct!==null?(jc.marginPct>=30?'m-green':jc.marginPct>=15?'m-yellow':'m-red'):'';
-  var mText = jc.marginPct!==null?('$'+fi(jc.marginDollar)+' ('+jc.marginPct.toFixed(1)+'%)'):'-';
-  if(g('jcs-margin')){g('jcs-margin').textContent=mText;g('jcs-margin').className=mc;}
-  if(g('jc-margin-badge')){
-    g('jc-margin-badge').textContent=jc.marginPct!==null?jc.marginPct.toFixed(1)+'% margin':'';
-    g('jc-margin-badge').className=mc;
-  }
-  return jc;
-}
-
-async function exportJobCostPDF(){
-  var jc=calcJobCost();
-  var projName=document.getElementById('proj-name')?document.getElementById('proj-name').value:'Project';
-  var client=document.getElementById('proj-client')?document.getElementById('proj-client').value:'';
-  var date=document.getElementById('proj-date')?document.getElementById('proj-date').value:'';
-  var fmtDate=date?(function(){var p=date.split('-');return p[1]+'/'+p[2]+'/'+p[0];})():'';
-  var payload={
-    project_name:projName, client_name:client, date:fmtDate,
-    mat_cost:jc.matCost, labor_cost:jc.laborCost,
-    overhead_pct:jc.ovhPct, overhead:jc.overhead, total_cost:jc.totalCost,
-    bid_price:jc.bidPrice, margin_dollar:jc.marginDollar, margin_pct:jc.marginPct,
-    sender_name:sender.name, sender_phone:sender.phone, sender_email:sender.email
-  };
-  var btn=document.querySelector('[onclick="exportJobCostPDF()"]');
-  if(btn){btn.textContent='Generating...';btn.disabled=true;}
-  try{
-    var r=await fetch('/generate-jc-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(!r.ok){var e=await r.json().catch(function(){return {};});throw new Error(e.error||r.status);}
-    var blob=await r.blob();
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.href=url;a.download='HD_JobCost_'+projName.replace(/\s+/g,'_')+'.pdf';
-    a.click();URL.revokeObjectURL(url);
-  }catch(e){alert('Error: '+e.message);}
-  if(btn){btn.textContent='Export Job Cost PDF';btn.disabled=false;}
-}
-
-function initJobCost(){
-  loadJCDefaults();
-  renderJCDefaults();
-  var jcDaysEl=document.getElementById('jc-days');
-  if(jcDaysEl)jcDaysEl.addEventListener('input',function(){renderJobCost();});
-  var jcCrEl=document.getElementById('jc-crew-rate');
-  if(jcCrEl)jcCrEl.addEventListener('input',function(){jcCrEl._edited=true;renderJobCost();});
-  var jcOpEl=document.getElementById('jc-overhead-pct');
-  if(jcOpEl)jcOpEl.addEventListener('input',function(){jcOpEl._edited=true;renderJobCost();});
-}
-
-
-
-// ---- Multi-Phase Bidding (#14) ----
-function toggleMultiPhase(){
-  multiPhase=!multiPhase;
-  var btn=document.getElementById('phase-toggle-btn');
-  var bar=document.getElementById('phase-tabs-bar');
-  if(multiPhase){
-    phases[0].sections=sections.slice();phases[0].concItems=concItems.slice();
-    phases[0].extraItems=extraItems.slice();
-    if(btn)btn.textContent=phases.length+' Phases';
-    if(bar)bar.style.display='block';
-    renderPhaseTabs();
-    var mc=document.getElementById('m-phase-card');if(mc)mc.style.display='';
-  } else {
-    sections=phases[activePhaseIdx].sections;
-    concItems=phases[activePhaseIdx].concItems;
-    extraItems=phases[activePhaseIdx].extraItems;
-    if(btn)btn.textContent='1 Phase';
-    if(bar)bar.style.display='none';
-    var mc=document.getElementById('m-phase-card');if(mc)mc.style.display='none';
-  }
-  renderAll();renderConc();renderExtra();recalc();
-}
-function addPhase(){
-  var n=phases.length+1;
-  phases.push({id:phaseSid++,name:'Phase '+n,sections:[],concItems:[],extraItems:[]});
-  var btn=document.getElementById('phase-toggle-btn');
-  if(btn)btn.textContent=phases.length+' Phases';
-  renderPhaseTabs();switchPhase(phases.length-1);
-}
-function switchPhase(idx){
-  phases[activePhaseIdx].sections=sections.slice();
-  phases[activePhaseIdx].concItems=concItems.slice();
-  phases[activePhaseIdx].extraItems=extraItems.slice();
-  activePhaseIdx=idx;
-  sections=phases[idx].sections;concItems=phases[idx].concItems;
-  extraItems=phases[idx].extraItems;
-  renderPhaseTabs();renderAll();renderConc();renderExtra();recalc();
-}
-function renamePhase(idx,n){
-  phases[idx].name=n||('Phase '+(idx+1));
-  renderPhaseTabs();updatePhaseMetric();
-}
-function removePhase(idx){
-  if(phases.length<=1){toast('Need at least one phase','err');return;}
-  phases.splice(idx,1);
-  if(activePhaseIdx>=phases.length)activePhaseIdx=phases.length-1;
-  sections=phases[activePhaseIdx].sections;
-  concItems=phases[activePhaseIdx].concItems;
-  extraItems=phases[activePhaseIdx].extraItems;
-  var btn=document.getElementById('phase-toggle-btn');
-  if(btn)btn.textContent=phases.length+' Phases';
-  renderPhaseTabs();renderAll();renderConc();renderExtra();recalc();
-}
-function renderPhaseTabs(){
-  var c=document.getElementById('phase-tabs');if(!c)return;c.innerHTML='';
-  phases.forEach(function(ph,i){
-    var tab=document.createElement('div');
-    tab.className='phase-tab'+(i===activePhaseIdx?' on':'');
-    var ni=document.createElement('input');
-    ni.type='text';ni.value=ph.name;ni.className='phase-tab-name';
-    ni.style.cssText='width:'+Math.max(60,ph.name.length*8)+'px;';
-    ni.addEventListener('click',function(e){e.stopPropagation();});
-    (function(j){ni.addEventListener('change',function(){renamePhase(j,this.value);});})(i);
-    tab.appendChild(ni);
-    if(phases.length>1){
-      var rem=document.createElement('span');
-      rem.textContent='x';
-      rem.style.cssText='cursor:pointer;opacity:.7;font-size:13px;margin-left:3px;';
-      (function(j){rem.addEventListener('click',function(e){e.stopPropagation();removePhase(j);});})(i);
-      tab.appendChild(rem);
-    }
-    (function(j){tab.addEventListener('click',function(){switchPhase(j);});})(i);
-    c.appendChild(tab);
-  });
-}
-function updatePhaseMetric(){
-  if(!multiPhase)return;
-  var lbl=document.getElementById('m-phase-lbl');
-  if(lbl)lbl.textContent=phases[activePhaseIdx].name;
-}
-
-// ---- Mobile / Responsive (#15) ----
-var isMobile = false;
-
-function checkMobile() {
-  isMobile = window.innerWidth <= 768;
-  var bar = document.getElementById('mobile-bar');
-  if (bar) bar.style.display = isMobile ? 'flex' : 'none';
-}
-
-function toggleMobileNav() {
-  document.querySelector('.sb').classList.toggle('open');
-  document.getElementById('sb-backdrop').classList.toggle('open');
-}
-
-function closeMobileNav() {
-  document.querySelector('.sb').classList.remove('open');
-  document.getElementById('sb-backdrop').classList.remove('open');
-}
-
-function updateMobTitle(title) {
-  var el = document.getElementById('mob-title');
-  if (el) el.textContent = title;
-  // Update action button based on panel
-  var btn = document.getElementById('mob-pdf-btn');
-  if (btn) {
-    if (title === 'Change Orders') {
-      btn.textContent = 'CO PDF';
-      btn.onclick = exportCOPDF;
-    } else if (title === 'Analytics') {
-      btn.textContent = 'Refresh';
-      btn.onclick = renderAnalytics;
-    } else if (title === 'Saved Proposals') {
-      btn.style.display = 'none';
-    } else if (title === 'Settings') {
-      btn.style.display = 'none';
-    } else {
-      btn.textContent = 'Export PDF';
-      btn.onclick = exportPDF;
-      btn.style.display = '';
-    }
-  }
-}
-
-window.addEventListener('resize', checkMobile);
-
-// ---- Analytics (#10) ----
-function marginClass(pct){
-  if(pct===null) return 'm-na';
-  if(pct>=30) return 'm-green';
-  if(pct>=15) return 'm-yellow';
-  return 'm-red';
-}
-
-function renderAnalytics(){
-  var tbody=document.getElementById('analytics-tbody');
-  var summary=document.getElementById('analytics-summary');
-  var emptyMsg=document.getElementById('analytics-empty');
-  if(!tbody||!summary) return;
-  var quotes=[];
-  if(typeof savedQuotes!=='undefined'&&savedQuotes.length) quotes=savedQuotes;
-  // quotes loaded from server via renderSaved
-  tbody.innerHTML=''; summary.innerHTML='';
-  if(!quotes.length){
-    if(emptyMsg)emptyMsg.style.display='block';
-    summary.innerHTML='<div class="a-card"><div class="a-card-lbl">Total Proposals</div><div class="a-card-val">0</div><div class="a-card-sub">none saved yet</div></div>';
-    return;
-  }
-  if(emptyMsg)emptyMsg.style.display='none';
-  var totalBid=0,highestMargin=null,lowestMargin=null,highestJob='',lowestJob='';
-  quotes.forEach(function(q){
-    var bid=parseFloat(q.total)||0;
-    totalBid+=bid;
-    var jcTC=0;
-    try{var sn=typeof q.snap==='string'?JSON.parse(q.snap):q.snap;
-      if(sn&&sn.jc_total_cost&&parseFloat(sn.jc_total_cost)>0)jcTC=parseFloat(sn.jc_total_cost);
-    }catch(e){}
-    var mDollar=jcTC>0?bid-jcTC:null;
-    var mPct=jcTC>0&&bid>0?((bid-jcTC)/bid*100):null;
-    if(mPct!==null){
-      if(highestMargin===null||mPct>highestMargin){highestMargin=mPct;highestJob=q.name||'';}
-      if(lowestMargin===null||mPct<lowestMargin){lowestMargin=mPct;lowestJob=q.name||'';}
-    }
-    var tr=document.createElement('tr');tr.style.borderBottom='1px solid var(--bdr)';
-    var mc=marginClass(mPct);
-    [{v:q.name||'-',a:'left'},{v:q.client||'-',a:'left'},{v:q.date||'-',a:'left'},
-     {v:'$'+Math.round(bid).toLocaleString(),a:'right'},
-     {v:mDollar!==null?'$'+Math.round(mDollar).toLocaleString():'-',a:'right',c:mc},
-     {v:mPct!==null?mPct.toFixed(1)+'%':'-',a:'right',c:mc}
-    ].forEach(function(cell){
-      var td=document.createElement('td');td.style.cssText='padding:8px 12px;text-align:'+cell.a+';';
-      if(cell.c)td.className=cell.c;td.textContent=cell.v;tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-  var avgBid=quotes.length?totalBid/quotes.length:0;
-  var avgMargin=null;
-  [{lbl:'Total Proposals',val:quotes.length,sub:'saved in tool'},
-   {lbl:'Avg Bid Price',val:'$'+Math.round(avgBid).toLocaleString(),sub:'across all saved'},
-   {lbl:'Avg Job Margin',val:'See rows below',sub:'based on job cost data'},
-   {lbl:'Highest Margin',val:highestMargin!==null?highestMargin.toFixed(1)+'%':'N/A',sub:highestJob||'no data',cls:marginClass(highestMargin)}
-  ].forEach(function(card){
-    var div=document.createElement('div');div.className='a-card';
-    var lbl=document.createElement('div');lbl.className='a-card-lbl';lbl.textContent=card.lbl;
-    var val=document.createElement('div');val.className='a-card-val';if(card.cls)val.className+=' '+card.cls;val.textContent=card.val;
-    var sub=document.createElement('div');sub.className='a-card-sub';sub.textContent=card.sub;
-    div.appendChild(lbl);div.appendChild(val);div.appendChild(sub);summary.appendChild(div);
-  });
-}
-
-
-// ---- Change Orders ----
-var coLines = [];
-
-function addCOLine(type){
-  var id = Date.now();
-  coLines.push({id:id,type:type,desc:'',qty:1,unit:'LS',price:0});
-  renderCOLines();
-}
-
-function removeCOLine(id){
-  coLines = coLines.filter(function(l){return l.id!==id;});
-  renderCOLines();
-}
-
-function renderCOLines(){
-  var tbody = document.getElementById('co-lines');
-  if(!tbody) return;
-  tbody.innerHTML = '';
-  if(!coLines.length){
-    var empty = document.createElement('tr');
-    empty.innerHTML = '<td colspan="7" style="padding:16px;text-align:center;color:var(--dgray);">No line items yet. Use Add, Deduct, or No Cost above.</td>';
-    tbody.appendChild(empty);
-    recalcCO();
-    return;
-  }
-  coLines.forEach(function(line){
-    var tr = document.createElement('tr');
-    tr.style.borderBottom = '1px solid var(--bdr)';
-    var typeLabel = line.type==='add'?'Add':line.type==='deduct'?'Deduct':'No Cost';
-    var typeClass = 'co-type-'+line.type;
-    var sub = line.type==='nocost'?'--':'$'+(((parseFloat(line.qty)||1)*(parseFloat(line.price)||0)).toFixed(2));
-    var lid = line.id;
-    var td0=document.createElement('td'); td0.style.cssText='padding:6px 12px;';
-    var sp=document.createElement('span'); sp.className=typeClass; sp.textContent=typeLabel;
-    td0.appendChild(sp); tr.appendChild(td0);
-    var td1=document.createElement('td'); td1.style.cssText='padding:6px 8px;';
-    var inp1=document.createElement('input'); inp1.style.cssText='width:100%;min-width:180px;';
-    inp1.value=line.desc||''; inp1.placeholder='Description';
-    inp1.addEventListener('change',function(){updateCOLine(lid,'desc',this.value);});
-    td1.appendChild(inp1); tr.appendChild(td1);
-    var td2=document.createElement('td'); td2.style.cssText='padding:6px 8px;';
-    var inp2=document.createElement('input'); inp2.type='number'; inp2.style.cssText='width:70px;text-align:right;'; inp2.value=line.qty||1;
-    inp2.addEventListener('change',function(){updateCOLine(lid,'qty',parseFloat(this.value)||1);});
-    td2.appendChild(inp2); tr.appendChild(td2);
-    var td3=document.createElement('td'); td3.style.cssText='padding:6px 8px;';
-    var sel=document.createElement('select'); sel.style.width='70px';
-    ['LS','SY','SF','TN','LF','EA','HR','DAY'].forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;if(u===line.unit)o.selected=true;sel.appendChild(o);});
-    sel.addEventListener('change',function(){updateCOLine(lid,'unit',this.value);});
-    td3.appendChild(sel); tr.appendChild(td3);
-    var td4=document.createElement('td'); td4.style.cssText='padding:6px 8px;';
-    var inp4=document.createElement('input'); inp4.type='number'; inp4.style.cssText='width:90px;text-align:right;'; inp4.value=line.price||0;
-    if(line.type==='nocost') inp4.disabled=true;
-    inp4.addEventListener('change',function(){updateCOLine(lid,'price',parseFloat(this.value)||0);});
-    td4.appendChild(inp4); tr.appendChild(td4);
-    var td5=document.createElement('td'); td5.style.cssText='padding:6px 12px;text-align:right;font-weight:600;'; td5.textContent=sub; tr.appendChild(td5);
-    var td6=document.createElement('td'); td6.style.cssText='padding:6px 6px;';
-    var remBtn=document.createElement('button'); remBtn.className='btn-ico'; remBtn.innerHTML='x';
-    remBtn.addEventListener('click',function(){removeCOLine(lid);});
-    td6.appendChild(remBtn); tr.appendChild(td6);
-    tbody.appendChild(tr);
-  });
-  recalcCO();
-}
-
-function updateCOLine(id,field,val){
-  var line = coLines.find(function(l){return l.id===id;});
-  if(line) line[field]=val;
-  recalcCO();
-}
-
-function recalcCO(){
-  var origAmt = parseFloat(document.getElementById('co-orig-amount')?document.getElementById('co-orig-amount').value:0)||0;
-  var addTotal=0,deductTotal=0,hasNocost=false;
-  coLines.forEach(function(l){
-    var sub=(parseFloat(l.qty)||1)*(parseFloat(l.price)||0);
-    if(l.type==='add') addTotal+=sub;
-    else if(l.type==='deduct') deductTotal+=sub;
-    else hasNocost=true;
-  });
-  var revised=origAmt+addTotal-deductTotal;
-  var g=function(id){return document.getElementById(id);};
-  if(g('cos-orig')) g('cos-orig').textContent='$'+fi(origAmt);
-  if(g('cos-add')) g('cos-add').textContent=addTotal>0?'+$'+fi(addTotal):'$0';
-  if(g('cos-deduct')) g('cos-deduct').textContent=deductTotal>0?'-$'+fi(deductTotal):'$0';
-  if(g('cos-nocost')) g('cos-nocost').textContent=hasNocost?'Yes':'--';
-  if(g('cos-total')) g('cos-total').textContent='$'+fi(revised);
-}
-
-function resetCO(){
-  coLines=[];
-  renderCOLines();
-  ['co-project','co-client','co-description'].forEach(function(id){
-    var e=document.getElementById(id);if(e)e.value='';
-  });
-  var e=document.getElementById('co-number');if(e)e.value=1;
-  var e2=document.getElementById('co-orig-amount');if(e2)e2.value=0;
-  var d=new Date().toISOString().split('T')[0];
-  var e3=document.getElementById('co-date');if(e3)e3.value=d;
-  recalcCO();
-}
-
-function buildCOPayload(){
-  var g=function(id){return document.getElementById(id);};
-  var coNum=parseInt(g('co-number')?g('co-number').value:1)||1;
-  var project=g('co-project')?g('co-project').value:'';
-  var client=g('co-client')?g('co-client').value:'';
-  var date=g('co-date')?g('co-date').value:'';
-  var origDate=g('co-orig-date')?g('co-orig-date').value:'';
-  var origAmt=parseFloat(g('co-orig-amount')?g('co-orig-amount').value:0)||0;
-  var desc=g('co-description')?g('co-description').value:'';
-  var fmt=function(d){if(!d)return '';var p=d.split('-');return p[1]+'/'+p[2]+'/'+p[0];};
-  var addTotal=0,deductTotal=0;
-  var items=coLines.map(function(l){
-    var sub=l.type==='nocost'?0:(parseFloat(l.qty)||1)*(parseFloat(l.price)||0);
-    if(l.type==='add') addTotal+=sub;
-    else if(l.type==='deduct') deductTotal+=sub;
-    return {type:l.type,description:l.desc,qty:parseFloat(l.qty)||1,unit:l.unit,price:parseFloat(l.price)||0,subtotal:sub};
-  });
-  return {
-    co_number:coNum,project_name:project,client_name:client,
-    date:fmt(date),orig_contract_date:fmt(origDate),orig_contract_amount:origAmt,
-    description:desc,line_items:items,
-    add_total:addTotal,deduct_total:deductTotal,
-    revised_total:origAmt+addTotal-deductTotal,
-    sender_name:sender.name,sender_phone:sender.phone,sender_email:sender.email
-  };
-}
-
-async function exportCOPDF(){
-  var btn=document.getElementById('co-pdf-btn');
-  var p=buildCOPayload();
-  if(!p.project_name){alert('Please enter a project name.');return;}
-  if(!p.line_items.length){alert('Please add at least one line item.');return;}
-  btn.textContent='Generating...';btn.disabled=true;
-  try{
-    var r=await fetch('/generate-co-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
-    if(!r.ok){var e=await r.json().catch(function(){return {};});throw new Error(e.error||r.status);}
-    var blob=await r.blob();
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.href=url;a.download='HD_CO_'+p.co_number+'_'+p.project_name.replace(/\s+/g,'_')+'.pdf';
-    a.click();URL.revokeObjectURL(url);
-  }catch(e){alert('Error: '+e.message);}
-  btn.textContent='Export CO PDF';btn.disabled=false;
-}
-
-
-var TOPBAR_CFG = {
-  build:[
-    {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
-    {html:"Reset",cls:"btn btn-sec btn-sm",fn:"resetAll()"},
-    {id:"site-plan-btn",html:"<svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path d=\"M8 1v10M4 7l4-5 4 5\"/><path d=\"M2 13h12\"/></svg> Upload Site Plan",cls:"btn btn-sec btn-sm",fn:"document.getElementById('site-plan-input').click()"},
-    {id:"email-btn",html:"Email",cls:"btn btn-sec btn-sm",fn:"openEmailModal()"},
-    {id:"docx-btn",html:"<svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path d=\"M4 7h8v1H4zm0 2h8v1H4zm0 2h5v1H4z\"/></svg> Export Word",cls:"btn btn-blue btn-sm",fn:"exportDOCX()"},
-    {id:"pdf-btn",html:"<svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path d=\"M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1z\"/></svg> Export PDF",cls:"btn btn-red btn-sm",fn:"exportPDF()"}
-  ],
-  co:[
-    {html:'Reset CO',cls:'btn btn-sec btn-sm',fn:'resetCO()'},
-    {id:'co-pdf-btn',html:'Export CO PDF',cls:'btn btn-red btn-sm',fn:'exportCOPDF()'}
-  ],
-  saved:[
-    {html:'Export All',cls:'btn btn-sec btn-sm',fn:'exportAllQuotes()'},
-    {html:'Import',cls:'btn btn-sec btn-sm',fn:'importQuotes()'}
-  ],
-  analytics:[{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderAnalytics()'}],
-  pipeline:[{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderPipeline()'}],
-  clients:[{html:'+ Add Client',cls:'btn btn-red btn-sm',fn:'openClientModal()'}],
-  admin:[],
-  settings:[]
-};
 function renderTopbar(panelId){
   var c=document.getElementById('topbar-actions');if(!c)return;
   c.innerHTML='';
@@ -1404,9 +1089,9 @@ var TOPBAR_CFG={
     
     {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
     {html:"Reset",cls:"btn btn-sec btn-sm",fn:"resetAll()"},
-    {id:"site-plan-btn",html:"Upload Site Plan",cls:"btn btn-sec btn-sm",fn:"document.getElementById('site-plan-input').click()"},
+    {id:"site-plan-btn",html:"Site Plan",cls:"btn btn-sec btn-sm",fn:"document.getElementById('site-plan-input').click()"},
+    {id:"docx-btn",html:"Word",cls:"btn btn-sec btn-sm",fn:"exportDOCX()"},
     {id:"email-btn",html:"Email",cls:"btn btn-sec btn-sm",fn:"openEmailModal()"},
-    {id:"docx-btn",html:"Export Word",cls:"btn btn-blue btn-sm",fn:"exportDOCX()"},
     
     {id:"pdf-btn",html:"Export PDF",cls:"btn btn-red btn-sm",fn:"exportPDF()"}
   ],
@@ -1438,6 +1123,8 @@ function renderTopbar(panelId){
   }
 }
 function showPanel(id,el){
+  if(id==='admin'&&window._userRole!=='admin'){toast('Admin access required','err');return;}
+  if(id==='admin'){setTimeout(function(){loadUsers();},50);}
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
   document.getElementById('panel-'+id).classList.add('on');
@@ -1861,441 +1548,7 @@ function updateConcResult(id){
   var matCost=item.qty*(parseFloat(item.mat)||0),subC=item.qty*item.sub,bR=concBid(item),bidC=item.qty*bR,mp=mu(matCost+subC,bidC);
   var resEl=document.querySelector('.lres[data-conc="'+id+'"]');
   var muEl=document.querySelector('.mubadge[data-conc="'+id+'"]');
-  if(resEl)resEl.innerHTML=item.qty>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  mat+sub <b>$'+fi(matCost+subC)+'</b>  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty and rates</span>';
-  if(muEl){muEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
-}
-function renderConc(){
-  var c=document.getElementById('conc-rows'),em=document.getElementById('conc-empty');
-  c.innerHTML='';em.style.display=concItems.length?'none':'block';
-  concItems.forEach(function(item){
-    var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];
-    var matCost=item.qty*(parseFloat(item.mat)||0),subC=item.qty*item.sub,bR=concBid(item),bidC=item.qty*bR,mp=mu(matCost+subC,bidC);
-    var resHTML=item.qty>0&&item.sub>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  -  sub <b>$'+fi(subC)+'</b>  -  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty &amp; sub rate</span>';
-    var muBadge='<span class="mubadge '+(mp>=0?'p':'n')+'" data-conc="'+item.id+'">'+(item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'')+'</span>';
-    var ctOpts=CTYPES.map(function(ct2){return '<option value="'+ct2.id+'"'+(ct2.id===item.type?' selected':'')+'>'+ct2.name+'</option>';}).join('');
-    var row=document.createElement('div');row.className='lyr-row';
-    row.innerHTML='<select onchange="updConcType('+item.id+',this.value)" style="min-width:138px">'+ctOpts+'</select>'
-      +'<label>'+ct.unit+'</label><input type="number" value="'+(item.qty||'')+'" placeholder="0" min="0" step="1" style="width:74px" onchange="updConcField('+item.id+',\'qty\',this.value)">'
-      +'<label>Mat $/'+ct.unit+'</label><input type="number" value="'+(item.mat!==undefined?item.mat:200)+'" placeholder="200" min="0" step="1" style="width:72px" onchange="updConcField('+item.id+',\'mat\',parseFloat(this.value)||0)"/>'
-      +'<label>Sub $/'+ct.unit+'</label><input type="number" value="'+(item.sub||'')+'" placeholder="0.00" min="0" step=".25" style="width:76px" onchange="updConcField('+item.id+',\'sub\',this.value)">'
-      +'<label>Markup %</label><input type="number" value="'+item.markup+'" min="0" step="1" style="width:58px" onchange="updConcField('+item.id+',\'markup\',this.value)">'
-      +muBadge+'<span class="lres" data-conc="'+item.id+'">'+resHTML+'</span>'
-      +'<button class="btn-ico" onclick="remConc('+item.id+')">x</button>';
-    c.appendChild(row);
-  });
-  recalc();
-}
-
-// -- Extra items ---------------------------------------------------------------
-function addExtra(){extraItems.push({id:eid++,name:'',qty:1,unit:'LS',price:0,subtotal:0});renderExtra();}
-function remExtra(id){extraItems=extraItems.filter(function(x){return x.id!==id;});renderExtra();recalc();}
-function updExtraName(id,v){var i=extraItems.find(function(x){return x.id===id;});if(i)i.name=v;}
-function updExtraUnit(id,v){var i=extraItems.find(function(x){return x.id===id;});if(i)i.unit=v;}
-function updExtraNum(id,f,v){
-  var i=extraItems.find(function(x){return x.id===id;});if(!i)return;
-  i[f]=parseFloat(v)||0;i.subtotal=(i.qty||0)*(i.price||0);
-  recalc();
-  var resEl=document.querySelector('.lres[data-extra="'+id+'"]');
-  if(resEl)resEl.innerHTML=i.subtotal>0?'Subtotal: <b>$'+fi(i.subtotal)+'</b>':'';
-}
-function renderExtra(){
-  var c=document.getElementById('extra-rows'),em=document.getElementById('extra-empty');
-  c.innerHTML='';em.style.display=extraItems.length?'none':'block';
-  extraItems.forEach(function(i){
-    var row=document.createElement('div');row.className='lyr-row';
-    var unitOpts=['LS','EA','LF','SY','SF'].map(function(u){return '<option'+(u===i.unit?' selected':'')+'>'+u+'</option>';}).join('');
-    row.innerHTML='<input type="text" value="'+esc(i.name)+'" placeholder="Item name" style="flex:1;min-width:150px" onchange="updExtraName('+i.id+',this.value)">'
-      +'<label>Qty</label><input type="number" value="'+i.qty+'" min="0" step="1" style="width:64px" onchange="updExtraNum('+i.id+',\'qty\',this.value)">'
-      +'<label>Unit</label><select onchange="updExtraUnit('+i.id+',this.value)" style="width:66px">'+unitOpts+'</select>'
-      +'<label>$/unit</label><input type="number" value="'+(i.price||'')+'" placeholder="0.00" min="0" step=".01" style="width:84px" onchange="updExtraNum('+i.id+',\'price\',this.value)">'
-      +'<span class="lres" data-extra="'+i.id+'">'+(i.subtotal>0?'Subtotal: <b>$'+fi(i.subtotal)+'</b>':'')+'</span>'
-      +'<button class="btn-ico" onclick="remExtra('+i.id+')">x</button>';
-    c.appendChild(row);
-  });
-  recalc();
-}
-
-
-// -- Layer bid price calculator ------------------------------------------------
-// bid = (mat_cost + crew_cost) * (1 + overhead/100) * (1 + markup/100)
-function calcLayerDays(tons, layer){
-  if(layer.days_override !== null && layer.days_override !== undefined) return layer.days_override;
-  return jcProductivity > 0 ? tons / jcProductivity : 0;
-}
-function calcLayerBid(tons, layer){
-  var mat = tons * (MAT[layer.type]||0);
-  var days = calcLayerDays(tons, layer);
-  var crew = days * jcCrewRate;
-  var ovh = (layer.overhead !== undefined ? layer.overhead : jcOverheadPct) / 100;
-  var mu = layer.markup / 100;
-  return (mat + crew) * (1 + ovh) * (1 + mu);
-}
-function calcLayerRate(tons, layer){
-  if(tons <= 0) return layer.rate;
-  return calcLayerBid(tons, layer) / tons;
-}
-
-// -- Recalc --------------------------------------------------------------------
-function recalc(){
-  var bk=document.getElementById('breakdown');bk.innerHTML='';
-  var wfv=wf(),mobv=mob();
-  var gSF=0,gSY=0,gT=0,gM=0,gB=0;
-  sections.forEach(function(s){
-    var sf=s.sf||0,sy=sf/9;gSF+=sf;gSY+=sy;
-    s.layers.forEach(function(l){
-      var isMill=l.type==='Mill & Pave';
-      var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
-      var t=rawT*wfv,millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
-      var mC=t*(MAT[l.type]||0),bC=calcLayerBid(t,l),mp=mu(mC,bC);
-      gT+=t;gM+=mC;gB+=bC;
-      var tr=document.createElement('tr');
-      tr.innerHTML='<td><small>'+esc(s.name)+'</small></td>'
-        +'<td><span class="badge '+(LBADGE[l.type]||'')+'">'+esc(l.type)+'</span></td>'
-        +'<td>'+(sf>0?sf.toLocaleString():'-')+'</td>'
-        +'<td>'+(sf>0?sy.toFixed(1):'-')+'</td>'
-        +'<td>'+(!isMill?l.depth+'"':'-')+'</td>'
-        +'<td>'+(!isMill?'ton':'day')+'</td>'
-        +'<td>'+(sf>0&&!isMill?rawT.toFixed(2):'-')+'</td>'
-        +'<td>'+(sf>0&&!isMill?t.toFixed(2):isMill&&millFlat>0?'$'+fi(millFlat)+' flat':'-')+'</td>'
-        +'<td>'+(mC>0?'$'+(MAT[l.type]||0):'-')+'</td>'
-        +'<td>'+(mC>0?'$'+fi(mC):'-')+'</td>'
-        +'<td>'+(bC>0?'$'+l.rate:'-')+'</td>'
-        +'<td>'+(bC>0?'$'+fi(bC):'-')+'</td>'
-        +'<td class="'+(mp>=0?'gp':'gn')+'">'+(bC>0?mp.toFixed(1)+'%':'-')+'</td>';
-      bk.appendChild(tr);
-    });
-  });
-  concItems.forEach(function(i){
-    if(!i.qty||!i.sub)return;
-    var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];
-    var matC=i.qty*(parseFloat(i.mat)||0),subC=i.qty*i.sub,bC=i.qty*concBid(i),mp=mu(matC+subC,bC);
-    gM+=matC+subC;gB+=bC;
-    var tr=document.createElement('tr');
-    tr.innerHTML='<td><small>Concrete</small></td><td><span class="badge b-conc">'+esc(ct.name)+'</span></td>'
-      +'<td>-</td><td>-</td><td>'+i.qty.toLocaleString()+' '+ct.unit+'</td><td>'+ct.unit+'</td>'
-      +'<td>-</td><td>-</td><td>$'+i.sub.toFixed(2)+'</td><td>$'+fi(subC)+'</td>'
-      +'<td>$'+concBid(i).toFixed(2)+'</td><td>$'+fi(bC)+'</td>'
-      +'<td class="'+(mp>=0?'gp':'gn')+'">'+mp.toFixed(1)+'%</td>';
-    bk.appendChild(tr);
-  });
-  extraItems.forEach(function(i){
-    if(!i.name||!i.subtotal)return;
-    gB+=i.subtotal;
-    var tr=document.createElement('tr');
-    tr.innerHTML='<td><small>Additional</small></td><td>'+esc(i.name)+'</td>'
-      +'<td>-</td><td>-</td><td>'+i.qty+' '+i.unit+'</td><td>'+i.unit+'</td>'
-      +'<td>-</td><td>-</td><td>-</td><td>-</td>'
-      +'<td>$'+f2(i.price)+'</td><td>$'+fi(i.subtotal)+'</td><td>-</td>';
-    bk.appendChild(tr);
-  });
-  var contPct=cont(),contv=gB>0?Math.round(gB*contPct/100*100)/100:0;
-  var total=gB+mobv+contv,gp=gB-gM;
-  document.getElementById('m-sf').textContent=gSF>0?gSF.toLocaleString():'-';
-  updatePhaseMetric();
-  var ccEl=document.getElementById('m-cont-card');
-  renderJobCost();
-  if(ccEl)ccEl.style.display=contv>0?'':'none';
-  var cmEl=document.getElementById('m-cont');
-  if(cmEl)cmEl.textContent=contv>0?'$'+fi(contv):'-';
-  document.getElementById('m-sy').textContent=gSY>0?gSY.toFixed(1):'-';
-  document.getElementById('m-tons').textContent=gT>0?gT.toFixed(2):'-';
-  document.getElementById('m-mat').textContent=gM>0?'$'+fi(gM):'-';
-  document.getElementById('m-mob').textContent=mobv>0?'$'+fi(mobv):'$0';
-  document.getElementById('m-bid').textContent=total>0?'$'+fi(total):'-';
-  document.getElementById('m-gp').textContent=gp>0?'$'+fi(gp)+' ('+mu(gM,gB).toFixed(1)+'%)':'-';
-}
-
-// -- Build payload -------------------------------------------------------------
-function buildPayload(){
-  var wfv=wf(),mobv=mob();
-  var name=document.getElementById('proj-name').value||'Unnamed Project';
-  var client=document.getElementById('proj-client').value||'';
-  var addr=document.getElementById('proj-addr').value||'';
-  var cs=document.getElementById('proj-cs').value||'';
-  var date=document.getElementById('proj-date').value||'';
-  var notes=document.getElementById('proj-notes').value||'';
-  var fmtDate=date?new Date(date+'T12:00:00').toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}):'';
-  var line_items=[],total=0;
-  sections.forEach(function(s){
-    var sf=s.sf||0,sy=sf/9;
-    s.layers.forEach(function(l){
-      var isMill=l.type==='Mill & Pave';
-      var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;
-      var t=rawT*wfv,millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;
-      var bC=calcLayerBid(t,l);
-      total+=bC;
-      if(sf>0||isMill)line_items.push({
-        name:s.name+' \u2014 '+l.type,
-        description:isMill?'Milling '+l.mill_days+' day(s) @ $'+l.mill_rate+'/day':('Install '+l.depth+'" '+l.type),
-        qty:isMill?l.mill_days:parseFloat(sy.toFixed(1)),
-        unit:isMill?'day':'SY',
-        price:isMill?l.mill_rate:parseFloat(sy>0?(bC/sy).toFixed(2):'0'),
-        subtotal:parseFloat(bC.toFixed(2))
-      });
-    });
-  });
-  concItems.forEach(function(i){
-    if(!i.qty||!i.sub)return;
-    var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];
-    var bR=concBid(i),bC=i.qty*bR;total+=bC;
-    line_items.push({name:ct.name,description:ct.desc,qty:i.qty,unit:ct.unit,price:parseFloat(bR.toFixed(2)),subtotal:parseFloat(bC.toFixed(2))});
-  });
-  extraItems.forEach(function(i){
-    if(!i.name||!i.subtotal)return;
-    total+=i.subtotal;
-    line_items.push({name:i.name,description:'',qty:i.qty,unit:i.unit,price:i.price,subtotal:i.subtotal});
-  });
-  var contPct2=cont(),contv2=contPct2>0?parseFloat((total*contPct2/100).toFixed(2)):0;
-  if(contv2>0){
-    total+=contv2;
-    line_items.push({name:'Contingency ('+contPct2.toFixed(1)+'%)',description:'Project contingency',qty:1,unit:'LS',price:contv2,subtotal:contv2});
-  }
-  if(mobv>0){total+=mobv;line_items.push({name:'Mobilization',description:'Project mobilization & setup',qty:1,unit:'LS',price:mobv,subtotal:mobv});}
-  return{
-    project_name:name,address:addr,city_state:cs,date:fmtDate,
-    sender_name:sender.name||'HD Hauling & Grading',sender_email:sender.email||'',sender_phone:sender.phone||'',
-    company:'HD Hauling & Grading',client_name:client,client_email:'',client_phone:'',client_company:'',
-    notes:notes,total:parseFloat(total.toFixed(2)),line_items:line_items,
-    unit_prices:[
-      {name:'ABC Stone (per ton)',rate:60},
-      {name:'Additional asphalt tonnage (prevailing market rate)',rate:150},
-      {name:'Cold patch / temporary repair (per ton)',rate:200},
-      {name:'Milling overage (per SY)',rate:4.50},
-      {name:'Additional traffic control (per day)',rate:2500},
-      {name:'Additional mobilization (per occurrence)',rate:1500},
-    ],
-    _date_iso:date,
-  };
-}
-
-// -- PDF export ----------------------------------------------------------------
-async function exportPDF(){
-  var btn=document.getElementById('pdf-btn');
-  btn.disabled=true;btn.textContent='Generating...';
-  try{
-    var p=buildPayload();
-    if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
-    var r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
-    if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
-    var blob=await r.blob();
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.href=url;a.download='HD_Proposal_'+p.project_name.replace(/\s+/g,'_')+'.pdf';
-    a.click();URL.revokeObjectURL(url);
-    toast('PDF downloaded','ok');
-  }catch(e){toast('PDF error: '+e.message,'err');}
-  finally{
-    btn.disabled=false;
-    btn.innerHTML='<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1z"/></svg>Export PDF';
-  }
-}
-
-// -- Word export ---------------------------------------------------------------
-async function exportDOCX(){
-  var btn=document.getElementById('docx-btn');
-  btn.disabled=true;btn.textContent='Generating...';
-  try{
-    var p=buildPayload();
-    if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
-    var r=await fetch('/generate-docx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
-    if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
-    var blob=await r.blob();
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.href=url;a.download='HD_Proposal_'+p.project_name.replace(/\s+/g,'_')+'.docx';
-    a.click();URL.revokeObjectURL(url);
-    toast('Word doc downloaded','ok');
-  }catch(e){toast('Word error: '+e.message,'err');}
-  finally{
-    btn.disabled=false;
-    btn.innerHTML='<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 7h8v1H4zm0 2h8v1H4zm0 2h5v1H4z"/></svg>Word';
-  }
-}
-
-// -- Site plan -----------------------------------------------------------------
-function setSitePlan(inp){
-  if(!inp.files||!inp.files[0])return;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    sitePlanDataUrl=e.target.result;
-    document.getElementById('site-plan-label').textContent='OK Plan';
-    document.getElementById('site-plan-btn').style.borderColor='#27500A';
-    toast('Site plan loaded','ok');
-  };
-  reader.readAsDataURL(inp.files[0]);
-}
-
-// -- Notion --------------------------------------------------------------------
-function onClientInput(v){
-  clearTimeout(clientTimer);
-  var sug=document.getElementById('client-sug');
-  if(!v||v.length<2){sug.style.display='none';return;}
-  clientTimer=setTimeout(function(){
-    var m=clients.filter(function(c){return c.name.toLowerCase().indexOf(v.toLowerCase())>=0;}).slice(0,6);
-    if(!m.length){sug.style.display='none';return;}
-    sug.innerHTML=m.map(function(c){
-      var json=JSON.stringify(c).replace(/"/g,'&quot;');
-      return '<div onclick="selectClient(\''+json.replace(/'/g,'x')+'\')" style="padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'\'">'
-        +'<div style="font-weight:600">'+esc(c.name)+'</div>'
-        +'<div style="font-size:11px;color:var(--dgray)">'+(c.company?esc(c.company)+'  -  ':'')+esc(c.phone||c.email||'')+'</div>'
-        +'</div>';
-    }).join('');
-    sug.style.display='block';
-  },200);
-}
-function selectClient(c){
-  if(typeof c==='string')c=JSON.parse(c);
-  document.getElementById('proj-client').value=c.name;
-  document.getElementById('client-sug').style.display='none';
-  var bar=document.getElementById('client-bar');
-  var parts=[c.company,c.phone,c.email].filter(Boolean);
-  if(parts.length){bar.style.display='block';bar.textContent=parts.join(' \u00b7 ');}
-  else bar.style.display='none';
-}
-
-// -- Save / Load ---------------------------------------------------------------
-async function saveQuote(){
-  var name=document.getElementById('proj-name').value||('Quote '+(savedQuotes.length+1));
-  var snap={name:name,client:document.getElementById('proj-client').value,
-    date:document.getElementById('proj-date').value,addr:document.getElementById('proj-addr').value,
-    cs:document.getElementById('proj-cs').value,notes:document.getElementById('proj-notes').value,
-    waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,contingency:document.getElementById('contingency').value,
-    sections:sections,concItems:concItems,extraItems:extraItems};
-  var p=buildPayload();
-  var jcData=calcJobCost();snap.jc_labor_cost=jcData.laborCost;snap.jc_overhead_pct=jcData.ovhPct;snap.jc_total_cost=jcData.totalCost;snap.jc_margin_pct=jcData.marginPct;
-  try{
-    var r=await fetch('/quotes/save',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({name:name,client:snap.client,date:snap.date,total:p.total,snap:snap,stage_id:pipelineStages.length?pipelineStages[0].id:null})});
-    var d=await r.json();
-    if(d.ok){savedQuotes.push({id:d.id,name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});toast('Quote saved','ok');}
-    else{toast('Save failed: '+(d.error||'unknown'),'err');}
-  }catch(e){toast('Save error: '+e.message,'err');}
-}
-function loadQuote(id){
-  var q=savedQuotes.find(function(x){return x.id===id;});if(!q)return;
-  var d=typeof q.snap==='string'?JSON.parse(q.snap):q.snap;
-  document.getElementById('proj-name').value=d.name||'';
-  document.getElementById('proj-client').value=d.client||'';
-  document.getElementById('proj-date').value=d.date||'';
-  document.getElementById('proj-addr').value=d.addr||'';
-  document.getElementById('proj-cs').value=d.cs||'';
-  document.getElementById('proj-notes').value=d.notes||'';
-  document.getElementById('waste').value=d.waste||5;
-  document.getElementById('mob').value=d.mob||0;
-  document.getElementById('contingency').value=d.contingency||0;
-  sections=d.sections||[];
-  sid=sections.reduce(function(m,s){return Math.max(m,s.id+1);},0);
-  lid=sections.reduce(function(m,s){return s.layers.reduce(function(m2,l){return Math.max(m2,l.id+1);},m);},0);
-  concItems=d.concItems||[];cid=concItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
-  extraItems=d.extraItems||[];eid=extraItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
-  showPanel('build',document.querySelector('.nav-item'));
-  renderAll();renderConc();renderExtra();
-  toast('Quote loaded');
-}
-async function delSaved(id){
-  try{await fetch('/quotes/delete/'+id,{method:'DELETE'});renderSaved();}
-  catch(e){toast('Delete error: '+e.message,'err');}
-}
-
-function exportAllQuotes(){
-  if(!savedQuotes.length){toast('No saved quotes to export','err');return;}
-  var data={exported:new Date().toISOString(),count:savedQuotes.length,quotes:savedQuotes};
-  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download='HD_Proposals_Backup_'+new Date().toISOString().split('T')[0]+'.json';
-  a.click();URL.revokeObjectURL(url);
-  toast('Exported '+savedQuotes.length+' quotes','ok');
-}
-
-async function importQuotes(){
-  var inp=document.createElement('input');
-  inp.type='file';inp.accept='.json';
-  inp.onchange=async function(e){
-    var file=e.target.files[0];if(!file)return;
-    try{
-      var text=await file.text();
-      var data=JSON.parse(text);
-      var quotes=Array.isArray(data)?data:(data.quotes||[]);
-      if(!quotes.length)throw new Error('No quotes found in file');
-      var count=0;
-      for(var i=0;i<quotes.length;i++){
-        var q=quotes[i];
-        var snap=typeof q.snap==='string'?JSON.parse(q.snap):q.snap||{};
-        var r=await fetch('/quotes/save',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({name:q.name||'Imported',client:q.client||'',date:q.date||'',total:q.total||0,snap:snap})});
-        var d=await r.json();if(d.ok)count++;
-      }
-      toast('Imported '+count+' of '+quotes.length+' quotes','ok');
-      renderSaved();
-    }catch(err){toast('Import error: '+err.message,'err');}
-  };
-  inp.click();
-}
-
-async function renderSaved(){
-  var c=document.getElementById('saved-list');
-  c.innerHTML='<p style="color:var(--dgray);font-size:13px;">Loading...</p>';
-  try{
-    var r=await fetch('/quotes/list');
-    var d=await r.json();
-    if(!d.ok)throw new Error(d.error||'Failed to load');
-    savedQuotes=d.quotes;
-    c.innerHTML='';
-    if(!savedQuotes.length){c.innerHTML='<p style="color:var(--dgray);font-size:13px;">No saved quotes yet.</p>';return;}
-    savedQuotes.forEach(function(q){
-      var div=document.createElement('div');
-      div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
-      div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+esc(q.name)+'</div>'
-        +'<div style="font-size:11px;color:var(--dgray);">'+(q.client?esc(q.client)+'  -  ':'')+(q.date||'')+'  -  $'+Math.round(q.total).toLocaleString()+'</div></div>'
-        +'<button class="btn btn-sec btn-sm" onclick="loadQuote('+q.id+')">Load</button>'
-        +'<button class="btn-ico" onclick="delSaved('+q.id+')">x</button>';
-      c.appendChild(div);
-    });
-  }catch(e){c.innerHTML='<p style="color:var(--red);font-size:13px;">Error: '+e.message+'</p>';}
-}
-function resetAll(){
-  sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;
-  ['proj-name','proj-client','proj-addr','proj-cs'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('proj-notes').value='All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice.';
-  document.getElementById('waste').value=5;document.getElementById('mob').value=0;document.getElementById('contingency').value=0;
-  document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
-  document.getElementById('client-bar').style.display='none';
-  renderAll();renderConc();renderExtra();
-  toast('Reset');
-}
-
-// -- Settings ------------------------------------------------------------------
-function saveSender(){
-  sender={name:document.getElementById('s-name').value,email:document.getElementById('s-email').value,phone:document.getElementById('s-phone').value};
-  localStorage.setItem('hd_sender',JSON.stringify(sender));
-  toast('Sender settings saved','ok');
-}
-function loadSenderUI(){
-  document.getElementById('s-name').value=sender.name||'';
-  document.getElementById('s-email').value=sender.email||'';
-  document.getElementById('s-phone').value=sender.phone||'';
-}
-function addPreset(){
-  var name=prompt('Preset name:');if(!name)return;
-  var t1=prompt('Layer 1 type (ABC base/Binder/Surface/Mill & Pave/B25.0C/I19.0C/S9.5C):');if(!t1)return;
-  var d1=parseFloat(prompt(t1+' depth (in):')||0);var r1=parseFloat(prompt(t1+' $/ton rate:')||0);
-  var layers=[{type:t1,depth:d1,rate:r1}];
-  if(confirm('Add a second layer?')){
-    var t2=prompt('Layer 2 type:');
-    if(t2){layers.push({type:t2,depth:parseFloat(prompt(t2+' depth:')||0),rate:parseFloat(prompt(t2+' rate:')||0)});}
-  }
-  PRESETS.push({name:name,layers:layers});
-  localStorage.setItem('hd_presets',JSON.stringify(PRESETS));
-  renderPresets();renderPresetMgr();
-  toast('Preset added','ok');
-}
-function renderPresetMgr(){
-  var c=document.getElementById('preset-mgr');if(!c)return;
-  c.innerHTML=PRESETS.map(function(p,i){
-    return '<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px;">'
-      +'<span style="flex:1;font-weight:600">'+esc(p.name)+'</span>'
-      +'<span style="font-size:11px;color:var(--dgray)">'+p.layers.map(function(l){return l.type+' '+l.depth+'"';}).join(', ')+'</span>'
-      +'<button class="btn-ico" onclick="PRESETS.splice('+i+',1);localStorage.setItem(\'hd_presets\',JSON.stringify(PRESETS));renderPresets();renderPresetMgr()">x</button>'
+  if(resEl)resEl.innerHTML=item.qty>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  mat+sub <b>$'+fi(matCost+subC)+'</b>  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty and rates</span>'; sub rate</span>';\n  if(muEl){muEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}\n}\nfunction renderConc(){\n  var c=document.getElementById('conc-rows'),em=document.getElementById('conc-empty');\n  c.innerHTML='';em.style.display=concItems.length?'none':'block';\n  concItems.forEach(function(item){\n    var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];\n    var bR=concBid(item),bidC=item.qty*bR,subC=item.qty*item.sub,mp=mu(subC,bidC);\n    var resHTML=item.qty>0&&item.sub>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  -  sub <b>$'+fi(subC)+'</b>  -  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty &amp; sub rate</span>';\n    var muBadge='<span class="mubadge '+(mp>=0?'p':'n')+'" data-conc="'+item.id+'">'+(item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'')+'</span>';\n    var ctOpts=CTYPES.map(function(ct2){return '<option value="'+ct2.id+'"'+(ct2.id===item.type?' selected':'')+'>'+ct2.name+'</option>';}).join('');\n    var row=document.createElement('div');row.className='lyr-row';\n    row.innerHTML='<select onchange="updConcType('+item.id+',this.value)" style="min-width:138px">'+ctOpts+'</select>'\n      +'<label>'+ct.unit+'</label><input type="number" value="'+(item.qty||'')+'" placeholder="0" min="0" step="1" style="width:74px" onchange="updConcField('+item.id+',\'qty\',this.value)">'\n      +'<label>Mat $/'+ct.unit+'</label><input type="number" value="'+(item.mat!==undefined?item.mat:200)+'" placeholder="200" min="0" step="1" style="width:72px" onchange="updConcField('+item.id+',\'mat\',parseFloat(this.value)||0)"/>'\n      +'<label>Sub $/'+ct.unit+'</label><input type="number" value="'+(item.sub||'')+'" placeholder="0.00" min="0" step=".25" style="width:76px" onchange="updConcField('+item.id+',\'sub\',this.value)">'\n      +'<label>Markup %</label><input type="number" value="'+item.markup+'" min="0" step="1" style="width:58px" onchange="updConcField('+item.id+',\'markup\',this.value)">'\n      +muBadge+'<span class="lres" data-conc="'+item.id+'">'+resHTML+'</span>'\n      +'<button class="btn-ico" onclick="remConc('+item.id+')">x</button>';\n    c.appendChild(row);\n  });\n  recalc();\n}\n\n// -- Extra items ---------------------------------------------------------------\nfunction addExtra(){extraItems.push({id:eid++,name:'',qty:1,unit:'LS',price:0,subtotal:0});renderExtra();}\nfunction remExtra(id){extraItems=extraItems.filter(function(x){return x.id!==id;});renderExtra();recalc();}\nfunction updExtraName(id,v){var i=extraItems.find(function(x){return x.id===id;});if(i)i.name=v;}\nfunction updExtraUnit(id,v){var i=extraItems.find(function(x){return x.id===id;});if(i)i.unit=v;}\nfunction updExtraNum(id,f,v){\n  var i=extraItems.find(function(x){return x.id===id;});if(!i)return;\n  i[f]=parseFloat(v)||0;i.subtotal=(i.qty||0)*(i.price||0);\n  recalc();\n  var resEl=document.querySelector('.lres[data-extra="'+id+'"]');\n  if(resEl)resEl.innerHTML=i.subtotal>0?'Subtotal: <b>$'+fi(i.subtotal)+'</b>':'';\n}\nfunction renderExtra(){\n  var c=document.getElementById('extra-rows'),em=document.getElementById('extra-empty');\n  c.innerHTML='';em.style.display=extraItems.length?'none':'block';\n  extraItems.forEach(function(i){\n    var row=document.createElement('div');row.className='lyr-row';\n    var unitOpts=['LS','EA','LF','SY','SF'].map(function(u){return '<option'+(u===i.unit?' selected':'')+'>'+u+'</option>';}).join('');\n    row.innerHTML='<input type="text" value="'+esc(i.name)+'" placeholder="Item name" style="flex:1;min-width:150px" onchange="updExtraName('+i.id+',this.value)">'\n      +'<label>Qty</label><input type="number" value="'+i.qty+'" min="0" step="1" style="width:64px" onchange="updExtraNum('+i.id+',\'qty\',this.value)">'\n      +'<label>Unit</label><select onchange="updExtraUnit('+i.id+',this.value)" style="width:66px">'+unitOpts+'</select>'\n      +'<label>$/unit</label><input type="number" value="'+(i.price||'')+'" placeholder="0.00" min="0" step=".01" style="width:84px" onchange="updExtraNum('+i.id+',\'price\',this.value)">'\n      +'<span class="lres" data-extra="'+i.id+'">'+(i.subtotal>0?'Subtotal: <b>$'+fi(i.subtotal)+'</b>':'')+'</span>'\n      +'<button class="btn-ico" onclick="remExtra('+i.id+')">x</button>';\n    c.appendChild(row);\n  });\n  recalc();\n}\n\n\n// -- Layer bid price calculator ------------------------------------------------\n// bid = (mat_cost + crew_cost) * (1 + overhead/100) * (1 + markup/100)\nfunction calcLayerDays(tons, layer){\n  if(layer.days_override !== null && layer.days_override !== undefined) return layer.days_override;\n  return jcProductivity > 0 ? tons / jcProductivity : 0;\n}\nfunction calcLayerBid(tons, layer){\n  var mat = tons * (MAT[layer.type]||0);\n  var days = calcLayerDays(tons, layer);\n  var crew = days * jcCrewRate;\n  var ovh = (layer.overhead !== undefined ? layer.overhead : jcOverheadPct) / 100;\n  var mu = layer.markup / 100;\n  return (mat + crew) * (1 + ovh) * (1 + mu);\n}\nfunction calcLayerRate(tons, layer){\n  if(tons <= 0) return layer.rate;\n  return calcLayerBid(tons, layer) / tons;\n}\n\n// -- Recalc --------------------------------------------------------------------\nfunction recalc(){\n  var bk=document.getElementById('breakdown');bk.innerHTML='';\n  var wfv=wf(),mobv=mob();\n  var gSF=0,gSY=0,gT=0,gM=0,gB=0;\n  sections.forEach(function(s){\n    var sf=s.sf||0,sy=sf/9;gSF+=sf;gSY+=sy;\n    s.layers.forEach(function(l){\n      var isMill=l.type==='Mill & Pave';\n      var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;\n      var t=rawT*wfv,millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;\n      var mC=t*(MAT[l.type]||0),bC=calcLayerBid(t,l),mp=mu(mC,bC);\n      gT+=t;gM+=mC;gB+=bC;\n      var tr=document.createElement('tr');\n      tr.innerHTML='<td><small>'+esc(s.name)+'</small></td>'\n        +'<td><span class="badge '+(LBADGE[l.type]||'')+'">'+esc(l.type)+'</span></td>'\n        +'<td>'+(sf>0?sf.toLocaleString():'-')+'</td>'\n        +'<td>'+(sf>0?sy.toFixed(1):'-')+'</td>'\n        +'<td>'+(!isMill?l.depth+'"':'-')+'</td>'\n        +'<td>'+(!isMill?'ton':'day')+'</td>'\n        +'<td>'+(sf>0&&!isMill?rawT.toFixed(2):'-')+'</td>'\n        +'<td>'+(sf>0&&!isMill?t.toFixed(2):isMill&&millFlat>0?'$'+fi(millFlat)+' flat':'-')+'</td>'\n        +'<td>'+(mC>0?'$'+(MAT[l.type]||0):'-')+'</td>'\n        +'<td>'+(mC>0?'$'+fi(mC):'-')+'</td>'\n        +'<td>'+(bC>0?'$'+l.rate:'-')+'</td>'\n        +'<td>'+(bC>0?'$'+fi(bC):'-')+'</td>'\n        +'<td class="'+(mp>=0?'gp':'gn')+'">'+(bC>0?mp.toFixed(1)+'%':'-')+'</td>';\n      bk.appendChild(tr);\n    });\n  });\n  concItems.forEach(function(i){\n    if(!i.qty||!i.sub)return;\n    var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];\n    var matC=i.qty*(parseFloat(i.mat)||0),subC=i.qty*i.sub,bC=i.qty*concBid(i),mp=mu(matC+subC,bC);\n    gM+=matC+subC;gB+=bC;\n    var tr=document.createElement('tr');\n    tr.innerHTML='<td><small>Concrete</small></td><td><span class="badge b-conc">'+esc(ct.name)+'</span></td>'\n      +'<td>-</td><td>-</td><td>'+i.qty.toLocaleString()+' '+ct.unit+'</td><td>'+ct.unit+'</td>'\n      +'<td>-</td><td>-</td><td>$'+i.sub.toFixed(2)+'</td><td>$'+fi(subC)+'</td>'\n      +'<td>$'+concBid(i).toFixed(2)+'</td><td>$'+fi(bC)+'</td>'\n      +'<td class="'+(mp>=0?'gp':'gn')+'">'+mp.toFixed(1)+'%</td>';\n    bk.appendChild(tr);\n  });\n  extraItems.forEach(function(i){\n    if(!i.name||!i.subtotal)return;\n    gB+=i.subtotal;\n    var tr=document.createElement('tr');\n    tr.innerHTML='<td><small>Additional</small></td><td>'+esc(i.name)+'</td>'\n      +'<td>-</td><td>-</td><td>'+i.qty+' '+i.unit+'</td><td>'+i.unit+'</td>'\n      +'<td>-</td><td>-</td><td>-</td><td>-</td>'\n      +'<td>$'+f2(i.price)+'</td><td>$'+fi(i.subtotal)+'</td><td>-</td>';\n    bk.appendChild(tr);\n  });\n  var contPct=cont(),contv=gB>0?Math.round(gB*contPct/100*100)/100:0;\n  var total=gB+mobv+contv,gp=gB-gM;\n  document.getElementById('m-sf').textContent=gSF>0?gSF.toLocaleString():'-';\n  updatePhaseMetric();\n  var ccEl=document.getElementById('m-cont-card');\n  renderJobCost();\n  if(ccEl)ccEl.style.display=contv>0?'':'none';\n  var cmEl=document.getElementById('m-cont');\n  if(cmEl)cmEl.textContent=contv>0?'$'+fi(contv):'-';\n  document.getElementById('m-sy').textContent=gSY>0?gSY.toFixed(1):'-';\n  document.getElementById('m-tons').textContent=gT>0?gT.toFixed(2):'-';\n  document.getElementById('m-mat').textContent=gM>0?'$'+fi(gM):'-';\n  document.getElementById('m-mob').textContent=mobv>0?'$'+fi(mobv):'$0';\n  document.getElementById('m-bid').textContent=total>0?'$'+fi(total):'-';\n  document.getElementById('m-gp').textContent=gp>0?'$'+fi(gp)+' ('+mu(gM,gB).toFixed(1)+'%)':'-';\n}\n\n// -- Build payload -------------------------------------------------------------\nfunction buildPayload(){\n  var wfv=wf(),mobv=mob();\n  var name=document.getElementById('proj-name').value||'Unnamed Project';\n  var client=document.getElementById('proj-client').value||'';\n  var addr=document.getElementById('proj-addr').value||'';\n  var cs=document.getElementById('proj-cs').value||'';\n  var date=document.getElementById('proj-date').value||'';\n  var notes=document.getElementById('proj-notes').value||'';\n  var fmtDate=date?new Date(date+'T12:00:00').toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}):'';\n  var line_items=[],total=0;\n  sections.forEach(function(s){\n    var sf=s.sf||0,sy=sf/9;\n    s.layers.forEach(function(l){\n      var isMill=l.type==='Mill & Pave';\n      var rawT=(!isMill&&sf>0)?tons(sf,l.depth,LBS[l.type]):0;\n      var t=rawT*wfv,millFlat=isMill?(l.mill_days||0)*(l.mill_rate||0):0;\n      var bC=calcLayerBid(t,l);\n      total+=bC;\n      if(sf>0||isMill)line_items.push({\n        name:s.name+' \u2014 '+l.type,\n        description:isMill?'Milling '+l.mill_days+' day(s) @ $'+l.mill_rate+'/day':('Install '+l.depth+'" '+l.type),\n        qty:isMill?l.mill_days:parseFloat(sy.toFixed(1)),\n        unit:isMill?'day':'SY',\n        price:isMill?l.mill_rate:parseFloat(sy>0?(bC/sy).toFixed(2):'0'),\n        subtotal:parseFloat(bC.toFixed(2))\n      });\n    });\n  });\n  concItems.forEach(function(i){\n    if(!i.qty||!i.sub)return;\n    var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];\n    var bR=concBid(i),bC=i.qty*bR;total+=bC;\n    line_items.push({name:ct.name,description:ct.desc,qty:i.qty,unit:ct.unit,price:parseFloat(bR.toFixed(2)),subtotal:parseFloat(bC.toFixed(2))});\n  });\n  extraItems.forEach(function(i){\n    if(!i.name||!i.subtotal)return;\n    total+=i.subtotal;\n    line_items.push({name:i.name,description:'',qty:i.qty,unit:i.unit,price:i.price,subtotal:i.subtotal});\n  });\n  var contPct2=cont(),contv2=contPct2>0?parseFloat((total*contPct2/100).toFixed(2)):0;\n  if(contv2>0){\n    total+=contv2;\n    line_items.push({name:'Contingency ('+contPct2.toFixed(1)+'%)',description:'Project contingency',qty:1,unit:'LS',price:contv2,subtotal:contv2});\n  }\n  if(mobv>0){total+=mobv;line_items.push({name:'Mobilization',description:'Project mobilization & setup',qty:1,unit:'LS',price:mobv,subtotal:mobv});}\n  return{\n    project_name:name,address:addr,city_state:cs,date:fmtDate,\n    sender_name:sender.name||'HD Hauling & Grading',sender_email:sender.email||'',sender_phone:sender.phone||'',\n    company:'HD Hauling & Grading',client_name:client,client_email:'',client_phone:'',client_company:'',\n    notes:notes,total:parseFloat(total.toFixed(2)),line_items:line_items,\n    unit_prices:[\n      {name:'Additional asphalt tonnage (prevailing market rate)',rate:150},\n      {name:'Cold patch / temporary repair (per ton)',rate:200},\n      {name:'Milling overage (per SY)',rate:4.50},\n      {name:'Additional traffic control (per day)',rate:2500},\n      {name:'Additional mobilization (per occurrence)',rate:1500},\n    ],\n    _date_iso:date,\n  };\n}\n\n// -- PDF export ----------------------------------------------------------------\nasync function exportPDF(){\n  var btn=document.getElementById('pdf-btn');\n  btn.disabled=true;btn.textContent='Generating...';\n  try{\n    var p=buildPayload();\n    if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;\n    var r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});\n    if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}\n    var blob=await r.blob();\n    var url=URL.createObjectURL(blob);\n    var a=document.createElement('a');\n    a.href=url;a.download='HD_Proposal_'+p.project_name.replace(/\s+/g,'_')+'.pdf';\n    a.click();URL.revokeObjectURL(url);\n    toast('PDF downloaded','ok');\n  }catch(e){toast('PDF error: '+e.message,'err');}\n  finally{\n    btn.disabled=false;\n    btn.innerHTML='<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1z"/></svg>Export PDF';\n  }\n}\n\n// -- Word export ---------------------------------------------------------------\nasync function exportDOCX(){\n  var btn=document.getElementById('docx-btn');\n  btn.disabled=true;btn.textContent='Generating...';\n  try{\n    var p=buildPayload();\n    if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;\n    var r=await fetch('/generate-docx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});\n    if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}\n    var blob=await r.blob();\n    var url=URL.createObjectURL(blob);\n    var a=document.createElement('a');\n    a.href=url;a.download='HD_Proposal_'+p.project_name.replace(/\s+/g,'_')+'.docx';\n    a.click();URL.revokeObjectURL(url);\n    toast('Word doc downloaded','ok');\n  }catch(e){toast('Word error: '+e.message,'err');}\n  finally{\n    btn.disabled=false;\n    btn.innerHTML='<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 7h8v1H4zm0 2h8v1H4zm0 2h5v1H4z"/></svg>Word';\n  }\n}\n\n// -- Site plan -----------------------------------------------------------------\nfunction setSitePlan(inp){\n  if(!inp.files||!inp.files[0])return;\n  var reader=new FileReader();\n  reader.onload=function(e){\n    sitePlanDataUrl=e.target.result;\n    document.getElementById('site-plan-label').textContent='OK Plan';\n    document.getElementById('site-plan-btn').style.borderColor='#27500A';\n    toast('Site plan loaded','ok');\n  };\n  reader.readAsDataURL(inp.files[0]);\n}\n\n// -- Notion --------------------------------------------------------------------\nfunction onClientInput(v){\n  clearTimeout(clientTimer);\n  var sug=document.getElementById('client-sug');\n  if(!v||v.length<2){sug.style.display='none';return;}\n  clientTimer=setTimeout(function(){\n    var m=clients.filter(function(c){return c.name.toLowerCase().indexOf(v.toLowerCase())>=0;}).slice(0,6);\n    if(!m.length){sug.style.display='none';return;}\n    sug.innerHTML=m.map(function(c){\n      var json=JSON.stringify(c).replace(/"/g,'&quot;');\n      return '<div onclick="selectClient(\''+json.replace(/'/g,'x')+'\')" style="padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'\'">'\n        +'<div style="font-weight:600">'+esc(c.name)+'</div>'\n        +'<div style="font-size:11px;color:var(--dgray)">'+(c.company?esc(c.company)+'  -  ':'')+esc(c.phone||c.email||'')+'</div>'\n        +'</div>';\n    }).join('');\n    sug.style.display='block';\n  },200);\n}\nfunction selectClient(c){\n  if(typeof c==='string')c=JSON.parse(c);\n  document.getElementById('proj-client').value=c.name;\n  document.getElementById('client-sug').style.display='none';\n  var bar=document.getElementById('client-bar');\n  var parts=[c.company,c.phone,c.email].filter(Boolean);\n  if(parts.length){bar.style.display='block';bar.textContent=parts.join(' \u00b7 ');}\n  else bar.style.display='none';\n}\n\n// -- Save / Load ---------------------------------------------------------------\nasync function saveQuote(){\n  var name=document.getElementById('proj-name').value||('Quote '+(savedQuotes.length+1));\n  var snap={name:name,client:document.getElementById('proj-client').value,\n    date:document.getElementById('proj-date').value,addr:document.getElementById('proj-addr').value,\n    cs:document.getElementById('proj-cs').value,notes:document.getElementById('proj-notes').value,\n    waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,contingency:document.getElementById('contingency').value,\n    sections:sections,concItems:concItems,extraItems:extraItems};\n  var p=buildPayload();\n  var jcData=calcJobCost();snap.jc_labor_cost=jcData.laborCost;snap.jc_overhead_pct=jcData.ovhPct;snap.jc_total_cost=jcData.totalCost;snap.jc_margin_pct=jcData.marginPct;\n  try{\n    var r=await fetch('/quotes/save',{method:'POST',headers:{'Content-Type':'application/json'},\n      body:JSON.stringify({name:name,client:snap.client,date:snap.date,total:p.total,snap:snap,stage_id:pipelineStages.length?pipelineStages[0].id:null})});\n    var d=await r.json();\n    if(d.ok){savedQuotes.push({id:d.id,name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});toast('Quote saved','ok');}\n    else{toast('Save failed: '+(d.error||'unknown'),'err');}\n  }catch(e){toast('Save error: '+e.message,'err');}\n}\nfunction loadQuote(id){\n  var q=savedQuotes.find(function(x){return x.id===id;});if(!q)return;\n  var d=typeof q.snap==='string'?JSON.parse(q.snap):q.snap;\n  document.getElementById('proj-name').value=d.name||'';\n  document.getElementById('proj-client').value=d.client||'';\n  document.getElementById('proj-date').value=d.date||'';\n  document.getElementById('proj-addr').value=d.addr||'';\n  document.getElementById('proj-cs').value=d.cs||'';\n  document.getElementById('proj-notes').value=d.notes||'';\n  document.getElementById('waste').value=d.waste||5;\n  document.getElementById('mob').value=d.mob||0;\n  document.getElementById('contingency').value=d.contingency||0;\n  sections=d.sections||[];\n  sid=sections.reduce(function(m,s){return Math.max(m,s.id+1);},0);\n  lid=sections.reduce(function(m,s){return s.layers.reduce(function(m2,l){return Math.max(m2,l.id+1);},m);},0);\n  concItems=d.concItems||[];cid=concItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);\n  extraItems=d.extraItems||[];eid=extraItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);\n  showPanel('build',document.querySelector('.nav-item'));\n  renderAll();renderConc();renderExtra();\n  toast('Quote loaded');\n}\nasync function delSaved(id){\n  try{await fetch('/quotes/delete/'+id,{method:'DELETE'});renderSaved();}\n  catch(e){toast('Delete error: '+e.message,'err');}\n}\n\nfunction exportAllQuotes(){\n  if(!savedQuotes.length){toast('No saved quotes to export','err');return;}\n  var data={exported:new Date().toISOString(),count:savedQuotes.length,quotes:savedQuotes};\n  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});\n  var url=URL.createObjectURL(blob);\n  var a=document.createElement('a');\n  a.href=url;a.download='HD_Proposals_Backup_'+new Date().toISOString().split('T')[0]+'.json';\n  a.click();URL.revokeObjectURL(url);\n  toast('Exported '+savedQuotes.length+' quotes','ok');\n}\n\nasync function importQuotes(){\n  var inp=document.createElement('input');\n  inp.type='file';inp.accept='.json';\n  inp.onchange=async function(e){\n    var file=e.target.files[0];if(!file)return;\n    try{\n      var text=await file.text();\n      var data=JSON.parse(text);\n      var quotes=Array.isArray(data)?data:(data.quotes||[]);\n      if(!quotes.length)throw new Error('No quotes found in file');\n      var count=0;\n      for(var i=0;i<quotes.length;i++){\n        var q=quotes[i];\n        var snap=typeof q.snap==='string'?JSON.parse(q.snap):q.snap||{};\n        var r=await fetch('/quotes/save',{method:'POST',headers:{'Content-Type':'application/json'},\n          body:JSON.stringify({name:q.name||'Imported',client:q.client||'',date:q.date||'',total:q.total||0,snap:snap})});\n        var d=await r.json();if(d.ok)count++;\n      }\n      toast('Imported '+count+' of '+quotes.length+' quotes','ok');\n      renderSaved();\n    }catch(err){toast('Import error: '+err.message,'err');}\n  };\n  inp.click();\n}\n\nasync function renderSaved(){\n  var c=document.getElementById('saved-list');\n  c.innerHTML='<p style="color:var(--dgray);font-size:13px;">Loading...</p>';\n  try{\n    var r=await fetch('/quotes/list');\n    var d=await r.json();\n    if(!d.ok)throw new Error(d.error||'Failed to load');\n    savedQuotes=d.quotes;\n    c.innerHTML='';\n    if(!savedQuotes.length){c.innerHTML='<p style="color:var(--dgray);font-size:13px;">No saved quotes yet.</p>';return;}\n    savedQuotes.forEach(function(q){\n      var div=document.createElement('div');\n      div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';\n      div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+esc(q.name)+'</div>'\n        +'<div style="font-size:11px;color:var(--dgray);">'+(q.client?esc(q.client)+'  -  ':'')+(q.date||'')+'  -  $'+Math.round(q.total).toLocaleString()+'</div></div>'\n        +'<button class="btn btn-sec btn-sm" onclick="loadQuote('+q.id+')">Load</button>'\n        +'<button class="btn-ico" onclick="delSaved('+q.id+')">x</button>';\n      c.appendChild(div);\n    });\n  }catch(e){c.innerHTML='<p style="color:var(--red);font-size:13px;">Error: '+e.message+'</p>';}\n}\nfunction resetAll(){\n  sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;\n  ['proj-name','proj-client','proj-addr','proj-cs','proj-notes'].forEach(function(id){document.getElementById(id).value='';});\n  document.getElementById('waste').value=5;document.getElementById('mob').value=0;document.getElementById('contingency').value=0;\n  document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];\n  document.getElementById('client-bar').style.display='none';\n  renderAll();renderConc();renderExtra();\n  toast('Reset');\n}\n\n// -- Settings ------------------------------------------------------------------\nfunction saveSender(){\n  sender={name:document.getElementById('s-name').value,email:document.getElementById('s-email').value,phone:document.getElementById('s-phone').value};\n  localStorage.setItem('hd_sender',JSON.stringify(sender));\n  toast('Sender settings saved','ok');\n}\nfunction loadSenderUI(){\n  document.getElementById('s-name').value=sender.name||'';\n  document.getElementById('s-email').value=sender.email||'';\n  document.getElementById('s-phone').value=sender.phone||'';\n}\nfunction addPreset(){\n  var name=prompt('Preset name:');if(!name)return;\n  var t1=prompt('Layer 1 type (ABC base/Binder/Surface/Mill & Pave/B25.0C/I19.0C/S9.5C):');if(!t1)return;\n  var d1=parseFloat(prompt(t1+' depth (in):')||0);var r1=parseFloat(prompt(t1+' $/ton rate:')||0);\n  var layers=[{type:t1,depth:d1,rate:r1}];\n  if(confirm('Add a second layer?')){\n    var t2=prompt('Layer 2 type:');\n    if(t2){layers.push({type:t2,depth:parseFloat(prompt(t2+' depth:')||0),rate:parseFloat(prompt(t2+' rate:')||0)});}\n  }\n  PRESETS.push({name:name,layers:layers});\n  localStorage.setItem('hd_presets',JSON.stringify(PRESETS));\n  renderPresets();renderPresetMgr();\n  toast('Preset added','ok');\n}\nfunction renderPresetMgr(){\n  var c=document.getElementById('preset-mgr');if(!c)return;\n  c.innerHTML=PRESETS.map(function(p,i){\n    return '<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px;">'\n      +'<span style="flex:1;font-weight:600">'+esc(p.name)+'</span>'\n      +'<span style="font-size:11px;color:var(--dgray)">'+p.layers.map(function(l){return l.type+' '+l.depth+'"';}).join(', ')+'</span>'\n      +'<button class="btn-ico" onclick="PRESETS.splice('+i+',1);localStorage.setItem(\'hd_presets\',JSON.stringify(PRESETS));renderPresets();renderPresetMgr()">x</button>'
       +'</div>';
   }).join('');
 }
@@ -2503,33 +1756,143 @@ async function deleteClient(id) {
 }
 
 document.addEventListener('click',function(e){if(e.target.id==='client-modal')closeClientModal();});
-function initLoginCanvas(){var cv=document.getElementById('login-canvas');if(!cv)return;var ctx=cv.getContext('2d');var W,H,pts;var N=55;function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}function rr(a,b){return a+Math.random()*(b-a);}function init(){resize();pts=[];for(var i=0;i<N;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:rr(-0.15,0.15),vy:rr(-0.15,0.15),r:rr(1,2)});}function draw(){ctx.clearRect(0,0,W,H);for(var i=0;i<N;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;}for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){var dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<150){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(170,170,170,'+(1-dist/150)*0.15+')';ctx.lineWidth=0.5;ctx.stroke();}if(dist<75){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(204,0,0,'+(1-dist/75)*0.2+')';ctx.lineWidth=0.6;ctx.stroke();}}for(var i=0;i<N;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,6.28);ctx.fillStyle='rgba(255,255,255,0.22)';ctx.fill();}requestAnimationFrame(draw);}window.addEventListener('resize',resize);init();draw();}initLoginCanvas();
 
-var _editingUserId=null;
-async function loadUsers(){var tbody=document.getElementById('users-tbody');if(!tbody)return;try{var r=await fetch('/admin/users');if(r.status===403){tbody.innerHTML='<tr><td colspan="6" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';d.users.forEach(function(u){var tr=document.createElement('tr');var created=u.created_at?new Date(u.created_at).toLocaleDateString():'-';tr.innerHTML='<td><b>'+esc(u.full_name||u.username)+'</b></td><td style="font-family:monospace;font-size:12px;">'+esc(u.username)+'</td><td><span class="role-badge role-'+u.role+'">'+u.role+'</span></td><td><span class="'+(u.active?'status-active':'status-inactive')+'">'+( u.active?'Active':'Inactive')+'</span></td><td style="font-size:12px;color:var(--dgray);">'+created+'</td><td style="white-space:nowrap;"><button class="btn btn-sec btn-sm" style="margin-right:4px;" onclick="openEditUserModal('+JSON.stringify(u)+')">Edit</button>'+(u.username!==(window._userUsername||'')? '<button class="btn-ico" style="color:var(--red);" onclick="deactivateUser('+u.id+',\''+esc(u.username)+'\','+u.active+')">'+( u.active?'&#10005;':'&#10003;')+'</button>':'')+'</td>';tbody.appendChild(tr);});var sel=document.getElementById('log-user-filter');if(sel){sel.innerHTML='<option value="">All Users</option>';d.users.forEach(function(u){var o=document.createElement('option');o.value=u.username;o.textContent=u.full_name||u.username;sel.appendChild(o);});}}catch(e){tbody.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
-async function loadLogs(){var tbody=document.getElementById('logs-tbody');if(!tbody)return;tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">Loading...</td></tr>';try{var f=(document.getElementById('log-user-filter')||{}).value||'';var url='/admin/logs?limit=100'+(f?'&username='+encodeURIComponent(f):'');var r=await fetch(url);if(r.status===403){tbody.innerHTML='<tr><td colspan="5" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';if(!d.logs.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">No activity yet.</td></tr>';return;}d.logs.forEach(function(l){var tr=document.createElement('tr');if(!l.success)tr.className='log-row-fail';var ts=l.logged_at?new Date(l.logged_at).toLocaleString():'-';tr.innerHTML='<td style="font-size:12px;white-space:nowrap;">'+ts+'</td><td><b>'+esc(l.full_name||l.username)+'</b><br><span style="font-size:11px;color:var(--dgray);">'+esc(l.username)+'</span></td><td style="text-transform:capitalize;font-size:12px;">'+esc(l.action)+'</td><td>'+(l.success?'<span style="color:#27500A;font-weight:600;font-size:11px;">Success</span>':'<span style="color:var(--red);font-weight:600;font-size:11px;">Failed</span>')+'</td><td class="log-ip">'+esc(l.ip_address||'-')+'</td>';tbody.appendChild(tr);});}catch(e){tbody.innerHTML='<tr><td colspan="5" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
-function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value='user';document.getElementById('pin-hint').textContent='(4-8 digits)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
-function openEditUserModal(u){_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=true;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value=u.role||'user';document.getElementById('pin-hint').textContent='(leave blank to keep current PIN)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');}
-function closeUserModal(){document.getElementById('user-modal').classList.add('hidden');_editingUserId=null;}
-async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pin=document.getElementById('edit-pin').value.trim();var role=document.getElementById('edit-role').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,role:role};if(pin)upd.pin=pin;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pin||pin.length<4){errEl.textContent='PIN must be at least 4 digits.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,pin:pin,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
-async function deactivateUser(uid,username,active){if(!confirm((active?'Deactivate':'Reactivate')+' "'+username+'"?'))return;var r=await fetch('/admin/users/'+uid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!active})});var d=await r.json();if(d.ok){loadUsers();toast('User '+(active?'deactivated':'reactivated'),'ok');}else toast('Error: '+(d.error||'failed'),'err');}
 
-// Startup: check auth on every page load so _userRole is set from server
-(async function(){
+// -- Admin Panel Functions ----------------------------------------------------
+var _editingUserId = null;
+
+async function loadUsers(){
+  var tbody = document.getElementById('users-tbody');
+  if(!tbody) return;
   try{
-    var r=await fetch('/auth/check');
-    var d=await r.json();
-    if(d.authenticated){
-      window._userRole=d.role||'user';
-      window._userName=d.full_name||'';
-      window._userUsername=d.username||'';
-      document.getElementById('login-screen').style.display='none';
-      document.getElementById('app').className='on';
-      try{boot();}catch(e){console.warn('boot error:',e.message);}
-      showAdminElements();
+    var r = await fetch('/admin/users');
+    if(r.status===403){tbody.innerHTML='<tr><td colspan="6" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}
+    var d = await r.json();
+    if(!d.ok) throw new Error(d.error);
+    tbody.innerHTML = '';
+    window._adminUsers = window._adminUsers || {};
+    d.users.forEach(function(u){
+      window._adminUsers[u.id] = u;
+      var tr = document.createElement('tr');
+      var created = u.created_at ? new Date(u.created_at).toLocaleDateString() : '-';
+      tr.innerHTML =
+        '<td><b>'+esc(u.full_name||u.username)+'</b></td>'+
+        '<td style="font-family:monospace;font-size:12px;">'+esc(u.username)+'</td>'+
+        '<td><span class="role-badge role-'+u.role+'">'+u.role+'</span></td>'+
+        '<td><span class="'+(u.active?'status-active':'status-inactive')+'">'+(u.active?'Active':'Inactive')+'</span></td>'+
+        '<td style="font-size:12px;color:var(--dgray);">'+created+'</td>'+
+        '<td style="white-space:nowrap;">'+'<button class="btn btn-sec btn-sm" style="margin-right:4px;" onclick="openEditUserModal(window._adminUsers['+u.id+'])" >Edit</button>'+(u.username!==(window._userName||'')?'<button class="btn-ico" style="color:var(--red);" title="'+(u.active?'Deactivate':'Reactivate')+'" onclick="deactivateUser('+u.id+',\''+esc(u.username)+'\','+u.active+')">'+(u.active?'&#10005;':'&#10003;')+'</button>':'')+'</td>';
+      tbody.appendChild(tr);
+    });
+    var sel = document.getElementById('log-user-filter');
+    if(sel){
+      sel.innerHTML = '<option value="">All Users</option>';
+      d.users.forEach(function(u){
+        var opt = document.createElement('option');
+        opt.value = u.username; opt.textContent = u.full_name||u.username;
+        sel.appendChild(opt);
+      });
     }
-  }catch(e){}
-})();
+  }catch(e){
+    tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';
+  }
+}
+
+async function loadLogs(){
+  var tbody = document.getElementById('logs-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">Loading...</td></tr>';
+  try{
+    var filter = (document.getElementById('log-user-filter')||{}).value||'';
+    var url = '/admin/logs?limit=100'+(filter?'&username='+encodeURIComponent(filter):'');
+    var r = await fetch(url);
+    if(r.status===403){tbody.innerHTML='<tr><td colspan="5" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}
+    var d = await r.json();
+    if(!d.ok) throw new Error(d.error);
+    tbody.innerHTML = '';
+    if(!d.logs.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">No activity yet.</td></tr>';return;}
+    d.logs.forEach(function(log){
+      var tr = document.createElement('tr');
+      if(!log.success) tr.className = 'log-row-fail';
+      var ts = log.logged_at ? new Date(log.logged_at).toLocaleString() : '-';
+      tr.innerHTML =
+        '<td style="font-size:12px;white-space:nowrap;">'+ts+'</td>'+
+        '<td><b>'+esc(log.full_name||log.username)+'</b><br><span style="font-size:11px;color:var(--dgray);">'+esc(log.username)+'</span></td>'+
+        '<td style="text-transform:capitalize;font-size:12px;">'+esc(log.action)+'</td>'+
+        '<td>'+(log.success?'<span style="color:#27500A;font-weight:600;font-size:11px;">Success</span>':'<span style="color:var(--red);font-weight:600;font-size:11px;">Failed</span>')+'</td>'+
+        '<td class="log-ip">'+esc(log.ip_address||'-')+'</td>';
+      tbody.appendChild(tr);
+    });
+  }catch(e){
+    tbody.innerHTML='<tr><td colspan="5" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';
+  }
+}
+
+function openAddUserModal(){
+  _editingUserId=null;
+  document.getElementById('user-modal-title').textContent='Add User';
+  document.getElementById('edit-full-name').value='';
+  document.getElementById('edit-username').value='';
+  document.getElementById('edit-username').disabled=false;
+  document.getElementById('edit-pin').value='';
+  document.getElementById('edit-role').value='user';
+  document.getElementById('pin-hint').textContent='(4-8 digits)';
+  document.getElementById('user-modal-err').textContent='';
+  document.getElementById('user-modal').classList.remove('hidden');
+  setTimeout(function(){document.getElementById('edit-full-name').focus();},100);
+}
+
+function openEditUserModal(u){
+  _editingUserId=u.id;
+  document.getElementById('user-modal-title').textContent='Edit User';
+  document.getElementById('edit-full-name').value=u.full_name||'';
+  document.getElementById('edit-username').value=u.username;
+  document.getElementById('edit-username').disabled=true;
+  document.getElementById('edit-pin').value='';
+  document.getElementById('edit-role').value=u.role||'user';
+  document.getElementById('pin-hint').textContent='(leave blank to keep current PIN)';
+  document.getElementById('user-modal-err').textContent='';
+  document.getElementById('user-modal').classList.remove('hidden');
+}
+
+function closeUserModal(){
+  document.getElementById('user-modal').classList.add('hidden');
+  _editingUserId=null;
+}
+
+async function saveUser(){
+  var errEl=document.getElementById('user-modal-err');
+  errEl.textContent='';
+  var fullName=document.getElementById('edit-full-name').value.trim();
+  var username=document.getElementById('edit-username').value.trim().toLowerCase();
+  var pin=document.getElementById('edit-pin').value.trim();
+  var role=document.getElementById('edit-role').value;
+  if(!fullName){errEl.textContent='Full name is required.';return;}
+  if(_editingUserId){
+    var update={full_name:fullName,role:role};
+    if(pin) update.pin=pin;
+    var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(update)});
+    var d=await r.json();
+    if(d.ok){closeUserModal();loadUsers();toast('User updated','ok');}
+    else{errEl.textContent=d.error||'Failed to update.';}
+  } else {
+    if(!username){errEl.textContent='Username is required.';return;}
+    if(!pin||pin.length<4){errEl.textContent='PIN must be at least 4 digits.';return;}
+    var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:username,full_name:fullName,pin:pin,role:role})});
+    var d=await r.json();
+    if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}
+    else{errEl.textContent=d.error||'Failed to create user.';}
+  }
+}
+
+async function deactivateUser(uid,username,active){
+  if(!confirm((active?'Deactivate':'Reactivate')+' user "'+username+'"?')) return;
+  var r=await fetch('/admin/users/'+uid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!active})});
+  var d=await r.json();
+  if(d.ok){loadUsers();toast('User '+(active?'deactivated':'reactivated'),'ok');}
+  else toast('Error: '+(d.error||'failed'),'err');
+}
+
 </script>
 
 <!-- Client Modal -->
@@ -2552,4 +1915,4 @@ async function deactivateUser(uid,username,active){if(!confirm((active?'Deactiva
   </div>
 </div>
 </body>
-</html>
+</html<span id="sidebar-user" style="font-size:10px;opacity:0.5;display:block;margin-bottom:4px;"></span>>
