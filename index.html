@@ -362,7 +362,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
       <div class="nav-item" onclick="showPanel('analytics',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v3H1zm4-4h3v7H5zm4-4h3v11H9zm4-6h2v17h-2z"/></svg>Analytics</div>
 
-      <div class="nav-item" onclick="showPanel('crewcosts',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 1v14M8 3v12M12 5v10"/><circle cx="4" cy="1" r="1"/><circle cx="8" cy="3" r="1"/><circle cx="12" cy="5" r="1"/></svg>Crew Costs</div>
       <div class="nav-item" onclick="showPanel('jobcost',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3v1.5H10v1H8.5V9H10v1H8.5V11.5h-1V10H6V9h1.5V6.5H6v-1h1.5V4h1z"/></svg>Job Costing</div>
       <div class="nav-item" onclick="showPanel('settings',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings
@@ -444,7 +443,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
                     <p style="color:#555;font-size:12px;margin-bottom:4px;">Company Title</p>
                     <p style="font-size:12px;color:#555;margin-bottom:1px;">E: <span style="color:#0055B2;">email@hdgrading.com</span></p>
                     <p style="font-size:12px;color:#555;margin-bottom:8px;">C: Cell Number | O: 704-791-8982</p>
-                    <img id="dash-sig-logo" src="hd_logo_cropped.png" alt="HD Hauling &amp; Grading" style="height:70px;width:auto;display:block;margin-bottom:8px;"/>
+                    <img id="dash-sig-logo" src="hd_logo.png" alt="HD Hauling &amp; Grading" style="height:70px;width:auto;display:block;margin-bottom:8px;"/>
                     <p style="font-size:8px;color:#888;line-height:1.3;margin:0;"><strong>CONFIDENTIALITY NOTICE:</strong> This email and any attachments are intended solely for the named recipient(s) and may contain confidential information. If you have received this email in error, please immediately notify the sender and permanently delete this email and any attachments without reading, forwarding, copying, or disclosing their contents. Any unauthorized use, disclosure, or distribution is prohibited and may be unlawful.</p>
                   </div>
                   <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -566,20 +565,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="panel" id="panel-lineitems"></div>
 
       <!-- CREW COSTS PANEL -->
-      <div class="panel" id="panel-crewcosts"><div class="content">
-        <div class="card">
-          <div class="card-hdr">
-            <span class="card-title">Crew Costs by Material</span>
-            <span style="font-size:11px;color:var(--dgray);margin-left:8px;">Set crew rate, productivity, and trucking per material type</span>
-          </div>
-          <div id="crew-costs-table" style="overflow-x:auto;"></div>
-          <div style="margin-top:12px;display:flex;gap:8px;">
-            <button class="btn btn-red btn-sm" onclick="saveCrewCosts()">Save</button>
-            <button class="btn btn-sec btn-sm" onclick="resetCrewCosts()">Reset Defaults</button>
-          </div>
-          <div id="cc-indicator" style="margin-top:6px;font-size:11px;color:var(--dgray);"></div>
-        </div>
-      </div></div>
+      <div class="panel" id="panel-crewcosts"></div>
 
       <!-- JOB COST / ESTIMATES VS ACTUALS PANEL -->
       <div class="panel" id="panel-jobcost">
@@ -832,6 +818,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <button class="stab" id="stab-badges" onclick="showSettingsTab('badges')">Layer Badges</button>
           <button class="stab" id="stab-presets" onclick="showSettingsTab('presets')">Presets</button>
           <button class="stab" id="stab-library" onclick="showSettingsTab('library')">Bid Library</button>
+          <button class="stab" id="stab-crews" onclick="showSettingsTab('crews')">Crew Costs</button>
         </div>
 
         <!-- General Tab -->
@@ -947,6 +934,19 @@ tr:nth-child(even) td{background:#FAFAFA;}
             </div>
           </div>
         </div>
+
+        <div id="stab-content-crews" style="display:none;">
+          <div class="card">
+            <div class="card-hdr">
+              <span class="card-title">Crew Costs</span>
+              <button class="btn btn-sec btn-sm" onclick="addCrew()">+ Add Crew</button>
+            </div>
+            <div class="card-body">
+              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Define your crews and their daily rates. These are used in job costing calculations.</p>
+              <div id="crews-list"></div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="panel" id="panel-admin">
   <div class="card">
@@ -1003,16 +1003,17 @@ var jcTruckRate = TRUCK_RATE_DEFAULT;
 var jcTruckHours = TRUCK_HOURS_DEFAULT;
 var jcTonsPerTruck = TONS_PER_TRUCK_DEFAULT;
 
-// Per-material crew cost profiles (override globals when set)
-var CREW_COSTS_DEFAULT = {
-  'ABC base':  {crew_rate:2500, productivity:800, tons_per_truck:200, truck_daily_rate:1000},
-  'Mill & Pave':{crew_rate:5000, productivity:400, tons_per_truck:100, truck_daily_rate:800},
-  'B25.0C':    {crew_rate:5000, productivity:400, tons_per_truck:100, truck_daily_rate:800},
-  'I19.0C':    {crew_rate:5000, productivity:400, tons_per_truck:100, truck_daily_rate:800},
-  'S9.5B':     {crew_rate:5000, productivity:400, tons_per_truck:100, truck_daily_rate:800},
-  'S9.5C':     {crew_rate:5000, productivity:400, tons_per_truck:100, truck_daily_rate:800}
-};
-var CREW_COSTS = JSON.parse(JSON.stringify(CREW_COSTS_DEFAULT));
+// Crew list — simple name + daily rate, editable, stored in localStorage
+var CREWS_DEFAULT = [
+  {id:1, name:'Stone Crew', daily_rate:2500},
+  {id:2, name:'Asphalt Crew', daily_rate:5000}
+];
+var CREWS = JSON.parse(localStorage.getItem('hd_crews')||'null') || JSON.parse(JSON.stringify(CREWS_DEFAULT));
+var _crewNextId = CREWS.reduce(function(mx,c){return Math.max(mx,c.id);},0)+1;
+
+// Legacy compat — keep CREW_COSTS as a lookup for job costing code that references it
+var CREW_COSTS_DEFAULT = {};
+var CREW_COSTS = {};
 
 function getCrewParam(matType, param){
   var c = CREW_COSTS[matType];
@@ -3022,61 +3023,76 @@ function loadCrewCosts(){
     if(s) CREW_COSTS=JSON.parse(s);
   }catch(e){}
 }
-function saveCrewCosts(){
-  // Read values from table inputs
-  var wrap=document.getElementById('crew-costs-table');
-  if(!wrap)return;
-  var inputs=wrap.querySelectorAll('input[data-mat]');
-  inputs.forEach(function(inp){
-    var mat=inp.getAttribute('data-mat');
-    var field=inp.getAttribute('data-field');
-    if(!CREW_COSTS[mat])CREW_COSTS[mat]={};
-    CREW_COSTS[mat][field]=parseFloat(inp.value)||0;
-  });
-  try{localStorage.setItem('hd_crew_costs',JSON.stringify(CREW_COSTS));}catch(e){}
-  var ind=document.getElementById('cc-indicator');
-  if(ind){ind.textContent='Saved.';setTimeout(function(){ind.textContent='';},2000);}
-  recalc();
+function saveCrews(){
+  try{localStorage.setItem('hd_crews',JSON.stringify(CREWS));}catch(e){}
 }
-function resetCrewCosts(){
-  CREW_COSTS=JSON.parse(JSON.stringify(CREW_COSTS_DEFAULT));
-  try{localStorage.removeItem('hd_crew_costs');}catch(e){}
-  renderCrewCosts();
-  recalc();
+function addCrew(){
+  CREWS.push({id:_crewNextId++, name:'', daily_rate:0});
+  saveCrews();
+  renderCrewsList();
+  // Focus the new name input
+  setTimeout(function(){
+    var inputs=document.querySelectorAll('#crews-list input[data-field="name"]');
+    if(inputs.length)inputs[inputs.length-1].focus();
+  },50);
 }
-function renderCrewCosts(){
-  var wrap=document.getElementById('crew-costs-table');if(!wrap)return;
+function deleteCrew(id){
+  CREWS=CREWS.filter(function(c){return c.id!==id;});
+  saveCrews();
+  renderCrewsList();
+}
+function updateCrewField(id,field,val){
+  var c=CREWS.find(function(x){return x.id===id;});
+  if(!c)return;
+  if(field==='daily_rate')c[field]=parseFloat(val)||0;
+  else c[field]=val;
+  saveCrews();
+}
+function renderCrewsList(){
+  var wrap=document.getElementById('crews-list');if(!wrap)return;
+  wrap.innerHTML='';
+  if(!CREWS.length){
+    wrap.innerHTML='<p style="color:var(--dgray);font-size:12px;">No crews defined. Click + Add Crew to get started.</p>';
+    return;
+  }
   var tbl=document.createElement('table');
-  tbl.className='tbl';tbl.style.width='100%';tbl.style.fontSize='12px';
+  tbl.style.cssText='width:100%;border-collapse:collapse;font-size:13px;';
   var thead=document.createElement('thead');
-  thead.innerHTML='<tr><th style="text-align:left;">Material</th><th style="text-align:right;">Crew $/day</th><th style="text-align:right;">Productivity t/day</th><th style="text-align:right;">Tons/truck/day</th><th style="text-align:right;">Truck $/day</th></tr>';
+  thead.innerHTML='<tr style="background:var(--lgray);"><th style="padding:8px 12px;text-align:left;font-weight:600;">Crew Name</th><th style="padding:8px 12px;text-align:right;font-weight:600;">Daily Rate ($)</th><th style="padding:8px 4px;width:40px;"></th></tr>';
   tbl.appendChild(thead);
   var tbody=document.createElement('tbody');
-  LTYPES.forEach(function(mat,idx){
-    var c=CREW_COSTS[mat]||{};
-    var def=CREW_COSTS_DEFAULT[mat]||{crew_rate:jcCrewRate,productivity:jcProductivity,tons_per_truck:jcTonsPerTruck,truck_daily_rate:jcTruckRate*jcTruckHours};
+  CREWS.forEach(function(c,idx){
     var tr=document.createElement('tr');
     if(idx%2)tr.style.background='var(--lgray)';
-    var tdName=document.createElement('td');
-    tdName.innerHTML='<span class="badge '+(LBADGE[mat]||'b-misc')+'" style="font-size:10px;">'+esc(mat)+'</span>';
-    tr.appendChild(tdName);
-    var fields=['crew_rate','productivity','tons_per_truck','truck_daily_rate'];
-    fields.forEach(function(f){
-      var td=document.createElement('td');td.style.textAlign='right';
-      var inp=document.createElement('input');
-      inp.type='number';inp.min='0';inp.step=f==='truck_daily_rate'?'50':'any';
-      inp.value=c[f]!==undefined?c[f]:def[f];
-      inp.style.cssText='width:90px;font-size:12px;padding:3px 6px;text-align:right;border:1px solid #ddd;border-radius:3px;';
-      inp.setAttribute('data-mat',mat);inp.setAttribute('data-field',f);
-      inp.placeholder=def[f];
-      td.appendChild(inp);
-      tr.appendChild(td);
-    });
+    var tdName=document.createElement('td');tdName.style.padding='6px 12px';
+    var nameInp=document.createElement('input');
+    nameInp.type='text';nameInp.value=c.name;nameInp.placeholder='e.g. Stone Crew';
+    nameInp.style.cssText='width:100%;font-size:13px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;';
+    nameInp.setAttribute('data-field','name');
+    (function(id){nameInp.addEventListener('change',function(){updateCrewField(id,'name',this.value);});})(c.id);
+    tdName.appendChild(nameInp);tr.appendChild(tdName);
+
+    var tdRate=document.createElement('td');tdRate.style.cssText='padding:6px 12px;text-align:right;';
+    var rateInp=document.createElement('input');
+    rateInp.type='number';rateInp.min='0';rateInp.step='100';rateInp.value=c.daily_rate;
+    rateInp.style.cssText='width:120px;font-size:13px;padding:4px 8px;text-align:right;border:1px solid var(--bdr);border-radius:4px;';
+    (function(id){rateInp.addEventListener('change',function(){updateCrewField(id,'daily_rate',this.value);});})(c.id);
+    tdRate.appendChild(rateInp);tr.appendChild(tdRate);
+
+    var tdDel=document.createElement('td');tdDel.style.cssText='padding:6px 4px;text-align:center;';
+    var delBtn=document.createElement('button');delBtn.className='btn-ico';delBtn.style.color='var(--red)';delBtn.innerHTML='&#10005;';
+    (function(id){delBtn.addEventListener('click',function(){deleteCrew(id);});})(c.id);
+    tdDel.appendChild(delBtn);tr.appendChild(tdDel);
+
     tbody.appendChild(tr);
   });
   tbl.appendChild(tbody);
-  wrap.innerHTML='';wrap.appendChild(tbl);
+  wrap.appendChild(tbl);
 }
+// Legacy stubs for any code that calls the old functions
+function saveCrewCosts(){saveCrews();}
+function resetCrewCosts(){CREWS=JSON.parse(JSON.stringify(CREWS_DEFAULT));saveCrews();renderCrewsList();}
+function renderCrewCosts(){renderCrewsList();}
 
 // -- Line Items tab ------------------------------------------------------------
 var liOverrides={}; // key: 'sec-{sid}-{lid}' or 'conc-{id}' or 'extra-{id}', val: {name,description,qty,unit,price}
@@ -3571,13 +3587,14 @@ function loadSenderUI(){
   document.getElementById('s-phone').value=sender.phone||'';
 }
 function showSettingsTab(tab){
-  ['general','badges','presets','library'].forEach(function(t){
+  ['general','badges','presets','library','crews'].forEach(function(t){
     document.getElementById('stab-content-'+t).style.display=t===tab?'':'none';
     document.getElementById('stab-'+t).classList.toggle('on',t===tab);
   });
   if(tab==='badges'){renderBadgeList();}
   if(tab==='presets'){renderPresetMgr();}
   if(tab==='library'){renderLibraryList();}
+  if(tab==='crews'){renderCrewsList();}
 }
 
 function applyBadgeStyles(){
