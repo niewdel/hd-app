@@ -1207,6 +1207,12 @@ async function doLogin(){
       sender={name:window._userName||'',email:window._userEmail||'',phone:window._userPhone||''};
       initSidebarCanvas();
       showAdminElements();
+    } else {
+      document.getElementById('pin-err').textContent=d.error||'Incorrect username or PIN.';
+      document.getElementById('pin-inp').value='';
+    }
+  }catch(e){document.getElementById('pin-err').textContent='Connection error. Try again.';}
+  finally{if(btn){btn.disabled=false;btn.textContent='Access Tool';}}
 }
 
 
