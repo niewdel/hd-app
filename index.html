@@ -113,6 +113,14 @@ body.dark .rpt-stat{background:#222;border-color:#333;}.rpt-bar{height:18px;bord
 .rpt-tbl tr:hover{background:#F9F9F9;}
 body.dark .rpt-tbl th{background:#2a2a2a;}body.dark .rpt-tbl tr:hover{background:#2a2a2a;}
 
+/* Schedule View Toggle */
+.sched-view-btn{background:#fff;border:none;border-right:1px solid var(--bdr);padding:4px 10px;font-size:11px;font-weight:600;color:var(--dgray);cursor:pointer;font-family:var(--font);transition:all .12s;}
+.sched-view-btn:last-child{border-right:none;}
+.sched-view-btn:hover{background:#F5F5F5;}
+.sched-view-active{background:var(--red) !important;color:#fff !important;}
+body.dark .sched-view-btn{background:#2a2a2a;color:#aaa;border-color:#444;}
+body.dark .sched-view-btn:hover{background:#333;}
+
 /* Cards */
 .card{background:#fff;border:1px solid var(--bdr);border-radius:var(--rad);margin-bottom:14px;overflow:hidden;}
 .card-hdr{padding:11px 15px;border-bottom:1px solid var(--bdr);background:#FAFAFA;display:flex;align-items:center;justify-content:space-between;}
@@ -558,7 +566,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div class="card-hdr"><span class="card-title">Global Settings</span></div>
           <div class="card-body">
             <div class="fg fg2">
-            <div><label>Mobilization / Flat Fee ($)</label><input id="mob" type="number" value="0" min="0" step="50"/></div>
+            <div><label>Mobilization — Bid ($)</label><input id="mob" type="number" value="10000" min="0" step="500"/></div>
+            <div><label>Mobilization — Est. Cost ($)</label><input id="mob-cost" type="number" value="5000" min="0" step="500"/></div>
               <div><label>Project Notes</label><textarea id="proj-notes" rows="3" placeholder="Notes for the proposal..." style="resize:vertical;font-family:inherit;font-size:13px;">All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice. See Exhibit A on Page 3 for Site Plan &amp; Takeoffs.</textarea></div>
             </div>
             <input id="waste" type="hidden" value="0"/>
@@ -666,6 +675,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Materials Cost</span><span id="jcs-mat">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Labor Cost</span><span id="jcs-labor">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Trucking Cost</span><span id="jcs-trucking">-</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Mobilization Cost</span><span id="jcs-mob-cost">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;padding:4px 0;border-top:1px solid var(--bdr);margin-top:4px;"><span>Total Est. Cost</span><span id="jcs-total-cost">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span style="color:var(--dgray);">Bid Price</span><span id="jcs-bid">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:4px 0;border-top:2px solid var(--bdr);margin-top:4px;"><span>Est. Margin</span><span id="jcs-margin">-</span></div>
@@ -1150,13 +1160,19 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div style="font-size:12px;color:var(--dgray);">Loading weather...</div>
           </div>
         </div>
-        <!-- Weekly calendar (full width) -->
+        <!-- Calendar (full width) -->
         <div class="card" style="margin-bottom:16px;">
-          <div class="card-hdr" style="display:flex;align-items:center;gap:10px;">
+          <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
             <button class="btn btn-sec btn-sm" onclick="schedCalNav(-1)">&lsaquo; Prev</button>
             <span class="card-title" id="sched-cal-title" style="flex:1;text-align:center;"></span>
             <button class="btn btn-sec btn-sm" onclick="schedCalNav(1)">Next &rsaquo;</button>
-            <button class="btn btn-sec btn-sm" onclick="schedCalNav(0)">This Week</button>
+            <button class="btn btn-sec btn-sm" onclick="schedCalNav(0)">Today</button>
+            <div style="display:flex;gap:0;border:1px solid var(--bdr);border-radius:4px;overflow:hidden;">
+              <button class="sched-view-btn" data-view="day" onclick="setSchedView('day')">Day</button>
+              <button class="sched-view-btn" data-view="3day" onclick="setSchedView('3day')">3-Day</button>
+              <button class="sched-view-btn sched-view-active" data-view="week" onclick="setSchedView('week')">Week</button>
+              <button class="sched-view-btn" data-view="month" onclick="setSchedView('month')">Month</button>
+            </div>
           </div>
           <div class="card-body" style="padding:8px;">
             <div id="sched-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;"></div>
@@ -1566,6 +1582,7 @@ function boot(){
   initJobCost();
   var coOA=document.getElementById('co-orig-amount');if(coOA)coOA.addEventListener('input',function(){recalcCO();});
   document.getElementById('mob').addEventListener('change',function(){recalc();});
+  document.getElementById('mob-cost').addEventListener('change',function(){renderJobCost();});
   renderPresets();
   if(!sections.length){
     addSection('Light Duty Asphalt Pavement',[{type:'ABC',depth:6,rate:50},{type:'S9.5C',depth:2,rate:150}]);
@@ -1654,6 +1671,7 @@ function tons(sf,d,lbs){return Math.ceil((sf*(d/12)*lbs)/2000);}
 function calcSY(sf){return Math.ceil(sf/9);}
 function wf(){return 1+(parseFloat(document.getElementById('waste').value)||0)/100;}
 function mob(){return parseFloat(document.getElementById('mob').value)||0;}
+function mobCost(){return parseFloat(document.getElementById('mob-cost').value)||0;}
 function cont(){var el=document.getElementById('contingency');return el?parseFloat(el.value)||0:0;}
 function mu(m,b){return m>0?((b-m)/m*100):0;}
 function fi(n){return Math.round(n).toLocaleString();}
@@ -1734,7 +1752,8 @@ function calcJobCost(){
     laborCost+=item.estLabor||0;
     truckCost+=item.estTruck||0;
   });
-  var totalCost=matCost+laborCost+truckCost;
+  var mobCostVal=mobCost();
+  var totalCost=matCost+laborCost+truckCost+mobCostVal;
   // Bid price
   var bidPrice = typeof total !== 'undefined' ? total : 0;
   var bidEl=document.getElementById('m-bid');
@@ -1744,7 +1763,7 @@ function calcJobCost(){
   }
   var marginDollar=bidPrice>0?bidPrice-totalCost:null;
   var marginPct=bidPrice>0&&totalCost>0?((bidPrice-totalCost)/bidPrice*100):null;
-  return {matCost:matCost,laborCost:laborCost,truckCost:truckCost,totalCost:totalCost,bidPrice:bidPrice,marginDollar:marginDollar,marginPct:marginPct};
+  return {matCost:matCost,laborCost:laborCost,truckCost:truckCost,mobCost:mobCostVal,totalCost:totalCost,bidPrice:bidPrice,marginDollar:marginDollar,marginPct:marginPct};
 }
 
 function renderJobCost(){
@@ -1753,6 +1772,7 @@ function renderJobCost(){
   if(g('jcs-mat'))g('jcs-mat').textContent=jc.matCost>0?'$'+fi(jc.matCost):'-';
   if(g('jcs-labor'))g('jcs-labor').textContent=jc.laborCost>0?'$'+fi(jc.laborCost):'-';
   if(g('jcs-trucking'))g('jcs-trucking').textContent=jc.truckCost>0?'$'+fi(jc.truckCost):'-';
+  if(g('jcs-mob-cost'))g('jcs-mob-cost').textContent=jc.mobCost>0?'$'+fi(jc.mobCost):'-';
   if(g('jcs-total-cost'))g('jcs-total-cost').textContent=jc.totalCost>0?'$'+fi(jc.totalCost):'-';
   if(g('jcs-bid'))g('jcs-bid').textContent=jc.bidPrice>0?'$'+fi(jc.bidPrice):'-';
   var mc = jc.marginPct!==null?(jc.marginPct>=20?'m-green':'m-red'):'';
@@ -1773,7 +1793,7 @@ async function exportJobCostPDF(){
   var fmtDate=date?(function(){var p=date.split('-');return p[1]+'/'+p[2]+'/'+p[0];})():'';
   var payload={
     project_name:projName, client_name:client, date:fmtDate,
-    mat_cost:jc.matCost, labor_cost:jc.laborCost, truck_cost:jc.truckCost||0,
+    mat_cost:jc.matCost, labor_cost:jc.laborCost, truck_cost:jc.truckCost||0, mob_cost:jc.mobCost||0,
     overhead_pct:0, overhead:0, total_cost:jc.totalCost, equip_cost:0,
     bid_price:jc.bidPrice, margin_dollar:jc.marginDollar, margin_pct:jc.marginPct,
     sender_name:sender.name, sender_phone:sender.phone, sender_email:sender.email
@@ -4953,7 +4973,7 @@ async function saveQuote(){
   var snap={name:name,client:document.getElementById('proj-client').value,
     date:document.getElementById('proj-date').value,addr:document.getElementById('proj-addr').value,
     cs:document.getElementById('proj-cs').value,notes:document.getElementById('proj-notes').value,
-    waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,contingency:document.getElementById('contingency').value,
+    waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,mob_cost:document.getElementById('mob-cost').value,contingency:document.getElementById('contingency').value,
     selectedClient:selectedClient,liOverrides:liOverrides,
     sections:sections,concItems:concItems,extraItems:extraItems};
   var p=buildPayload();
@@ -5014,7 +5034,8 @@ function loadQuote(id){
   document.getElementById('proj-addr').value=fullAddr;
   document.getElementById('proj-notes').value=d.notes||'';
   document.getElementById('waste').value=d.waste||5;
-  document.getElementById('mob').value=d.mob||0;
+  document.getElementById('mob').value=d.mob||10000;
+  document.getElementById('mob-cost').value=d.mob_cost||5000;
   document.getElementById('contingency').value=d.contingency||0;
   selectedClient=d.selectedClient||{name:d.client||'',company:'',phone:'',email:''};
   liOverrides=d.liOverrides||{};
@@ -5272,7 +5293,7 @@ async function duplicateProposal(id){
 function resetAll(){
   sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;lastSavedQuoteId=null;
   ['proj-name','proj-client','proj-addr','proj-cs'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('proj-notes').value='All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice. See Exhibit A on Page 3 for Site Plan & Takeoffs.';
-  document.getElementById('waste').value=5;document.getElementById('mob').value=0;document.getElementById('contingency').value=0;
+  document.getElementById('waste').value=5;document.getElementById('mob').value=10000;document.getElementById('mob-cost').value=5000;document.getElementById('contingency').value=0;
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('client-bar').style.display='none';
   selectedClient={name:'',company:'',phone:'',email:''};
@@ -6462,12 +6483,31 @@ var _pipelineStages=null;
 
 // -- Schedule Page ------------------------------------------------------------
 var _schedWeekStart=null; // Sunday of current week
+var _schedView='week'; // 'day','3day','week','month'
 function getWeekStart(d){var dt=new Date(d);dt.setDate(dt.getDate()-dt.getDay());dt.setHours(0,0,0,0);return dt;}
 (function(){_schedWeekStart=getWeekStart(new Date());})();
 
+function setSchedView(v){
+  _schedView=v;
+  document.querySelectorAll('.sched-view-btn').forEach(function(b){b.classList.remove('sched-view-active');});
+  var active=document.querySelector('.sched-view-btn[data-view="'+v+'"]');
+  if(active)active.classList.add('sched-view-active');
+  // Reset start to today for day/3day views
+  if(v==='day'||v==='3day')_schedWeekStart=getWeekStart(new Date());
+  renderSchedule();
+}
+
 function schedCalNav(dir){
   if(dir===0){_schedWeekStart=getWeekStart(new Date());}
-  else{_schedWeekStart=new Date(_schedWeekStart.getTime()+dir*7*86400000);}
+  else{
+    var step=7;
+    if(_schedView==='day')step=1;
+    else if(_schedView==='3day')step=3;
+    else if(_schedView==='month'){
+      var d=new Date(_schedWeekStart);d.setMonth(d.getMonth()+dir);_schedWeekStart=d;renderSchedule();return;
+    }
+    _schedWeekStart=new Date(_schedWeekStart.getTime()+dir*step*86400000);
+  }
   renderSchedule();
 }
 
@@ -6594,10 +6634,36 @@ function renderSchedule(){
   var queueEl=document.getElementById('sched-queue');
   if(!titleEl||!gridEl||!queueEl)return;
 
-  // Week title
-  var weekEnd=new Date(_schedWeekStart.getTime()+6*86400000);
+  // View config
   var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  titleEl.textContent=months[_schedWeekStart.getMonth()]+' '+_schedWeekStart.getDate()+' – '+months[weekEnd.getMonth()]+' '+weekEnd.getDate()+', '+weekEnd.getFullYear();
+  var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var numDays=7;var startDate=new Date(_schedWeekStart);
+  if(_schedView==='day'){numDays=1;startDate=new Date();startDate.setHours(0,0,0,0);}
+  else if(_schedView==='3day'){numDays=3;startDate=new Date();startDate.setHours(0,0,0,0);}
+  else if(_schedView==='month'){
+    // Month view: full calendar month grid
+    var mStart=new Date(_schedWeekStart.getFullYear(),_schedWeekStart.getMonth(),1);
+    startDate=getWeekStart(mStart); // Start from Sunday before month start
+    var mEnd=new Date(_schedWeekStart.getFullYear(),_schedWeekStart.getMonth()+1,0);
+    var gridEnd=new Date(mEnd);gridEnd.setDate(gridEnd.getDate()+(6-gridEnd.getDay()));
+    numDays=Math.round((gridEnd-startDate)/(86400000))+1;
+  }
+  // Title
+  if(_schedView==='day'){
+    titleEl.textContent=dayNames[startDate.getDay()]+', '+months[startDate.getMonth()]+' '+startDate.getDate()+', '+startDate.getFullYear();
+  } else if(_schedView==='3day'){
+    var end3=new Date(startDate.getTime()+2*86400000);
+    titleEl.textContent=months[startDate.getMonth()]+' '+startDate.getDate()+' – '+months[end3.getMonth()]+' '+end3.getDate()+', '+end3.getFullYear();
+  } else if(_schedView==='month'){
+    titleEl.textContent=months[_schedWeekStart.getMonth()]+' '+_schedWeekStart.getFullYear();
+  } else {
+    var weekEnd=new Date(_schedWeekStart.getTime()+6*86400000);
+    titleEl.textContent=months[_schedWeekStart.getMonth()]+' '+_schedWeekStart.getDate()+' – '+months[weekEnd.getMonth()]+' '+weekEnd.getDate()+', '+weekEnd.getFullYear();
+  }
+  // Grid columns
+  if(_schedView==='day')gridEl.style.gridTemplateColumns='1fr';
+  else if(_schedView==='3day')gridEl.style.gridTemplateColumns='repeat(3,1fr)';
+  else gridEl.style.gridTemplateColumns='repeat(7,1fr)';
 
   // Collect all work orders across all projects
   var allWOs=[];
@@ -6667,25 +6733,41 @@ function renderSchedule(){
     queueEl.innerHTML='<p style="color:var(--dgray);font-size:12px;">No unscheduled work orders.</p>';
   }
 
-  // Weekly grid
+  // Calendar grid
   gridEl.innerHTML='';
-  var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  // Add day-of-week headers for month view
+  if(_schedView==='month'){
+    dayNames.forEach(function(dn){
+      var hdrCell=document.createElement('div');
+      hdrCell.style.cssText='text-align:center;padding:4px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--dgray);';
+      hdrCell.textContent=dn;
+      gridEl.appendChild(hdrCell);
+    });
+  }
   var today=new Date();var todayStr=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  var currentMonth=_schedView==='month'?_schedWeekStart.getMonth():-1;
 
-  for(var i=0;i<7;i++){
-    var dayDate=new Date(_schedWeekStart.getTime()+i*86400000);
+  for(var i=0;i<numDays;i++){
+    var dayDate=new Date(startDate.getTime()+i*86400000);
     var dateStr=dayDate.getFullYear()+'-'+String(dayDate.getMonth()+1).padStart(2,'0')+'-'+String(dayDate.getDate()).padStart(2,'0');
     var isToday=dateStr===todayStr;
 
+    var isOtherMonth=_schedView==='month'&&dayDate.getMonth()!==currentMonth;
+    var minH=_schedView==='month'?'80px':(_schedView==='day'?'400px':'180px');
     var col=document.createElement('div');
-    col.style.cssText='border:1px solid var(--bdr);border-radius:6px;min-height:180px;display:flex;flex-direction:column;'+(isToday?'background:#FFF5F5;border-color:var(--red);':'');
+    col.style.cssText='border:1px solid var(--bdr);border-radius:6px;min-height:'+minH+';display:flex;flex-direction:column;'+(isToday?'background:#FFF5F5;border-color:var(--red);':'')+(isOtherMonth?'opacity:.4;':'');
     col.dataset.date=dateStr;
 
     // Day header
     var hdr=document.createElement('div');
-    hdr.style.cssText='text-align:center;padding:8px 4px;border-bottom:1px solid var(--bdr);'+(isToday?'background:var(--red);border-radius:5px 5px 0 0;':'background:#FAFAFA;border-radius:5px 5px 0 0;');
-    hdr.innerHTML='<div style="font-size:10px;font-weight:700;text-transform:uppercase;'+(isToday?'color:#fff;':'color:var(--dgray);')+'">'+dayNames[i]+'</div>'
-      +'<div style="font-size:16px;font-weight:800;'+(isToday?'color:#fff;':'')+'">'+dayDate.getDate()+'</div>';
+    if(_schedView==='month'){
+      hdr.style.cssText='text-align:center;padding:4px 2px;border-bottom:1px solid var(--bdr);'+(isToday?'background:var(--red);border-radius:5px 5px 0 0;':'background:#FAFAFA;border-radius:5px 5px 0 0;');
+      hdr.innerHTML='<div style="font-size:13px;font-weight:700;'+(isToday?'color:#fff;':'')+'">'+dayDate.getDate()+'</div>';
+    } else {
+      hdr.style.cssText='text-align:center;padding:8px 4px;border-bottom:1px solid var(--bdr);'+(isToday?'background:var(--red);border-radius:5px 5px 0 0;':'background:#FAFAFA;border-radius:5px 5px 0 0;');
+      hdr.innerHTML='<div style="font-size:10px;font-weight:700;text-transform:uppercase;'+(isToday?'color:#fff;':'color:var(--dgray);')+'">'+dayNames[dayDate.getDay()]+'</div>'
+        +'<div style="font-size:16px;font-weight:800;'+(isToday?'color:#fff;':'')+'">'+dayDate.getDate()+'</div>';
+    }
     col.appendChild(hdr);
 
     // Work orders for this day
@@ -6704,14 +6786,19 @@ function renderSchedule(){
       var addr=snap.address||snap.proj_addr||'';
       var tag=document.createElement('div');
       var stColors={pending:'#999',active:'#2B5FA6',complete:'#27500A'};
-      tag.style.cssText='background:'+(stColors[item.wo.status]||'#999')+';color:#fff;padding:5px 6px;border-radius:4px;font-size:10px;margin-bottom:4px;cursor:pointer;';
+      var isCompact=_schedView==='month';
+      tag.style.cssText='background:'+(stColors[item.wo.status]||'#999')+';color:#fff;padding:'+(isCompact?'2px 4px':'5px 6px')+';border-radius:4px;font-size:'+(isCompact?'8px':'10px')+';margin-bottom:'+(isCompact?'2px':'4px')+';cursor:pointer;overflow:hidden;';
       var timeStr='';
       if(item.wo.scheduled_time)timeStr=fmt12(item.wo.scheduled_time)+(item.wo.scheduled_end_time?' - '+fmt12(item.wo.scheduled_end_time):'');
       var daysStr=item.wo.scheduled_days&&item.wo.scheduled_days>1?item.wo.scheduled_days+'d':'';
-      tag.innerHTML='<div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.wo.name)+'</div>'
-        +'<div style="opacity:.85;font-size:9px;">'+esc(item.project.name)+'</div>'
-        +(addr?'<div style="opacity:.75;font-size:9px;">'+esc(addr)+'</div>':'')
-        +(timeStr||daysStr?'<div style="opacity:.85;font-size:9px;margin-top:1px;">'+(timeStr?timeStr:'')+(timeStr&&daysStr?' &middot; ':'')+daysStr+'</div>':'');
+      if(isCompact){
+        tag.innerHTML='<div style="font-weight:700;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.wo.name)+'</div>';
+      } else {
+        tag.innerHTML='<div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.wo.name)+'</div>'
+          +'<div style="opacity:.85;font-size:9px;">'+esc(item.project.name)+'</div>'
+          +(addr?'<div style="opacity:.75;font-size:9px;">'+esc(addr)+'</div>':'')
+          +(timeStr||daysStr?'<div style="opacity:.85;font-size:9px;margin-top:1px;">'+(timeStr?timeStr:'')+(timeStr&&daysStr?' &middot; ':'')+daysStr+'</div>':'');
+      }
       tag.title=item.project.name+' — '+item.wo.name+(addr?'\n'+addr:'')+(timeStr?'\n'+timeStr:'');
       (function(woId,projId){tag.addEventListener('click',function(){
         _currentProjectId=projId;openWorkOrderView(woId);
