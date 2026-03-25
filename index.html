@@ -636,7 +636,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
                     <th style="padding:4px 8px;">Cost</th>
                     <th style="padding:4px 8px;border-left:2px solid var(--red);background:#FFF5F5;">Qty</th>
                     <th style="padding:4px 8px;background:#FFF5F5;">Cost</th>
-                    <th style="padding:4px 8px;background:#FFF5F5;">Days</th>
+                    <th style="padding:4px 8px;background:#FFF5F5;">Labor ($)</th>
                     <th style="padding:4px 8px;border-left:1px solid var(--bdr);">Qty +/-</th>
                     <th style="padding:4px 8px;">Cost +/-</th>
                   </tr>
@@ -1584,7 +1584,7 @@ function initJobCost(){
 }
 
 // ---- Estimates vs Actuals ----
-var evaActuals = {}; // keyed by line item key: {qty, cost, days}
+var evaActuals = {}; // keyed by line item key: {qty, cost, labor}
 
 function buildEVAEstimates(){
   var items=[];
@@ -1629,28 +1629,36 @@ function renderEVA(){
     tbody.innerHTML='<tr><td colspan="9" style="padding:16px;text-align:center;color:var(--dgray);">No line items in proposal yet.</td></tr>';
     return;
   }
-  var totEstCost=0,totActCost=0,totEstQty=0,totActQty=0;
+  var totEstCost=0,totActCost=0,totEstQty=0,totActQty=0,totActMatOnly=0,totActLabOnly=0;
   items.forEach(function(item){
     var act=evaActuals[item.key]||{};
     var actQty=act.qty!==undefined?act.qty:null;
     var actCost=act.cost!==undefined?act.cost:null;
-    var actDays=act.days!==undefined?act.days:null;
+    var actLabor=act.labor!==undefined?act.labor:null;
+    var actTotal=(actCost!==null?actCost:0)+(actLabor!==null?actLabor:0);
+    var hasActual=actCost!==null||actLabor!==null;
     var qtyVar=actQty!==null?(actQty-item.qty):null;
-    var costVar=actCost!==null?(actCost-item.estCost):null;
+    var costVar=hasActual?(actTotal-item.estCost):null;
     totEstCost+=item.estCost;
-    if(actCost!==null)totActCost+=actCost;
+    if(hasActual)totActCost+=actTotal;
+    if(actCost!==null)totActMatOnly+=actCost;
+    if(actLabor!==null)totActLabOnly+=actLabor;
     totEstQty+=item.qty;
     if(actQty!==null)totActQty+=actQty;
+    var isConcrete=item.type==='concrete';
     var tr=document.createElement('tr');tr.style.borderBottom='1px solid var(--bdr)';
     var varQtyClass=qtyVar!==null?(qtyVar>0?'m-red':qtyVar<0?'m-green':''):'';
     var varCostClass=costVar!==null?(costVar>0?'m-red':costVar<0?'m-green':''):'';
+    var laborCell=isConcrete
+      ?'<td style="padding:8px;text-align:center;background:#FFF5F5;color:var(--dgray);font-size:10px;">N/A</td>'
+      :'<td style="padding:8px;text-align:right;background:#FFF5F5;"><input type="number" value="'+(actLabor!==null?actLabor:'')+'" placeholder="—" min="0" step="1" style="width:80px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'labor\',this.value)"></td>';
     tr.innerHTML='<td style="padding:8px;"><div style="font-weight:600;font-size:12px;">'+esc(item.name)+'</div><div style="font-size:10px;color:var(--dgray);">'+esc(item.section)+'</div></td>'
       +'<td style="padding:8px;text-align:right;border-left:1px solid var(--bdr);">'+item.qty.toLocaleString()+'</td>'
       +'<td style="padding:8px;text-align:center;">'+item.unit+'</td>'
       +'<td style="padding:8px;text-align:right;">$'+fi(item.estCost)+'</td>'
       +'<td style="padding:8px;text-align:right;border-left:2px solid var(--red);background:#FFF5F5;"><input type="number" value="'+(actQty!==null?actQty:'')+'" placeholder="—" min="0" step="1" style="width:70px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'qty\',this.value)"></td>'
       +'<td style="padding:8px;text-align:right;background:#FFF5F5;"><input type="number" value="'+(actCost!==null?actCost:'')+'" placeholder="—" min="0" step="1" style="width:80px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'cost\',this.value)"></td>'
-      +'<td style="padding:8px;text-align:right;background:#FFF5F5;"><input type="number" value="'+(actDays!==null?actDays:'')+'" placeholder="—" min="0" step="0.5" style="width:50px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'days\',this.value)"></td>'
+      +laborCell
       +'<td style="padding:8px;text-align:right;border-left:1px solid var(--bdr);" class="'+varQtyClass+'">'+(qtyVar!==null?(qtyVar>=0?'+':'')+qtyVar.toLocaleString():'—')+'</td>'
       +'<td style="padding:8px;text-align:right;" class="'+varCostClass+'">'+(costVar!==null?(costVar>=0?'+$':'-$')+fi(Math.abs(costVar)):'—')+'</td>';
     tbody.appendChild(tr);
@@ -1666,8 +1674,8 @@ function renderEVA(){
       +'<td style="padding:8px;"></td>'
       +'<td style="padding:8px;text-align:right;">$'+fi(totEstCost)+'</td>'
       +'<td style="padding:8px;text-align:right;border-left:2px solid var(--red);background:#FFF5F5;">'+(hasActuals?totActQty.toLocaleString():'—')+'</td>'
-      +'<td style="padding:8px;text-align:right;background:#FFF5F5;">'+(hasActuals?'$'+fi(totActCost):'—')+'</td>'
-      +'<td style="padding:8px;background:#FFF5F5;"></td>'
+      +'<td style="padding:8px;text-align:right;background:#FFF5F5;">'+(hasActuals?'$'+fi(totActMatOnly):'—')+'</td>'
+      +'<td style="padding:8px;text-align:right;background:#FFF5F5;">'+(hasActuals&&totActLabOnly>0?'$'+fi(totActLabOnly):'—')+'</td>'
       +'<td style="padding:8px;text-align:right;border-left:1px solid var(--bdr);"></td>'
       +'<td style="padding:8px;text-align:right;" class="'+tcClass+'">'+(totalCostVar!==null?(totalCostVar>=0?'+$':'-$')+fi(Math.abs(totalCostVar)):'—')+'</td>'
       +'</tr>';
@@ -1694,17 +1702,12 @@ function renderEVASummary(totEstCost,totActCost){
   var g=function(id){return document.getElementById(id);};
   var hasActuals=Object.keys(evaActuals).length>0;
   var actMatCost=0,actLaborCost=0;
-  // Sum actual costs by type
   var items=buildEVAEstimates();
   items.forEach(function(item){
     var act=evaActuals[item.key];
-    if(!act||act.cost===undefined)return;
-    if(item.type==='extra')actLaborCost+=act.cost;
-    else {
-      // Split: use ratio of est mat vs est labor to apportion actual cost
-      // Or simpler: actual cost IS the total actual for that line
-      actMatCost+=act.cost;
-    }
+    if(!act)return;
+    if(act.cost!==undefined)actMatCost+=act.cost;
+    if(act.labor!==undefined)actLaborCost+=act.labor;
   });
   var actTotal=hasActuals?actMatCost+actLaborCost:0;
   if(g('eva-actual-mat'))g('eva-actual-mat').textContent=hasActuals?'$'+fi(actMatCost):'-';
