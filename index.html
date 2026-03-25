@@ -380,8 +380,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" data-field-hidden onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents</div>
       <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
       <div class="nav-item" onclick="showPanel('schedule',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg>Schedule</div>
-      <div class="nav-grp" data-field-hidden>Config</div>
-      <div class="nav-item" data-field-hidden onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
+      <div class="nav-grp">Config</div>
+      <div class="nav-item" onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
       <div class="nav-item admin-only" id="nav-admin" data-admin-hidden onclick="showPanel('admin',this);loadUsers();showAdminTab('users');">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg>
         Admin
@@ -917,10 +917,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="panel" id="panel-settings">
         <div class="settings-tab-bar">
           <button class="stab on" id="stab-general" onclick="showSettingsTab('general')">General</button>
-          <button class="stab" id="stab-presets" onclick="showSettingsTab('presets')">Presets</button>
-          <button class="stab" id="stab-library" onclick="showSettingsTab('library')">Bid Library</button>
-          <button class="stab" id="stab-badges" onclick="showSettingsTab('badges')">Layer Badges</button>
-          <button class="stab" id="stab-crews" onclick="showSettingsTab('crews')">Crew Costs</button>
+          <button class="stab" data-field-hidden id="stab-presets" onclick="showSettingsTab('presets')">Presets</button>
+          <button class="stab" data-field-hidden id="stab-library" onclick="showSettingsTab('library')">Bid Library</button>
+          <button class="stab" data-field-hidden id="stab-badges" onclick="showSettingsTab('badges')">Layer Badges</button>
+          <button class="stab" data-field-hidden id="stab-crews" onclick="showSettingsTab('crews')">Crew Costs</button>
         </div>
 
         <!-- General Tab -->
@@ -935,6 +935,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 <div><label>Your Phone</label><input id="s-phone" type="text" placeholder="(555) 000-0000"/></div>
               </div>
               <div style="margin-top:11px;"><button class="btn btn-red btn-sm" onclick="saveSender()">Save</button></div>
+              <div id="pin-change-notice" style="display:none;margin-top:12px;padding:10px 14px;background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;font-size:12px;color:var(--dgray);">To change your PIN, contact a system administrator.</div>
             </div>
           </div>
           <!-- Job Cost Defaults removed — values baked into code: asphalt 400t/day, stone 800t/day, 100 tons/truck, truck $100/hr, 8hr/day -->
@@ -1066,28 +1067,22 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div style="font-size:12px;color:var(--dgray);">Loading weather...</div>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;">
-          <!-- Queue column (left) -->
-          <div>
-            <div class="card">
-              <div class="card-hdr"><span class="card-title">Ready to Schedule</span></div>
-              <div class="card-body" id="sched-queue" style="min-height:300px;max-height:calc(100vh - 280px);overflow-y:auto;"><p style="color:var(--dgray);font-size:12px;">No jobs waiting.</p></div>
-            </div>
+        <!-- Weekly calendar (full width) -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-hdr" style="display:flex;align-items:center;gap:10px;">
+            <button class="btn btn-sec btn-sm" onclick="schedCalNav(-1)">&lsaquo; Prev</button>
+            <span class="card-title" id="sched-cal-title" style="flex:1;text-align:center;"></span>
+            <button class="btn btn-sec btn-sm" onclick="schedCalNav(1)">Next &rsaquo;</button>
+            <button class="btn btn-sec btn-sm" onclick="schedCalNav(0)">This Week</button>
           </div>
-          <!-- Weekly calendar (right) -->
-          <div>
-            <div class="card">
-              <div class="card-hdr" style="display:flex;align-items:center;gap:10px;">
-                <button class="btn btn-sec btn-sm" onclick="schedCalNav(-1)">&lsaquo; Prev</button>
-                <span class="card-title" id="sched-cal-title" style="flex:1;text-align:center;"></span>
-                <button class="btn btn-sec btn-sm" onclick="schedCalNav(1)">Next &rsaquo;</button>
-                <button class="btn btn-sec btn-sm" onclick="schedCalNav(0)">This Week</button>
-              </div>
-              <div class="card-body" style="padding:8px;">
-                <div id="sched-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;"></div>
-              </div>
-            </div>
+          <div class="card-body" style="padding:8px;">
+            <div id="sched-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;"></div>
           </div>
+        </div>
+        <!-- Ready to schedule (bottom) -->
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Ready to Schedule</span></div>
+          <div class="card-body" id="sched-queue" style="min-height:120px;"><p style="color:var(--dgray);font-size:12px;">No jobs waiting.</p></div>
         </div>
       </div></div>
 
@@ -3423,7 +3418,7 @@ function showPanel(id,el){
   if(id==='dashboard'){renderPipeline().then(function(){renderDashboard();}).catch(function(){renderDashboard();});}
   if(id==='project')renderProjectSummary();
   if(id==='co'){populateCOProposalDropdown();}
-  if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');}
+  if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');var pn=document.getElementById('pin-change-notice');if(pn&&isFieldUser())pn.style.display='block';}
   if(id==='jobcost'){renderJobCost();renderEVA();}
   if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
   if(id==='pipeline')setTimeout(renderPipeline,50);
@@ -4478,6 +4473,22 @@ async function importQuotes(){
   inp.click();
 }
 
+async function exportPDFFromSaved(qid){
+  var q=savedQuotes.find(function(x){return x.id===qid;});
+  if(!q){toast('Proposal not found','err');return;}
+  // Load the quote into the builder, generate PDF, then restore
+  loadQuote(qid);
+  await new Promise(function(r){setTimeout(r,200);});
+  try{
+    var p=buildPayload();
+    var r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+    if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
+    var blob=await r.blob();var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download=(p.document_number||'HD_Proposal')+'_'+p.project_name.replace(/\s+/g,'_')+'.pdf';
+    a.click();URL.revokeObjectURL(url);toast('Proposal PDF downloaded','ok');
+  }catch(e){toast('PDF error: '+e.message,'err');}
+}
+
 async function generateWorkOrder(qid){
   var q=savedQuotes.find(function(x){return x.id===qid;})||pipelineProposals.find(function(x){return x.id===qid;});
   if(!q){toast('Proposal not found','err');return;}
@@ -4563,6 +4574,7 @@ async function renderSaved(){
       div.innerHTML='<div style="flex:1"><div style="font-weight:600;font-size:13px;">'+esc(q.name)+createdBy+'</div>'
         +'<div style="font-size:11px;color:var(--dgray);">'+(q.client?esc(q.client)+' &middot; ':'')+ts+' &middot; $'+Math.round(q.total).toLocaleString()+'</div></div>'
         +'<button class="btn btn-sec btn-sm" onclick="loadQuote('+q.id+')">Load</button>'
+        +'<button class="btn btn-sec btn-sm" onclick="exportPDFFromSaved('+q.id+')" title="Export PDF">PDF</button>'
         +'<button class="btn btn-sec btn-sm" onclick="generateWorkOrder('+q.id+')" title="Generate crew work order">Work Order</button>'
         +'<button class="btn btn-sec btn-sm" onclick="generateJobCostFromSaved('+q.id+')" title="Generate job cost report">Job Cost</button>'
         +'<button class="btn-ico" onclick="delSaved('+q.id+')">x</button>';
@@ -4844,22 +4856,30 @@ function initAddrAutocomplete(inputId, sugId){
     var q=inp.value.trim();
     if(q.length<4){sug.style.display='none';sug.innerHTML='';return;}
     _addrTimer=setTimeout(function(){
-      fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&limit=5&q='+encodeURIComponent(q),{headers:{'Accept':'application/json'}})
+      fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=us&limit=5&q='+encodeURIComponent(q),{headers:{'Accept':'application/json'}})
         .then(function(r){return r.json();}).then(function(results){
           sug.innerHTML='';
           if(!results.length){sug.style.display='none';return;}
           sug.style.display='block';
           results.forEach(function(r){
+            // Build short address: street, city, state, zip
+            var ad=r.address||{};
+            var street=ad.house_number?(ad.house_number+' '+(ad.road||'')):(ad.road||'');
+            var city=ad.city||ad.town||ad.village||ad.hamlet||'';
+            var state=ad.state||'';
+            var zip=ad.postcode||'';
+            var parts=[street,city,state,zip].filter(Boolean);
+            var shortAddr=parts.join(', ');
             var div=document.createElement('div');
             div.style.cssText='padding:8px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--bdr);';
-            div.textContent=r.display_name;
+            div.textContent=shortAddr||r.display_name;
             div.addEventListener('mouseenter',function(){div.style.background='#F0F0F0';});
             div.addEventListener('mouseleave',function(){div.style.background='';});
-            div.addEventListener('mousedown',function(ev){
+            (function(addr){div.addEventListener('mousedown',function(ev){
               ev.preventDefault();
-              inp.value=r.display_name;
+              inp.value=addr;
               sug.style.display='none';
-            });
+            });})(shortAddr||r.display_name);
             sug.appendChild(div);
           });
         }).catch(function(){sug.style.display='none';});
