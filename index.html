@@ -807,9 +807,9 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="panel" id="panel-settings">
         <div class="settings-tab-bar">
           <button class="stab on" id="stab-general" onclick="showSettingsTab('general')">General</button>
-          <button class="stab" id="stab-badges" onclick="showSettingsTab('badges')">Layer Badges</button>
           <button class="stab" id="stab-presets" onclick="showSettingsTab('presets')">Presets</button>
           <button class="stab" id="stab-library" onclick="showSettingsTab('library')">Bid Library</button>
+          <button class="stab" id="stab-badges" onclick="showSettingsTab('badges')">Layer Badges</button>
           <button class="stab" id="stab-crews" onclick="showSettingsTab('crews')">Crew Costs</button>
         </div>
 
@@ -840,8 +840,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 <div><label>DEFAULT OVERHEAD %</label><input id="jc-default-overhead-pct" type="number" min="0" step="1"/></div>
                 <div><label>ASPHALT PRODUCTIVITY (t/day)</label><input id="jc-default-productivity" type="number" min="1" step="10"/></div>
               </div>
-              <div class="fg fg4" style="margin-top:10px;">
-                <div><label>MILL FEE ($/day)</label><input id="jc-default-mill-fee" type="number" min="0" step="500" value="6000"/></div>
+              <div class="fg fg3" style="margin-top:10px;">
                 <div><label>TONS/TRUCK</label><input id="jc-default-tons-per-truck" type="number" min="1" step="10" value="100"/></div>
                 <div><label>TRUCK RATE ($/hr)</label><input id="jc-default-truck-rate" type="number" min="0" step="5" value="100"/></div>
                 <div><label>TRUCK HOURS/DAY</label><input id="jc-default-truck-hours" type="number" min="0" step="0.5" value="8"/></div>
@@ -852,19 +851,17 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div class="card">
             <div class="card-hdr">
               <span class="card-title">Material Prices</span>
-              <button class="btn btn-sec btn-sm" onclick="addMaterial()">+ Add Material</button>
             </div>
             <div class="card-body">
-              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Reference table for material costs. Attach materials to line items in the Bid Library tab.</p>
+              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Raw material costs. Only the cost per unit is editable.</p>
               <div style="overflow-x:auto;">
                 <table style="width:100%;border-collapse:collapse;font-size:12px;" id="mat-table">
                   <thead>
                     <tr style="background:var(--lgray);">
                       <th style="padding:7px 10px;text-align:left;font-weight:600;">Material</th>
-                      <th style="padding:7px 10px;text-align:center;font-weight:600;">Category</th>
+                      <th style="padding:7px 10px;text-align:center;font-weight:600;">Trade</th>
                       <th style="padding:7px 10px;text-align:right;font-weight:600;">Cost $/unit</th>
                       <th style="padding:7px 10px;text-align:center;font-weight:600;">Unit</th>
-                      <th style="padding:7px 4px;"></th>
                     </tr>
                   </thead>
                   <tbody id="mat-tbody"></tbody>
@@ -872,7 +869,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
               </div>
               <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
                 <button class="btn btn-red btn-sm" onclick="saveMatPrices()">Save Prices</button>
-                <button class="btn btn-sec btn-sm" onclick="resetMatPrices()">Reset to Defaults</button>
                 <span id="mat-prices-updated" style="font-size:11px;color:var(--dgray);"></span>
               </div>
             </div>
@@ -976,18 +972,16 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
 <script>
 // -- Constants -----------------------------------------------------------------
-var LTYPES = ['ABC base','Mill & Pave','B25.0C','I19.0C','S9.5B','S9.5C'];
-var LBS    = {'ABC base':150,'Mill & Pave':115,'B25.0C':115,'I19.0C':115,'S9.5B':115,'S9.5C':115};
-// MAT is a live variable - editable via Settings and persisted to localStorage
-var MAT    = {'ABC base':45,'Mill & Pave':35,'B25.0C':85,'I19.0C':92,'S9.5B':95,'S9.5C':95};
+var LTYPES = ['ABC','#57 Stone','S9.5B','S9.5C','I19.0C','B25.0C','Concrete'];
+var LBS    = {'ABC':150,'#57 Stone':150,'S9.5B':115,'S9.5C':115,'I19.0C':115,'B25.0C':115,'Concrete':150};
+// MAT is the raw material cost — editable in Settings, saved to Supabase
+var MAT    = {'ABC':30,'#57 Stone':35,'S9.5B':100,'S9.5C':90,'I19.0C':90,'B25.0C':90,'Concrete':200};
 var JC_CREW_RATE_DEFAULT = 5000;
 var JC_PRODUCTIVITY_DEFAULT = 400; // tons/day
 var jcProductivity = JC_PRODUCTIVITY_DEFAULT;
 var JC_OVERHEAD_PCT_DEFAULT = 15;
 var jcCrewRate = JC_CREW_RATE_DEFAULT;
 var jcOverheadPct = JC_OVERHEAD_PCT_DEFAULT;
-var MILL_FEE_DEFAULT = 6000; // $/day for milling
-var jcMillFee = MILL_FEE_DEFAULT;
 var TRUCK_RATE_DEFAULT = 100; // $/hr per truck
 var TRUCK_HOURS_DEFAULT = 8; // hours per day
 var TONS_PER_TRUCK_DEFAULT = 100; // tons per truck per day
@@ -1017,22 +1011,25 @@ function getCrewParam(matType, param){
   if(param === 'truck_daily_rate') return jcTruckRate * jcTruckHours;
   return 0;
 }
-var MAT_DEFAULT = {'ABC base':45,'Mill & Pave':35,'B25.0C':85,'I19.0C':92,'S9.5B':95,'S9.5C':95};
-var MAT_UNIT = {'ABC base':'TON','Mill & Pave':'TON','B25.0C':'TON','I19.0C':'TON','S9.5B':'TON','S9.5C':'TON'};
-var MAT_UNIT_DEFAULT = {'ABC base':'TON','Mill & Pave':'TON','B25.0C':'TON','I19.0C':'TON','S9.5B':'TON','S9.5C':'TON'};
-var MAT_CATEGORY = {'ABC base':'Stone','Mill & Pave':'Asphalt','B25.0C':'Asphalt','I19.0C':'Asphalt','S9.5B':'Asphalt','S9.5C':'Asphalt'};
-var MAT_CATEGORY_DEFAULT = {'ABC base':'Stone','Mill & Pave':'Asphalt','B25.0C':'Asphalt','I19.0C':'Asphalt','S9.5B':'Asphalt','S9.5C':'Asphalt'};
-var DRATE_DEFAULT = {'ABC base':50,'Mill & Pave':150,'B25.0C':150,'I19.0C':150,'S9.5B':150,'S9.5C':150};
-var LBS_DEFAULT = {'ABC base':150,'Mill & Pave':115,'B25.0C':115,'I19.0C':115,'S9.5B':115,'S9.5C':115};
-var DDEPTH_DEFAULT = {'ABC base':6,'Mill & Pave':2,'B25.0C':5,'I19.0C':4,'S9.5B':3,'S9.5C':3};
-var LBADGE_DEFAULT = {'ABC base':'b-base','Mill & Pave':'b-millings','B25.0C':'b-base','I19.0C':'b-binder','S9.5B':'b-surface','S9.5C':'b-surface'};
-var BADGE_DEFS={'b-base':{label:'Base',color:'#8B5E3C'},'b-millings':{label:'Millings',color:'#555'},'b-binder':{label:'Binder',color:'#2B5FA6'},'b-surface':{label:'Surface',color:'#27500A'},'b-conc':{label:'Concrete',color:'#6B4FA6'}};
+var MAT_DEFAULT = {'ABC':30,'#57 Stone':35,'S9.5B':100,'S9.5C':90,'I19.0C':90,'B25.0C':90,'Concrete':200};
+var MAT_UNIT = {'ABC':'TON','#57 Stone':'TON','S9.5B':'TON','S9.5C':'TON','I19.0C':'TON','B25.0C':'TON','Concrete':'CY'};
+var MAT_UNIT_DEFAULT = {'ABC':'TON','#57 Stone':'TON','S9.5B':'TON','S9.5C':'TON','I19.0C':'TON','B25.0C':'TON','Concrete':'CY'};
+var MAT_TRADE = {'ABC':'Stone','#57 Stone':'Stone','S9.5B':'Asphalt','S9.5C':'Asphalt','I19.0C':'Asphalt','B25.0C':'Asphalt','Concrete':'Concrete'};
+var MAT_TRADE_DEFAULT = {'ABC':'Stone','#57 Stone':'Stone','S9.5B':'Asphalt','S9.5C':'Asphalt','I19.0C':'Asphalt','B25.0C':'Asphalt','Concrete':'Concrete'};
+// Legacy aliases
+var MAT_CATEGORY = MAT_TRADE;
+var MAT_CATEGORY_DEFAULT = MAT_TRADE_DEFAULT;
+var DRATE_DEFAULT = {'ABC':50,'#57 Stone':50,'S9.5B':150,'S9.5C':150,'I19.0C':150,'B25.0C':150,'Concrete':0};
+var LBS_DEFAULT = {'ABC':150,'#57 Stone':150,'S9.5B':115,'S9.5C':115,'I19.0C':115,'B25.0C':115,'Concrete':150};
+var DDEPTH_DEFAULT = {'ABC':0,'#57 Stone':0,'S9.5B':0,'S9.5C':0,'I19.0C':0,'B25.0C':0,'Concrete':0};
+var LBADGE_DEFAULT = {'ABC':'b-base','#57 Stone':'b-base','S9.5B':'b-surface','S9.5C':'b-surface','I19.0C':'b-binder','B25.0C':'b-base','Concrete':'b-conc'};
+var BADGE_DEFS={'b-base':{label:'Base',color:'#8B5E3C'},'b-binder':{label:'Binder',color:'#2B5FA6'},'b-surface':{label:'Surface',color:'#27500A'},'b-conc':{label:'Concrete',color:'#6B4FA6'}};
 var BID_LIBRARY=JSON.parse(localStorage.getItem('hd_bid_library')||'[]');
 var _libId=BID_LIBRARY.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},0);
-var LTYPES_DEFAULT = ['ABC base','Mill & Pave','B25.0C','I19.0C','S9.5B','S9.5C'];
-var DDEPTH = {'ABC base':6,'Mill & Pave':2,'B25.0C':5,'I19.0C':4,'S9.5B':3,'S9.5C':3};
-var DRATE  = {'ABC base':50,'Mill & Pave':150,'B25.0C':150,'I19.0C':150,'S9.5B':150,'S9.5C':150};
-var LBADGE = {'ABC base':'b-base','Mill & Pave':'b-millings','B25.0C':'b-base','I19.0C':'b-binder','S9.5B':'b-surface','S9.5C':'b-surface'};
+var LTYPES_DEFAULT = ['ABC','#57 Stone','S9.5B','S9.5C','I19.0C','B25.0C','Concrete'];
+var DDEPTH = {'ABC':0,'#57 Stone':0,'S9.5B':0,'S9.5C':0,'I19.0C':0,'B25.0C':0,'Concrete':0};
+var DRATE  = {'ABC':50,'#57 Stone':50,'S9.5B':150,'S9.5C':150,'I19.0C':150,'B25.0C':150,'Concrete':0};
+var LBADGE = {'ABC':'b-base','#57 Stone':'b-base','S9.5B':'b-surface','S9.5C':'b-surface','I19.0C':'b-binder','B25.0C':'b-base','Concrete':'b-conc'};
 
 var CTYPES = [
   {id:'18sg',name:'18" Standard C&G',desc:'18" 3000PSI Standard Curb & Gutter',unit:'LF',cy_per_lf:0.028},
@@ -1048,10 +1045,9 @@ var CTYPES = [
 ];
 
 var PRESETS = [
-  {name:'Light Duty Asphalt Pavement',layers:[{type:'ABC base',depth:6,rate:50},{type:'S9.5C',depth:2,rate:150}]},
-  {name:'Heavy Duty Asphalt Pavement',layers:[{type:'ABC base',depth:8,rate:50},{type:'I19.0C',depth:2.5,rate:150},{type:'S9.5C',depth:1.5,rate:150}]},
-  {name:'Parking lot',layers:[{type:'ABC base',depth:6,rate:50},{type:'S9.5C',depth:2,rate:150}]},
-  {name:'Mill & Pave',layers:[{type:'Mill & Pave',depth:2,rate:150}]},
+  {name:'Light Duty Asphalt Pavement',layers:[{type:'ABC',depth:6,rate:50},{type:'S9.5C',depth:2,rate:150}]},
+  {name:'Heavy Duty Asphalt Pavement',layers:[{type:'ABC',depth:8,rate:50},{type:'I19.0C',depth:2.5,rate:150},{type:'S9.5C',depth:1.5,rate:150}]},
+  {name:'Parking lot',layers:[{type:'ABC',depth:6,rate:50},{type:'S9.5C',depth:2,rate:150}]},
   {name:'NCDOT Asphalt Pavement',layers:[{type:'B25.0C',depth:5,rate:150},{type:'I19.0C',depth:4,rate:150},{type:'S9.5C',depth:3,rate:150}]},
 ];
 
@@ -1236,8 +1232,8 @@ function boot(){
   document.getElementById('mob').addEventListener('change',function(){recalc();});
   renderPresets();
   if(!sections.length){
-    addSection('Light Duty Asphalt Pavement',[{type:'ABC base',depth:6,rate:50},{type:'S9.5C',depth:2,rate:150}]);
-    addSection('Heavy Duty Asphalt Pavement',[{type:'ABC base',depth:8,rate:50},{type:'I19.0C',depth:2.5,rate:150},{type:'S9.5C',depth:1.5,rate:150}]);
+    addSection('Light Duty Asphalt Pavement',[{type:'ABC',depth:6,rate:50},{type:'S9.5C',depth:2,rate:150}]);
+    addSection('Heavy Duty Asphalt Pavement',[{type:'ABC',depth:8,rate:50},{type:'I19.0C',depth:2.5,rate:150},{type:'S9.5C',depth:1.5,rate:150}]);
   } else {renderAll();renderConc();renderExtra();}
   loadClientsForAutocomplete();
   updateMatIndicator();
@@ -1283,21 +1279,18 @@ function loadStorage(){
 }
 
 function _applyMatPrices(mpd){
-  if(mpd.mat){Object.assign(MAT,mpd.mat);}else if(mpd.prices){Object.assign(MAT,mpd.prices);}
-  if(mpd.drate)Object.assign(DRATE,mpd.drate);
-  if(mpd.lbs)Object.assign(LBS,mpd.lbs);
-  if(mpd.ddepth)Object.assign(DDEPTH,mpd.ddepth);
-  if(mpd.lbadge)Object.assign(LBADGE,mpd.lbadge);
-  if(mpd.mat_unit)Object.assign(MAT_UNIT,mpd.mat_unit);
-  if(mpd.mat_category)Object.assign(MAT_CATEGORY,mpd.mat_category);
-  if(mpd.ltypes&&mpd.ltypes.length){LTYPES.length=0;mpd.ltypes.forEach(function(t){LTYPES.push(t);});}
+  // Only apply cost overrides — material list, trades, units are all hard-coded
+  if(mpd.mat){
+    LTYPES.forEach(function(k){
+      if(mpd.mat[k]!==undefined)MAT[k]=mpd.mat[k];
+    });
+  }
 }
 
 function _applyJCDefaults(d){
   if(d.crew_rate)jcCrewRate=d.crew_rate;
   if(d.overhead_pct)jcOverheadPct=d.overhead_pct;
   if(d.productivity)jcProductivity=d.productivity;
-  if(d.mill_fee)jcMillFee=d.mill_fee;
   if(d.tons_per_truck)jcTonsPerTruck=d.tons_per_truck;
   if(d.truck_rate)jcTruckRate=d.truck_rate;
   if(d.truck_hours)jcTruckHours=d.truck_hours;
@@ -1365,11 +1358,10 @@ function saveJCDefaults(){
   var op=parseFloat(document.getElementById('jc-default-overhead-pct')?document.getElementById('jc-default-overhead-pct').value:jcOverheadPct)||jcOverheadPct;
   jcCrewRate=cr; jcOverheadPct=op;
   var pr=parseFloat(document.getElementById('jc-default-productivity')?document.getElementById('jc-default-productivity').value:JC_PRODUCTIVITY_DEFAULT)||JC_PRODUCTIVITY_DEFAULT;jcProductivity=pr;
-  var mf=parseFloat(document.getElementById('jc-default-mill-fee')?document.getElementById('jc-default-mill-fee').value:jcMillFee)||jcMillFee;jcMillFee=mf;
   var tpt=parseFloat(document.getElementById('jc-default-tons-per-truck')?document.getElementById('jc-default-tons-per-truck').value:jcTonsPerTruck)||jcTonsPerTruck;jcTonsPerTruck=tpt;
   var tr2=parseFloat(document.getElementById('jc-default-truck-rate')?document.getElementById('jc-default-truck-rate').value:jcTruckRate)||jcTruckRate;jcTruckRate=tr2;
   var th=parseFloat(document.getElementById('jc-default-truck-hours')?document.getElementById('jc-default-truck-hours').value:jcTruckHours)||jcTruckHours;jcTruckHours=th;
-  _saveSetting('hd_jc_defaults',{crew_rate:cr,overhead_pct:op,productivity:jcProductivity,mill_fee:jcMillFee,tons_per_truck:jcTonsPerTruck,truck_rate:jcTruckRate,truck_hours:jcTruckHours});
+  _saveSetting('hd_jc_defaults',{crew_rate:cr,overhead_pct:op,productivity:jcProductivity,tons_per_truck:jcTonsPerTruck,truck_rate:jcTruckRate,truck_hours:jcTruckHours});
   renderJCDefaults();
   var ind=document.getElementById('jc-settings-indicator');
   if(ind){ind.textContent='Saved.';setTimeout(function(){ind.textContent='';},2000);}
@@ -1377,7 +1369,7 @@ function saveJCDefaults(){
 
 function resetJCDefaults(){
   jcCrewRate=JC_CREW_RATE_DEFAULT; jcOverheadPct=JC_OVERHEAD_PCT_DEFAULT; jcProductivity=JC_PRODUCTIVITY_DEFAULT;
-  jcMillFee=MILL_FEE_DEFAULT; jcTonsPerTruck=TONS_PER_TRUCK_DEFAULT; jcTruckRate=TRUCK_RATE_DEFAULT; jcTruckHours=TRUCK_HOURS_DEFAULT;
+  jcTonsPerTruck=TONS_PER_TRUCK_DEFAULT; jcTruckRate=TRUCK_RATE_DEFAULT; jcTruckHours=TRUCK_HOURS_DEFAULT;
   _saveSetting('hd_jc_defaults',null);
   renderJCDefaults();
 }
@@ -1386,7 +1378,6 @@ function renderJCDefaults(){
   var cr=document.getElementById('jc-default-crew-rate');if(cr)cr.value=jcCrewRate;
   var op=document.getElementById('jc-default-overhead-pct');if(op)op.value=jcOverheadPct;
   var pr=document.getElementById('jc-default-productivity');if(pr)pr.value=jcProductivity;
-  var mf=document.getElementById('jc-default-mill-fee');if(mf)mf.value=jcMillFee;
   var tpt=document.getElementById('jc-default-tons-per-truck');if(tpt)tpt.value=jcTonsPerTruck;
   var tr2=document.getElementById('jc-default-truck-rate');if(tr2)tr2.value=jcTruckRate;
   var th=document.getElementById('jc-default-truck-hours');if(th)th.value=jcTruckHours;
@@ -1492,9 +1483,7 @@ function buildEVAEstimates(){
       var days=calcLayerDays(t,l);
       var crewC=days*getCrewParam(l.type,'crew_rate');
       var truckC=calcTrucking(t,l,days);
-      var isMill=l.type==='Mill & Pave';
-      var millC=isMill?days*(l.mill_rate||jcMillFee):0;
-      var totalCost=matC+crewC+truckC+millC;
+      var totalCost=matC+crewC+truckC;
       items.push({key:'lyr-'+s.id+'-'+l.id, name:(l.name||l.type), section:s.name,
         qty:t, unit:'TON', estCost:totalCost, estDays:days, type:'asphalt'});
     });
@@ -2505,7 +2494,7 @@ function showPanel(id,el){
 function updateMatIndicator(){
   var a=document.getElementById('mp-abc');
   var b=document.getElementById('mp-asp');
-  if(a)a.textContent='$'+MAT['ABC base'];
+  if(a)a.textContent='$'+MAT['ABC'];
   if(b)b.textContent='$'+MAT['S9.5C'];
 }
 
@@ -2516,105 +2505,42 @@ function renderMatPriceInputs(){
 function renderMatTable(){
   var tbody = document.getElementById('mat-tbody');
   if(!tbody) return;
-  var keys = Object.keys(MAT_DEFAULT).slice();
-  Object.keys(MAT).forEach(function(k){ if(keys.indexOf(k)<0) keys.push(k); });
-  var categories=['Asphalt','Stone','Concrete','Other'];
-  var units=['TON','CY','SY','LF','EA','LS'];
   tbody.innerHTML = '';
-  keys.forEach(function(k){
+  var tradeColors={'Stone':'#8B5E3C','Asphalt':'#333','Concrete':'#6B4FA6'};
+  LTYPES.forEach(function(k,idx){
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid var(--bdr)';
-    // Name
-    var td0 = document.createElement('td'); td0.style.cssText='padding:6px 10px;';
-    var ni=document.createElement('input');ni.type='text';ni.value=k;ni.placeholder='Name';
-    ni.style.cssText='width:120px;font-size:12px;';
-    (function(kk){ni.addEventListener('change',function(){renameMaterial(kk,this.value);});})(k);
-    td0.appendChild(ni);tr.appendChild(td0);
-    // Category
-    var td1=document.createElement('td');td1.style.cssText='padding:6px 10px;text-align:center;';
-    var cs=document.createElement('select');cs.style.cssText='font-size:11px;width:90px;';
-    categories.forEach(function(cat){
-      var o=document.createElement('option');o.value=cat;o.textContent=cat;
-      if((MAT_CATEGORY[k]||'Other')===cat)o.selected=true;
-      cs.appendChild(o);
-    });
-    (function(kk){cs.addEventListener('change',function(){MAT_CATEGORY[kk]=this.value;});})(k);
-    td1.appendChild(cs);tr.appendChild(td1);
-    // Cost $/unit
-    var td2=document.createElement('td');td2.style.cssText='padding:6px 10px;text-align:right;';
-    var i1=document.createElement('input');i1.type='number';i1.value=MAT[k]||0;i1.min=0;i1.step=1;i1.style.cssText='width:80px;text-align:right;';
-    (function(kk){i1.addEventListener('change',function(){MAT[kk]=parseFloat(this.value)||0;renderAll();renderConc();renderExtra();});})(k);
+    if(idx%2)tr.style.background='var(--lgray)';
+    // Name (read-only)
+    var td0 = document.createElement('td'); td0.style.cssText='padding:8px 10px;font-weight:600;font-size:13px;';
+    td0.textContent=k; tr.appendChild(td0);
+    // Trade (read-only badge)
+    var td1=document.createElement('td');td1.style.cssText='padding:8px 10px;text-align:center;';
+    var trade=MAT_TRADE[k]||'Other';
+    var badge=document.createElement('span');
+    badge.style.cssText='font-size:10px;font-weight:700;color:#fff;padding:2px 8px;border-radius:3px;background:'+(tradeColors[trade]||'#888')+';';
+    badge.textContent=trade;
+    td1.appendChild(badge);tr.appendChild(td1);
+    // Cost $/unit (editable)
+    var td2=document.createElement('td');td2.style.cssText='padding:8px 10px;text-align:right;';
+    var i1=document.createElement('input');i1.type='number';i1.value=MAT[k]||0;i1.min=0;i1.step=1;
+    i1.style.cssText='width:90px;text-align:right;font-size:13px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;';
+    (function(kk){i1.addEventListener('change',function(){MAT[kk]=parseFloat(this.value)||0;});})(k);
     td2.appendChild(i1);tr.appendChild(td2);
-    // Unit
-    var td3=document.createElement('td');td3.style.cssText='padding:6px 10px;text-align:center;';
-    var us=document.createElement('select');us.style.cssText='font-size:11px;width:65px;';
-    units.forEach(function(u){
-      var o=document.createElement('option');o.value=u;o.textContent=u;
-      if((MAT_UNIT[k]||'TON')===u)o.selected=true;
-      us.appendChild(o);
-    });
-    (function(kk){us.addEventListener('change',function(){MAT_UNIT[kk]=this.value;});})(k);
-    td3.appendChild(us);tr.appendChild(td3);
-    // Remove
-    var td4=document.createElement('td');td4.style.cssText='padding:6px 4px;text-align:center;';
-    var rb=document.createElement('button');rb.className='btn-ico';rb.textContent='x';
-    (function(kk){rb.addEventListener('click',function(){removeMaterial(kk);});})(k);
-    td4.appendChild(rb);
-    tr.appendChild(td4);
+    // Unit (read-only)
+    var td3=document.createElement('td');td3.style.cssText='padding:8px 10px;text-align:center;font-size:12px;color:var(--dgray);';
+    td3.textContent=MAT_UNIT[k]||'TON'; tr.appendChild(td3);
     tbody.appendChild(tr);
   });
-}
-
-function addMaterial(){
-  var name = prompt('New material name (e.g. "S9.5D"):');
-  if(!name || name.trim()==='') return;
-  name = name.trim();
-  if(MAT.hasOwnProperty(name)){toast('Material already exists','err');return;}
-  MAT[name]=0; DRATE[name]=150; LBS[name]=115; DDEPTH[name]=3; LBADGE[name]='b-surface';
-  MAT_UNIT[name]='TON'; MAT_CATEGORY[name]='Other';
-  if(LTYPES.indexOf(name)<0) LTYPES.push(name);
-  renderMatTable();
-  renderPresets();
-  toast('Material added - set prices and save','ok');
-}
-
-function removeMaterial(name){
-  if(!confirm('Remove "'+name+'" from materials? This will affect any sections using it.')) return;
-  delete MAT[name]; delete DRATE[name]; delete LBS[name]; delete DDEPTH[name]; delete LBADGE[name]; delete MAT_UNIT[name]; delete MAT_CATEGORY[name];
-  var idx = LTYPES.indexOf(name);
-  if(idx>=0) LTYPES.splice(idx,1);
-  renderMatTable();
-  renderPresets();
-  renderAll();
-  toast('Material removed','ok');
-}
-
-function renameMaterial(oldName, newName){
-  newName = (newName||'').trim();
-  if(!newName || newName===oldName) return;
-  if(MAT.hasOwnProperty(newName)){toast('Name already in use','err');return;}
-  MAT[newName]=MAT[oldName]; DRATE[newName]=DRATE[oldName];
-  LBS[newName]=LBS[oldName]; DDEPTH[newName]=DDEPTH[oldName]; LBADGE[newName]=LBADGE[oldName]||'';
-  MAT_UNIT[newName]=MAT_UNIT[oldName]||'TON'; MAT_CATEGORY[newName]=MAT_CATEGORY[oldName]||'Other';
-  delete MAT[oldName]; delete DRATE[oldName]; delete LBS[oldName]; delete DDEPTH[oldName]; delete LBADGE[oldName];
-  delete MAT_UNIT[oldName]; delete MAT_CATEGORY[oldName];
-  var idx=LTYPES.indexOf(oldName); if(idx>=0) LTYPES[idx]=newName;
-  renderMatTable(); renderPresets(); renderAll();
 }
 
 
 
 function saveMatPrices(){
-  var keys = Object.keys(MAT);
-  var saved = {mat:{},drate:{},lbs:{},ddepth:{},lbadge:{},mat_unit:{},mat_category:{},ltypes:LTYPES.slice()};
-  // Values already updated in-memory via input event listeners
-  keys.forEach(function(k){
-    saved.mat[k]=MAT[k]; saved.drate[k]=DRATE[k];
-    saved.lbs[k]=LBS[k]; saved.ddepth[k]=DDEPTH[k]; saved.lbadge[k]=LBADGE[k];
-    saved.mat_unit[k]=MAT_UNIT[k]||'TON'; saved.mat_category[k]=MAT_CATEGORY[k]||'Other';
-  });
-  saved.updated = Date.now();
-  _saveSetting('hd_mat_prices', saved);
+  // Only save costs (the only editable field) — everything else is hard-coded
+  var costs={};
+  LTYPES.forEach(function(k){costs[k]=MAT[k];});
+  _saveSetting('hd_mat_prices', {mat:costs,updated:Date.now()});
   var el=document.getElementById('mat-prices-updated');
   if(el) el.textContent='Last updated: '+new Date().toLocaleDateString();
   updateMatIndicator();
@@ -2623,15 +2549,8 @@ function saveMatPrices(){
 }
 
 function resetMatPrices(){
-  if(!confirm('Reset all materials to defaults? Custom materials will be removed.')) return;
-  Object.keys(MAT).forEach(function(k){delete MAT[k];delete DRATE[k];delete LBS[k];delete DDEPTH[k];delete LBADGE[k];delete MAT_UNIT[k];delete MAT_CATEGORY[k];});
+  if(!confirm('Reset all material costs to defaults?')) return;
   Object.assign(MAT,JSON.parse(JSON.stringify(MAT_DEFAULT)));
-  Object.assign(DRATE,JSON.parse(JSON.stringify(DRATE_DEFAULT)));
-  Object.assign(LBS,JSON.parse(JSON.stringify(LBS_DEFAULT)));
-  Object.assign(DDEPTH,JSON.parse(JSON.stringify(DDEPTH_DEFAULT)));
-  Object.assign(LBADGE,JSON.parse(JSON.stringify(LBADGE_DEFAULT)));
-  Object.assign(MAT_UNIT,JSON.parse(JSON.stringify(MAT_UNIT_DEFAULT)));
-  Object.assign(MAT_CATEGORY,JSON.parse(JSON.stringify(MAT_CATEGORY_DEFAULT)));
   LTYPES.length=0; LTYPES_DEFAULT.forEach(function(t){LTYPES.push(t);});
   _saveSetting('hd_mat_prices', null);
   renderMatTable(); updateMatIndicator();
@@ -2659,14 +2578,13 @@ function mkLayer(l){
     days_override:l.days_override!==undefined?l.days_override:null,
     overhead:l.overhead!==undefined?l.overhead:jcOverheadPct,
     rate_override:l.rate_override!==undefined?l.rate_override:null,
-    mill_days:l.mill_days||0,mill_rate:l.mill_rate||jcMillFee,
     trucks_override:l.trucks_override!==undefined?l.trucks_override:null,
     description:l.description||''};
 }
 
 function addSection(name,lds){
   var s={id:sid++,name:name||('Section '+(sid)),sf:0,layers:[]};
-  (lds||[{type:'ABC base'},{type:'S9.5C'}]).forEach(function(l){s.layers.push(mkLayer(l));});
+  (lds||[{type:'ABC'},{type:'S9.5C'}]).forEach(function(l){s.layers.push(mkLayer(l));});
   sections.push(s);renderAll();
 }
 function remSec(id){sections=sections.filter(function(s){return s.id!==id;});renderAll();}
@@ -2683,7 +2601,6 @@ function updLyrType(sid2,lid2,v){
   l.type=v;l.depth=DDEPTH[v];l.rate=DRATE[v];
   if(!l.name||l.name===oldType)l.name=v;
   var mat=MAT[v]||0;l.markup=mat>0?Math.round((l.rate-mat)/mat*100):0;
-  l.mill_days=0;l.mill_rate=0;
   renderAll();
 }
 function updLyrDepth(sid2,lid2,v){
@@ -2720,16 +2637,6 @@ function updLyrOverhead(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   l.overhead=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
-}
-function updMillDays(sid2,lid2,v){
-  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
-  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
-  l.mill_days=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
-}
-function updMillRate(sid2,lid2,v){
-  var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
-  var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
-  l.mill_rate=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
 }
 function updTrucks(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
@@ -2780,7 +2687,6 @@ function updateLyrResult(sid2,lid2){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   var sf=s.sf||0,wfv=wf();
-  var isMill=l.type==='Mill & Pave';
   var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
   var t=rawT*wfv;
   var bidC=calcLayerBid(t,l);
@@ -2789,13 +2695,11 @@ function updateLyrResult(sid2,lid2){
   var lDays=calcLayerDays(t,l);
   var truckCost=calcTrucking(t,l,lDays);
   var crewCost=lDays*getCrewParam(l.type,'crew_rate');
-  var millCost=isMill?lDays*(l.mill_rate||jcMillFee):0;
   var resEl=document.querySelector('.lres[data-lyr="'+sid2+'-'+lid2+'"]');
   var muEl=document.querySelector('.mubadge[data-lyr="'+sid2+'-'+lid2+'"]');
   if(resEl){
     var ppt2=t>0?'<b>$'+(bidC/t).toFixed(2)+'/t</b> ':'';
-    var millStr=isMill&&millCost>0?' mill:<b>$'+fi(millCost)+'</b>':'';
-    resEl.innerHTML=sf>0?('<b>'+t.toLocaleString()+'t</b> '+ppt2+'<b>'+lDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b>'+millStr+' truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter SF above</span>';
+    resEl.innerHTML=sf>0?('<b>'+t.toLocaleString()+'t</b> '+ppt2+'<b>'+lDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter SF above</span>';
   }
   if(muEl){muEl.textContent=bidC>0?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
   updateSecFooter(sid2);
@@ -2808,7 +2712,7 @@ function renderAll(){
     var div=document.createElement('div');div.className='sec';
     var lrows='';
     s.layers.forEach(function(l){
-      var wfv=wf(),isMill=l.type==='Mill & Pave';
+      var wfv=wf();
       var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
       var t=rawT*wfv;
       var bidC=calcLayerBid(t,l);
@@ -2817,13 +2721,10 @@ function renderAll(){
       var layerDays=calcLayerDays(t,l);
       var truckCost=calcTrucking(t,l,layerDays);
       var crewCost=layerDays*getCrewParam(l.type,'crew_rate');
-      var millCost=isMill?layerDays*(l.mill_rate||jcMillFee):0;
       var ppt=t>0?'<b>$'+(bidC/t).toFixed(2)+'/t</b> ':'';
-      var millStr=isMill&&millCost>0?' mill:<b>$'+fi(millCost)+'</b>':'';
-      var resHTML=sf>0?'<b>'+t.toLocaleString()+'t</b> '+ppt+'<b>'+layerDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b>'+millStr+' truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter SF above</span>';
+      var resHTML=sf>0?'<b>'+t.toLocaleString()+'t</b> '+ppt+'<b>'+layerDays.toFixed(1)+'d</b> mat:<b>$'+fi(matC)+'</b> crew:<b>$'+fi(crewCost)+'</b> truck:<b>$'+fi(truckCost)+'</b> = <b>$'+fi(bidC)+'</b>':'<span style="opacity:.5">enter SF above</span>';
       var muBadge='<span class="mubadge '+(lmp>=0?'p':'n')+'" data-lyr="'+s.id+'-'+l.id+'">'+(bidC>0?lmp.toFixed(1)+'% MU':'')+'</span>';
       var typeOpts=LTYPES.map(function(t2){return '<option'+(t2===l.type?' selected':'')+'>'+t2+'</option>';}).join('');
-      var millFields=isMill?'<label>Mill $/day</label><input type="number" value="'+(l.mill_rate||jcMillFee)+'" min="0" step="any" style="width:74px" onchange="updMillRate('+s.id+','+l.id+',this.value)">':'';
       var layerRate=calcLayerRate(t,l);
       var stdFields='<label>Depth (in)</label><input type="number" value="'+l.depth+'" min=".5" step=".5" style="width:55px" onchange="updLyrDepth('+s.id+','+l.id+',this.value)"/>'+'<label>Days</label><input type="number" value="'+(l.days_override!==null&&l.days_override!==undefined?l.days_override:layerDays.toFixed(1))+'" min="0" step="0.5" style="width:60px" title="Auto: '+layerDays.toFixed(2)+'d" onchange="updLyrDays('+s.id+','+l.id+',this.value,true)"/>'+'<label>MU%</label><input type="number" value="'+l.markup+'" min="0" step="1" style="width:52px" class="lyr-markup" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrMarkup('+s.id+','+l.id+',this.value)"/>'
       // Trucking: only # trucks adjustable here, rate/hours in Settings
@@ -2838,7 +2739,7 @@ function renderAll(){
       lrows+='<div class="lyr-row" style="flex-wrap:wrap;">'
         +nameField
         +'<select onchange="updLyrType('+s.id+','+l.id+',this.value)">'+typeOpts+'</select>'
-        +millFields+stdFields+truckFields
+        +stdFields+truckFields
         +muBadge+'<span class="lres" data-lyr="'+s.id+'-'+l.id+'">'+resHTML+'</span>'
         +'<button class="btn-ico" onclick="remLyr('+s.id+','+l.id+')">x</button>'
         +'</div>';
@@ -2928,8 +2829,7 @@ function updExtraNum(id,f,v){
 
 
 // -- Layer bid price calculator ------------------------------------------------
-// Regular asphalt: (material + crew + trucking) * (1 + markup/100)
-// Mill & Pave: (surface asphalt + crew*days + mill_fee*days + trucking) * (1 + markup/100)
+// (material + crew + trucking) * (1 + markup/100)
 function calcLayerDays(tons, layer){
   if(layer.days_override !== null && layer.days_override !== undefined) return layer.days_override;
   var prod = getCrewParam(layer.type, 'productivity');
@@ -2944,8 +2844,6 @@ function calcTruckCount(tons, layer){
   if(days <= 0) return 0;
   var tonsPerDay = tons / days;
   var base = Math.ceil(tonsPerDay / tpt);
-  // Mill & Pave needs 1.5x trucks for material removal
-  if(layer.type === 'Mill & Pave') return Math.ceil(base * 1.5);
   return base;
 }
 function calcTrucking(tons, layer, days){
@@ -2959,10 +2857,8 @@ function calcLayerBid(tons, layer){
   var crewRate = getCrewParam(layer.type, 'crew_rate');
   var crew = days * crewRate;
   var truckCost = calcTrucking(tons, layer, days);
-  // Mill & Pave adds milling fee on top of standard asphalt bid
-  var millCost = (layer.type === 'Mill & Pave') ? days * (layer.mill_rate || jcMillFee) : 0;
   var mu = layer.markup / 100;
-  return (mat + crew + truckCost + millCost) * (1 + mu);
+  return (mat + crew + truckCost) * (1 + mu);
 }
 function calcLayerRate(tons, layer){
   if(tons <= 0) return layer.rate;
@@ -2978,7 +2874,6 @@ function recalc(){
   sections.forEach(function(s){
     var sf=s.sf||0,sy=calcSY(sf);gSF+=sf;gSY+=sy;
     s.layers.forEach(function(l){
-      var isMill=l.type==='Mill & Pave';
       var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
       var t=rawT*wfv;
       var mC=t*(MAT[l.type]||0);
@@ -2986,7 +2881,6 @@ function recalc(){
       var lDays=calcLayerDays(t,l);
       var crewC=lDays*getCrewParam(l.type,'crew_rate');
       var truckC=calcTrucking(t,l,lDays);
-      var millC=isMill?lDays*(l.mill_rate||jcMillFee):0;
       var mp=mu(mC,bC);
       gT+=t;gM+=mC;gB+=bC;gCrew+=crewC;gTruck+=truckC;
       var tr=document.createElement('tr');
@@ -2998,7 +2892,7 @@ function recalc(){
         +'<td>ton</td>'
         +'<td>'+(t>0?t.toLocaleString():'-')+'</td>'
         +'<td>'+(lDays>0?lDays.toFixed(1):'-')+'</td>'
-        +'<td>'+(mC>0?'$'+fi(mC):'- ')+(millC>0?' +mill $'+fi(millC):'')+'</td>'
+        +'<td>'+(mC>0?'$'+fi(mC):'-')+'</td>'
         +'<td>'+(crewC>0?'$'+fi(crewC):'-')+'</td>'
         +'<td>'+(truckC>0?'$'+fi(truckC):'-')+'</td>'
         +'<td>'+(bC>0?'$'+fi(bC):'-')+'</td>'
@@ -3702,20 +3596,20 @@ function openPresetModal(editIdx){
     +'<div style="display:grid;grid-template-columns:1fr 80px 90px 32px;gap:8px;margin-bottom:6px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;">'
     +'<span>Material</span><span>Depth (in)</span><span>$/ton Rate</span><span></span></div>'
     +'<div id="pm-layers"></div>'
-    +'<button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="(function(){layers.push({type:LTYPES[0],depth:4,rate:50});renderRows();}).call(this)">+ Add Layer</button>'
+    +'<button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="window._presetModalLayers.push({type:LTYPES[0],depth:4,rate:50});window._presetModalRenderRows();">+ Add Layer</button>'
     +'<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bdr);">'
     +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'preset-modal\').remove()">Cancel</button>'
     +'<button class="btn btn-red btn-sm" onclick="savePresetModal()">Save Preset</button>'
     +'</div>';
 
+  window._presetModalEditIdx=isEdit?editIdx:null;
+  window._presetModalLayers=layers;
+  window._presetModalRenderRows=renderRows;
+
   modal.appendChild(box);
   modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
   document.body.appendChild(modal);
   renderRows();
-
-  window._presetModalEditIdx=isEdit?editIdx:null;
-  window._presetModalLayers=layers;
-  window._presetModalRenderRows=renderRows;
 }
 
 function savePresetModal(){
