@@ -408,7 +408,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div class="card-body" style="padding:10px 14px;"><div style="font-size:12px;color:var(--dgray);">Loading weather...</div></div>
           </div>
           <!-- Stats row -->
-          <div id="dash-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;"></div>
+          <div id="dash-stats" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;"></div>
           <!-- Upcoming WO + Recent Projects (same row) -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
             <div class="card">
@@ -745,6 +745,11 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
       <!-- PROJECTS LIST PANEL -->
       <div class="panel" id="panel-projects"><div class="content" style="padding:16px;max-width:none;">
+        <!-- Pipeline value stat -->
+        <div class="a-card" id="projects-pipeline-value" style="margin-bottom:16px;display:inline-block;min-width:220px;">
+          <div class="a-card-lbl">Total Pipeline Value</div>
+          <div class="a-card-val" id="proj-pipeline-val">-</div>
+        </div>
         <!-- Pipeline board at top of projects -->
         <div class="card" style="margin-bottom:16px;">
           <div class="card-hdr"><span class="card-title">Project Pipeline</span><button class="btn btn-sec btn-sm" onclick="renderPipeline()">Refresh</button></div>
@@ -759,6 +764,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
       <!-- CLIENTS PANEL -->
       <div class="panel" id="panel-clients"><div class="content">
+          <div id="clients-count" style="font-size:13px;color:var(--dgray);margin-bottom:12px;padding:0 16px;"></div>
           <div id="clients-list"></div>
         </div>
       </div>
@@ -2114,40 +2120,36 @@ function renderDashRecentProjects(){
 function renderDashStats(){
   var c=document.getElementById('dash-stats');if(!c)return;
   c.innerHTML='';
-  // Count upcoming bids due (today or future)
   var today=new Date().toISOString().split('T')[0];
-  var upcomingBids=0;
+  var upcomingBids=0,overdueBids=0;
   Object.keys(dashBidDueDates).forEach(function(dateKey){
-    if(dateKey>=today)upcomingBids+=dashBidDueDates[dateKey].length;
+    var count=dashBidDueDates[dateKey].length;
+    if(dateKey>=today)upcomingBids+=count;
+    else overdueBids+=count;
   });
-  // Pipeline value — sum project totals + standalone proposal totals (avoid double-counting)
-  var totalBid=0;
-  var linkedIds={};
+  [{lbl:'Upcoming Bids Due',val:upcomingBids,id:'dash-stat-bids'},
+   {lbl:'Bids Overdue',val:overdueBids,id:'dash-stat-overdue'}
+  ].forEach(function(s){
+    var div=document.createElement('div');div.className='a-card';
+    var valColor=s.id==='dash-stat-overdue'&&s.val>0?'color:var(--red);':'';
+    div.innerHTML='<div class="a-card-lbl">'+s.lbl+'</div><div class="a-card-val" id="'+s.id+'" style="'+valColor+'">'+s.val+'</div>';
+    c.appendChild(div);
+  });
+}
+function calcPipelineValue(){
+  var totalBid=0;var linkedIds={};
   if(typeof pipelineProposals!=='undefined'){
-    // First pass: collect all proposal IDs that are linked to projects
     pipelineProposals.forEach(function(p){
       var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
       if(snap.is_project&&snap.linked_proposals)snap.linked_proposals.forEach(function(id){linkedIds[id]=true;});
     });
-    // Second pass: sum projects + unlinked proposals
     pipelineProposals.forEach(function(p){
       var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
       if(snap.is_project){totalBid+=parseFloat(p.total)||0;}
       else if(!linkedIds[p.id]){totalBid+=parseFloat(p.total)||0;}
     });
   }
-  // Clients (async)
-  try{fetch('/clients/list').then(function(r){return r.json();}).then(function(d){
-    if(d.ok&&d.clients){var ce=document.getElementById('dash-stat-clients');if(ce)ce.textContent=d.clients.length;}
-  });}catch(e){}
-  [{lbl:'Upcoming Bids Due',val:upcomingBids,id:'dash-stat-bids'},
-   {lbl:'Total Pipeline Value',val:'$'+Math.round(totalBid).toLocaleString(),id:'dash-stat-value'},
-   {lbl:'Total Clients',val:'...',id:'dash-stat-clients'}
-  ].forEach(function(s){
-    var div=document.createElement('div');div.className='a-card';
-    div.innerHTML='<div class="a-card-lbl">'+s.lbl+'</div><div class="a-card-val" id="'+s.id+'">'+s.val+'</div>';
-    c.appendChild(div);
-  });
+  return totalBid;
 }
 
 function renderDashCal(){
@@ -3188,7 +3190,7 @@ function showPanel(id,el){
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved'){renderSaved();loadCOList();}
-  if(id==='projects')renderProjectsList();
+  if(id==='projects'){renderProjectsList();var pvEl=document.getElementById('proj-pipeline-val');if(pvEl)pvEl.textContent='$'+Math.round(calcPipelineValue()).toLocaleString();}
   if(id==='lineitems')renderLineItems();
   if(id==='crewcosts')renderCrewCosts();
   if(id==='dashboard'){renderPipeline().then(function(){renderDashboard();}).catch(function(){renderDashboard();});}
@@ -4759,9 +4761,12 @@ async function renderClients() {
     var d = await r.json();
     if (!d.ok) throw new Error(d.error);
     clientsList = d.clients;
+    var countEl=document.getElementById('clients-count');
+    if(countEl)countEl.innerHTML='<b>'+clientsList.length+'</b> total client'+(clientsList.length!==1?'s':'');
     container.innerHTML = '';
     if (!clientsList.length) {
       container.innerHTML = '<p style="color:var(--dgray);font-size:13px;">No clients yet. Use the + Add Client button in the toolbar to get started.</p>';
+      if(countEl)countEl.innerHTML='';
       return;
     }
     clientsList.forEach(function(c){
