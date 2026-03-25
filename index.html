@@ -412,6 +412,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
               </div>
             </div>
           </div>
+          <!-- Weather -->
+          <div id="dash-weather" class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="padding:10px 14px;"><div style="font-size:12px;color:var(--dgray);">Loading weather...</div></div>
+          </div>
           <!-- Stats row -->
           <div id="dash-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;"></div>
           <!-- Calendar + Documents row -->
@@ -1028,7 +1032,13 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
       <!-- SCHEDULE PANEL -->
       <div class="panel" id="panel-schedule"><div class="content" style="padding:20px;">
-        <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;">
+        <!-- Weather strip -->
+        <div id="sched-weather" class="card" style="margin-bottom:14px;">
+          <div class="card-body" style="padding:10px 14px;">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dgray);">Loading weather...</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:240px 1fr;gap:16px;">
           <!-- Queue sidebar -->
           <div>
             <div class="card">
@@ -1036,17 +1046,17 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div class="card-body" id="sched-queue" style="min-height:200px;"><p style="color:var(--dgray);font-size:12px;">No jobs waiting.</p></div>
             </div>
           </div>
-          <!-- Calendar -->
+          <!-- Weekly calendar -->
           <div>
             <div class="card">
               <div class="card-hdr" style="display:flex;align-items:center;gap:10px;">
-                <button class="btn btn-sec btn-sm" onclick="schedCalNav(-1)">&lsaquo;</button>
+                <button class="btn btn-sec btn-sm" onclick="schedCalNav(-1)">&lsaquo; Prev</button>
                 <span class="card-title" id="sched-cal-title" style="flex:1;text-align:center;"></span>
-                <button class="btn btn-sec btn-sm" onclick="schedCalNav(1)">&rsaquo;</button>
-                <button class="btn btn-sec btn-sm" onclick="schedCalNav(0)">Today</button>
+                <button class="btn btn-sec btn-sm" onclick="schedCalNav(1)">Next &rsaquo;</button>
+                <button class="btn btn-sec btn-sm" onclick="schedCalNav(0)">This Week</button>
               </div>
               <div class="card-body" style="padding:8px;">
-                <div id="sched-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
+                <div id="sched-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;"></div>
               </div>
             </div>
           </div>
@@ -1993,6 +2003,7 @@ function loadDashBidDates(){
 
 function renderDashboard(){
   loadDashBidDates();
+  renderDashWeather();
   renderDashStats();
   renderDashCal();
   renderDashUpcomingWO();
@@ -2489,7 +2500,7 @@ function _renderProjectSummaryInner(proj){
         // Detail row
         var details=[];
         if(wo.assigned_to)details.push(esc(wo.assigned_to));
-        if(wo.scheduled_date)details.push('Scheduled: '+esc(wo.scheduled_date));
+        if(wo.scheduled_date)details.push('Scheduled: '+esc(wo.scheduled_date)+(wo.scheduled_time?' at '+fmt12(wo.scheduled_time):''));
         else if(wo.date)details.push('Created: '+esc(wo.date));
         if(details.length){
           var detEl=document.createElement('div');detEl.style.cssText='font-size:12px;color:var(--dgray);margin-bottom:4px;';
@@ -2710,7 +2721,8 @@ function openWorkOrderModal(editWoId){
     +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Contact Phone</label><input id="wo-contact-phone" class="inp" placeholder="(555) 000-0000" style="width:100%;" value="'+esc(editing?editing.onsite_phone:'')+'"></div>'
     +'</div>'
     +'<div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Crew Notes</label><textarea id="wo-crew-notes" rows="2" class="inp" placeholder="Special instructions for the crew..." style="width:100%;resize:vertical;">'+esc(editing?editing.crew_notes:'')+'</textarea></div>'
-    +'<div style="margin-bottom:14px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Scheduled Date</label><input type="date" id="wo-sched-date" class="inp" style="width:200px;" value="'+(editing&&editing.scheduled_date?editing.scheduled_date:'')+'"></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;"><div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Scheduled Date</label><input type="date" id="wo-sched-date" class="inp" style="width:100%;" value="'+(editing&&editing.scheduled_date?editing.scheduled_date:'')+'"></div>'
+    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Scheduled Time <span style="font-weight:400;color:var(--dgray);">(optional)</span></label><input type="time" id="wo-sched-time" class="inp" style="width:100%;" value="'+(editing&&editing.scheduled_time?editing.scheduled_time:'')+'"></div></div>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
     +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'wo-modal\').remove()">Cancel</button>'
     +'<button class="btn btn-red btn-sm" id="wo-save">'+(editing?'Update':'Save')+' Work Order</button></div>';
@@ -2732,6 +2744,7 @@ function openWorkOrderModal(editWoId){
       onsite_phone:document.getElementById('wo-contact-phone').value.trim(),
       crew_notes:document.getElementById('wo-crew-notes').value.trim(),
       scheduled_date:document.getElementById('wo-sched-date').value||null,
+      scheduled_time:document.getElementById('wo-sched-time').value||null,
       linked_proposal:linkedProp,
       date:new Date().toISOString().split('T')[0]
     };
@@ -4903,7 +4916,7 @@ function renderWorkOrderDetail(){
   var detHtml='<div style="font-size:13px;line-height:2;">';
   detHtml+='<div><b>Status:</b> '+esc(wo.status?wo.status.charAt(0).toUpperCase()+wo.status.slice(1):'Pending')+'</div>';
   detHtml+='<div><b>Created:</b> '+(wo.date||'—')+'</div>';
-  if(wo.scheduled_date)detHtml+='<div><b>Scheduled:</b> '+wo.scheduled_date+'</div>';
+  if(wo.scheduled_date)detHtml+='<div><b>Scheduled:</b> '+wo.scheduled_date+(wo.scheduled_time?' at '+fmt12(wo.scheduled_time):'')+'</div>';
   if(wo.onsite_contact)detHtml+='<div><b>On-Site Contact:</b> '+esc(wo.onsite_contact)+(wo.onsite_phone?' ('+esc(wo.onsite_phone)+')':'')+'</div>';
   if(linkedQ)detHtml+='<div><b>Linked Proposal:</b> '+esc(linkedQ.name||'Proposal')+'</div>';
   detHtml+='<div><b>Project:</b> '+esc(proj.name||'')+'</div>';
@@ -5015,13 +5028,81 @@ function autoCreateWorkOrder(projectId,stageId){
 var _pipelineStages=null;
 
 // -- Schedule Page ------------------------------------------------------------
-var _schedMonth=new Date().getMonth();
-var _schedYear=new Date().getFullYear();
+var _schedWeekStart=null; // Sunday of current week
+function getWeekStart(d){var dt=new Date(d);dt.setDate(dt.getDate()-dt.getDay());dt.setHours(0,0,0,0);return dt;}
+(function(){_schedWeekStart=getWeekStart(new Date());})();
 
 function schedCalNav(dir){
-  if(dir===0){_schedMonth=new Date().getMonth();_schedYear=new Date().getFullYear();}
-  else{_schedMonth+=dir;if(_schedMonth>11){_schedMonth=0;_schedYear++;}if(_schedMonth<0){_schedMonth=11;_schedYear--;}}
+  if(dir===0){_schedWeekStart=getWeekStart(new Date());}
+  else{_schedWeekStart=new Date(_schedWeekStart.getTime()+dir*7*86400000);}
   renderSchedule();
+}
+
+// Weather cache
+var _weatherCache=null;var _weatherCacheTime=0;
+var WEATHER_ICONS={0:'\u2600\uFE0F',1:'\uD83C\uDF24',2:'\u26C5',3:'\u2601\uFE0F',45:'\uD83C\uDF2B',48:'\uD83C\uDF2B',51:'\uD83C\uDF27',53:'\uD83C\uDF27',55:'\uD83C\uDF27',61:'\uD83C\uDF27',63:'\uD83C\uDF27\uFE0F',65:'\uD83C\uDF27\uFE0F',71:'\u2744\uFE0F',73:'\u2744\uFE0F',75:'\u2744\uFE0F',80:'\uD83C\uDF26',81:'\uD83C\uDF27',82:'\uD83C\uDF27\uFE0F',95:'\u26A1',96:'\u26A1',99:'\u26A1'};
+function fetchWeather(cb){
+  if(_weatherCache&&Date.now()-_weatherCacheTime<1800000){cb(_weatherCache);return;}
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=35.4088&longitude=-80.5795&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&temperature_unit=fahrenheit&timezone=America%2FNew_York')
+    .then(function(r){return r.json();}).then(function(d){
+      _weatherCache=d.daily||null;_weatherCacheTime=Date.now();cb(_weatherCache);
+    }).catch(function(){cb(null);});
+}
+
+function renderSchedWeather(){
+  var el=document.getElementById('sched-weather');if(!el)return;
+  fetchWeather(function(daily){
+    if(!daily){el.innerHTML='<div class="card-body" style="padding:10px 14px;"><div style="font-size:12px;color:var(--dgray);">Weather unavailable</div></div>';return;}
+    var html='<div class="card-body" style="padding:10px 14px;">';
+    html+='<div style="font-size:11px;font-weight:600;color:var(--dgray);margin-bottom:8px;">CONCORD, NC — 7-DAY FORECAST</div>';
+    html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;">';
+    var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    for(var i=0;i<daily.time.length&&i<7;i++){
+      var dt=new Date(daily.time[i]+'T12:00:00');
+      var code=daily.weathercode[i];
+      var icon=WEATHER_ICONS[code]||'\u2601\uFE0F';
+      var rain=daily.precipitation_probability_max[i]||0;
+      var rainWarn=rain>=50;
+      html+='<div style="padding:6px 4px;border-radius:6px;'+(rainWarn?'background:#FFF3E0;border:1px solid #FFB74D;':'background:#FAFAFA;border:1px solid var(--bdr);')+'">'
+        +'<div style="font-size:10px;font-weight:600;color:var(--dgray);">'+dayNames[dt.getDay()]+'</div>'
+        +'<div style="font-size:10px;color:var(--dgray);">'+String(dt.getMonth()+1)+'/'+dt.getDate()+'</div>'
+        +'<div style="font-size:20px;line-height:1.3;">'+icon+'</div>'
+        +'<div style="font-size:12px;font-weight:700;">'+Math.round(daily.temperature_2m_max[i])+'°</div>'
+        +'<div style="font-size:10px;color:var(--dgray);">'+Math.round(daily.temperature_2m_min[i])+'°</div>'
+        +'<div style="font-size:10px;'+(rainWarn?'color:#E65100;font-weight:700;':'color:var(--dgray);')+'">'+rain+'%</div>'
+        +'</div>';
+    }
+    html+='</div></div>';
+    el.innerHTML=html;
+  });
+}
+
+function renderDashWeather(){
+  var el=document.getElementById('dash-weather');if(!el)return;
+  fetchWeather(function(daily){
+    if(!daily){el.innerHTML='<div class="card-body" style="padding:10px 14px;"><div style="font-size:12px;color:var(--dgray);">Weather unavailable</div></div>';return;}
+    var html='<div class="card-body" style="padding:10px 14px;">';
+    html+='<div style="font-size:11px;font-weight:600;color:var(--dgray);margin-bottom:8px;">CONCORD, NC — 7-DAY FORECAST</div>';
+    html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;">';
+    var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    for(var i=0;i<daily.time.length&&i<7;i++){
+      var dt=new Date(daily.time[i]+'T12:00:00');
+      var code=daily.weathercode[i];
+      var icon=WEATHER_ICONS[code]||'\u2601\uFE0F';
+      var rain=daily.precipitation_probability_max[i]||0;
+      var rainWarn=rain>=50;
+      html+='<div style="padding:6px 4px;border-radius:6px;'+(rainWarn?'background:#FFF3E0;border:1px solid #FFB74D;':'background:#FAFAFA;border:1px solid var(--bdr);')+'">'
+        +'<div style="font-size:10px;font-weight:600;color:var(--dgray);">'+dayNames[dt.getDay()]+'</div>'
+        +'<div style="font-size:10px;color:var(--dgray);">'+String(dt.getMonth()+1)+'/'+dt.getDate()+'</div>'
+        +'<div style="font-size:20px;line-height:1.3;">'+icon+'</div>'
+        +'<div style="font-size:12px;font-weight:700;">'+Math.round(daily.temperature_2m_max[i])+'°</div>'
+        +'<div style="font-size:10px;color:var(--dgray);">'+Math.round(daily.temperature_2m_min[i])+'°</div>'
+        +'<div style="font-size:10px;'+(rainWarn?'color:#E65100;font-weight:700;':'color:var(--dgray);')+'">'+rain+'%</div>'
+        +'</div>';
+    }
+    html+='</div></div>';
+    el.innerHTML=html;
+  });
 }
 
 function renderSchedule(){
@@ -5030,13 +5111,13 @@ function renderSchedule(){
   var queueEl=document.getElementById('sched-queue');
   if(!titleEl||!gridEl||!queueEl)return;
 
-  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  titleEl.textContent=months[_schedMonth]+' '+_schedYear;
+  // Week title
+  var weekEnd=new Date(_schedWeekStart.getTime()+6*86400000);
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  titleEl.textContent=months[_schedWeekStart.getMonth()]+' '+_schedWeekStart.getDate()+' – '+months[weekEnd.getMonth()]+' '+weekEnd.getDate()+', '+weekEnd.getFullYear();
 
-  // Collect all work orders with scheduled_date across all projects
+  // Collect all work orders across all projects
   var allWOs=[];
-  var approvedStage=null;
-  if(_pipelineStages)approvedStage=_pipelineStages.find(function(s){return s.name==='Approved'||s.name==='Scheduled'||s.name==='In Progress';});
   pipelineProposals.forEach(function(p){
     var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
     if(!snap.is_project)return;
@@ -5045,18 +5126,22 @@ function renderSchedule(){
     });
   });
 
-  // Queue — unscheduled work orders from approved+ projects
+  // Queue — unscheduled work orders
   var unscheduled=allWOs.filter(function(item){return !item.wo.scheduled_date&&item.wo.status!=='complete';});
   queueEl.innerHTML='';
   if(unscheduled.length){
     unscheduled.forEach(function(item){
+      var snap=item.snap;
+      var addr=snap.address||snap.proj_addr||'';
       var card=document.createElement('div');
       card.style.cssText='padding:8px 10px;margin-bottom:6px;background:var(--lgray);border-radius:6px;border:1px solid var(--bdr);cursor:grab;font-size:12px;';
       card.setAttribute('draggable','true');
       card.dataset.woId=item.wo.id;
       card.dataset.projectId=item.project.id;
-      card.innerHTML='<div style="font-weight:700;font-size:13px;">'+esc(item.wo.name)+'</div>'
-        +'<div style="color:var(--dgray);font-size:11px;">'+esc(item.project.name)+(item.wo.assigned_to?' &middot; '+esc(item.wo.assigned_to):'')+'</div>';
+      card.innerHTML='<div style="font-weight:700;font-size:12px;">'+esc(item.wo.name)+'</div>'
+        +'<div style="color:var(--dgray);font-size:10px;">'+esc(item.project.name)+'</div>'
+        +(addr?'<div style="color:var(--dgray);font-size:10px;">'+esc(addr)+'</div>':'')
+        +(item.wo.assigned_to?'<div style="color:var(--dgray);font-size:10px;">'+esc(item.wo.assigned_to)+'</div>':'');
       card.addEventListener('dragstart',function(ev){
         ev.dataTransfer.setData('text/plain',JSON.stringify({woId:item.wo.id,projectId:item.project.id}));
         card.style.opacity='0.5';
@@ -5068,65 +5153,66 @@ function renderSchedule(){
     queueEl.innerHTML='<p style="color:var(--dgray);font-size:12px;">No unscheduled work orders.</p>';
   }
 
-  // Calendar grid
+  // Weekly grid
   gridEl.innerHTML='';
-  var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  days.forEach(function(d){
-    var hdr=document.createElement('div');
-    hdr.style.cssText='text-align:center;font-weight:700;font-size:11px;padding:6px 0;color:var(--dgray);';
-    hdr.textContent=d;
-    gridEl.appendChild(hdr);
-  });
-
-  var firstDay=new Date(_schedYear,_schedMonth,1).getDay();
-  var daysInMonth=new Date(_schedYear,_schedMonth+1,0).getDate();
+  var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var today=new Date();var todayStr=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
 
-  // Empty cells before first day
-  for(var i=0;i<firstDay;i++){
-    var empty=document.createElement('div');
-    empty.style.cssText='min-height:80px;background:#FAFAFA;border-radius:4px;';
-    gridEl.appendChild(empty);
-  }
-
-  for(var d=1;d<=daysInMonth;d++){
-    var dateStr=_schedYear+'-'+String(_schedMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    var cell=document.createElement('div');
+  for(var i=0;i<7;i++){
+    var dayDate=new Date(_schedWeekStart.getTime()+i*86400000);
+    var dateStr=dayDate.getFullYear()+'-'+String(dayDate.getMonth()+1).padStart(2,'0')+'-'+String(dayDate.getDate()).padStart(2,'0');
     var isToday=dateStr===todayStr;
-    cell.style.cssText='min-height:80px;border:1px solid var(--bdr);border-radius:4px;padding:4px;font-size:11px;'+(isToday?'background:#FFF5F5;border-color:var(--red);':'');
-    cell.dataset.date=dateStr;
-    var dayNum=document.createElement('div');
-    dayNum.style.cssText='font-weight:700;font-size:12px;margin-bottom:4px;'+(isToday?'color:var(--red);':'');
-    dayNum.textContent=d;
-    cell.appendChild(dayNum);
 
-    // Show scheduled work orders for this date
+    var col=document.createElement('div');
+    col.style.cssText='border:1px solid var(--bdr);border-radius:6px;min-height:180px;display:flex;flex-direction:column;'+(isToday?'background:#FFF5F5;border-color:var(--red);':'');
+    col.dataset.date=dateStr;
+
+    // Day header
+    var hdr=document.createElement('div');
+    hdr.style.cssText='text-align:center;padding:8px 4px;border-bottom:1px solid var(--bdr);'+(isToday?'background:var(--red);border-radius:5px 5px 0 0;':'background:#FAFAFA;border-radius:5px 5px 0 0;');
+    hdr.innerHTML='<div style="font-size:10px;font-weight:700;text-transform:uppercase;'+(isToday?'color:#fff;':'color:var(--dgray);')+'">'+dayNames[i]+'</div>'
+      +'<div style="font-size:16px;font-weight:800;'+(isToday?'color:#fff;':'')+'">'+dayDate.getDate()+'</div>';
+    col.appendChild(hdr);
+
+    // Work orders for this day
+    var body=document.createElement('div');
+    body.style.cssText='flex:1;padding:4px;';
     var dayWOs=allWOs.filter(function(item){return item.wo.scheduled_date===dateStr;});
+    dayWOs.sort(function(a,b){return (a.wo.scheduled_time||'99:99')>(b.wo.scheduled_time||'99:99')?1:-1;});
     dayWOs.forEach(function(item){
+      var snap=item.snap;
+      var addr=snap.address||snap.proj_addr||'';
       var tag=document.createElement('div');
       var stColors={pending:'#999',active:'#2B5FA6',complete:'#27500A'};
-      tag.style.cssText='background:'+(stColors[item.wo.status]||'#999')+';color:#fff;padding:2px 5px;border-radius:3px;font-size:10px;font-weight:600;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-      tag.textContent=item.wo.name;
-      tag.title=item.project.name+' — '+item.wo.name;
+      tag.style.cssText='background:'+(stColors[item.wo.status]||'#999')+';color:#fff;padding:5px 6px;border-radius:4px;font-size:10px;margin-bottom:4px;cursor:pointer;';
+      var timeStr=item.wo.scheduled_time?fmt12(item.wo.scheduled_time):'';
+      tag.innerHTML='<div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.wo.name)+'</div>'
+        +'<div style="opacity:.85;font-size:9px;">'+esc(item.project.name)+'</div>'
+        +(addr?'<div style="opacity:.75;font-size:9px;">'+esc(addr)+'</div>':'')
+        +(timeStr?'<div style="opacity:.85;font-size:9px;margin-top:1px;">'+timeStr+'</div>':'');
+      tag.title=item.project.name+' — '+item.wo.name+(addr?'\n'+addr:'')+(timeStr?'\n'+timeStr:'');
       (function(woId,projId){tag.addEventListener('click',function(){
         _currentProjectId=projId;openWorkOrderView(woId);
       });})(item.wo.id,item.project.id);
-      cell.appendChild(tag);
+      body.appendChild(tag);
     });
+    col.appendChild(body);
 
     // Drop target
-    cell.addEventListener('dragover',function(ev){ev.preventDefault();this.style.background='#E8F5E9';});
-    cell.addEventListener('dragleave',function(){this.style.background=isToday?'#FFF5F5':'';});
-    (function(ds,isT){cell.addEventListener('drop',function(ev){
-      ev.preventDefault();this.style.background=isT?'#FFF5F5':'';
+    col.addEventListener('dragover',function(ev){ev.preventDefault();this.style.boxShadow='inset 0 0 0 2px #4CAF50';});
+    col.addEventListener('dragleave',function(){this.style.boxShadow='';});
+    (function(ds){col.addEventListener('drop',function(ev){
+      ev.preventDefault();this.style.boxShadow='';
       try{
         var data=JSON.parse(ev.dataTransfer.getData('text/plain'));
         scheduleWorkOrder(data.projectId,data.woId,ds);
       }catch(e){}
-    });})(dateStr,isToday);
+    });})(dateStr);
 
-    gridEl.appendChild(cell);
+    gridEl.appendChild(col);
   }
+
+  renderSchedWeather();
 }
 
 function scheduleWorkOrder(projectId,woId,dateStr){
@@ -5159,8 +5245,14 @@ function exportScheduleToGCal(){
   allWOs.forEach(function(item){
     var d=item.wo.scheduled_date.replace(/-/g,'');
     lines.push('BEGIN:VEVENT');
-    lines.push('DTSTART;VALUE=DATE:'+d);
-    lines.push('DTEND;VALUE=DATE:'+d);
+    if(item.wo.scheduled_time){
+      var t=item.wo.scheduled_time.replace(/:/g,'')+'00';
+      lines.push('DTSTART;TZID=America/New_York:'+d+'T'+t);
+      lines.push('DTEND;TZID=America/New_York:'+d+'T'+t);
+    } else {
+      lines.push('DTSTART;VALUE=DATE:'+d);
+      lines.push('DTEND;VALUE=DATE:'+d);
+    }
     lines.push('SUMMARY:'+item.wo.name+' — '+item.project.name);
     var desc=[];
     if(item.wo.assigned_to)desc.push('Crew: '+item.wo.assigned_to);
