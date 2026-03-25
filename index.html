@@ -355,10 +355,9 @@ tr:nth-child(even) td{background:#FAFAFA;}
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Create Proposal
       </div>
       <div class="nav-item" onclick="showPanel('saved',this)">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Proposals
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents
       </div>
       <div class="nav-item" onclick="showPanel('co',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h8l3 3v9H2V2zm5 4H4v1h3V6zm5 2H4v1h6V8zm0 2H4v1h6v-1z"/></svg>Create CO</div>
-      <div class="nav-item" onclick="showPanel('savedco',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 1h7l3 3v10a1 1 0 01-1 1H3a1 1 0 01-1-1V2a1 1 0 011-1zm1 5h6v1H4zm0 2h6v1H4zm0 2h4v1H4z"/></svg>Saved CO's</div>
       <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
       <div class="nav-item" onclick="showPanel('analytics',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v3H1zm4-4h3v7H5zm4-4h3v11H9zm4-6h2v17h-2z"/></svg>Analytics</div>
 
@@ -628,11 +627,16 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
       </div>
 
-      <!-- SAVED PANEL -->
+      <!-- SAVED DOCUMENTS PANEL -->
       <div class="panel" id="panel-saved">
         <div class="content">
           <div class="card">
-            <div class="card-body" id="saved-list"><p style="color:var(--dgray);font-size:13px;">No saved quotes yet.</p></div>
+            <div class="card-hdr"><span class="card-title">Proposals</span></div>
+            <div class="card-body" id="saved-list"><p style="color:var(--dgray);font-size:13px;">No saved proposals yet.</p></div>
+          </div>
+          <div class="card" style="margin-top:16px;">
+            <div class="card-hdr"><span class="card-title">Change Orders</span></div>
+            <div class="card-body" id="co-saved-list"><p style="color:var(--dgray);font-size:12px;">No saved change orders yet.</p></div>
           </div>
         </div>
       </div>
@@ -756,13 +760,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
               </div>
             </div>
 
-      <!-- SAVED CO's PANEL -->
-      <div class="panel" id="panel-savedco"><div class="content">
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Saved Change Orders</span></div>
-          <div class="card-body" id="co-saved-list"><p style="color:var(--dgray);font-size:12px;">No saved change orders yet.</p></div>
-        </div>
-      </div></div>
 
       <!-- ANALYTICS PANEL -->
       <div class="panel" id="panel-analytics"><div class="content">
@@ -1718,7 +1715,7 @@ function updateMobTitle(title) {
     } else if (title === 'Analytics') {
       btn.textContent = 'Refresh';
       btn.onclick = renderAnalytics;
-    } else if (title === 'Saved Proposals') {
+    } else if (title === 'Saved Documents') {
       btn.style.display = 'none';
     } else if (title === 'Settings') {
       btn.style.display = 'none';
@@ -2428,7 +2425,6 @@ async function loadCOList(){
 
 var TOPBAR_CFG = {
   dashboard:[{html:'+ New Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'},{html:'+ Create Proposal',cls:'btn btn-sec btn-sm',fn:"showPanel('build',document.querySelector('[onclick*=build]'))"},{html:'+ Create CO',cls:'btn btn-sec btn-sm',fn:"showPanel('co',document.querySelector('[onclick*=co]'))"}],
-  savedco:[],
   project:[{html:'Edit Project',cls:'btn btn-sec btn-sm',fn:'editCurrentProject()'},{html:'Back to Dashboard',cls:'btn btn-sec btn-sm',fn:"showPanel('dashboard',document.querySelector('[onclick*=dashboard]'))"}],
   build:[
     {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
@@ -2472,16 +2468,15 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Proposals',settings:'Settings',co:'Create CO',savedco:"Saved CO's",analytics:'Analytics',pipeline:'Project Pipeline',project:'Project Summary',clients:'Clients',admin:'Admin Panel'}[id]||id;
+  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',project:'Project Summary',clients:'Clients',admin:'Admin Panel'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
-  if(id==='saved')renderSaved();
+  if(id==='saved'){renderSaved();loadCOList();}
   if(id==='lineitems')renderLineItems();
   if(id==='crewcosts')renderCrewCosts();
   if(id==='dashboard'){renderDashboard();setTimeout(renderPipeline,50);}
   if(id==='project')renderProjectSummary();
   if(id==='co'){populateCOProposalDropdown();}
-  if(id==='savedco')loadCOList();
   if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');}
   if(id==='jobcost'){renderJobCost();renderEVA();}
   if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
@@ -3499,7 +3494,7 @@ async function renderSaved(){
     if(!d.ok)throw new Error(d.error||'Failed to load');
     savedQuotes=d.quotes;
     c.innerHTML='';
-    if(!savedQuotes.length){c.innerHTML='<p style="color:var(--dgray);font-size:13px;">No saved quotes yet.</p>';return;}
+    if(!savedQuotes.length){c.innerHTML='<p style="color:var(--dgray);font-size:13px;">No saved proposals yet.</p>';return;}
     savedQuotes.forEach(function(q){
       var div=document.createElement('div');
       div.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);';
