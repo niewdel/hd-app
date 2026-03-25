@@ -293,7 +293,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
 .kb-col{background:#F4F4F4;border-radius:8px;min-width:210px;max-width:210px;display:flex;flex-direction:column;flex-shrink:0;}
 .kb-col-hdr{padding:10px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;color:#fff;}
 .kb-col-hdr .kb-count{background:rgba(255,255,255,.3);border-radius:10px;padding:1px 7px;font-size:11px;}
-.kb-cards{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:100px;flex:1;}
+.kb-cards{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:400px;flex:1;overflow-y:auto;}
 .kb-card{background:#fff;border:1px solid var(--bdr);border-radius:6px;padding:10px 12px;cursor:grab;transition:box-shadow .12s,opacity .15s,transform .15s;}
 .kb-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);}
 .kb-card.dragging{opacity:.4;transform:scale(.96);}
@@ -3207,8 +3207,17 @@ function renderTopbar(panelId){
     el.innerHTML=b.html;el.setAttribute('onclick',b.fn);
     c.appendChild(el);
   });
-  if(panelId==='build'){var btn=document.getElementById('phase-toggle-btn');
-    if(btn)btn.textContent=(typeof multiPhase!=='undefined'&&multiPhase)?(phases.length+' Phases'):'1 Phase';}
+  if(panelId==='build'){
+    // Add "Back to Project" button if linked to a project
+    if(window._pendingProjectLink){
+      var backBtn=document.createElement('button');backBtn.className='btn btn-sec btn-sm';
+      backBtn.innerHTML='&lsaquo; Back to Project';
+      backBtn.setAttribute('onclick','openProjectSummary('+window._pendingProjectLink+')');
+      c.insertBefore(backBtn,c.firstChild);
+    }
+    var btn=document.getElementById('phase-toggle-btn');
+    if(btn)btn.textContent=(typeof multiPhase!=='undefined'&&multiPhase)?(phases.length+' Phases'):'1 Phase';
+  }
 }
 
 function showPanel(id,el){
@@ -4551,7 +4560,7 @@ async function renderPipeline() {
     board.innerHTML = '';
 
     var cols = document.createElement('div');
-    cols.style.cssText = 'display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;align-items:flex-start;';
+    cols.style.cssText = 'display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;align-items:stretch;min-height:500px;';
 
     var unassigned=pipelineItems.filter(function(p){return !p.stage_id;});
     var allStages=pipelineStages.slice();
@@ -4583,10 +4592,23 @@ async function renderPipeline() {
       });
       cardsDiv.dataset.stageId=stage.id;
 
-      // Pipeline shows stages only (no project cards) — projects listed below
+      cards.forEach(function(p){
+        var card=document.createElement('div');
+        var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+        card.className='kb-card';
+        card.draggable=true;
+        card.addEventListener('dragstart',function(e){e.dataTransfer.setData('text/plain',p.id);e.dataTransfer.effectAllowed='move';this.classList.add('dragging');});
+        card.addEventListener('dragend',function(){this.classList.remove('dragging');document.querySelectorAll('.kb-cards.drag-over').forEach(function(el){el.classList.remove('drag-over');});});
+        var projNumStr=snap.project_number?'<div style="font-size:9px;font-weight:700;color:var(--red);font-family:monospace;margin-bottom:2px;">'+esc(snap.project_number)+'</div>':'';
+        card.innerHTML=projNumStr
+          +'<div class="kb-card-name" style="cursor:pointer;" onclick="openProjectSummary('+p.id+')">'+esc(p.name||'Untitled')+'</div>'
+          +'<div class="kb-card-client">'+esc(p.client||'')+'</div>'
+          +'<div class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'')+'</div>';
+        cardsDiv.appendChild(card);
+      });
       if(!cards.length){
         var empty=document.createElement('div');
-        empty.style.cssText='padding:12px;font-size:11px;color:var(--dgray);text-align:center;';
+        empty.style.cssText='padding:16px;font-size:11px;color:var(--dgray);text-align:center;';
         empty.textContent='No projects';
         cardsDiv.appendChild(empty);
       }
