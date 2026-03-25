@@ -403,7 +403,11 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <!-- DASHBOARD PANEL -->
       <div class="panel on" id="panel-dashboard">
         <div class="content" style="padding:16px;max-width:none;">
-          <!-- Pipeline Board (top) -->
+          <!-- Weather (full width, top) -->
+          <div id="dash-weather" class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="padding:10px 14px;"><div style="font-size:12px;color:var(--dgray);">Loading weather...</div></div>
+          </div>
+          <!-- Pipeline Board -->
           <div class="card" style="margin-bottom:16px;">
             <div class="card-hdr"><span class="card-title">Project Pipeline</span><button class="btn btn-sec btn-sm" onclick="renderPipeline()">Refresh</button></div>
             <div class="card-body" style="padding:8px;overflow-x:auto;">
@@ -411,10 +415,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 <div style="color:var(--dgray);font-size:13px;padding:20px;">Loading pipeline...</div>
               </div>
             </div>
-          </div>
-          <!-- Weather -->
-          <div id="dash-weather" class="card" style="margin-bottom:16px;">
-            <div class="card-body" style="padding:10px 14px;"><div style="font-size:12px;color:var(--dgray);">Loading weather...</div></div>
           </div>
           <!-- Stats row -->
           <div id="dash-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;"></div>
@@ -614,15 +614,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <span id="jc-margin-badge" style="font-size:12px;font-weight:600;"></span>
           </div>
           <div class="card-body">
-            <div class="fg fg3" style="margin-bottom:12px;">
-              <div><label>Crew Day Rate ($)</label><input id="jc-crew-rate" type="number" min="0" step="100"/></div>
-              <div><label>Days on Job</label><input id="jc-days" type="number" value="0" min="0" step="0.5"/></div>
-              <div><label>Overhead %</label><input id="jc-overhead-pct" type="number" value="15" min="0" max="100" step="1"/></div>
-            </div>
             <div id="jc-summary" style="background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;padding:12px 15px;">
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Materials Cost</span><span id="jcs-mat">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Labor Cost</span><span id="jcs-labor">-</span></div>
-              <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;border-top:1px solid var(--bdr);margin-top:4px;padding-top:4px;"><span style="color:var(--dgray);">Overhead (<span id="jcs-ovh-pct">15</span>%)</span><span id="jcs-overhead">-</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Trucking Cost</span><span id="jcs-trucking">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;padding:4px 0;border-top:1px solid var(--bdr);margin-top:4px;"><span>Total Est. Cost</span><span id="jcs-total-cost">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span style="color:var(--dgray);">Bid Price</span><span id="jcs-bid">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:4px 0;border-top:2px solid var(--bdr);margin-top:4px;"><span>Est. Margin</span><span id="jcs-margin">-</span></div>
@@ -640,16 +635,18 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 <thead>
                   <tr style="background:#FAFAFA;border-bottom:2px solid var(--bdr);">
                     <th style="padding:8px;text-align:left;" rowspan="2">Line Item</th>
-                    <th style="padding:8px;text-align:center;border-left:1px solid var(--bdr);" colspan="3">Estimated</th>
+                    <th style="padding:8px;text-align:center;border-left:1px solid var(--bdr);" colspan="5">Estimated</th>
                     <th style="padding:8px;text-align:center;border-left:2px solid var(--red);background:#FFF5F5;" colspan="4">Actual</th>
                     <th style="padding:8px;text-align:center;border-left:1px solid var(--bdr);" colspan="2">Variance</th>
                   </tr>
                   <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);font-size:10px;text-transform:uppercase;">
                     <th style="padding:4px 8px;border-left:1px solid var(--bdr);">Qty</th>
                     <th style="padding:4px 8px;">Unit</th>
-                    <th style="padding:4px 8px;">Cost</th>
+                    <th style="padding:4px 8px;">Material</th>
+                    <th style="padding:4px 8px;">Labor</th>
+                    <th style="padding:4px 8px;">Trucking</th>
                     <th style="padding:4px 8px;border-left:2px solid var(--red);background:#FFF5F5;">Qty</th>
-                    <th style="padding:4px 8px;background:#FFF5F5;">Cost</th>
+                    <th style="padding:4px 8px;background:#FFF5F5;">Material</th>
                     <th style="padding:4px 8px;background:#FFF5F5;">Labor ($)</th>
                     <th style="padding:4px 8px;background:#FFF5F5;">Trucking ($)</th>
                     <th style="padding:4px 8px;border-left:1px solid var(--bdr);">Qty +/-</th>
@@ -1014,21 +1011,22 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
       <!-- SCHEDULE PANEL -->
       <div class="panel" id="panel-schedule"><div class="content" style="padding:20px;">
+        <!-- Weather full width top -->
+        <div id="sched-weather" class="card" style="margin-bottom:16px;">
+          <div class="card-body" style="padding:10px 14px;">
+            <div style="font-size:12px;color:var(--dgray);">Loading weather...</div>
+          </div>
+        </div>
         <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;">
-          <!-- Queue column (full height left) -->
+          <!-- Queue column (left) -->
           <div>
             <div class="card">
               <div class="card-hdr"><span class="card-title">Ready to Schedule</span></div>
-              <div class="card-body" id="sched-queue" style="min-height:300px;max-height:calc(100vh - 180px);overflow-y:auto;"><p style="color:var(--dgray);font-size:12px;">No jobs waiting.</p></div>
+              <div class="card-body" id="sched-queue" style="min-height:300px;max-height:calc(100vh - 280px);overflow-y:auto;"><p style="color:var(--dgray);font-size:12px;">No jobs waiting.</p></div>
             </div>
           </div>
-          <!-- Right column: weather on top, calendar below -->
+          <!-- Weekly calendar (right) -->
           <div>
-            <div id="sched-weather" class="card" style="margin-bottom:14px;">
-              <div class="card-body" style="padding:10px 14px;">
-                <div style="font-size:12px;color:var(--dgray);">Loading weather...</div>
-              </div>
-            </div>
             <div class="card">
               <div class="card-hdr" style="display:flex;align-items:center;gap:10px;">
                 <button class="btn btn-sec btn-sm" onclick="schedCalNav(-1)">&lsaquo; Prev</button>
@@ -1504,17 +1502,15 @@ function renderJCDefaults(){
 }
 
 function calcJobCost(){
-  // Get material cost from recalc global
-  var matCost = typeof gM !== 'undefined' ? gM : 0;
-  // Get labor cost
-  var crewRate=parseFloat(document.getElementById('jc-crew-rate')?document.getElementById('jc-crew-rate').value:0)||0;
-  var days=parseFloat(document.getElementById('jc-days')?document.getElementById('jc-days').value:0)||0;
-  var laborCost=crewRate*days;
-  // Overhead
-  var ovhPct=parseFloat(document.getElementById('jc-overhead-pct')?document.getElementById('jc-overhead-pct').value:jcOverheadPct)||0;
-  var subtotal=matCost+laborCost;
-  var overhead=subtotal*(ovhPct/100);
-  var totalCost=subtotal+overhead;
+  // Calculate from proposal line items
+  var items=buildEVAEstimates();
+  var matCost=0,laborCost=0,truckCost=0;
+  items.forEach(function(item){
+    matCost+=item.estMat||0;
+    laborCost+=item.estLabor||0;
+    truckCost+=item.estTruck||0;
+  });
+  var totalCost=matCost+laborCost+truckCost;
   // Bid price
   var bidPrice = typeof total !== 'undefined' ? total : 0;
   var bidEl=document.getElementById('m-bid');
@@ -1524,7 +1520,7 @@ function calcJobCost(){
   }
   var marginDollar=bidPrice>0?bidPrice-totalCost:null;
   var marginPct=bidPrice>0&&totalCost>0?((bidPrice-totalCost)/bidPrice*100):null;
-  return {matCost:matCost,laborCost:laborCost,overhead:overhead,ovhPct:ovhPct,totalCost:totalCost,bidPrice:bidPrice,marginDollar:marginDollar,marginPct:marginPct};
+  return {matCost:matCost,laborCost:laborCost,truckCost:truckCost,totalCost:totalCost,bidPrice:bidPrice,marginDollar:marginDollar,marginPct:marginPct};
 }
 
 function renderJobCost(){
@@ -1532,8 +1528,7 @@ function renderJobCost(){
   var g=function(id){return document.getElementById(id);};
   if(g('jcs-mat'))g('jcs-mat').textContent=jc.matCost>0?'$'+fi(jc.matCost):'-';
   if(g('jcs-labor'))g('jcs-labor').textContent=jc.laborCost>0?'$'+fi(jc.laborCost):'-';
-  if(g('jcs-ovh-pct'))g('jcs-ovh-pct').textContent=jc.ovhPct.toFixed(0);
-  if(g('jcs-overhead'))g('jcs-overhead').textContent=jc.overhead>0?'$'+fi(jc.overhead):'-';
+  if(g('jcs-trucking'))g('jcs-trucking').textContent=jc.truckCost>0?'$'+fi(jc.truckCost):'-';
   if(g('jcs-total-cost'))g('jcs-total-cost').textContent=jc.totalCost>0?'$'+fi(jc.totalCost):'-';
   if(g('jcs-bid'))g('jcs-bid').textContent=jc.bidPrice>0?'$'+fi(jc.bidPrice):'-';
   var mc = jc.marginPct!==null?(jc.marginPct>=20?'m-green':'m-red'):'';
@@ -1600,9 +1595,8 @@ function buildEVAEstimates(){
       var days=calcLayerDays(t,l);
       var crewC=days*getCrewParam(l.type,'crew_rate');
       var truckC=calcTrucking(t,l,days);
-      var totalCost=matC+crewC+truckC;
       items.push({key:'lyr-'+s.id+'-'+l.id, name:(l.name||l.type), section:s.name,
-        qty:t, unit:'TON', estCost:totalCost, estDays:days, type:'asphalt'});
+        qty:t, unit:'TON', estMat:matC, estLabor:crewC, estTruck:truckC, estCost:matC+crewC+truckC, estDays:days, type:'asphalt'});
     });
   });
   concItems.forEach(function(i){
@@ -1611,12 +1605,12 @@ function buildEVAEstimates(){
     var cy=calcConcCY(i);
     var matC=concMatCost(i);var labC=concLaborCost(i);
     items.push({key:'conc-'+i.id, name:ct.name, section:'Concrete',
-      qty:i.qty, unit:ct.unit, estCost:matC+labC, estDays:0, type:'concrete', cy:cy});
+      qty:i.qty, unit:ct.unit, estMat:matC, estLabor:labC, estTruck:0, estCost:matC+labC, estDays:0, type:'concrete', cy:cy});
   });
   extraItems.forEach(function(i){
     if(!i.name||!i.subtotal)return;
     items.push({key:'extra-'+i.id, name:i.name, section:'Additional',
-      qty:i.qty, unit:i.unit, estCost:i.subtotal, estDays:0, type:'extra'});
+      qty:i.qty, unit:i.unit, estMat:i.subtotal, estLabor:0, estTruck:0, estCost:i.subtotal, estDays:0, type:'extra'});
   });
   return items;
 }
@@ -1628,22 +1622,23 @@ function renderEVA(){
   tbody.innerHTML='';if(tfoot)tfoot.innerHTML='';
   var items=buildEVAEstimates();
   if(!items.length){
-    tbody.innerHTML='<tr><td colspan="10" style="padding:16px;text-align:center;color:var(--dgray);">No line items in proposal yet.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="12" style="padding:16px;text-align:center;color:var(--dgray);">No line items in proposal yet.</td></tr>';
     return;
   }
-  var totEstCost=0,totActCost=0,totEstQty=0,totActQty=0,totActMatOnly=0,totActLabOnly=0,totActTruckOnly=0;
+  var totEstCost=0,totEstMat=0,totEstLabor=0,totEstTruck=0,totActCost=0,totEstQty=0,totActQty=0,totActMatOnly=0,totActLabOnly=0,totActTruckOnly=0;
   items.forEach(function(item){
     var act=evaActuals[item.key]||{};
     var actQty=act.qty!==undefined?act.qty:null;
     var actCost=act.cost!==undefined?act.cost:null;
     var actLabor=act.labor!==undefined?act.labor:null;
     var actTruck=act.trucking!==undefined?act.trucking:null;
-    var actTotal=(actCost!==null?actCost:0)+(actLabor!==null?actLabor:0)+(actTruck!==null?actTruck:0);
+    // Actual total with 15% overhead on labor (covers overhead & fuel on payroll actuals)
+    var rawActTotal=(actCost!==null?actCost:0)+(actLabor!==null?actLabor*1.15:0)+(actTruck!==null?actTruck:0);
     var hasActual=actCost!==null||actLabor!==null||actTruck!==null;
     var qtyVar=actQty!==null?(actQty-item.qty):null;
-    var costVar=hasActual?(actTotal-item.estCost):null;
-    totEstCost+=item.estCost;
-    if(hasActual)totActCost+=actTotal;
+    var costVar=hasActual?(rawActTotal-item.estCost):null;
+    totEstCost+=item.estCost;totEstMat+=item.estMat;totEstLabor+=item.estLabor;totEstTruck+=item.estTruck;
+    if(hasActual)totActCost+=rawActTotal;
     if(actCost!==null)totActMatOnly+=actCost;
     if(actLabor!==null)totActLabOnly+=actLabor;
     if(actTruck!==null)totActTruckOnly+=actTruck;
@@ -1653,16 +1648,17 @@ function renderEVA(){
     var tr=document.createElement('tr');tr.style.borderBottom='1px solid var(--bdr)';
     var varQtyClass=qtyVar!==null?(qtyVar>0?'m-red':qtyVar<0?'m-green':''):'';
     var varCostClass=costVar!==null?(costVar>0?'m-red':costVar<0?'m-green':''):'';
-    var laborCell=isConcrete
-      ?'<td style="padding:8px;text-align:center;background:#FFF5F5;color:var(--dgray);font-size:10px;">N/A</td>'
-      :'<td style="padding:8px;text-align:right;background:#FFF5F5;"><input type="number" value="'+(actLabor!==null?actLabor:'')+'" placeholder="—" min="0" step="1" style="width:80px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'labor\',this.value)"></td>';
+    // Concrete gets labor input but no trucking
+    var laborCell='<td style="padding:8px;text-align:right;background:#FFF5F5;"><input type="number" value="'+(actLabor!==null?actLabor:'')+'" placeholder="—" min="0" step="1" style="width:80px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'labor\',this.value)"></td>';
     var truckCell=isConcrete
       ?'<td style="padding:8px;text-align:center;background:#FFF5F5;color:var(--dgray);font-size:10px;">N/A</td>'
       :'<td style="padding:8px;text-align:right;background:#FFF5F5;"><input type="number" value="'+(actTruck!==null?actTruck:'')+'" placeholder="—" min="0" step="1" style="width:80px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'trucking\',this.value)"></td>';
     tr.innerHTML='<td style="padding:8px;"><div style="font-weight:600;font-size:12px;">'+esc(item.name)+'</div><div style="font-size:10px;color:var(--dgray);">'+esc(item.section)+'</div></td>'
       +'<td style="padding:8px;text-align:right;border-left:1px solid var(--bdr);">'+item.qty.toLocaleString()+'</td>'
       +'<td style="padding:8px;text-align:center;">'+item.unit+'</td>'
-      +'<td style="padding:8px;text-align:right;">$'+fi(item.estCost)+'</td>'
+      +'<td style="padding:8px;text-align:right;">$'+fi(item.estMat)+'</td>'
+      +'<td style="padding:8px;text-align:right;">$'+fi(item.estLabor)+'</td>'
+      +'<td style="padding:8px;text-align:right;">$'+fi(item.estTruck)+'</td>'
       +'<td style="padding:8px;text-align:right;border-left:2px solid var(--red);background:#FFF5F5;"><input type="number" value="'+(actQty!==null?actQty:'')+'" placeholder="—" min="0" step="1" style="width:70px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'qty\',this.value)"></td>'
       +'<td style="padding:8px;text-align:right;background:#FFF5F5;"><input type="number" value="'+(actCost!==null?actCost:'')+'" placeholder="—" min="0" step="1" style="width:80px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'cost\',this.value)"></td>'
       +laborCell
@@ -1680,7 +1676,9 @@ function renderEVA(){
       +'<td style="padding:8px;">TOTALS</td>'
       +'<td style="padding:8px;text-align:right;border-left:1px solid var(--bdr);">'+totEstQty.toLocaleString()+'</td>'
       +'<td style="padding:8px;"></td>'
-      +'<td style="padding:8px;text-align:right;">$'+fi(totEstCost)+'</td>'
+      +'<td style="padding:8px;text-align:right;">$'+fi(totEstMat)+'</td>'
+      +'<td style="padding:8px;text-align:right;">$'+fi(totEstLabor)+'</td>'
+      +'<td style="padding:8px;text-align:right;">$'+fi(totEstTruck)+'</td>'
       +'<td style="padding:8px;text-align:right;border-left:2px solid var(--red);background:#FFF5F5;">'+(hasActuals?totActQty.toLocaleString():'—')+'</td>'
       +'<td style="padding:8px;text-align:right;background:#FFF5F5;">'+(hasActuals?'$'+fi(totActMatOnly):'—')+'</td>'
       +'<td style="padding:8px;text-align:right;background:#FFF5F5;">'+(hasActuals&&totActLabOnly>0?'$'+fi(totActLabOnly):'—')+'</td>'
@@ -1719,9 +1717,10 @@ function renderEVASummary(totEstCost,totActCost){
     if(act.labor!==undefined)actLaborCost+=act.labor;
     if(act.trucking!==undefined)actTruckCost+=act.trucking;
   });
-  var actTotal=hasActuals?actMatCost+actLaborCost+actTruckCost:0;
+  var actLaborWithOH=actLaborCost*1.15; // 15% overhead on labor actuals (covers overhead & fuel)
+  var actTotal=hasActuals?actMatCost+actLaborWithOH+actTruckCost:0;
   if(g('eva-actual-mat'))g('eva-actual-mat').textContent=hasActuals?'$'+fi(actMatCost):'-';
-  if(g('eva-actual-labor'))g('eva-actual-labor').textContent=hasActuals?'$'+fi(actLaborCost):'-';
+  if(g('eva-actual-labor'))g('eva-actual-labor').textContent=hasActuals?'$'+fi(actLaborCost)+(actLaborCost>0?' (+15% OH = $'+fi(actLaborWithOH)+')':''):'-';
   if(g('eva-actual-truck'))g('eva-actual-truck').textContent=hasActuals&&actTruckCost>0?'$'+fi(actTruckCost):'-';
   if(g('eva-actual-total'))g('eva-actual-total').textContent=hasActuals?'$'+fi(actTotal):'-';
   // Bid price
@@ -5040,13 +5039,16 @@ function fetchWeather(cb){
     }).catch(function(){cb(null);});
 }
 
-function renderSchedWeather(){
-  var el=document.getElementById('sched-weather');if(!el)return;
+function renderWeatherWidget(elId){
+  var el=document.getElementById(elId);if(!el)return;
   fetchWeather(function(daily){
     if(!daily){el.innerHTML='<div class="card-body" style="padding:10px 14px;"><div style="font-size:12px;color:var(--dgray);">Weather unavailable</div></div>';return;}
-    var html='<div class="card-body" style="padding:10px 14px;">';
-    html+='<div style="font-size:11px;font-weight:600;color:var(--dgray);margin-bottom:8px;">CONCORD, NC — 7-DAY FORECAST</div>';
-    html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;">';
+    var html='<div class="card-body" style="padding:12px 18px;">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">';
+    html+='<span style="font-size:12px;font-weight:700;color:var(--dgray);letter-spacing:1px;">CONCORD, NC &mdash; 7-DAY FORECAST</span>';
+    html+='<a href="https://weather.com/weather/tenday/l/Concord+NC+28025" target="_blank" class="btn btn-sec btn-sm" style="text-decoration:none;font-size:11px;">View on Weather.com</a>';
+    html+='</div>';
+    html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;text-align:center;">';
     var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     for(var i=0;i<daily.time.length&&i<7;i++){
       var dt=new Date(daily.time[i]+'T12:00:00');
@@ -5054,47 +5056,21 @@ function renderSchedWeather(){
       var icon=WEATHER_ICONS[code]||'\u2601\uFE0F';
       var rain=daily.precipitation_probability_max[i]||0;
       var rainWarn=rain>=50;
-      html+='<div style="padding:6px 4px;border-radius:6px;'+(rainWarn?'background:#FFF3E0;border:1px solid #FFB74D;':'background:#FAFAFA;border:1px solid var(--bdr);')+'">'
-        +'<div style="font-size:10px;font-weight:600;color:var(--dgray);">'+dayNames[dt.getDay()]+'</div>'
-        +'<div style="font-size:10px;color:var(--dgray);">'+String(dt.getMonth()+1)+'/'+dt.getDate()+'</div>'
-        +'<div style="font-size:20px;line-height:1.3;">'+icon+'</div>'
-        +'<div style="font-size:12px;font-weight:700;">'+Math.round(daily.temperature_2m_max[i])+'°</div>'
-        +'<div style="font-size:10px;color:var(--dgray);">'+Math.round(daily.temperature_2m_min[i])+'°</div>'
-        +'<div style="font-size:10px;'+(rainWarn?'color:#E65100;font-weight:700;':'color:var(--dgray);')+'">'+rain+'%</div>'
+      html+='<div style="padding:10px 6px;border-radius:8px;'+(rainWarn?'background:#FFF3E0;border:1px solid #FFB74D;':'background:#FAFAFA;border:1px solid var(--bdr);')+'">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--dgray);">'+dayNames[dt.getDay()]+'</div>'
+        +'<div style="font-size:11px;color:var(--dgray);">'+String(dt.getMonth()+1)+'/'+dt.getDate()+'</div>'
+        +'<div style="font-size:28px;line-height:1.4;">'+icon+'</div>'
+        +'<div style="font-size:16px;font-weight:800;">'+Math.round(daily.temperature_2m_max[i])+'&deg;</div>'
+        +'<div style="font-size:12px;color:var(--dgray);">'+Math.round(daily.temperature_2m_min[i])+'&deg;</div>'
+        +'<div style="font-size:11px;margin-top:4px;'+(rainWarn?'color:#E65100;font-weight:700;':'color:var(--dgray);')+'">'+rain+'% rain</div>'
         +'</div>';
     }
     html+='</div></div>';
     el.innerHTML=html;
   });
 }
-
-function renderDashWeather(){
-  var el=document.getElementById('dash-weather');if(!el)return;
-  fetchWeather(function(daily){
-    if(!daily){el.innerHTML='<div class="card-body" style="padding:10px 14px;"><div style="font-size:12px;color:var(--dgray);">Weather unavailable</div></div>';return;}
-    var html='<div class="card-body" style="padding:10px 14px;">';
-    html+='<div style="font-size:11px;font-weight:600;color:var(--dgray);margin-bottom:8px;">CONCORD, NC — 7-DAY FORECAST</div>';
-    html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;">';
-    var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    for(var i=0;i<daily.time.length&&i<7;i++){
-      var dt=new Date(daily.time[i]+'T12:00:00');
-      var code=daily.weathercode[i];
-      var icon=WEATHER_ICONS[code]||'\u2601\uFE0F';
-      var rain=daily.precipitation_probability_max[i]||0;
-      var rainWarn=rain>=50;
-      html+='<div style="padding:6px 4px;border-radius:6px;'+(rainWarn?'background:#FFF3E0;border:1px solid #FFB74D;':'background:#FAFAFA;border:1px solid var(--bdr);')+'">'
-        +'<div style="font-size:10px;font-weight:600;color:var(--dgray);">'+dayNames[dt.getDay()]+'</div>'
-        +'<div style="font-size:10px;color:var(--dgray);">'+String(dt.getMonth()+1)+'/'+dt.getDate()+'</div>'
-        +'<div style="font-size:20px;line-height:1.3;">'+icon+'</div>'
-        +'<div style="font-size:12px;font-weight:700;">'+Math.round(daily.temperature_2m_max[i])+'°</div>'
-        +'<div style="font-size:10px;color:var(--dgray);">'+Math.round(daily.temperature_2m_min[i])+'°</div>'
-        +'<div style="font-size:10px;'+(rainWarn?'color:#E65100;font-weight:700;':'color:var(--dgray);')+'">'+rain+'%</div>'
-        +'</div>';
-    }
-    html+='</div></div>';
-    el.innerHTML=html;
-  });
-}
+function renderSchedWeather(){renderWeatherWidget('sched-weather');}
+function renderDashWeather(){renderWeatherWidget('dash-weather');}
 
 function renderSchedule(){
   var titleEl=document.getElementById('sched-cal-title');
