@@ -3409,28 +3409,37 @@ function updLyrDesc(sid2,lid2,v){
 
 
 function secTot(s){
-  var wfv=wf(),tt=0,tm=0,tb=0;
+  var wfv=wf(),tt=0,tm=0,tl=0,ttr=0,tcost=0,tb=0;
   s.layers.forEach(function(l){
     var t=(s.sf>0)?tons(s.sf,l.depth,LBS[l.type])*wfv:0;
-    tt+=t;tm+=t*(MAT[l.type]||0);tb+=calcLayerBid(t,l);
+    var matC=t*(MAT[l.type]||0);
+    var days=calcLayerDays(t,l);
+    var crewC=days*getCrewParam(l.type,'crew_rate');
+    var truckC=calcTrucking(t,l,days);
+    var cost=matC+crewC+truckC;
+    tt+=t;tm+=matC;tl+=crewC;ttr+=truckC;tcost+=cost;tb+=calcLayerBid(t,l);
   });
-  return {tons:tt,mat:tm,bid:tb};
+  return {tons:tt,mat:tm,labor:tl,truck:ttr,cost:tcost,bid:tb};
 }
 
 function updateSecFooter(sid2){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var foot=document.querySelector('.sec-foot[data-sid="'+sid2+'"]');if(!foot)return;
-  var sf=s.sf||0,sy=calcSY(sf),st=secTot(s),mp=mu(st.mat,st.bid);
-  foot.innerHTML=buildFooterHTML(sf,sy,st,mp);
+  var sf=s.sf||0,sy=calcSY(sf),st=secTot(s);
+  foot.innerHTML=buildFooterHTML(sf,sy,st);
   s.layers.forEach(function(l){updateLyrResult(sid2,l.id);});
 }
 
-function buildFooterHTML(sf,sy,st,mp){
+function buildFooterHTML(sf,sy,st){
+  var markupPct=st.cost>0?((st.bid-st.cost)/st.cost*100):0;
   return '<div class="sec-foot-item"><div class="sf-lbl">SY</div><div class="sf-val">'+(sf>0?sy.toLocaleString():'-')+'</div></div>'
-    +'<div class="sec-foot-item"><div class="sf-lbl">Tons</div><div class="sf-val">'+(sf>0?st.tons.toLocaleString():'-')+'</div></div>'
+    +'<div class="sec-foot-item"><div class="sf-lbl">Tons</div><div class="sf-val">'+(sf>0?Math.round(st.tons).toLocaleString():'-')+'</div></div>'
     +'<div class="sec-foot-item"><div class="sf-lbl">Materials</div><div class="sf-val">'+(sf>0?'$'+fi(st.mat):'-')+'</div></div>'
+    +'<div class="sec-foot-item"><div class="sf-lbl">Labor</div><div class="sf-val">'+(sf>0?'$'+fi(st.labor):'-')+'</div></div>'
+    +'<div class="sec-foot-item"><div class="sf-lbl">Trucking</div><div class="sf-val">'+(sf>0?'$'+fi(st.truck):'-')+'</div></div>'
+    +'<div class="sec-foot-item"><div class="sf-lbl">Cost</div><div class="sf-val">'+(sf>0?'$'+fi(st.cost):'-')+'</div></div>'
     +'<div class="sec-foot-item"><div class="sf-lbl">Total</div><div class="sf-val" style="color:var(--red);">'+(sf>0?'$'+fi(st.bid):'-')+'</div></div>'
-    +'<div class="sec-foot-item"><div class="sf-lbl">Markup</div><div class="sf-val '+(mp>=0?'gp':'gn')+'">'+(sf>0?mp.toFixed(1)+'%':'-')+'</div></div>';
+    +'<div class="sec-foot-item"><div class="sf-lbl">Markup</div><div class="sf-val '+(markupPct>=0?'gp':'gn')+'">'+(sf>0?markupPct.toFixed(1)+'%':'-')+'</div></div>';
 }
 
 function updateLyrResult(sid2,lid2){
@@ -3441,14 +3450,15 @@ function updateLyrResult(sid2,lid2){
   var t=rawT*wfv;var sy=calcSY(sf);
   var bidC=calcLayerBid(t,l);
   var matC=t*(MAT[l.type]||0);
-  var mp=mu(matC,bidC);
   var lDays=calcLayerDays(t,l);
-  var truckCost=calcTrucking(t,l,lDays);
   var crewCost=lDays*getCrewParam(l.type,'crew_rate');
+  var truckCost=calcTrucking(t,l,lDays);
+  var costC=matC+crewCost+truckCost;
+  var mp=costC>0?((bidC-costC)/costC*100):0;
   var resEl=document.querySelector('.lres[data-lyr="'+sid2+'-'+lid2+'"]');
   var muEl=document.querySelector('.mubadge[data-lyr="'+sid2+'-'+lid2+'"]');
   if(resEl){
-    resEl.innerHTML=sf>0?buildLyrResHTML(t,sy,matC,bidC):'<span style="opacity:.4">Enter SF above</span>';
+    resEl.innerHTML=sf>0?buildLyrResHTML(t,sy,matC,crewCost,truckCost,costC,bidC):'<span style="opacity:.4">Enter SF above</span>';
   }
   if(muEl){muEl.textContent=bidC>0?mp.toFixed(1)+'%':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
   var pptEl=document.querySelector('.lyr-ppt[data-lyr="'+sid2+'-'+lid2+'"]');
@@ -3456,20 +3466,21 @@ function updateLyrResult(sid2,lid2){
   updateSecFooter(sid2);
 }
 
-function buildLyrResHTML(t,sy,matC,bidC){
-  return '<span><b>'+sy.toLocaleString()+'</b> SY</span>'
-    +'<span style="margin:0 3px;color:#ddd;">&middot;</span>'
-    +'<span><b>'+t.toLocaleString()+'</b> tons</span>'
-    +'<span style="margin:0 3px;color:#ddd;">&middot;</span>'
-    +'<span>Mat <b>$'+fi(matC)+'</b></span>'
-    +'<span style="margin:0 3px;color:#ddd;">&middot;</span>'
-    +'<span>Total <b style="color:var(--blk);">$'+fi(bidC)+'</b></span>';
+function buildLyrResHTML(t,sy,matC,laborC,truckC,costC,bidC){
+  var d='<span style="margin:0 3px;color:#ddd;">&middot;</span>';
+  return '<span><b>'+sy.toLocaleString()+'</b> SY</span>'+d
+    +'<span><b>'+Math.round(t).toLocaleString()+'</b> tons</span>'+d
+    +'<span>Mat <b>$'+fi(matC)+'</b></span>'+d
+    +'<span>Labor <b>$'+fi(laborC)+'</b></span>'+d
+    +'<span>Truck <b>$'+fi(truckC)+'</b></span>'+d
+    +'<span>Cost <b>$'+fi(costC)+'</b></span>'+d
+    +'<span>Total <b style="color:var(--red);">$'+fi(bidC)+'</b></span>';
 }
 
 function renderAll(){
   var c=document.getElementById('sections');c.innerHTML='';
   sections.forEach(function(s){
-    var sf=s.sf||0,sy=calcSY(sf),st=secTot(s),mp=mu(st.mat,st.bid);
+    var sf=s.sf||0,sy=calcSY(sf),st=secTot(s);
     var div=document.createElement('div');div.className='sec';
     var lrows='';
     s.layers.forEach(function(l){
@@ -3478,12 +3489,15 @@ function renderAll(){
       var t=rawT*wfv;
       var bidC=calcLayerBid(t,l);
       var matC=t*(MAT[l.type]||0);
-      var lmp=mu(matC,bidC);
       var layerDays=calcLayerDays(t,l);
+      var crewC=layerDays*getCrewParam(l.type,'crew_rate');
+      var truckC=calcTrucking(t,l,layerDays);
+      var costC=matC+crewC+truckC;
+      var lmp=costC>0?((bidC-costC)/costC*100):0;
       var autoTrucks=calcTruckCount(t,l);
       var typeOpts=LTYPES.map(function(t2){return '<option'+(t2===l.type?' selected':'')+'>'+t2+'</option>';}).join('');
       var badgeCls=LBADGE[l.type]||'b-misc';
-      var resHTML=sf>0?buildLyrResHTML(t,sy,matC,bidC):'<span style="opacity:.4">Enter SF above</span>';
+      var resHTML=sf>0?buildLyrResHTML(t,sy,matC,crewC,truckC,costC,bidC):'<span style="opacity:.4">Enter SF above</span>';
       lrows+='<div class="lyr-row">'
         // Top row: badge + name + delete
         +'<div class="lyr-top">'
@@ -3518,7 +3532,7 @@ function renderAll(){
       +'</div>'
       +'<div>'+lrows+'</div>'
       +'<div class="sec-foot" data-sid="'+s.id+'">'
-      +buildFooterHTML(sf,sy,st,mp)
+      +buildFooterHTML(sf,sy,st)
       +'</div>';
     c.appendChild(div);
   });
