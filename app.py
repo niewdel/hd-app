@@ -560,6 +560,17 @@ def co_list():
 
 # ââ Email âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
+@app.route('/change-orders/delete/<int:coid>', methods=['DELETE'])
+@require_auth
+def co_delete(coid):
+    try:
+        r = http.delete(sb_url('change_orders', f'?id=eq.{coid}'), headers=sb_headers(), timeout=10)
+        r.raise_for_status()
+        log_access(session.get('username',''), session.get('full_name',''), f'deleted change order #{coid}')
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 @app.route('/send-email', methods=['POST'])
 @require_auth
 def send_email():
