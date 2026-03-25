@@ -731,10 +731,12 @@ def setup_settings_table():
 @app.route('/setup/user-fields', methods=['POST'])
 @require_admin
 def setup_user_fields():
-    """Add email and phone columns to hd_users if they don't exist."""
+    """Add email/phone columns and update role constraint to include 'field'."""
     sql = """
     ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS email TEXT DEFAULT '';
     ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT '';
+    ALTER TABLE hd_users DROP CONSTRAINT IF EXISTS hd_users_role_check;
+    ALTER TABLE hd_users ADD CONSTRAINT hd_users_role_check CHECK (role IN ('admin', 'user', 'field'));
     """
     try:
         svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
