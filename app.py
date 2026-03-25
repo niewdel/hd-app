@@ -231,6 +231,7 @@ def project_create():
             'bid_due_time': data.get('bid_due_time', ''),
             'notes': data.get('notes', ''),
             'linked_proposals': [],
+            'activity_log': data.get('activity_log', []),
         }
         payload = {
             'name': data.get('name', 'Unnamed Project'),

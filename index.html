@@ -351,14 +351,14 @@ tr:nth-child(even) td{background:#FAFAFA;}
     </div>
     <nav>
       <div class="nav-item on" onclick="showPanel('dashboard',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg>Dashboard</div>
+      <div class="nav-item" onclick="showPanel('projects',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg>Projects</div>
       <div class="nav-item" onclick="showPanel('build',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Create Proposal
       </div>
+      <div class="nav-item" onclick="showPanel('co',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h8l3 3v9H2V2zm5 4H4v1h3V6zm5 2H4v1h6V8zm0 2H4v1h6v-1z"/></svg>Create CO</div>
       <div class="nav-item" onclick="showPanel('saved',this)">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents
       </div>
-      <div class="nav-item" onclick="showPanel('co',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h8l3 3v9H2V2zm5 4H4v1h3V6zm5 2H4v1h6V8zm0 2H4v1h6v-1z"/></svg>Create CO</div>
-      <div class="nav-item" onclick="showPanel('projects',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg>Projects</div>
       <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
       <div class="nav-item" onclick="showPanel('analytics',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v3H1zm4-4h3v7H5zm4-4h3v11H9zm4-6h2v17h-2z"/></svg>Analytics</div>
 
@@ -478,13 +478,12 @@ tr:nth-child(even) td{background:#FAFAFA;}
         <div class="card">
           <div class="card-hdr"><span class="card-title">Global Settings</span></div>
           <div class="card-body">
-            <div class="fg fg4">
-              <div><label>Waste Factor %</label><input id="waste" type="number" value="5" min="0" max="30" step="0.25"/></div>
-              <div><label>Contingency %</label><input id="contingency" type="number" value="0" min="0" max="50" step="0.5" title="Applied to total bid as a separate line item on the proposal"/></div>
+            <div class="fg fg2">
             <div><label>Mobilization / Flat Fee ($)</label><input id="mob" type="number" value="0" min="0" step="50"/></div>
-              
               <div><label>Project Notes</label><textarea id="proj-notes" rows="3" placeholder="Notes for the proposal..." style="resize:vertical;font-family:inherit;font-size:13px;">All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice. See Exhibit A on Page 3 for Site Plan &amp; Takeoffs.</textarea></div>
             </div>
+            <input id="waste" type="hidden" value="0"/>
+            <input id="contingency" type="hidden" value="0"/>
             <div style="margin-top:10px;">
               <div class="mat-indicator" id="mat-indicator" onclick="showPanel('settings',document.querySelectorAll('.nav-item')[2])">
                 <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 3v4l3 2-1 1-3-2V4z"/></svg>
@@ -530,12 +529,11 @@ tr:nth-child(even) td{background:#FAFAFA;}
         <div class="metrics">
           <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">-</div></div>
           <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">-</div></div>
-          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">-</div><div class="metric-sub">w/ waste</div></div>
+          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">-</div></div>
           <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">-</div></div>
           <div class="metric"><div class="metric-lbl">Crew Cost</div><div class="metric-val" id="m-crew">-</div></div>
           <div class="metric"><div class="metric-lbl">Trucking</div><div class="metric-val" id="m-truck">-</div></div>
           <div class="metric"><div class="metric-lbl">Mobilization</div><div class="metric-val" id="m-mob">-</div></div>
-          <div class="metric" id="m-cont-card"><div class="metric-lbl">Contingency</div><div class="metric-val" id="m-cont">$0</div></div>
           <div class="metric" id="m-phase-card" style="display:none;"><div class="metric-lbl" id="m-phase-lbl">Phase 1</div><div class="metric-val" id="m-phase">-</div></div>
           <div class="metric hl"><div class="metric-lbl">Bid Price</div><div class="metric-val" id="m-bid">-</div></div>
           <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">-</div></div>
@@ -644,39 +642,48 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
       <!-- PIPELINE PANEL -->
       <!-- PROJECT SUMMARY PANEL -->
-      <div class="panel" id="panel-project"><div class="content" style="padding:16px;">
-        <div style="margin-bottom:14px;">
-          <button class="btn btn-sec btn-sm" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">&lsaquo; Back to Projects</button>
-        </div>
-        <div id="project-summary-header" style="margin-bottom:16px;"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
-          <div class="card">
-            <div class="card-hdr"><span class="card-title">Proposals</span></div>
-            <div class="card-body" id="ps-proposals"><p style="color:var(--dgray);font-size:12px;">No proposals linked.</p></div>
-          </div>
-          <div class="card">
-            <div class="card-hdr"><span class="card-title">Change Orders</span></div>
-            <div class="card-body" id="ps-change-orders"><p style="color:var(--dgray);font-size:12px;">No change orders.</p></div>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
-          <div class="card">
-            <div class="card-hdr"><span class="card-title">Site Plan</span></div>
-            <div class="card-body" id="ps-site-plan">
-              <p style="color:var(--dgray);font-size:12px;">No site plan uploaded.</p>
-              <label class="btn btn-sec btn-sm" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Upload Site Plan</label>
+      <div class="panel" id="panel-project"><div class="content" style="padding:20px;">
+        <!-- Header -->
+        <div id="project-summary-header" style="margin-bottom:20px;"></div>
+        <!-- Financial summary strip -->
+        <div id="ps-financials" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;"></div>
+        <!-- Main content: 2 columns -->
+        <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;">
+          <!-- Left column -->
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Proposals</span></div>
+              <div class="card-body" id="ps-proposals"><p style="color:var(--dgray);font-size:12px;">No proposals linked.</p></div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Change Orders</span></div>
+              <div class="card-body" id="ps-change-orders"><p style="color:var(--dgray);font-size:12px;">No change orders.</p></div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Job Costing</span></div>
+              <div class="card-body" id="ps-job-costing"><p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p></div>
             </div>
           </div>
-          <div class="card">
-            <div class="card-hdr"><span class="card-title">Job Costing — Estimates vs Actuals</span></div>
-            <div class="card-body" id="ps-job-costing"><p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Work Orders &amp; Notes</span></div>
-          <div class="card-body" id="ps-work-orders">
-            <div id="ps-wo-list"></div>
-            <button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="addProjectNote()">+ Add Note</button>
+          <!-- Right column -->
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Site Plan</span></div>
+              <div class="card-body" id="ps-site-plan">
+                <p style="color:var(--dgray);font-size:12px;">No site plan uploaded.</p>
+                <label class="btn btn-sec btn-sm" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Upload Site Plan</label>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Activity</span></div>
+              <div class="card-body" id="ps-activity" style="max-height:360px;overflow-y:auto;"><p style="color:var(--dgray);font-size:12px;">No activity yet.</p></div>
+            </div>
+            <div class="card">
+              <div class="card-hdr"><span class="card-title">Notes</span></div>
+              <div class="card-body" id="ps-work-orders">
+                <div id="ps-wo-list"></div>
+                <button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="addProjectNote()">+ Add Note</button>
+              </div>
+            </div>
           </div>
         </div>
       </div></div>
@@ -994,8 +1001,8 @@ var jcTonsPerTruck = TONS_PER_TRUCK_DEFAULT;
 
 // Crew list — simple name + daily rate, editable, stored in localStorage
 var CREWS_DEFAULT = [
-  {id:1, name:'Stone Crew', daily_rate:2500},
-  {id:2, name:'Asphalt Crew', daily_rate:5000}
+  {id:1, name:'Stone Crew', trade:'Stone', daily_rate:2500, productivity:800},
+  {id:2, name:'Asphalt Crew', trade:'Asphalt', daily_rate:5000, productivity:400}
 ];
 var CREWS = JSON.parse(localStorage.getItem('hd_crews')||'null') || JSON.parse(JSON.stringify(CREWS_DEFAULT));
 var _crewNextId = CREWS.reduce(function(mx,c){return Math.max(mx,c.id);},0)+1;
@@ -1004,9 +1011,16 @@ var _crewNextId = CREWS.reduce(function(mx,c){return Math.max(mx,c.id);},0)+1;
 var CREW_COSTS_DEFAULT = {};
 var CREW_COSTS = {};
 
+function getCrewForTrade(trade){
+  return CREWS.find(function(c){return c.trade===trade;})||null;
+}
 function getCrewParam(matType, param){
-  var c = CREW_COSTS[matType];
-  if(c && c[param] !== undefined && c[param] !== null) return c[param];
+  var trade=MAT_TRADE[matType]||'';
+  var crew=getCrewForTrade(trade);
+  if(crew){
+    if(param === 'crew_rate') return crew.daily_rate||jcCrewRate;
+    if(param === 'productivity') return crew.productivity||jcProductivity;
+  }
   // Fall back to globals
   if(param === 'crew_rate') return jcCrewRate;
   if(param === 'productivity') return jcProductivity;
@@ -1044,7 +1058,7 @@ var CTYPES = [
   {id:'rib', name:'Ribbon Curb',desc:'12" Concrete Ribbon Gutter',unit:'LF',cy_per_lf:0.019},
   {id:'fl',  name:'Concrete Flume',desc:'Concrete Drainage Flume per plan',unit:'LF',cy_per_lf:0.019},
   {id:'te',  name:'Thickened Edge',desc:'Concrete Thickened Edge Pavement',unit:'LF',cy_per_lf:0.009},
-  {id:'ada', name:'ADA Curb Ramp',desc:'ADA Compliant Concrete Curb Ramp',unit:'EA'},
+  {id:'ada', name:'ADA Curb Ramp',desc:'ADA Compliant Concrete Curb Ramp',unit:'EA',cy_per_ea:1.2},
 ];
 
 var PRESETS = [
@@ -1227,8 +1241,6 @@ function boot(){
   loadStorage();
   applyBadgeStyles();
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
-  document.getElementById('waste').addEventListener('change',function(){renderAll();});
-  document.getElementById('contingency').addEventListener('change',function(){recalc();});
   var coD=document.getElementById('co-date');if(coD)coD.value=new Date().toISOString().split('T')[0];
   initJobCost();
   var coOA=document.getElementById('co-orig-amount');if(coOA)coOA.addEventListener('input',function(){recalcCO();});
@@ -1806,6 +1818,8 @@ var dashCalDate = new Date();
 var dashSelectedDate = null;
 var dashBidDueDates = {}; // {dateKey: [{name,client,time,id}]}
 var _currentProjectId = null;
+var _pendingProjectLink = null;
+var _pendingCOProjectLink = null;
 
 function loadDashBidDates(){
   dashBidDueDates={};
@@ -1839,9 +1853,22 @@ function renderDashStats(){
   Object.keys(dashBidDueDates).forEach(function(dateKey){
     if(dateKey>=today)upcomingBids+=dashBidDueDates[dateKey].length;
   });
-  // Pipeline value
+  // Pipeline value — sum project totals + standalone proposal totals (avoid double-counting)
   var totalBid=0;
-  if(typeof pipelineProposals!=='undefined')pipelineProposals.forEach(function(p){totalBid+=parseFloat(p.total)||0;});
+  var linkedIds={};
+  if(typeof pipelineProposals!=='undefined'){
+    // First pass: collect all proposal IDs that are linked to projects
+    pipelineProposals.forEach(function(p){
+      var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+      if(snap.is_project&&snap.linked_proposals)snap.linked_proposals.forEach(function(id){linkedIds[id]=true;});
+    });
+    // Second pass: sum projects + unlinked proposals
+    pipelineProposals.forEach(function(p){
+      var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+      if(snap.is_project){totalBid+=parseFloat(p.total)||0;}
+      else if(!linkedIds[p.id]){totalBid+=parseFloat(p.total)||0;}
+    });
+  }
   // Clients (async)
   try{fetch('/clients/list').then(function(r){return r.json();}).then(function(d){
     if(d.ok&&d.clients){var ce=document.getElementById('dash-stat-clients');if(ce)ce.textContent=d.clients.length;}
@@ -2053,9 +2080,68 @@ function renderProjectSummary(){
   _renderProjectSummaryInner(proj);
 }
 
+function calcProjectTotal(proj){
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap||'{}'):proj.snap||{};
+  var linked=snap.linked_proposals||[];
+  var proposalTotal=0;
+  linked.forEach(function(qid){
+    var q=savedQuotes.find(function(x){return x.id===qid;});
+    if(q)proposalTotal+=parseFloat(q.total)||0;
+  });
+  var coNet=0;
+  (snap.change_orders||[]).forEach(function(co){coNet+=parseFloat(co.total)||0;});
+  return {proposalTotal:proposalTotal,coNet:coNet,grandTotal:proposalTotal+coNet};
+}
+
+async function updateProjectTotal(projectId){
+  var proj=pipelineProposals.find(function(p){return p.id===projectId;});
+  if(!proj)return;
+  var totals=calcProjectTotal(proj);
+  proj.total=totals.grandTotal;
+  await fetch('/projects/update/'+projectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({total:totals.grandTotal})});
+}
+
+function addProjectActivity(snap,type,text){
+  if(!snap.activity_log)snap.activity_log=[];
+  snap.activity_log.push({type:type,text:text,date:new Date().toISOString(),user:window._userUsername||''});
+}
+
+function createProposalFromProject(projectId){
+  var proj=pipelineProposals.find(function(p){return p.id===projectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap||'{}'):proj.snap||{};
+  // Pre-fill the proposal builder
+  document.getElementById('proj-name').value=proj.name||'';
+  document.getElementById('proj-client').value=proj.client||'';
+  document.getElementById('proj-addr').value=snap.address||'';
+  document.getElementById('proj-cs').value=snap.city_state||'';
+  document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
+  lastSavedQuoteId=null;
+  window._pendingProjectLink=projectId;
+  showPanel('build',document.querySelector('[onclick*=build]'));
+  toast('Fill out the proposal — it will auto-link to this project on save','ok');
+}
+
+function createCOFromProject(projectId){
+  var proj=pipelineProposals.find(function(p){return p.id===projectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap||'{}'):proj.snap||{};
+  resetCO();
+  var el=document.getElementById('co-project');if(el)el.value=proj.name||'';
+  var el2=document.getElementById('co-client');if(el2)el2.value=proj.client||'';
+  // Set original contract amount to current project total
+  var totals=calcProjectTotal(proj);
+  var el3=document.getElementById('co-orig-amount');if(el3)el3.value=totals.proposalTotal;
+  window._pendingCOProjectLink=projectId;
+  showPanel('co',document.querySelector('[onclick*=co]'));
+  toast('Fill out the change order — it will auto-link to this project on save','ok');
+}
+
 function _renderProjectSummaryInner(proj){
   var snap=typeof proj.snap==='string'?JSON.parse(proj.snap||'{}'):proj.snap||{};
-  // Header
+  var totals=calcProjectTotal(proj);
+
+  // ── Header ──
   var hdr=document.getElementById('project-summary-header');
   if(hdr){
     var stageName=(proj.pipeline_stages?proj.pipeline_stages.name:'Unassigned');
@@ -2063,114 +2149,186 @@ function _renderProjectSummaryInner(proj){
     var dueStr='';
     if(snap.bid_due_date){
       var dp=snap.bid_due_date.split('-');
-      dueStr='Bid Due: '+dp[1]+'/'+dp[2]+'/'+dp[0]+(snap.bid_due_time?' @ '+snap.bid_due_time:'');
+      dueStr='Due '+dp[1]+'/'+dp[2]+'/'+dp[0]+(snap.bid_due_time?' @ '+snap.bid_due_time:'');
     }
-    hdr.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
-      +'<h2 style="margin:0;font-size:20px;">'+esc(proj.name||'Untitled Project')+'</h2>'
-      +'<span style="font-size:10px;font-weight:700;color:#fff;background:'+stageColor+';padding:2px 8px;border-radius:3px;text-transform:uppercase;">'+esc(stageName)+'</span>'
+    hdr.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">'
+      +'<h2 style="margin:0;font-size:22px;font-weight:800;">'+esc(proj.name||'Untitled Project')+'</h2>'
+      +'<span style="font-size:10px;font-weight:700;color:#fff;background:'+stageColor+';padding:3px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;">'+esc(stageName)+'</span>'
+      +(dueStr?'<span style="font-size:11px;font-weight:700;color:var(--red);margin-left:4px;">'+dueStr+'</span>':'')
       +'</div>'
-      +'<div style="font-size:13px;color:var(--dgray);margin-top:4px;">'
-      +(proj.client?esc(proj.client):'No client')
-      +(snap.address?' — '+esc(snap.address):'')
+      +'<div style="font-size:13px;color:var(--dgray);">'
+      +(proj.client?esc(proj.client):'No client assigned')
+      +(snap.address?' &middot; '+esc(snap.address):'')
       +'</div>'
-      +(dueStr?'<div style="font-size:12px;color:var(--red);font-weight:600;margin-top:4px;">'+dueStr+'</div>':'')
-      +(snap.notes?'<div style="font-size:12px;color:var(--dgray);margin-top:6px;padding:8px 12px;background:#FAFAFA;border-radius:6px;border:1px solid var(--bdr);">'+esc(snap.notes)+'</div>':'');
+      +(snap.notes?'<div style="font-size:12px;color:#555;margin-top:8px;padding:10px 14px;background:#F8F8F8;border-radius:6px;border-left:3px solid var(--red);line-height:1.5;">'+esc(snap.notes)+'</div>':'');
   }
-  // Proposals card
+
+  // ── Financial Strip ──
+  var fin=document.getElementById('ps-financials');
+  if(fin){
+    fin.innerHTML='';
+    [{lbl:'Proposal Total',val:'$'+Math.round(totals.proposalTotal).toLocaleString(),color:'#111'},
+     {lbl:'Change Orders (Net)',val:(totals.coNet>=0?'+':'')+' $'+Math.round(Math.abs(totals.coNet)).toLocaleString(),color:totals.coNet>=0?'#27500A':'var(--red)'},
+     {lbl:'Project Total',val:'$'+Math.round(totals.grandTotal).toLocaleString(),color:'var(--red)'}
+    ].forEach(function(s){
+      var box=document.createElement('div');
+      box.style.cssText='background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:16px 20px;';
+      box.innerHTML='<div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--dgray);letter-spacing:.5px;margin-bottom:6px;">'+s.lbl+'</div>'
+        +'<div style="font-size:24px;font-weight:800;color:'+s.color+';">'+s.val+'</div>';
+      fin.appendChild(box);
+    });
+  }
+
+  // ── Proposals Card ──
   var psProposals=document.getElementById('ps-proposals');
   if(psProposals){
     var linked=snap.linked_proposals||[];
+    psProposals.innerHTML='';
     if(linked.length){
-      psProposals.innerHTML='';
       linked.forEach(function(qid){
         var q=savedQuotes.find(function(x){return x.id===qid;});
         var row=document.createElement('div');
-        row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);';
+        row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);';
         if(q){
-          row.innerHTML='<div><div style="font-weight:600;font-size:13px;">'+esc(q.name||'Untitled')+'</div>'
-            +'<div style="font-size:11px;color:var(--dgray);">$'+(q.total?Math.round(q.total).toLocaleString():'0')+' — '+esc(q.date||'')+'</div></div>';
+          var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+          info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(q.name||'Untitled')+'</div>'
+            +'<div style="font-size:11px;color:var(--dgray);">$'+Math.round(q.total||0).toLocaleString()+' &middot; '+esc(q.date||'')+'</div>';
+          row.appendChild(info);
+          var btns=document.createElement('div');btns.style.cssText='display:flex;gap:6px;flex-shrink:0;';
           var openBtn=document.createElement('button');openBtn.className='btn btn-sec btn-sm';openBtn.textContent='Open';
-          (function(id){openBtn.addEventListener('click',function(){loadProposalFromPipeline(id);});})(qid);
-          row.appendChild(openBtn);
+          (function(id){openBtn.addEventListener('click',function(){loadQuote(id);showPanel('build',document.querySelector('[onclick*=build]'));});})(qid);
+          var jcBtn=document.createElement('button');jcBtn.className='btn btn-sec btn-sm';jcBtn.textContent='Job Cost';
+          (function(id){jcBtn.addEventListener('click',function(){loadQuote(id);showPanel('jobcost',document.querySelector('[onclick*=jobcost]'));});})(qid);
+          btns.appendChild(openBtn);btns.appendChild(jcBtn);row.appendChild(btns);
         } else {
-          row.innerHTML='<div style="font-size:12px;color:var(--dgray);">Proposal #'+qid+' (not found in saved)</div>';
+          row.innerHTML='<div style="font-size:12px;color:var(--dgray);">Proposal #'+qid+' (not found)</div>';
         }
         psProposals.appendChild(row);
       });
-    } else {
-      psProposals.innerHTML='<p style="color:var(--dgray);font-size:12px;">No proposals linked.</p>'
-        +'<button class="btn btn-sec btn-sm" style="margin-top:6px;" onclick="attachProposalToProject('+_currentProjectId+')">+ Attach Proposal</button>';
     }
+    // Action buttons
+    var actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;margin-top:10px;';
+    var newBtn=document.createElement('button');newBtn.className='btn btn-red btn-sm';newBtn.textContent='+ Create Proposal';
+    newBtn.addEventListener('click',function(){createProposalFromProject(_currentProjectId);});
+    var attachBtn=document.createElement('button');attachBtn.className='btn btn-sec btn-sm';attachBtn.textContent='+ Attach Existing';
+    attachBtn.addEventListener('click',function(){attachProposalToProject(_currentProjectId);});
+    actions.appendChild(newBtn);actions.appendChild(attachBtn);
+    psProposals.appendChild(actions);
   }
-  // Change orders card
+
+  // ── Change Orders Card ──
   var psCO=document.getElementById('ps-change-orders');
   if(psCO){
     var coList=snap.change_orders||[];
+    psCO.innerHTML='';
     if(coList.length){
-      psCO.innerHTML='';
-      coList.forEach(function(co){
+      coList.forEach(function(co,idx){
         var row=document.createElement('div');
-        row.style.cssText='padding:6px 0;border-bottom:1px solid var(--bdr);font-size:13px;';
-        row.textContent=esc(co.name||'Change Order')+' — $'+(co.total?Math.round(co.total).toLocaleString():'0');
+        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);';
+        var info=document.createElement('div');info.style.cssText='flex:1;';
+        var sign=co.total>=0?'+':'';
+        info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(co.name||'Change Order')+'</div>'
+          +'<div style="font-size:11px;color:var(--dgray);">'+sign+'$'+Math.round(Math.abs(co.total||0)).toLocaleString()+(co.date?' &middot; '+esc(co.date):'')+'</div>';
+        row.appendChild(info);
+        var del=document.createElement('button');del.className='btn-ico';del.style.cssText='color:var(--dgray);font-size:14px;';del.textContent='×';del.title='Remove';
+        (function(i){del.addEventListener('click',function(){
+          if(!confirm('Remove this change order from the project?'))return;
+          snap.change_orders.splice(i,1);
+          var newTotals=calcProjectTotal(proj);
+          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap,total:newTotals.grandTotal})})
+            .then(function(){proj.total=newTotals.grandTotal;renderProjectSummary();});
+        });})(idx);
+        row.appendChild(del);
         psCO.appendChild(row);
       });
-    } else {
-      psCO.innerHTML='<p style="color:var(--dgray);font-size:12px;">No change orders.</p>';
     }
+    var coBtn=document.createElement('button');coBtn.className='btn btn-red btn-sm';coBtn.style.marginTop='10px';
+    coBtn.textContent='+ Create Change Order';
+    coBtn.addEventListener('click',function(){createCOFromProject(_currentProjectId);});
+    psCO.appendChild(coBtn);
   }
-  // Site plan
+
+  // ── Site Plan ──
   var psSP=document.getElementById('ps-site-plan');
   if(psSP){
     var spUrl=snap.site_plan_url;
     if(spUrl){
       var isPdf=spUrl.toLowerCase().indexOf('.pdf')>-1;
       psSP.innerHTML=(isPdf
-        ?'<iframe src="'+esc(spUrl)+'" style="width:100%;height:400px;border:1px solid var(--bdr);border-radius:6px;" frameborder="0"></iframe>'
+        ?'<iframe src="'+esc(spUrl)+'" style="width:100%;height:300px;border:1px solid var(--bdr);border-radius:6px;" frameborder="0"></iframe>'
         :'<img src="'+esc(spUrl)+'" style="max-width:100%;border-radius:6px;border:1px solid var(--bdr);"/>')
-        +'<label class="btn btn-sec btn-sm" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Replace Site Plan</label>';
+        +'<div style="margin-top:8px;"><label class="btn btn-sec btn-sm" style="cursor:pointer;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Replace</label></div>';
     }
   }
-  // Job costing
+
+  // ── Job Costing Card ──
   var psJC=document.getElementById('ps-job-costing');
   if(psJC){
     var linked=snap.linked_proposals||[];
     if(linked.length){
-      psJC.innerHTML='<p style="font-size:12px;color:var(--dgray);">Open a linked proposal to view Estimates vs Actuals.</p>';
+      psJC.innerHTML='';
       linked.forEach(function(qid){
         var q=savedQuotes.find(function(x){return x.id===qid;});
         if(q){
-          var btn=document.createElement('button');btn.className='btn btn-sec btn-sm';btn.style.marginTop='6px';
-          btn.textContent='View Job Costing: '+esc(q.name||'Proposal');
+          var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:6px 0;';
+          row.innerHTML='<span style="font-size:13px;">'+esc(q.name||'Proposal')+'</span>';
+          var btn=document.createElement('button');btn.className='btn btn-sec btn-sm';btn.textContent='View Report';
           (function(id){btn.addEventListener('click',function(){
-            loadQuote(id);
-            showPanel('jobcost',document.querySelector('[onclick*=jobcost]'));
+            loadQuote(id);showPanel('jobcost',document.querySelector('[onclick*=jobcost]'));
           });})(qid);
-          psJC.appendChild(btn);
+          row.appendChild(btn);psJC.appendChild(row);
         }
       });
     } else {
-      psJC.innerHTML='<p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p>';
+      psJC.innerHTML='<p style="color:var(--dgray);font-size:12px;">Create or attach a proposal to generate job costing reports.</p>';
     }
   }
-  // Work orders / notes
+
+  // ── Activity Timeline ──
+  var psAct=document.getElementById('ps-activity');
+  if(psAct){
+    var log=snap.activity_log||[];
+    psAct.innerHTML='';
+    if(log.length){
+      var icons={created:'\u25CB',proposal:'\u25A0',co:'\u25B2',note:'\u270E',stage:'\u2192',default:'\u2022'};
+      var colors={created:'#999',proposal:'var(--red)',co:'#2B5FA6',note:'#27500A',stage:'#8B5E3C',default:'#999'};
+      log.slice().reverse().forEach(function(entry){
+        var row=document.createElement('div');row.style.cssText='display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:12px;';
+        var icon=document.createElement('span');
+        icon.style.cssText='flex-shrink:0;width:20px;height:20px;border-radius:50%;background:'+(colors[entry.type]||colors.default)+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;margin-top:1px;';
+        icon.textContent=icons[entry.type]||icons.default;
+        var body=document.createElement('div');body.style.cssText='flex:1;min-width:0;';
+        var ts=entry.date?new Date(entry.date).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true}):'';
+        body.innerHTML='<div style="color:#333;">'+esc(entry.text||'')+'</div>'
+          +'<div style="color:var(--dgray);font-size:10px;margin-top:1px;">'+ts+(entry.user?' &middot; '+esc(entry.user):'')+'</div>';
+        row.appendChild(icon);row.appendChild(body);
+        psAct.appendChild(row);
+      });
+    } else {
+      psAct.innerHTML='<p style="color:var(--dgray);font-size:12px;">No activity yet.</p>';
+    }
+  }
+
+  // ── Notes ──
   var psWO=document.getElementById('ps-wo-list');
   if(psWO){
     var notes=snap.work_notes||[];
     psWO.innerHTML='';
     if(notes.length){
-      notes.forEach(function(n,idx){
+      notes.slice().reverse().forEach(function(n,idx){
+        var realIdx=notes.length-1-idx;
         var row=document.createElement('div');
         row.style.cssText='padding:8px 0;border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;gap:8px;';
         var info=document.createElement('div');info.style.flex='1';
-        info.innerHTML='<div style="font-size:11px;color:var(--dgray);">'+esc(n.date||'')+'</div>'
-          +'<div style="font-size:13px;">'+esc(n.text||'')+'</div>';
+        info.innerHTML='<div style="font-size:11px;color:var(--dgray);">'+esc(n.date||'')+(n.user?' &middot; '+esc(n.user):'')+'</div>'
+          +'<div style="font-size:13px;margin-top:2px;">'+esc(n.text||'')+'</div>';
         row.appendChild(info);
         var del=document.createElement('button');del.className='btn-ico';del.style.color='var(--red)';del.textContent='×';
         (function(i){del.addEventListener('click',function(){
           snap.work_notes.splice(i,1);
           fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
             .then(function(){renderProjectSummary();});
-        });})(idx);
+        });})(realIdx);
         row.appendChild(del);
         psWO.appendChild(row);
       });
@@ -2212,7 +2370,8 @@ function addProjectNote(){
     var text=document.getElementById('pn-text').value.trim();
     if(!text){toast('Enter a note','err');return;}
     if(!snap.work_notes)snap.work_notes=[];
-    snap.work_notes.push({text:text,date:new Date().toISOString().split('T')[0]});
+    snap.work_notes.push({text:text,date:new Date().toISOString().split('T')[0],user:window._userUsername||''});
+    addProjectActivity(snap,'note','Note added');
     fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
       .then(function(r){return r.json();}).then(function(d){
         if(d.ok){
@@ -2475,7 +2634,27 @@ async function saveCO(){
   try{
     var r=await fetch('/change-orders/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     var d=await r.json();
-    if(d.ok){toast('Change order saved','ok');loadCOList();}
+    if(d.ok){
+      // Auto-link to project if created from project context
+      if(window._pendingCOProjectLink){
+        var pid=window._pendingCOProjectLink;window._pendingCOProjectLink=null;
+        var proj=pipelineProposals.find(function(x){return x.id===pid;});
+        if(proj){
+          var psnap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+          if(!psnap.change_orders)psnap.change_orders=[];
+          var coNet=p.add_total-p.deduct_total;
+          psnap.change_orders.push({id:d.id,name:'CO #'+p.co_number,total:coNet,date:p.date});
+          addProjectActivity(psnap,'co','Change Order #'+p.co_number+' added ('+(coNet>=0?'+':'')+' $'+Math.round(Math.abs(coNet)).toLocaleString()+')');
+          proj.snap=psnap;
+          var newTotals=calcProjectTotal(proj);proj.total=newTotals.grandTotal;
+          fetch('/projects/update/'+pid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:psnap,total:newTotals.grandTotal})});
+          toast('Change order linked to project','ok');
+        }
+      } else {
+        toast('Change order saved','ok');
+      }
+      loadCOList();
+    }
     else toast('Save failed: '+(d.error||'unknown'),'err');
   }catch(e){toast('Save error: '+e.message,'err');}
 }
@@ -2508,7 +2687,12 @@ async function loadCOList(){
 var TOPBAR_CFG = {
   dashboard:[{html:'+ New Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'},{html:'+ Create Proposal',cls:'btn btn-sec btn-sm',fn:"showPanel('build',document.querySelector('[onclick*=build]'))"},{html:'+ Create CO',cls:'btn btn-sec btn-sm',fn:"showPanel('co',document.querySelector('[onclick*=co]'))"}],
   projects:[{html:'+ New Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'}],
-  project:[{html:'Edit Project',cls:'btn btn-sec btn-sm',fn:'editCurrentProject()'},{html:'Back to Projects',cls:'btn btn-sec btn-sm',fn:"showPanel('projects',document.querySelector('[onclick*=projects]'))"}],
+  project:[
+    {html:'+ Proposal',cls:'btn btn-red btn-sm',fn:'createProposalFromProject(_currentProjectId)'},
+    {html:'+ Change Order',cls:'btn btn-sec btn-sm',fn:'createCOFromProject(_currentProjectId)'},
+    {html:'Edit',cls:'btn btn-sec btn-sm',fn:'editCurrentProject()'},
+    {html:'&lsaquo; Projects',cls:'btn btn-sec btn-sm',fn:"showPanel('projects',document.querySelector('[onclick*=projects]'))"}
+  ],
   build:[
     {html:"Save",cls:"btn btn-sec btn-sm",fn:"saveQuote()"},
     {html:"Reset",cls:"btn btn-sec btn-sm",fn:"resetAll()"},
@@ -2805,11 +2989,9 @@ function renderAll(){
       var muBadge='<span class="mubadge '+(lmp>=0?'p':'n')+'" data-lyr="'+s.id+'-'+l.id+'">'+(bidC>0?lmp.toFixed(1)+'% MU':'')+'</span>';
       var typeOpts=LTYPES.map(function(t2){return '<option'+(t2===l.type?' selected':'')+'>'+t2+'</option>';}).join('');
       var layerRate=calcLayerRate(t,l);
-      var stdFields='<label>Depth (in)</label><input type="number" value="'+l.depth+'" min=".5" step=".5" style="width:55px" onchange="updLyrDepth('+s.id+','+l.id+',this.value)"/>'+'<label>Days</label><input type="number" value="'+(l.days_override!==null&&l.days_override!==undefined?l.days_override:layerDays.toFixed(1))+'" min="0" step="0.5" style="width:60px" title="Auto: '+layerDays.toFixed(2)+'d" onchange="updLyrDays('+s.id+','+l.id+',this.value,true)"/>'+'<label>MU%</label><input type="number" value="'+l.markup+'" min="0" step="1" style="width:52px" class="lyr-markup" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrMarkup('+s.id+','+l.id+',this.value)"/>'
-      // Trucking: only # trucks adjustable here, rate/hours in Settings
       var autoTrucks=calcTruckCount(t,l);
       var tptVal=getCrewParam(l.type,'tons_per_truck');
-      var truckFields='<label>Trucks</label><input type="number" value="'+(l.trucks_override!==null&&l.trucks_override!==undefined?l.trucks_override:autoTrucks)+'" min="0" step="1" style="width:44px" title="Auto: '+autoTrucks+' ('+tptVal+'t/truck/day)" onchange="updTrucks('+s.id+','+l.id+',this.value)">';
+      var stdFields='<label>Depth (in)</label><input type="number" value="'+l.depth+'" min=".5" step=".5" style="width:55px" onchange="updLyrDepth('+s.id+','+l.id+',this.value)"/>'+'<label>Days</label><input type="number" value="'+(l.days_override!==null&&l.days_override!==undefined?l.days_override:layerDays.toFixed(1))+'" min="0" step="0.5" style="width:60px" title="Auto: '+layerDays.toFixed(2)+'d" onchange="updLyrDays('+s.id+','+l.id+',this.value,true)"/>'+'<label>Trucks</label><input type="number" value="'+(l.trucks_override!==null&&l.trucks_override!==undefined?l.trucks_override:autoTrucks)+'" min="0" step="1" style="width:44px" title="Auto: '+autoTrucks+' ('+tptVal+'t/truck/day)" onchange="updTrucks('+s.id+','+l.id+',this.value)">'+'<label>MU%</label><input type="number" value="'+l.markup+'" min="0" step="1" style="width:52px" class="lyr-markup" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrMarkup('+s.id+','+l.id+',this.value)"/>';
       // Name + description fields (top of layer row)
       var nameField='<div style="width:100%;display:flex;flex-direction:column;gap:2px;margin-bottom:4px;">'
         +'<input type="text" value="'+esc(l.name||l.type)+'" placeholder="Item name" style="width:100%;font-size:13px;font-weight:600;padding:3px 6px;" onchange="updLyrName('+s.id+','+l.id+',this.value)">'
@@ -2818,7 +3000,7 @@ function renderAll(){
       lrows+='<div class="lyr-row" style="flex-wrap:wrap;">'
         +nameField
         +'<select onchange="updLyrType('+s.id+','+l.id+',this.value)">'+typeOpts+'</select>'
-        +stdFields+truckFields
+        +stdFields
         +muBadge+'<span class="lres" data-lyr="'+s.id+'-'+l.id+'">'+resHTML+'</span>'
         +'<button class="btn-ico" onclick="remLyr('+s.id+','+l.id+')">x</button>'
         +'</div>';
@@ -2855,7 +3037,7 @@ function updConcField(id,f,v){
   var i=concItems.find(function(x){return x.id===id;});if(!i)return;
   i[f]=parseFloat(v)||0;recalc();updateConcResult(id);
 }
-function calcConcCY(item){var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];if(!item.qty||item.qty<=0)return 0;return item.qty*(item.cy_per_lf||ct.cy_per_lf||0);}
+function calcConcCY(item){var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];if(!item.qty||item.qty<=0)return 0;var rate=ct.cy_per_ea||ct.cy_per_lf||0;return item.qty*rate;}
 function concMatCost(i){var cy=calcConcCY(i);return cy*(parseFloat(i.mat)||0);}
 function concLaborCost(i){return (i.qty||0)*(i.sub||0);}
 function concBidTotal(i){return (concMatCost(i)+concLaborCost(i))*(1+(i.markup/100));}
@@ -3002,15 +3184,10 @@ function recalc(){
       +'<td>$'+fi(i.subtotal)+'</td><td>-</td>';
     bk.appendChild(tr);
   });
-  var contPct=cont(),contv=gB>0?Math.round(gB*contPct/100*100)/100:0;
-  var total=gB+mobv+contv,gp=gB-gM-gCrew-gTruck;
+  var total=gB+mobv,gp=gB-gM-gCrew-gTruck;
   document.getElementById('m-sf').textContent=gSF>0?gSF.toLocaleString():'-';
   updatePhaseMetric();
-  var ccEl=document.getElementById('m-cont-card');
   renderJobCost();
-  if(ccEl)ccEl.style.display=contv>0?'':'none';
-  var cmEl=document.getElementById('m-cont');
-  if(cmEl)cmEl.textContent=contv>0?'$'+fi(contv):'-';
   document.getElementById('m-sy').textContent=gSY>0?gSY.toLocaleString():'-';
   document.getElementById('m-tons').textContent=gT>0?gT.toLocaleString():'-';
   document.getElementById('m-mat').textContent=gM>0?'$'+fi(gM):'-';
@@ -3058,14 +3235,9 @@ function saveCrews(){
   _saveSetting('hd_crews',CREWS);
 }
 function addCrew(){
-  CREWS.push({id:_crewNextId++, name:'', daily_rate:0});
+  CREWS.push({id:_crewNextId++, name:'', trade:'Other', daily_rate:0, productivity:0});
   saveCrews();
   renderCrewsList();
-  // Focus the new name input
-  setTimeout(function(){
-    var inputs=document.querySelectorAll('#crews-list input[data-field="name"]');
-    if(inputs.length)inputs[inputs.length-1].focus();
-  },50);
 }
 function deleteCrew(id){
   CREWS=CREWS.filter(function(c){return c.id!==id;});
@@ -3075,7 +3247,7 @@ function deleteCrew(id){
 function updateCrewField(id,field,val){
   var c=CREWS.find(function(x){return x.id===id;});
   if(!c)return;
-  if(field==='daily_rate')c[field]=parseFloat(val)||0;
+  if(field==='daily_rate'||field==='productivity')c[field]=parseFloat(val)||0;
   else c[field]=val;
   saveCrews();
 }
@@ -3086,35 +3258,49 @@ function renderCrewsList(){
     wrap.innerHTML='<p style="color:var(--dgray);font-size:12px;">No crews defined. Click + Add Crew to get started.</p>';
     return;
   }
+  var trades=['Stone','Asphalt','Concrete','Other'];
   var tbl=document.createElement('table');
   tbl.style.cssText='width:100%;border-collapse:collapse;font-size:13px;';
   var thead=document.createElement('thead');
-  thead.innerHTML='<tr style="background:var(--lgray);"><th style="padding:8px 12px;text-align:left;font-weight:600;">Crew Name</th><th style="padding:8px 12px;text-align:right;font-weight:600;">Daily Rate ($)</th><th style="padding:8px 4px;width:40px;"></th></tr>';
+  thead.innerHTML='<tr style="background:var(--lgray);"><th style="padding:8px 12px;text-align:left;font-weight:600;">Crew Name</th><th style="padding:8px 12px;text-align:center;font-weight:600;">Trade</th><th style="padding:8px 12px;text-align:right;font-weight:600;">Daily Rate ($)</th><th style="padding:8px 12px;text-align:right;font-weight:600;">Productivity (t/day)</th><th style="padding:8px 4px;width:40px;"></th></tr>';
   tbl.appendChild(thead);
   var tbody=document.createElement('tbody');
   CREWS.forEach(function(c,idx){
     var tr=document.createElement('tr');
     if(idx%2)tr.style.background='var(--lgray)';
+    // Name
     var tdName=document.createElement('td');tdName.style.padding='6px 12px';
     var nameInp=document.createElement('input');
     nameInp.type='text';nameInp.value=c.name;nameInp.placeholder='e.g. Stone Crew';
     nameInp.style.cssText='width:100%;font-size:13px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;';
-    nameInp.setAttribute('data-field','name');
     (function(id){nameInp.addEventListener('change',function(){updateCrewField(id,'name',this.value);});})(c.id);
     tdName.appendChild(nameInp);tr.appendChild(tdName);
-
+    // Trade
+    var tdTrade=document.createElement('td');tdTrade.style.cssText='padding:6px 12px;text-align:center;';
+    var tradeSel=document.createElement('select');
+    tradeSel.style.cssText='font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;';
+    trades.forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;if((c.trade||'')==t)o.selected=true;tradeSel.appendChild(o);});
+    (function(id){tradeSel.addEventListener('change',function(){updateCrewField(id,'trade',this.value);});})(c.id);
+    tdTrade.appendChild(tradeSel);tr.appendChild(tdTrade);
+    // Daily Rate
     var tdRate=document.createElement('td');tdRate.style.cssText='padding:6px 12px;text-align:right;';
     var rateInp=document.createElement('input');
     rateInp.type='number';rateInp.min='0';rateInp.step='100';rateInp.value=c.daily_rate;
-    rateInp.style.cssText='width:120px;font-size:13px;padding:4px 8px;text-align:right;border:1px solid var(--bdr);border-radius:4px;';
+    rateInp.style.cssText='width:110px;font-size:13px;padding:4px 8px;text-align:right;border:1px solid var(--bdr);border-radius:4px;';
     (function(id){rateInp.addEventListener('change',function(){updateCrewField(id,'daily_rate',this.value);});})(c.id);
     tdRate.appendChild(rateInp);tr.appendChild(tdRate);
-
+    // Productivity
+    var tdProd=document.createElement('td');tdProd.style.cssText='padding:6px 12px;text-align:right;';
+    var prodInp=document.createElement('input');
+    prodInp.type='number';prodInp.min='0';prodInp.step='50';prodInp.value=c.productivity||0;
+    prodInp.style.cssText='width:110px;font-size:13px;padding:4px 8px;text-align:right;border:1px solid var(--bdr);border-radius:4px;';
+    (function(id){prodInp.addEventListener('change',function(){updateCrewField(id,'productivity',this.value);});})(c.id);
+    tdProd.appendChild(prodInp);tr.appendChild(tdProd);
+    // Delete
     var tdDel=document.createElement('td');tdDel.style.cssText='padding:6px 4px;text-align:center;';
     var delBtn=document.createElement('button');delBtn.className='btn-ico';delBtn.style.color='var(--red)';delBtn.innerHTML='&#10005;';
     (function(id){delBtn.addEventListener('click',function(){deleteCrew(id);});})(c.id);
     tdDel.appendChild(delBtn);tr.appendChild(tdDel);
-
     tbody.appendChild(tr);
   });
   tbl.appendChild(tbody);
@@ -3173,9 +3359,6 @@ function buildRawLineItems(){
       src:'extra'
     });
   });
-  var contPct2=cont(),total=items.reduce(function(s,x){return s+x.subtotal;},0);
-  var contv2=contPct2>0?parseFloat((total*contPct2/100).toFixed(2)):0;
-  if(contv2>0)items.push({key:'_contingency',badge:'',name:'Contingency ('+contPct2.toFixed(1)+'%)',description:'Project contingency',qty:1,unit:'LS',price:contv2,subtotal:contv2,src:'auto'});
   var mobv2=mob();
   if(mobv2>0)items.push({key:'_mobilization',badge:'',name:'Mobilization',description:'Project mobilization & setup',qty:1,unit:'LS',price:mobv2,subtotal:mobv2,src:'auto'});
   return items;
@@ -3430,7 +3613,23 @@ async function saveQuote(){
       var existing=savedQuotes.find(function(q){return q.id===d.id;});
       if(existing){existing.name=name;existing.client=snap.client;existing.date=snap.date;existing.total=p.total;existing.snap=JSON.stringify(snap);}
       else{savedQuotes.push({id:d.id,name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});}
-      toast(method==='PATCH'?'Quote updated':'Quote saved','ok');
+      // Auto-link to project if created from project context
+      if(window._pendingProjectLink){
+        var pid=window._pendingProjectLink;window._pendingProjectLink=null;
+        var proj=pipelineProposals.find(function(x){return x.id===pid;});
+        if(proj){
+          var psnap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+          if(!psnap.linked_proposals)psnap.linked_proposals=[];
+          if(psnap.linked_proposals.indexOf(d.id)<0)psnap.linked_proposals.push(d.id);
+          addProjectActivity(psnap,'proposal','Proposal "'+name+'" created ($'+Math.round(p.total).toLocaleString()+')');
+          proj.snap=psnap;
+          var newTotals=calcProjectTotal(proj);proj.total=newTotals.grandTotal;
+          fetch('/projects/update/'+pid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:psnap,total:newTotals.grandTotal})});
+          toast('Proposal linked to project','ok');
+        }
+      } else {
+        toast(method==='PATCH'?'Quote updated':'Quote saved','ok');
+      }
     }
     else{toast('Save failed: '+(d.error||'unknown'),'err');}
   }catch(e){toast('Save error: '+e.message,'err');}
@@ -3964,9 +4163,10 @@ function openProjectModal(existingData, editId){
           else toast(rd.error||'Update failed','err');
         }).catch(function(e){toast('Error: '+e.message,'err');});
     } else {
+      payload.activity_log=[{type:'created',text:'Project created',date:new Date().toISOString(),user:window._userUsername||''}];
       fetch('/projects/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
         .then(function(r){return r.json();}).then(function(rd){
-          if(rd.ok){toast('Project created','ok');modal.remove();renderPipeline();}
+          if(rd.ok){toast('Project created','ok');modal.remove();renderPipeline();renderProjectsList();}
           else toast(rd.error||'Create failed','err');
         }).catch(function(e){toast('Error: '+e.message,'err');});
     }
@@ -4002,18 +4202,21 @@ function attachProposalToProject(projectId){
       row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);';
       row.innerHTML='<div><div style="font-weight:600;font-size:13px;">'+esc(q.name||'Untitled')+'</div><div style="font-size:11px;color:var(--dgray);">'+esc(q.client||'')+' — $'+(q.total?Math.round(q.total).toLocaleString():'0')+'</div></div>';
       var btn=document.createElement('button');btn.className='btn btn-red btn-sm';btn.textContent='Attach';
-      (function(qid,qtotal){btn.addEventListener('click',function(){
+      (function(qid,qname,qtotal){btn.addEventListener('click',function(){
         var proj=pipelineProposals.find(function(x){return x.id===projectId;});
         if(!proj)return;
         var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
         if(!snap.linked_proposals)snap.linked_proposals=[];
         if(snap.linked_proposals.indexOf(qid)<0)snap.linked_proposals.push(qid);
-        fetch('/projects/update/'+projectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap,total:qtotal})})
+        addProjectActivity(snap,'proposal','Proposal "'+qname+'" attached ($'+Math.round(qtotal).toLocaleString()+')');
+        proj.snap=snap;
+        var newTotals=calcProjectTotal(proj);proj.total=newTotals.grandTotal;
+        fetch('/projects/update/'+projectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap,total:newTotals.grandTotal})})
           .then(function(r){return r.json();}).then(function(rd){
             if(rd.ok){toast('Proposal attached','ok');modal.remove();renderPipeline();if(_currentProjectId===projectId){fetch('/pipeline/list').then(function(r){return r.json();}).then(function(dd){if(dd.ok)pipelineProposals=dd.proposals;renderProjectSummary();});}}
             else toast(rd.error||'Failed','err');
           });
-      });})(q.id,q.total||0);
+      });})(q.id,q.name||'Untitled',q.total||0);
       row.appendChild(btn);
       list.appendChild(row);
     });
