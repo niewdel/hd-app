@@ -628,7 +628,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
         </div>
 
       <div class="card" id="bk-asphalt-card">
-        <div class="card-hdr"><span class="card-title">Pricing Breakdown</span><button class="btn btn-sec btn-sm" onclick="exportPricingBreakdown()">Export PDF</button></div>
+        <div class="card-hdr"><span class="card-title">Asphalt Breakdown</span><button class="btn btn-sec btn-sm" onclick="exportPricingBreakdown()">Export PDF</button></div>
           <div class="tbl-wrap">
             <table>
               <thead><tr><th>Section</th><th>Layer</th><th>SY</th><th>Depth</th><th>Tons</th><th>Days</th><th>Mat Cost</th><th>Crew</th><th>Trucking</th><th>Total</th><th>MU%</th></tr></thead>
@@ -646,10 +646,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
           </div>
         </div>
       <div class="card" id="bk-extra-card" style="display:none;">
-        <div class="card-hdr"><span class="card-title">Additional Items</span></div>
+        <div class="card-hdr"><span class="card-title">Additional Items Breakdown</span></div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Price</th><th>Total</th></tr></thead>
+              <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Mat Cost</th><th>Labor</th><th>Bid Price</th><th>MU%</th></tr></thead>
               <tbody id="breakdown-extra"></tbody>
             </table>
           </div>
@@ -1568,7 +1568,7 @@ function openLibraryPicker(){
   modal.appendChild(box);modal.addEventListener("click",function(e){if(e.target===modal)modal.remove();});
   document.body.appendChild(modal);
 }
-function renderExtra(){var c=document.getElementById("extra-rows"),em=document.getElementById("extra-empty");if(!c)return;c.innerHTML="";em.style.display=extraItems.length?"none":"block";extraItems.forEach(function(i){var row=document.createElement("div");row.className="lyr-row";row.style.cssText="flex-wrap:wrap;gap:6px;align-items:flex-start;padding:8px 0;";var unitOpts=["LS","EA","LF","SY","SF","TON","CY"].map(function(u){return "<option"+(u===i.unit?" selected":"")+">"+u+"</option>";}).join("");var wrap=document.createElement("div");wrap.style.cssText="display:flex;flex-direction:column;gap:3px;flex:1;min-width:160px;";var ni=document.createElement("input");ni.type="text";ni.value=i.name||"";ni.placeholder="Item name";ni.style.cssText="width:100%;font-weight:500;";ni.addEventListener("change",(function(id){return function(){updExtraName(id,this.value);};})(i.id));var di=document.createElement("input");di.type="text";di.value=i.desc||"";di.placeholder="Description (appears on proposal)";di.style.cssText="width:100%;font-size:11px;color:var(--dgray);";di.addEventListener("change",(function(id){return function(){updExtraDesc(id,this.value);};})(i.id));wrap.appendChild(ni);wrap.appendChild(di);row.appendChild(wrap);var ql=document.createElement("label");ql.textContent="Qty";row.appendChild(ql);var qi=document.createElement("input");qi.type="number";qi.value=i.qty;qi.min="0";qi.step="1";qi.style.width="60px";qi.addEventListener("change",(function(id){return function(){updExtraNum(id,"qty",this.value);};})(i.id));row.appendChild(qi);var ul=document.createElement("label");ul.textContent="Unit";row.appendChild(ul);var us=document.createElement("select");us.style.width="66px";us.innerHTML=unitOpts;us.addEventListener("change",(function(id){return function(){updExtraUnit(id,this.value);};})(i.id));row.appendChild(us);var pl=document.createElement("label");pl.textContent="$/unit";row.appendChild(pl);var pi=document.createElement("input");pi.type="number";pi.value=i.price||"";pi.placeholder="0.00";pi.min="0";pi.step=".01";pi.style.width="80px";pi.addEventListener("change",(function(id){return function(){updExtraNum(id,"price",this.value);};})(i.id));row.appendChild(pi);var rs=document.createElement("span");rs.className="lres";rs.setAttribute("data-extra",i.id);rs.innerHTML=i.subtotal>0?"Subtotal: <b>$"+fi(i.subtotal)+"</b>":"";row.appendChild(rs);var db=document.createElement("button");db.className="btn-ico";db.innerHTML="&#215;";db.addEventListener("click",(function(id){return function(){remExtra(id);};})(i.id));row.appendChild(db);c.appendChild(row);});recalc();}
+function renderExtra(){var c=document.getElementById("extra-rows"),em=document.getElementById("extra-empty");if(!c)return;c.innerHTML="";em.style.display=extraItems.length?"none":"block";extraItems.forEach(function(i){var row=document.createElement("div");row.className="lyr-row";row.style.cssText="flex-wrap:wrap;gap:6px;align-items:flex-start;padding:8px 0;";var unitOpts=["LS","EA","LF","SY","SF","TON","CY"].map(function(u){return "<option"+(u===i.unit?" selected":"")+">"+u+"</option>";}).join("");var wrap=document.createElement("div");wrap.style.cssText="display:flex;flex-direction:column;gap:3px;flex:1;min-width:160px;";var ni=document.createElement("input");ni.type="text";ni.value=i.name||"";ni.placeholder="Item name";ni.style.cssText="width:100%;font-weight:500;";ni.addEventListener("change",(function(id){return function(){updExtraName(id,this.value);};})(i.id));var di=document.createElement("input");di.type="text";di.value=i.desc||"";di.placeholder="Description (appears on proposal)";di.style.cssText="width:100%;font-size:11px;color:var(--dgray);";di.addEventListener("change",(function(id){return function(){updExtraDesc(id,this.value);};})(i.id));wrap.appendChild(ni);wrap.appendChild(di);row.appendChild(wrap);var ql=document.createElement("label");ql.textContent="Qty";row.appendChild(ql);var qi=document.createElement("input");qi.type="number";qi.value=i.qty;qi.min="0";qi.step="1";qi.style.width="60px";qi.addEventListener("change",(function(id){return function(){updExtraNum(id,"qty",this.value);};})(i.id));row.appendChild(qi);var ul=document.createElement("label");ul.textContent="Unit";row.appendChild(ul);var us=document.createElement("select");us.style.width="66px";us.innerHTML=unitOpts;us.addEventListener("change",(function(id){return function(){updExtraUnit(id,this.value);};})(i.id));row.appendChild(us);var mcl=document.createElement("label");mcl.textContent="Mat $";mcl.style.cssText="font-size:11px;color:var(--dgray);";row.appendChild(mcl);var mci=document.createElement("input");mci.type="number";mci.value=i.mat_cost||"";mci.placeholder="0";mci.min="0";mci.step="1";mci.style.width="75px";mci.addEventListener("change",(function(id){return function(){updExtraNum(id,"mat_cost",this.value);};})(i.id));row.appendChild(mci);var lcl=document.createElement("label");lcl.textContent="Labor $";lcl.style.cssText="font-size:11px;color:var(--dgray);";row.appendChild(lcl);var lci=document.createElement("input");lci.type="number";lci.value=i.labor_cost||"";lci.placeholder="0";lci.min="0";lci.step="1";lci.style.width="75px";lci.addEventListener("change",(function(id){return function(){updExtraNum(id,"labor_cost",this.value);};})(i.id));row.appendChild(lci);var pl=document.createElement("label");pl.textContent="Bid $/unit";row.appendChild(pl);var pi=document.createElement("input");pi.type="number";pi.value=i.price||"";pi.placeholder="0.00";pi.min="0";pi.step=".01";pi.style.width="80px";pi.addEventListener("change",(function(id){return function(){updExtraNum(id,"price",this.value);};})(i.id));row.appendChild(pi);var rs=document.createElement("span");rs.className="lres";rs.setAttribute("data-extra",i.id);rs.innerHTML=i.subtotal>0?"Subtotal: <b>$"+fi(i.subtotal)+"</b>":"";row.appendChild(rs);var db=document.createElement("button");db.className="btn-ico";db.innerHTML="&#215;";db.addEventListener("click",(function(id){return function(){remExtra(id);};})(i.id));row.appendChild(db);c.appendChild(row);});recalc();}
 async function doLogout(){
   try{await fetch("/auth/logout",{method:"POST"});}catch(e){}
   location.reload();
@@ -4389,7 +4389,7 @@ function renderConc(){
 }
 
 // -- Extra items ---------------------------------------------------------------
-function addExtra(){extraItems.push({id:eid++,name:'',desc:'',qty:1,unit:'LS',price:0,subtotal:0});renderExtra();}
+function addExtra(){extraItems.push({id:eid++,name:'',desc:'',qty:1,unit:'LS',price:0,subtotal:0,mat_cost:0,labor_cost:0});renderExtra();}
 function remExtra(id){extraItems=extraItems.filter(function(x){return x.id!==id;});renderExtra();recalc();}
 function updExtraName(id,v){var i=extraItems.find(function(x){return x.id===id;});if(i)i.name=v;}
 function updExtraDesc(id,v){var i=extraItems.find(function(x){return x.id===id;});if(i)i.desc=v;}
@@ -4534,12 +4534,16 @@ function recalc(){
     if(!i.name||!i.subtotal)return;
     hasExtra=true;
     gB+=i.subtotal;
+    var mc=parseFloat(i.mat_cost)||0;var lc=parseFloat(i.labor_cost)||0;
+    var costE=mc+lc;var mpE=costE>0?((i.subtotal-costE)/costE*100):0;
     var tr=document.createElement('tr');
     tr.innerHTML='<td>'+esc(i.name)+'</td>'
       +'<td>'+i.qty+'</td>'
       +'<td>'+esc(i.unit)+'</td>'
-      +'<td>$'+f2(i.price)+'</td>'
-      +'<td style="font-weight:600;">$'+fi(i.subtotal)+'</td>';
+      +'<td>'+(mc>0?'$'+fi(mc):'-')+'</td>'
+      +'<td>'+(lc>0?'$'+fi(lc):'-')+'</td>'
+      +'<td style="font-weight:600;">$'+fi(i.subtotal)+'</td>'
+      +'<td class="'+(mpE>=0?'gp':'gn')+'">'+(costE>0?mpE.toFixed(1)+'%':'-')+'</td>';
     bkExtra.appendChild(tr);
   });
   // Show/hide breakdown cards
@@ -5141,15 +5145,24 @@ async function exportPricingBreakdown(){
   extraItems.forEach(function(i){
     if(!i.name||!i.subtotal)return;
     gBid+=i.subtotal;
-    extraItems2.push({name:i.name,qty:i.qty,unit:i.unit,price:i.price,subtotal:i.subtotal});
+    var mc=parseFloat(i.mat_cost)||0;var lc=parseFloat(i.labor_cost)||0;
+    gM+=mc;gCrew+=lc;
+    extraItems2.push({name:i.name,qty:i.qty,unit:i.unit,price:i.price,subtotal:i.subtotal,material:mc,labor:lc});
   });
-  var totalCost=gM+gCrew+gTruck;
+  var mobCostV=mobCost();
+  var totalCost=gM+gCrew+gTruck+mobCostV;
   var totalBid=gBid+mobv;
+  // Get document number
+  var docNum='';
+  var proj=window._pendingProjectLink?pipelineProposals.find(function(p){return p.id===window._pendingProjectLink;}):null;
+  if(proj){var pSnap=typeof proj.snap==='string'?JSON.parse(proj.snap||'{}'):proj.snap||{};docNum=pSnap.project_number||'';}
   var payload={
     project_name:name,client_name:client,address:addr,date:fmtDate,
-    sender_name:sender.name||'',
+    sender_name:sender.name||'',sender_email:sender.email||'',sender_phone:sender.phone||'',
+    document_number:docNum,
+    client_company:selectedClient.company||'',client_email:selectedClient.email||'',client_phone:selectedClient.phone||'',
     asphalt_items:asphaltItems,concrete_items:concItems2,extra_items:extraItems2,
-    totals:{material:gM,labor:gCrew,trucking:gTruck,cost:totalCost,mobilization:mobv,bid:totalBid,
+    totals:{material:gM,labor:gCrew,trucking:gTruck,mob_cost:mobCostV,cost:totalCost,mobilization:mobv,bid:totalBid,
       markup_pct:totalCost>0?((totalBid-totalCost)/totalCost*100):0,
       profit:totalBid-totalCost}
   };
