@@ -135,6 +135,7 @@ def quotes_save():
         r = http.post(sb_url('proposals'), headers=sb_headers(), json=payload, timeout=10)
         r.raise_for_status()
         result = r.json()
+        log_access(session.get('username',''), session.get('full_name',''), f'created proposal "{data.get("name","")}"')
         return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
@@ -155,6 +156,7 @@ def quotes_update(qid):
         }
         r = http.patch(sb_url('proposals', f'?id=eq.{qid}'), headers=sb_headers(), json=payload, timeout=10)
         r.raise_for_status()
+        log_access(session.get('username',''), session.get('full_name',''), f'updated proposal "{data.get("name","")}"')
         return jsonify({'ok': True, 'id': qid})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
@@ -173,8 +175,17 @@ def quotes_list():
 @require_auth
 def quotes_delete(qid):
     try:
+        # Get name before deleting for the log
+        name = ''
+        try:
+            gr = http.get(sb_url('proposals', f'?id=eq.{qid}&select=name'), headers=sb_headers(), timeout=5)
+            if gr.status_code == 200 and gr.json():
+                name = gr.json()[0].get('name', '')
+        except Exception:
+            pass
         r = http.delete(sb_url('proposals', f'?id=eq.{qid}'), headers=sb_headers(), timeout=10)
         r.raise_for_status()
+        log_access(session.get('username',''), session.get('full_name',''), f'deleted proposal "{name}"')
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
@@ -216,6 +227,8 @@ def pipeline_move(proposal_id):
             timeout=10
         )
         r.raise_for_status()
+        stage_name = data.get('stage_name', '')
+        log_access(session.get('username',''), session.get('full_name',''), f'moved project to "{stage_name}"' if stage_name else 'moved project stage')
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
@@ -248,6 +261,7 @@ def project_create():
         r = http.post(sb_url('proposals'), headers=sb_headers(), json=payload, timeout=10)
         r.raise_for_status()
         result = r.json()
+        log_access(session.get('username',''), session.get('full_name',''), f'created project "{data.get("name","")}"')
         return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500

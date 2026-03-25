@@ -383,7 +383,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" onclick="showPanel('schedule',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg>Schedule</div>
       <div class="nav-grp">Config</div>
       <div class="nav-item" onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
-      <div class="nav-item admin-only" id="nav-admin" data-admin-hidden onclick="showPanel('admin',this);loadUsers();loadLogs();">
+      <div class="nav-item admin-only" id="nav-admin" data-admin-hidden onclick="showPanel('admin',this);loadUsers();showAdminTab('users');">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg>
         Admin
       </div>
@@ -1043,13 +1043,44 @@ tr:nth-child(even) td{background:#FAFAFA;}
       </div></div>
 
       <div class="panel" id="panel-admin">
-  <div class="card">
-    <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">User Management</span><button class="btn btn-red btn-sm" onclick="openAddUserModal()">+ Add User</button></div>
-    <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
+  <!-- Admin tabs -->
+  <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--bdr);">
+    <button class="btn btn-sec btn-sm" id="admin-tab-users" onclick="showAdminTab('users')" style="border-radius:6px 6px 0 0;border-bottom:2px solid var(--red);font-weight:700;">Users</button>
+    <button class="btn btn-sec btn-sm" id="admin-tab-activity" onclick="showAdminTab('activity')" style="border-radius:6px 6px 0 0;">Activity Log</button>
+    <button class="btn btn-sec btn-sm" id="admin-tab-deleted" onclick="showAdminTab('deleted')" style="border-radius:6px 6px 0 0;">Recently Deleted</button>
   </div>
-  <div class="card" style="margin-top:16px;">
-    <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">Activity Log</span><select id="log-user-filter" onchange="loadLogs()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:12px;"><option value="">All Users</option></select><button class="btn btn-sec btn-sm" onclick="loadLogs()">Refresh</button></div>
-    <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Result</th><th>IP Address</th></tr></thead><tbody id="logs-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
+  <!-- Users tab -->
+  <div id="admin-pane-users">
+    <div class="card">
+      <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">User Management</span><button class="btn btn-red btn-sm" onclick="openAddUserModal()">+ Add User</button></div>
+      <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
+    </div>
+  </div>
+  <!-- Activity Log tab -->
+  <div id="admin-pane-activity" style="display:none;">
+    <div class="card">
+      <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span class="card-title">Activity Log</span>
+        <select id="log-type-filter" onchange="loadLogs()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:12px;">
+          <option value="">All Activity</option>
+          <option value="logins">Logins Only</option>
+          <option value="actions">Actions Only</option>
+        </select>
+        <select id="log-user-filter" onchange="loadLogs()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:12px;"><option value="">All Users</option></select>
+        <button class="btn btn-sec btn-sm" onclick="loadLogs()">Refresh</button>
+      </div>
+      <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Result</th><th>IP Address</th></tr></thead><tbody id="logs-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
+    </div>
+  </div>
+  <!-- Recently Deleted tab -->
+  <div id="admin-pane-deleted" style="display:none;">
+    <div class="card">
+      <div class="card-hdr" style="display:flex;align-items:center;gap:16px;">
+        <span class="card-title">Recently Deleted</span>
+        <button class="btn btn-sec btn-sm" onclick="clearRecentlyDeleted()">Clear All</button>
+      </div>
+      <div class="card-body" id="recently-deleted-list"><p style="color:var(--dgray);font-size:12px;">No recently deleted items.</p></div>
+    </div>
   </div>
 </div>
 <div class="modal-overlay hidden" id="user-modal">
@@ -4083,8 +4114,17 @@ function loadQuote(id){
   toast('Quote loaded');
 }
 async function delSaved(id){
-  try{await fetch('/quotes/delete/'+id,{method:'DELETE'});renderSaved();}
-  catch(e){toast('Delete error: '+e.message,'err');}
+  try{
+    // Store in recently deleted before removing
+    var q=savedQuotes.find(function(x){return x.id===id;});
+    if(q){
+      var snap=typeof q.snap==='string'?JSON.parse(q.snap||'{}'):q.snap||{};
+      addToRecentlyDeleted({id:q.id,name:q.name,client:q.client,total:q.total,type:snap.is_project?'project':'proposal',snap:snap});
+    }
+    await fetch('/quotes/delete/'+id,{method:'DELETE'});
+    savedQuotes=savedQuotes.filter(function(x){return x.id!==id;});
+    renderSaved();
+  }catch(e){toast('Delete error: '+e.message,'err');}
 }
 
 function exportAllQuotes(){
@@ -4797,7 +4837,84 @@ function initSidebarCanvas(){
 
 var _editingUserId=null;
 async function loadUsers(){var tbody=document.getElementById('users-tbody');if(!tbody)return;try{var r=await fetch('/admin/users');if(r.status===403){tbody.innerHTML='<tr><td colspan="6" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';window._adminUsers={};d.users.forEach(function(u){window._adminUsers[u.id]=u;var tr=document.createElement('tr');var created=u.created_at?new Date(u.created_at).toLocaleDateString():'-';tr.innerHTML='<td><b>'+esc(u.full_name||u.username)+'</b></td><td style="font-family:monospace;font-size:12px;">'+esc(u.username)+'</td><td><span class="role-badge role-'+u.role+'">'+u.role+'</span></td><td><span class="'+(u.active?'status-active':'status-inactive')+'">'+( u.active?'Active':'Inactive')+'</span></td><td style="font-size:12px;color:var(--dgray);">'+created+'</td><td style="white-space:nowrap;"><button class="btn btn-sec btn-sm" style="margin-right:4px;" onclick="openEditUserModal('+u.id+')">Edit</button>'+(u.username!==(window._userUsername||'')? '<button class="btn-ico" style="color:var(--red);" onclick="deactivateUser('+u.id+',\''+esc(u.username)+'\','+u.active+')">'+( u.active?'&#10005;':'&#10003;')+'</button>':'')+'</td>';tbody.appendChild(tr);});var sel=document.getElementById('log-user-filter');if(sel){sel.innerHTML='<option value="">All Users</option>';d.users.forEach(function(u){var o=document.createElement('option');o.value=u.username;o.textContent=u.full_name||u.username;sel.appendChild(o);});}}catch(e){tbody.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
-async function loadLogs(){var tbody=document.getElementById('logs-tbody');if(!tbody)return;tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">Loading...</td></tr>';try{var f=(document.getElementById('log-user-filter')||{}).value||'';var url='/admin/logs?limit=100'+(f?'&username='+encodeURIComponent(f):'');var r=await fetch(url);if(r.status===403){tbody.innerHTML='<tr><td colspan="5" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';if(!d.logs.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">No activity yet.</td></tr>';return;}d.logs.forEach(function(l){var tr=document.createElement('tr');if(!l.success)tr.className='log-row-fail';var ts=l.logged_at?new Date(l.logged_at).toLocaleString():'-';tr.innerHTML='<td style="font-size:12px;white-space:nowrap;">'+ts+'</td><td><b>'+esc(l.full_name||l.username)+'</b><br><span style="font-size:11px;color:var(--dgray);">'+esc(l.username)+'</span></td><td style="text-transform:capitalize;font-size:12px;">'+esc(l.action)+'</td><td>'+(l.success?'<span style="color:#27500A;font-weight:600;font-size:11px;">Success</span>':'<span style="color:var(--red);font-weight:600;font-size:11px;">Failed</span>')+'</td><td class="log-ip">'+esc(l.ip_address||'-')+'</td>';tbody.appendChild(tr);});}catch(e){tbody.innerHTML='<tr><td colspan="5" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
+function showAdminTab(tab){
+  ['users','activity','deleted'].forEach(function(t){
+    var pane=document.getElementById('admin-pane-'+t);if(pane)pane.style.display=t===tab?'':'none';
+    var btn=document.getElementById('admin-tab-'+t);if(btn){btn.style.borderBottom=t===tab?'2px solid var(--red)':'none';btn.style.fontWeight=t===tab?'700':'400';}
+  });
+  if(tab==='activity')loadLogs();
+  if(tab==='deleted')renderRecentlyDeleted();
+}
+async function loadLogs(){
+  var tbody=document.getElementById('logs-tbody');if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">Loading...</td></tr>';
+  try{
+    var uf=(document.getElementById('log-user-filter')||{}).value||'';
+    var tf=(document.getElementById('log-type-filter')||{}).value||'';
+    var url='/admin/logs?limit=200'+(uf?'&username='+encodeURIComponent(uf):'');
+    var r=await fetch(url);if(r.status===403){tbody.innerHTML='<tr><td colspan="5" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}
+    var d=await r.json();if(!d.ok)throw new Error(d.error);
+    var logs=d.logs||[];
+    // Filter by type
+    if(tf==='logins')logs=logs.filter(function(l){return l.action==='login'||l.action==='logout';});
+    else if(tf==='actions')logs=logs.filter(function(l){return l.action!=='login'&&l.action!=='logout';});
+    tbody.innerHTML='';
+    if(!logs.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">No activity found.</td></tr>';return;}
+    logs.forEach(function(l){
+      var tr=document.createElement('tr');if(!l.success)tr.className='log-row-fail';
+      var ts=l.logged_at?new Date(l.logged_at).toLocaleString():'-';
+      var isLogin=l.action==='login'||l.action==='logout';
+      var actionColor=isLogin?'color:var(--dgray);':'color:#2B5FA6;font-weight:600;';
+      tr.innerHTML='<td style="font-size:12px;white-space:nowrap;">'+ts+'</td>'
+        +'<td><b>'+esc(l.full_name||l.username)+'</b><br><span style="font-size:11px;color:var(--dgray);">'+esc(l.username)+'</span></td>'
+        +'<td style="font-size:12px;'+actionColor+'">'+esc(l.action)+'</td>'
+        +'<td>'+(l.success?'<span style="color:#27500A;font-weight:600;font-size:11px;">OK</span>':'<span style="color:var(--red);font-weight:600;font-size:11px;">Failed</span>')+'</td>'
+        +'<td class="log-ip">'+esc(l.ip_address||'-')+'</td>';
+      tbody.appendChild(tr);
+    });
+  }catch(e){tbody.innerHTML='<tr><td colspan="5" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}
+}
+// Recently Deleted (localStorage)
+function getRecentlyDeleted(){try{return JSON.parse(localStorage.getItem('hd_recently_deleted')||'[]');}catch(e){return [];}}
+function saveRecentlyDeleted(items){try{localStorage.setItem('hd_recently_deleted',JSON.stringify(items.slice(0,50)));}catch(e){}}
+function addToRecentlyDeleted(item){
+  var items=getRecentlyDeleted();
+  items.unshift({id:item.id,name:item.name||'',client:item.client||'',total:item.total||0,type:item.type||'proposal',deleted_at:new Date().toISOString(),deleted_by:window._userUsername||'',snap:item.snap||null});
+  saveRecentlyDeleted(items);
+}
+function renderRecentlyDeleted(){
+  var c=document.getElementById('recently-deleted-list');if(!c)return;
+  var items=getRecentlyDeleted();c.innerHTML='';
+  if(!items.length){c.innerHTML='<p style="color:var(--dgray);font-size:12px;">No recently deleted items.</p>';return;}
+  items.forEach(function(item,idx){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bdr);';
+    var ago='';if(item.deleted_at){var d=Date.now()-new Date(item.deleted_at).getTime();var days=Math.floor(d/86400000);ago=days>0?days+'d ago':Math.floor(d/3600000)+'h ago';}
+    row.innerHTML='<div style="flex:1;min-width:0;">'
+      +'<div style="font-weight:600;font-size:13px;">'+esc(item.name)+'</div>'
+      +'<div style="font-size:11px;color:var(--dgray);">'+(item.type==='project'?'Project':'Proposal')+(item.client?' &middot; '+esc(item.client):'')+(item.total?' &middot; $'+Math.round(item.total).toLocaleString():'')+'</div>'
+      +'<div style="font-size:10px;color:var(--dgray);">Deleted by '+esc(item.deleted_by)+' &middot; '+ago+'</div>'
+      +'</div>';
+    var restoreBtn=document.createElement('button');restoreBtn.className='btn btn-red btn-sm';restoreBtn.textContent='Restore';
+    (function(i){restoreBtn.addEventListener('click',function(){restoreDeletedItem(i);});})(idx);
+    row.appendChild(restoreBtn);
+    var removeBtn=document.createElement('button');removeBtn.className='btn btn-sec btn-sm';removeBtn.textContent='Remove';removeBtn.style.color='var(--dgray)';
+    (function(i){removeBtn.addEventListener('click',function(){var its=getRecentlyDeleted();its.splice(i,1);saveRecentlyDeleted(its);renderRecentlyDeleted();});})(idx);
+    row.appendChild(removeBtn);
+    c.appendChild(row);
+  });
+}
+async function restoreDeletedItem(idx){
+  var items=getRecentlyDeleted();var item=items[idx];if(!item)return;
+  try{
+    var body={name:item.name,client:item.client||'',date:'',total:item.total||0,snap:item.snap||{}};
+    var r=await fetch('/quotes/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var d=await r.json();
+    if(d.ok){items.splice(idx,1);saveRecentlyDeleted(items);renderRecentlyDeleted();toast('Restored "'+item.name+'"','ok');renderSaved();}
+    else toast('Restore failed','err');
+  }catch(e){toast('Restore error: '+e.message,'err');}
+}
+function clearRecentlyDeleted(){if(!confirm('Clear all recently deleted items?'))return;saveRecentlyDeleted([]);renderRecentlyDeleted();}
 function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-email').value='';document.getElementById('edit-phone').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value='user';document.getElementById('pin-hint').textContent='(4-8 digits)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
 function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-email').value=u.email||'';document.getElementById('edit-phone').value=u.phone||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value=u.role||'user';document.getElementById('pin-hint').textContent='(leave blank to keep current PIN)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');}
 function closeUserModal(){document.getElementById('user-modal').classList.add('hidden');_editingUserId=null;}
