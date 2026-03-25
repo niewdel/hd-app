@@ -737,9 +737,21 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div class="card-hdr"><span class="card-title">Work Orders</span></div>
               <div class="card-body" id="ps-work-orders-list"><p style="color:var(--dgray);font-size:12px;">No work orders yet.</p></div>
             </div>
+            <div class="card" id="ps-material-tracking" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Material Tracking</span></div>
+              <div class="card-body" id="ps-material-tracking-body"><p style="color:var(--dgray);font-size:12px;">No materials to track.</p></div>
+            </div>
             <div class="card" data-field-hidden style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Job Costing</span></div>
               <div class="card-body" id="ps-job-costing"><p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p></div>
+            </div>
+            <div class="card" data-field-hidden style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Invoices</span></div>
+              <div class="card-body" id="ps-invoices"><p style="color:var(--dgray);font-size:12px;">No invoices yet.</p></div>
+            </div>
+            <div class="card" data-field-hidden style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Subcontractors</span></div>
+              <div class="card-body" id="ps-subs"><p style="color:var(--dgray);font-size:12px;">No subcontractors assigned.</p></div>
             </div>
           </div>
           <!-- Right column -->
@@ -750,6 +762,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 <p style="color:var(--dgray);font-size:12px;">No site plan uploaded.</p>
                 <label class="btn btn-sec btn-sm" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Upload Site Plan</label>
               </div>
+            </div>
+            <div class="card" data-field-hidden style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Equipment</span></div>
+              <div class="card-body" id="ps-equipment"><p style="color:var(--dgray);font-size:12px;">No equipment logged.</p></div>
             </div>
             <div class="card" data-field-hidden style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Activity</span></div>
@@ -1078,6 +1094,13 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div class="card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Crew Notes</span></div>
               <div class="card-body" id="wo-notes"><p style="color:var(--dgray);font-size:12px;">No notes.</p></div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Photos</span></div>
+              <div class="card-body" id="wo-photos">
+                <div id="wo-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;"></div>
+                <label class="btn btn-sec btn-sm" style="cursor:pointer;"><input type="file" accept="image/*" multiple style="display:none;" onchange="uploadWOPhotos(this.files)"/>+ Add Photos</label>
+              </div>
             </div>
             <div class="card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Material Suppliers</span></div>
@@ -2708,6 +2731,9 @@ function _renderProjectSummaryInner(proj){
     psWOList.appendChild(woBtn);
   }
 
+  // ── Material Tracking Card ──
+  renderMaterialTracking(proj,snap);
+
   // ── Site Plan ──
   var psSP=document.getElementById('ps-site-plan');
   if(psSP){
@@ -2742,6 +2768,127 @@ function _renderProjectSummaryInner(proj){
     } else {
       psJC.innerHTML='<p style="color:var(--dgray);font-size:12px;">Create or attach a proposal to generate job costing reports.</p>';
     }
+  }
+
+  // ── Invoices Card ──
+  var psInv=document.getElementById('ps-invoices');
+  if(psInv&&canSeePricing()){
+    var invList=snap.invoices||[];
+    psInv.innerHTML='';
+    if(invList.length){
+      invList.forEach(function(inv,idx){
+        var row=document.createElement('div');
+        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);';
+        var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+        info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(inv.number||'Invoice')+'</div>'
+          +'<div style="font-size:11px;color:var(--dgray);">$'+Math.round(inv.amount||0).toLocaleString()+(inv.date?' &middot; '+esc(inv.date):'')+(inv.notes?' &middot; '+esc(inv.notes):'')+'</div>';
+        row.appendChild(info);
+        var statusColors={draft:'#999',sent:'#2B5FA6',paid:'#27500A'};
+        var sel=document.createElement('select');
+        sel.style.cssText='font-size:11px;padding:3px 8px;border:1px solid var(--bdr);border-radius:4px;background:'+(statusColors[inv.status]||'#999')+';color:#fff;cursor:pointer;font-weight:700;';
+        ['draft','sent','paid'].forEach(function(s){
+          var opt=document.createElement('option');opt.value=s;opt.textContent=s.charAt(0).toUpperCase()+s.slice(1);
+          if(inv.status===s)opt.selected=true;
+          sel.appendChild(opt);
+        });
+        (function(i){sel.addEventListener('change',function(){
+          snap.invoices[i].status=this.value;
+          this.style.background=statusColors[this.value]||'#999';
+          addProjectActivity(snap,'note','Invoice "'+snap.invoices[i].number+'" marked '+this.value);
+          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+            .then(function(){renderProjectSummary();});
+        });})(idx);
+        row.appendChild(sel);
+        var del=document.createElement('button');del.className='btn-ico';del.style.cssText='color:var(--dgray);font-size:14px;';del.textContent='\u00d7';del.title='Remove';
+        (function(i){del.addEventListener('click',function(){
+          if(!confirm('Remove this invoice?'))return;
+          snap.invoices.splice(i,1);
+          addProjectActivity(snap,'note','Invoice removed');
+          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+            .then(function(){renderProjectSummary();});
+        });})(idx);
+        row.appendChild(del);
+        psInv.appendChild(row);
+      });
+    }
+    var invBtn=document.createElement('button');invBtn.className='btn btn-red btn-sm';invBtn.style.marginTop='10px';
+    invBtn.textContent='+ Create Invoice';
+    invBtn.addEventListener('click',function(){openInvoiceModal(proj,snap,totals);});
+    psInv.appendChild(invBtn);
+  }
+
+  // ── Subcontractors Card ──
+  var psSubs=document.getElementById('ps-subs');
+  if(psSubs&&canSeePricing()){
+    var subList=snap.subcontractors||[];
+    psSubs.innerHTML='';
+    if(subList.length){
+      subList.forEach(function(sub,idx){
+        var row=document.createElement('div');
+        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);';
+        var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+        info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(sub.name||'')+'</div>'
+          +'<div style="font-size:11px;color:var(--dgray);">'+esc(sub.trade||'')+(sub.phone?' &middot; '+esc(sub.phone):'')+(sub.quote_amount?' &middot; $'+Math.round(sub.quote_amount).toLocaleString():'')+'</div>';
+        row.appendChild(info);
+        var statusColors={pending:'#999',confirmed:'#2B5FA6',complete:'#27500A'};
+        var badge=document.createElement('span');
+        badge.style.cssText='font-size:10px;font-weight:700;color:#fff;background:'+(statusColors[sub.status]||'#999')+';padding:3px 10px;border-radius:4px;text-transform:uppercase;flex-shrink:0;';
+        badge.textContent=(sub.status||'pending').charAt(0).toUpperCase()+(sub.status||'pending').slice(1);
+        row.appendChild(badge);
+        var del=document.createElement('button');del.className='btn-ico';del.style.cssText='color:var(--dgray);font-size:14px;';del.textContent='\u00d7';del.title='Remove';
+        (function(i){del.addEventListener('click',function(){
+          if(!confirm('Remove this subcontractor?'))return;
+          snap.subcontractors.splice(i,1);
+          addProjectActivity(snap,'note','Subcontractor removed');
+          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+            .then(function(){renderProjectSummary();});
+        });})(idx);
+        row.appendChild(del);
+        psSubs.appendChild(row);
+      });
+    }
+    var subBtn=document.createElement('button');subBtn.className='btn btn-red btn-sm';subBtn.style.marginTop='10px';
+    subBtn.textContent='+ Add Sub';
+    subBtn.addEventListener('click',function(){openSubcontractorForm(snap);});
+    psSubs.appendChild(subBtn);
+  }
+
+  // ── Equipment Card ──
+  var psEquip=document.getElementById('ps-equipment');
+  if(psEquip){
+    var eqList=snap.equipment_log||[];
+    psEquip.innerHTML='';
+    if(eqList.length){
+      var runTotal=0;
+      eqList.forEach(function(eq,idx){
+        var cost=(eq.hours||0)*(eq.rate||0);
+        runTotal+=cost;
+        var row=document.createElement('div');
+        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);';
+        var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+        info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(eq.name||'')+'</div>'
+          +'<div style="font-size:11px;color:var(--dgray);">'+eq.hours+'h @ $'+Math.round(eq.rate||0)+'/hr = $'+Math.round(cost).toLocaleString()+(eq.date?' &middot; '+esc(eq.date):'')+(eq.user?' &middot; '+esc(eq.user):'')+'</div>';
+        row.appendChild(info);
+        var del=document.createElement('button');del.className='btn-ico';del.style.cssText='color:var(--dgray);font-size:14px;';del.textContent='\u00d7';del.title='Remove';
+        (function(i){del.addEventListener('click',function(){
+          if(!confirm('Remove this equipment entry?'))return;
+          snap.equipment_log.splice(i,1);
+          addProjectActivity(snap,'note','Equipment entry removed');
+          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+            .then(function(){renderProjectSummary();});
+        });})(idx);
+        row.appendChild(del);
+        psEquip.appendChild(row);
+      });
+      var totalRow=document.createElement('div');
+      totalRow.style.cssText='display:flex;justify-content:space-between;padding:8px 0;font-weight:700;font-size:13px;';
+      totalRow.innerHTML='<span>Total Equipment Cost</span><span style="color:var(--red);">$'+Math.round(runTotal).toLocaleString()+'</span>';
+      psEquip.appendChild(totalRow);
+    }
+    var eqBtn=document.createElement('button');eqBtn.className='btn btn-red btn-sm';eqBtn.style.marginTop='10px';
+    eqBtn.textContent='+ Log Equipment';
+    eqBtn.addEventListener('click',function(){openEquipmentModal(snap);});
+    psEquip.appendChild(eqBtn);
   }
 
   // ── Activity Timeline ──
@@ -2796,6 +2943,132 @@ function _renderProjectSummaryInner(proj){
   }
 }
 
+function openInvoiceModal(proj,snap,totals){
+  var ex=document.getElementById('invoice-modal');if(ex)ex.remove();
+  if(!snap.invoices)snap.invoices=[];
+  var projNum=snap.project_number||proj.name||'PROJ';
+  var nextNum=projNum+'-INV'+(snap.invoices.length+1);
+  var today=new Date().toISOString().split('T')[0];
+  var modal=document.createElement('div');modal.id='invoice-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:420px;max-width:92vw;';
+  box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">Create Invoice</h3>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Invoice Number</label>'
+    +'<input class="inp" id="inv-number" value="'+esc(nextNum)+'" style="margin-bottom:10px;width:100%;"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Date</label>'
+    +'<input class="inp" id="inv-date" type="date" value="'+today+'" style="margin-bottom:10px;width:100%;"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Amount ($)</label>'
+    +'<input class="inp" id="inv-amount" type="number" step="0.01" value="'+Math.round(totals.grandTotal)+'" style="margin-bottom:10px;width:100%;"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Notes</label>'
+    +'<input class="inp" id="inv-notes" placeholder="Optional notes" style="margin-bottom:16px;width:100%;"/>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    +'<button class="btn btn-sec btn-sm" id="inv-cancel">Cancel</button>'
+    +'<button class="btn btn-red btn-sm" id="inv-save">Create Invoice</button></div>';
+  modal.appendChild(box);
+  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+  document.getElementById('inv-cancel').addEventListener('click',function(){modal.remove();});
+  document.getElementById('inv-save').addEventListener('click',function(){
+    var num=document.getElementById('inv-number').value.trim();
+    var date=document.getElementById('inv-date').value;
+    var amount=parseFloat(document.getElementById('inv-amount').value)||0;
+    var notes=document.getElementById('inv-notes').value.trim();
+    if(!num){toast('Enter an invoice number','err');return;}
+    snap.invoices.push({id:Date.now(),number:num,date:date,amount:amount,status:'draft',notes:notes});
+    addProjectActivity(snap,'note','Invoice "'+num+'" created — $'+Math.round(amount).toLocaleString());
+    fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+      .then(function(r){return r.json();}).then(function(d){
+        if(d.ok){proj.snap=snap;toast('Invoice created','ok');modal.remove();renderProjectSummary();}
+        else toast(d.error||'Failed','err');
+      }).catch(function(e){toast('Error: '+e.message,'err');});
+  });
+}
+
+function openSubcontractorForm(snap){
+  var ex=document.getElementById('sub-modal');if(ex)ex.remove();
+  if(!snap.subcontractors)snap.subcontractors=[];
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  if(!proj)return;
+  var modal=document.createElement('div');modal.id='sub-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:420px;max-width:92vw;';
+  box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">Add Subcontractor</h3>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Name</label>'
+    +'<input class="inp" id="sub-name" placeholder="Company or contact name" style="margin-bottom:10px;width:100%;"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Trade</label>'
+    +'<input class="inp" id="sub-trade" placeholder="e.g. Concrete, Striping, Grading" style="margin-bottom:10px;width:100%;"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Phone</label>'
+    +'<input class="inp" id="sub-phone" placeholder="Phone number" style="margin-bottom:10px;width:100%;"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Quote Amount ($)</label>'
+    +'<input class="inp" id="sub-quote" type="number" step="0.01" placeholder="0" style="margin-bottom:16px;width:100%;"/>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    +'<button class="btn btn-sec btn-sm" id="sub-cancel">Cancel</button>'
+    +'<button class="btn btn-red btn-sm" id="sub-save">Add Sub</button></div>';
+  modal.appendChild(box);
+  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+  document.getElementById('sub-cancel').addEventListener('click',function(){modal.remove();});
+  document.getElementById('sub-save').addEventListener('click',function(){
+    var name=document.getElementById('sub-name').value.trim();
+    var trade=document.getElementById('sub-trade').value.trim();
+    var phone=document.getElementById('sub-phone').value.trim();
+    var quote=parseFloat(document.getElementById('sub-quote').value)||0;
+    if(!name){toast('Enter a subcontractor name','err');return;}
+    snap.subcontractors.push({id:Date.now(),name:name,trade:trade,phone:phone,quote_amount:quote,status:'pending'});
+    addProjectActivity(snap,'note','Subcontractor "'+name+'" added');
+    fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+      .then(function(r){return r.json();}).then(function(d){
+        if(d.ok){proj.snap=snap;toast('Subcontractor added','ok');modal.remove();renderProjectSummary();}
+        else toast(d.error||'Failed','err');
+      }).catch(function(e){toast('Error: '+e.message,'err');});
+  });
+}
+
+function openEquipmentModal(snap){
+  var ex=document.getElementById('equip-modal');if(ex)ex.remove();
+  if(!snap.equipment_log)snap.equipment_log=[];
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  if(!proj)return;
+  var today=new Date().toISOString().split('T')[0];
+  var modal=document.createElement('div');modal.id='equip-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:420px;max-width:92vw;';
+  box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">Log Equipment</h3>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Equipment Name</label>'
+    +'<input class="inp" id="eq-name" placeholder="e.g. Skid Steer, Roller, Paver" style="margin-bottom:10px;width:100%;"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Hours</label>'
+    +'<input class="inp" id="eq-hours" type="number" step="0.5" placeholder="0" style="margin-bottom:10px;width:100%;"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Date</label>'
+    +'<input class="inp" id="eq-date" type="date" value="'+today+'" style="margin-bottom:10px;width:100%;"/>'
+    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Rate ($/hr)</label>'
+    +'<input class="inp" id="eq-rate" type="number" step="0.01" placeholder="0" style="margin-bottom:16px;width:100%;"/>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    +'<button class="btn btn-sec btn-sm" id="eq-cancel">Cancel</button>'
+    +'<button class="btn btn-red btn-sm" id="eq-save">Log Equipment</button></div>';
+  modal.appendChild(box);
+  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+  document.getElementById('eq-cancel').addEventListener('click',function(){modal.remove();});
+  document.getElementById('eq-save').addEventListener('click',function(){
+    var name=document.getElementById('eq-name').value.trim();
+    var hours=parseFloat(document.getElementById('eq-hours').value)||0;
+    var date=document.getElementById('eq-date').value;
+    var rate=parseFloat(document.getElementById('eq-rate').value)||0;
+    if(!name){toast('Enter equipment name','err');return;}
+    if(!hours){toast('Enter hours','err');return;}
+    snap.equipment_log.push({id:Date.now(),name:name,hours:hours,date:date,rate:rate,user:window._userUsername||''});
+    addProjectActivity(snap,'note','Equipment "'+name+'" logged — '+hours+'h @ $'+rate+'/hr');
+    fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+      .then(function(r){return r.json();}).then(function(d){
+        if(d.ok){proj.snap=snap;toast('Equipment logged','ok');modal.remove();renderProjectSummary();}
+        else toast(d.error||'Failed','err');
+      }).catch(function(e){toast('Error: '+e.message,'err');});
+  });
+}
+
 function editCurrentProject(){
   if(!_currentProjectId)return;
   var p=pipelineProposals.find(function(x){return x.id===_currentProjectId;});
@@ -2806,6 +3079,170 @@ function editCurrentProject(){
     bid_due_date:snap.bid_due_date||'',bid_due_time:snap.bid_due_time||'',
     stage_id:p.stage_id,notes:snap.notes||'',_rawSnap:snap
   },_currentProjectId);
+}
+
+function renderMaterialTracking(proj,snap){
+  var body=document.getElementById('ps-material-tracking-body');
+  if(!body)return;
+  body.innerHTML='';
+
+  // Gather estimated materials from linked proposals
+  var estimated={};
+  var linkedIds=snap.linked_proposals||[];
+  linkedIds.forEach(function(pid){
+    var q=savedQuotes.find(function(x){return x.id===pid;});
+    if(!q)return;
+    var qs=typeof q.snap==='string'?JSON.parse(q.snap||'{}'):q.snap||{};
+    (qs.sections||[]).forEach(function(sec){
+      (sec.layers||[]).forEach(function(lyr){
+        var mat=lyr.material||lyr.type||'Unknown';
+        var tons=Math.round(lyr.tons||0);
+        if(tons>0){
+          if(!estimated[mat])estimated[mat]=0;
+          estimated[mat]+=tons;
+        }
+      });
+    });
+  });
+
+  var materialLog=snap.material_log||[];
+
+  // Calculate actuals from log
+  var actuals={};
+  materialLog.forEach(function(entry){
+    var mat=entry.material||'Unknown';
+    if(!actuals[mat])actuals[mat]=0;
+    actuals[mat]+=parseFloat(entry.tons)||0;
+  });
+
+  // Build combined list of all materials (estimated + any actuals with no estimate)
+  var allMats=Object.keys(estimated);
+  Object.keys(actuals).forEach(function(m){if(allMats.indexOf(m)===-1)allMats.push(m);});
+
+  if(allMats.length===0&&materialLog.length===0){
+    body.innerHTML='<p style="color:var(--dgray);font-size:12px;">Link a proposal to track materials.</p>';
+  }
+
+  // Progress bars per material
+  if(allMats.length>0){
+    allMats.forEach(function(mat){
+      var est=estimated[mat]||0;
+      var act=actuals[mat]||0;
+      var pct=est>0?Math.min(Math.round((act/est)*100),150):0;
+      var barColor=pct>100?'#CC0000':pct>=75?'#F5A623':'#27500A';
+
+      var row=document.createElement('div');
+      row.style.cssText='margin-bottom:12px;';
+
+      var label=document.createElement('div');
+      label.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;';
+      label.innerHTML='<span style="font-weight:700;font-size:12px;">'+esc(mat)+'</span>'
+        +'<span style="font-size:11px;color:var(--dgray);">'+Math.round(act)+' / '+(est>0?est+' tons':' — est.')+'</span>';
+      row.appendChild(label);
+
+      if(est>0){
+        var barOuter=document.createElement('div');
+        barOuter.style.cssText='width:100%;height:8px;background:#EFEFEF;border-radius:4px;overflow:hidden;';
+        var barInner=document.createElement('div');
+        barInner.style.cssText='height:100%;width:'+Math.min(pct,100)+'%;background:'+barColor+';border-radius:4px;transition:width .3s;';
+        barOuter.appendChild(barInner);
+        row.appendChild(barOuter);
+
+        var pctLabel=document.createElement('div');
+        pctLabel.style.cssText='font-size:10px;color:var(--dgray);margin-top:2px;text-align:right;';
+        pctLabel.textContent=pct+'%';
+        row.appendChild(pctLabel);
+      }
+
+      body.appendChild(row);
+    });
+  }
+
+  // Recent log entries
+  if(materialLog.length>0){
+    var logTitle=document.createElement('div');
+    logTitle.style.cssText='font-size:11px;font-weight:700;text-transform:uppercase;color:var(--dgray);letter-spacing:.5px;margin:12px 0 6px;border-top:1px solid var(--bdr);padding-top:10px;';
+    logTitle.textContent='Recent Entries';
+    body.appendChild(logTitle);
+
+    var showEntries=materialLog.slice(-5).reverse();
+    showEntries.forEach(function(entry){
+      var entryEl=document.createElement('div');
+      entryEl.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:11px;border-bottom:1px solid #F0F0F0;';
+      entryEl.innerHTML='<span>'+esc(entry.material)+' — <b>'+parseFloat(entry.tons).toFixed(1)+' tons</b></span>'
+        +'<span style="color:var(--dgray);">'+esc(entry.date||'')+(entry.user?' &middot; '+esc(entry.user):'')+'</span>';
+      body.appendChild(entryEl);
+    });
+  }
+
+  // Add Entry button & inline form
+  var addBtn=document.createElement('button');
+  addBtn.className='btn btn-red btn-sm';
+  addBtn.style.marginTop='10px';
+  addBtn.textContent='+ Add Entry';
+  addBtn.addEventListener('click',function(){
+    var existing=document.getElementById('mt-add-form');
+    if(existing){existing.remove();return;}
+
+    var form=document.createElement('div');
+    form.id='mt-add-form';
+    form.style.cssText='margin-top:10px;padding:12px;background:#F8F8F8;border-radius:8px;border:1px solid var(--bdr);';
+
+    // Date input
+    var dateRow=document.createElement('div');dateRow.style.cssText='margin-bottom:8px;';
+    dateRow.innerHTML='<label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Date</label>';
+    var dateIn=document.createElement('input');dateIn.type='date';dateIn.style.cssText='width:100%;padding:6px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;';
+    var now=new Date();dateIn.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    dateRow.appendChild(dateIn);
+    form.appendChild(dateRow);
+
+    // Material dropdown
+    var matRow=document.createElement('div');matRow.style.cssText='margin-bottom:8px;';
+    matRow.innerHTML='<label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Material</label>';
+    var matSel=document.createElement('select');matSel.style.cssText='width:100%;padding:6px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;background:#fff;';
+    var matOptions=allMats.length>0?allMats:Object.keys(MAT);
+    matOptions.forEach(function(m){
+      var opt=document.createElement('option');opt.value=m;opt.textContent=m;
+      matSel.appendChild(opt);
+    });
+    matRow.appendChild(matSel);
+    form.appendChild(matRow);
+
+    // Tons input
+    var tonsRow=document.createElement('div');tonsRow.style.cssText='margin-bottom:10px;';
+    tonsRow.innerHTML='<label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Actual Tons</label>';
+    var tonsIn=document.createElement('input');tonsIn.type='number';tonsIn.step='0.1';tonsIn.min='0';tonsIn.placeholder='0';
+    tonsIn.style.cssText='width:100%;padding:6px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;';
+    tonsRow.appendChild(tonsIn);
+    form.appendChild(tonsRow);
+
+    // Save button
+    var saveRow=document.createElement('div');saveRow.style.cssText='display:flex;gap:8px;';
+    var saveBtn=document.createElement('button');saveBtn.className='btn btn-red btn-sm';saveBtn.textContent='Save';
+    saveBtn.addEventListener('click',function(){
+      var tons=parseFloat(tonsIn.value);
+      if(!tons||tons<=0){toast('Enter a valid tonnage','err');return;}
+      if(!snap.material_log)snap.material_log=[];
+      snap.material_log.push({
+        date:dateIn.value,
+        material:matSel.value,
+        tons:tons,
+        user:window._userName||window._userUsername||''
+      });
+      addProjectActivity(snap,'material','Logged '+tons+' tons of '+matSel.value);
+      fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+        .then(function(){renderProjectSummary();toast('Material entry added','ok');});
+    });
+    saveRow.appendChild(saveBtn);
+
+    var cancelBtn=document.createElement('button');cancelBtn.className='btn btn-sec btn-sm';cancelBtn.textContent='Cancel';
+    cancelBtn.addEventListener('click',function(){form.remove();});
+    saveRow.appendChild(cancelBtn);
+    form.appendChild(saveRow);
+
+    body.appendChild(form);
+  });
+  body.appendChild(addBtn);
 }
 
 function addProjectNote(){
@@ -3426,7 +3863,7 @@ var TOPBAR_CFG = {
     {html:'Edit',cls:'btn btn-sec btn-sm',fn:'editWorkOrder()'},
     {html:'&lsaquo; Back to Project',cls:'btn btn-sec btn-sm',fn:"showPanel('project',null)"}
   ],
-  schedule:[{html:'Mark Day Complete',cls:'btn btn-red btn-sm',fn:'openMarkDayCompleteModal()'},{html:'Sync to Google Calendar',cls:'btn btn-sec btn-sm',fn:'openCalSyncModal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderSchedule()'}],
+  schedule:[{html:'Export Daily Report',cls:'btn btn-red btn-sm',fn:'exportDailyReport()'},{html:'Mark Day Complete',cls:'btn btn-sec btn-sm',fn:'openMarkDayCompleteModal()'},{html:'Sync to Google Calendar',cls:'btn btn-sec btn-sm',fn:'openCalSyncModal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderSchedule()'}],
   admin:[],
   settings:[]
 };
@@ -5642,6 +6079,110 @@ function renderWorkOrderDetail(){
   if(linkedQ)detHtml+='<div><b>Linked Proposal:</b> '+esc(linkedQ.name||'Proposal')+'</div>';
   detHtml+='</div>';
   detEl.innerHTML=detHtml;
+
+  // Photos
+  renderWOPhotos(wo);
+}
+
+function renderWOPhotos(wo){
+  var grid=document.getElementById('wo-photos-grid');
+  var container=document.getElementById('wo-photos');
+  if(!grid||!container)return;
+  var photos=wo.photos||[];
+  grid.innerHTML='';
+  if(!photos.length){
+    grid.innerHTML='<p style="color:var(--dgray);font-size:12px;grid-column:1/-1;margin:0;">No photos attached.</p>';
+  } else {
+    photos.forEach(function(photo,idx){
+      var wrap=document.createElement('div');
+      wrap.style.cssText='position:relative;border-radius:6px;overflow:hidden;border:1px solid var(--bdr);cursor:pointer;aspect-ratio:1;';
+      var img=document.createElement('img');
+      img.src=photo.data;
+      img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+      img.title=(photo.name||'Photo')+(photo.date?' — '+new Date(photo.date).toLocaleDateString():'');
+      (function(i){img.addEventListener('click',function(){viewWOPhoto(i);});})(idx);
+      wrap.appendChild(img);
+      var del=document.createElement('button');
+      del.innerHTML='&times;';
+      del.style.cssText='position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:14px;line-height:20px;text-align:center;cursor:pointer;padding:0;';
+      del.title='Remove photo';
+      (function(i){del.addEventListener('click',function(e){e.stopPropagation();deleteWOPhoto(i);});})(idx);
+      wrap.appendChild(del);
+      grid.appendChild(wrap);
+    });
+  }
+  var addLabel=container.querySelector('label');
+  if(addLabel)addLabel.style.display=photos.length>=5?'none':'';
+}
+
+function uploadWOPhotos(files){
+  if(!files||!files.length||!_currentProjectId||!_currentWorkOrderId)return;
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var wo=(snap.work_orders||[]).find(function(w){return w.id===_currentWorkOrderId;});
+  if(!wo)return;
+  if(!wo.photos)wo.photos=[];
+  var remaining=5-wo.photos.length;
+  if(remaining<=0){toast('Maximum 5 photos per work order','err');return;}
+  var toProcess=Math.min(files.length,remaining);
+  if(files.length>remaining)toast('Only adding '+toProcess+' of '+files.length+' photos (limit 5)','err');
+  var loaded=0;
+  for(var i=0;i<toProcess;i++){
+    (function(file){
+      var reader=new FileReader();
+      reader.onload=function(e){
+        wo.photos.push({data:e.target.result,name:file.name,date:new Date().toISOString(),user:window._userUsername||''});
+        loaded++;
+        if(loaded===toProcess){
+          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+            .then(function(r){return r.json();}).then(function(d){
+              if(d.ok){proj.snap=snap;renderWOPhotos(wo);toast(toProcess+' photo'+(toProcess>1?'s':'')+' added','ok');}
+              else toast(d.error||'Upload failed','err');
+            }).catch(function(err){toast('Error: '+err.message,'err');});
+        }
+      };
+      reader.readAsDataURL(file);
+    })(files[i]);
+  }
+}
+
+function viewWOPhoto(idx){
+  if(!_currentProjectId||!_currentWorkOrderId)return;
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var wo=(snap.work_orders||[]).find(function(w){return w.id===_currentWorkOrderId;});
+  if(!wo||!wo.photos||!wo.photos[idx])return;
+  var photo=wo.photos[idx];
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+  overlay.addEventListener('click',function(){overlay.remove();});
+  var img=document.createElement('img');
+  img.src=photo.data;
+  img.style.cssText='max-width:90%;max-height:90%;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,0.5);';
+  overlay.appendChild(img);
+  var info=document.createElement('div');
+  info.style.cssText='position:absolute;bottom:24px;left:50%;transform:translateX(-50%);color:#fff;font-size:12px;text-align:center;opacity:0.7;';
+  info.textContent=(photo.name||'Photo')+(photo.user?' — '+photo.user:'')+(photo.date?' — '+new Date(photo.date).toLocaleDateString():'');
+  overlay.appendChild(info);
+  document.body.appendChild(overlay);
+}
+
+function deleteWOPhoto(idx){
+  if(!confirm('Remove this photo?'))return;
+  if(!_currentProjectId||!_currentWorkOrderId)return;
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var wo=(snap.work_orders||[]).find(function(w){return w.id===_currentWorkOrderId;});
+  if(!wo||!wo.photos)return;
+  wo.photos.splice(idx,1);
+  fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.ok){proj.snap=snap;renderWOPhotos(wo);toast('Photo removed','ok');}
+      else toast(d.error||'Delete failed','err');
+    }).catch(function(err){toast('Error: '+err.message,'err');});
 }
 
 function editWorkOrder(){
@@ -5822,6 +6363,79 @@ function renderWeatherWidget(elId){
 }
 function renderSchedWeather(){renderWeatherWidget('sched-weather');}
 function renderDashWeather(){renderWeatherWidget('dash-weather');}
+
+function exportDailyReport(){
+  var today=new Date();
+  var yyyy=today.getFullYear();
+  var mm=String(today.getMonth()+1).padStart(2,'0');
+  var dd=String(today.getDate()).padStart(2,'0');
+  var dateStr=yyyy+'-'+mm+'-'+dd;
+
+  // Collect all work orders scheduled for today
+  var todayWOs=[];
+  pipelineProposals.forEach(function(p){
+    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    if(!snap.is_project)return;
+    (snap.work_orders||[]).forEach(function(wo){
+      if(!wo.scheduled_date)return;
+      // Check if today falls within the work order's scheduled range
+      var startDate=wo.scheduled_date;
+      var endDate=wo.scheduled_end_date||wo.scheduled_date;
+      if(dateStr>=startDate&&dateStr<=endDate){
+        // Calculate tonnage from linked proposals
+        var totalTons=0;
+        var proposalIds=wo.linked_proposal?[wo.linked_proposal]:(snap.linked_proposals||[]);
+        proposalIds.forEach(function(pid){
+          var lq=savedQuotes.find(function(q){return q.id===pid;});
+          if(lq){
+            var lqs=typeof lq.snap==='string'?JSON.parse(lq.snap||'{}'):lq.snap||{};
+            (lqs.sections||[]).forEach(function(sec){
+              (sec.layers||[]).forEach(function(lyr){totalTons+=Math.round(lyr.tons||0);});
+            });
+          }
+        });
+        todayWOs.push({
+          name:wo.name||'Work Order',
+          project:p.name||'Untitled',
+          status:wo.status||'pending',
+          assigned:wo.assigned_to||'',
+          tonnage:totalTons>0?totalTons.toLocaleString():'—'
+        });
+      }
+    });
+  });
+
+  // Get weather summary if available
+  var weatherEl=document.getElementById('sched-weather');
+  var weather='';
+  if(weatherEl){
+    var tempEl=weatherEl.querySelector('[data-weather-temp]');
+    var descEl=weatherEl.querySelector('[data-weather-desc]');
+    if(tempEl&&descEl)weather=tempEl.textContent+' — '+descEl.textContent;
+    else weather=weatherEl.textContent.trim().substring(0,100);
+  }
+
+  var payload={
+    date:dateStr,
+    work_orders:todayWOs,
+    weather:weather
+  };
+
+  toast('Generating daily report...','ok');
+  fetch('/generate-daily-report',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  }).then(function(r){
+    if(!r.ok)throw new Error('PDF generation failed');
+    return r.blob();
+  }).then(function(blob){
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download='HD_Daily_Report_'+dateStr+'.pdf';
+    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+    toast('Daily report downloaded','ok');
+  }).catch(function(e){toast('Error: '+e.message,'err');});
+}
 
 function renderSchedule(){
   var titleEl=document.getElementById('sched-cal-title');

@@ -524,6 +524,19 @@ def generate_wo_pdf():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/generate-daily-report', methods=['POST'])
+@require_auth
+def generate_daily_report():
+    from generate_daily_report import build as dr_build
+    data = request.get_json()
+    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+        out = f.name
+    try:
+        dr_build(data, out)
+        return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_Daily_Report.pdf')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/change-orders/save', methods=['POST'])
 @require_auth
 def co_save():
