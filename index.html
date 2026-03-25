@@ -378,7 +378,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-item" onclick="showPanel('projects',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg>Projects</div>
       <div class="nav-grp">Manage</div>
       <div class="nav-item" data-field-hidden onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents</div>
-      <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
+      <div class="nav-item" data-field-hidden onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
       <div class="nav-item" onclick="showPanel('schedule',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg>Schedule</div>
       <div class="nav-grp">Config</div>
       <div class="nav-item" onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
@@ -727,7 +727,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 <label class="btn btn-sec btn-sm" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Upload Site Plan</label>
               </div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="card" data-field-hidden style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Activity</span></div>
               <div class="card-body" id="ps-activity" style="max-height:360px;overflow-y:auto;"><p style="color:var(--dgray);font-size:12px;">No activity yet.</p></div>
             </div>
@@ -1054,6 +1054,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div class="card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Crew Notes</span></div>
               <div class="card-body" id="wo-notes"><p style="color:var(--dgray);font-size:12px;">No notes.</p></div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Material Suppliers</span></div>
+              <div class="card-body" id="wo-suppliers"><p style="color:var(--dgray);font-size:12px;">No suppliers listed.</p></div>
             </div>
           </div>
         </div>
@@ -1530,6 +1534,7 @@ function fi(n){return Math.round(n).toLocaleString();}
 function f2(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function fmt12(t){if(!t)return '';var p=t.split(':'),h=parseInt(p[0],10),m=p[1],ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+m+' '+ap;}
+function fmtD(d){if(!d)return '';if(d.indexOf('/')>-1)return d;var p=d.split('-');if(p.length===3)return p[1]+'/'+p[2]+'/'+p[0];return d;}
 function toast(msg,type){
   var t=document.getElementById('toast');
   t.textContent=msg;t.className='toast '+(type==='ok'?'ok':type==='err'?'err':'');
@@ -2629,8 +2634,8 @@ function _renderProjectSummaryInner(proj){
         // Detail row
         var details=[];
         if(wo.assigned_to)details.push(esc(wo.assigned_to));
-        if(wo.scheduled_date){var sd='Scheduled: '+esc(wo.scheduled_date)+(wo.scheduled_end_date?' to '+esc(wo.scheduled_end_date):'')+(wo.scheduled_time?' at '+fmt12(wo.scheduled_time):'')+(wo.scheduled_end_time?' - '+fmt12(wo.scheduled_end_time):'')+(wo.scheduled_days&&wo.scheduled_days>1?' ('+wo.scheduled_days+' days)':'');details.push(sd);}
-        else if(wo.date)details.push('Created: '+esc(wo.date));
+        if(wo.scheduled_date){var sd='Scheduled: '+fmtD(wo.scheduled_date)+(wo.scheduled_end_date?' to '+esc(wo.scheduled_end_date):'')+(wo.scheduled_time?' at '+fmt12(wo.scheduled_time):'')+(wo.scheduled_end_time?' - '+fmt12(wo.scheduled_end_time):'')+(wo.scheduled_days&&wo.scheduled_days>1?' ('+wo.scheduled_days+' days)':'');details.push(sd);}
+        else if(wo.date)details.push('Created: '+fmtD(wo.date));
         if(details.length){
           var detEl=document.createElement('div');detEl.style.cssText='font-size:12px;color:var(--dgray);margin-bottom:4px;';
           detEl.innerHTML=details.join(' &middot; ');
@@ -2813,6 +2818,22 @@ function addProjectNote(){
   });
 }
 
+function addWOSupplier(){window._woSuppliers=window._woSuppliers||[];window._woSuppliers.push({name:'',type:'',phone:'',notes:''});renderWOSuppliers();}
+function removeWOSupplier(idx){window._woSuppliers.splice(idx,1);renderWOSuppliers();}
+function renderWOSuppliers(){
+  var c=document.getElementById('wo-suppliers-list');if(!c)return;c.innerHTML='';
+  (window._woSuppliers||[]).forEach(function(s,i){
+    var row=document.createElement('div');
+    row.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr 1fr 28px;gap:8px;margin-bottom:6px;align-items:center;';
+    row.innerHTML='<input class="inp" placeholder="Plant / Supplier name" value="'+esc(s.name)+'" onchange="window._woSuppliers['+i+'].name=this.value" style="font-size:12px;"/>'
+      +'<select class="inp" onchange="window._woSuppliers['+i+'].type=this.value" style="font-size:12px;"><option value="">Type...</option><option value="Asphalt Plant"'+(s.type==='Asphalt Plant'?' selected':'')+'>Asphalt Plant</option><option value="Stone Quarry"'+(s.type==='Stone Quarry'?' selected':'')+'>Stone Quarry</option><option value="Concrete Plant"'+(s.type==='Concrete Plant'?' selected':'')+'>Concrete Plant</option><option value="Sign Distributor"'+(s.type==='Sign Distributor'?' selected':'')+'>Sign Distributor</option><option value="Other"'+(s.type==='Other'?' selected':'')+'>Other</option></select>'
+      +'<input class="inp" placeholder="Phone" value="'+esc(s.phone)+'" onchange="window._woSuppliers['+i+'].phone=this.value" style="font-size:12px;"/>'
+      +'<input class="inp" placeholder="Notes" value="'+esc(s.notes)+'" onchange="window._woSuppliers['+i+'].notes=this.value" style="font-size:12px;"/>'
+      +'<button class="btn-ico" style="color:var(--red);" onclick="removeWOSupplier('+i+')">x</button>';
+    c.appendChild(row);
+  });
+}
+
 function openWorkOrderModal(editWoId){
   if(!_currentProjectId)return;
   var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
@@ -2850,6 +2871,9 @@ function openWorkOrderModal(editWoId){
     +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Contact Phone</label><input id="wo-contact-phone" class="inp" placeholder="(555) 000-0000" style="width:100%;" value="'+esc(editing?editing.onsite_phone:'')+'"></div>'
     +'</div>'
     +'<div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Crew Notes</label><textarea id="wo-crew-notes" rows="2" class="inp" placeholder="Special instructions for the crew..." style="width:100%;resize:vertical;">'+esc(editing?editing.crew_notes:'')+'</textarea></div>'
+    +'<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--dgray);text-transform:uppercase;letter-spacing:0.5px;">Material Suppliers</div>'
+    +'<div id="wo-suppliers-list"></div>'
+    +'<button class="btn btn-sec btn-sm" style="margin-bottom:14px;" onclick="addWOSupplier()">+ Add Supplier</button>'
     +'<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--dgray);text-transform:uppercase;letter-spacing:0.5px;">Scheduling</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:10px;margin-bottom:10px;">'
     +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Start Date</label><input type="date" id="wo-sched-date" class="inp" style="width:100%;" value="'+(editing&&editing.scheduled_date?editing.scheduled_date:'')+'"></div>'
@@ -2866,6 +2890,9 @@ function openWorkOrderModal(editWoId){
   modal.appendChild(box);
   modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
   document.body.appendChild(modal);
+  // Init suppliers
+  window._woSuppliers=(editing&&editing.suppliers)?editing.suppliers.map(function(s){return {name:s.name||'',type:s.type||'',phone:s.phone||'',notes:s.notes||''};}):[];
+  renderWOSuppliers();
   document.getElementById('wo-save').addEventListener('click',function(){
     var name=document.getElementById('wo-name').value.trim();
     if(!name){toast('Enter a work order name','err');return;}
@@ -2885,6 +2912,7 @@ function openWorkOrderModal(editWoId){
       scheduled_days:parseInt(document.getElementById('wo-sched-days').value)||1,
       scheduled_time:document.getElementById('wo-sched-time').value||null,
       scheduled_end_time:document.getElementById('wo-sched-end-time').value||null,
+      suppliers:window._woSuppliers||[],
       linked_proposal:linkedProp,
       date:new Date().toISOString().split('T')[0]
     };
@@ -5385,7 +5413,7 @@ function renderWorkOrderDetail(){
     +'<div style="font-size:14px;font-weight:600;color:#555;margin-bottom:2px;">'+esc(wo.name)+'</div>'
     +'<div style="font-size:12px;color:var(--dgray);">'
     +(addr?esc(addr)+(snap.city_state?', '+esc(snap.city_state):''):'')
-    +(wo.scheduled_date?(addr?' &middot; ':'')+'Scheduled '+wo.scheduled_date+(wo.scheduled_end_date?' to '+wo.scheduled_end_date:'')+(wo.scheduled_time?' at '+fmt12(wo.scheduled_time):'')+(wo.scheduled_days&&wo.scheduled_days>1?' ('+wo.scheduled_days+'d)':''):'')
+    +(wo.scheduled_date?(addr?' &middot; ':'')+'Scheduled '+fmtD(wo.scheduled_date)+(wo.scheduled_end_date?' to '+fmtD(wo.scheduled_end_date):'')+(wo.scheduled_time?' at '+fmt12(wo.scheduled_time):'')+(wo.scheduled_days&&wo.scheduled_days>1?' ('+wo.scheduled_days+'d)':''):'')
     +'</div>';
 
   // Scope of Work — just the typed description
@@ -5470,6 +5498,23 @@ function renderWorkOrderDetail(){
   if(wo.assigned_to)notesHtml+='<div style="margin-top:8px;font-size:12px;"><b>Assigned To:</b> '+esc(wo.assigned_to)+'</div>';
   notesEl.innerHTML=notesHtml||'<p style="color:var(--dgray);font-size:12px;">No crew notes.</p>';
 
+  // Material Suppliers
+  var supEl=document.getElementById('wo-suppliers');
+  if(supEl){
+    var suppliers=wo.suppliers||[];
+    if(suppliers.length){
+      var supHtml='';
+      suppliers.forEach(function(s){
+        supHtml+='<div style="padding:8px 0;border-bottom:1px solid var(--bdr);">'
+          +'<div style="font-weight:600;font-size:13px;">'+esc(s.name||'Unnamed')+(s.type?' <span style="font-size:11px;font-weight:400;color:var(--dgray);">('+esc(s.type)+')</span>':'')+'</div>'
+          +(s.phone?'<div style="font-size:12px;color:var(--dgray);">'+esc(s.phone)+'</div>':'')
+          +(s.notes?'<div style="font-size:11px;color:#555;margin-top:2px;">'+esc(s.notes)+'</div>':'')
+          +'</div>';
+      });
+      supEl.innerHTML=supHtml;
+    } else {supEl.innerHTML='<p style="color:var(--dgray);font-size:12px;">No suppliers listed.</p>';}
+  }
+
   // Site Plan
   var spEl=document.getElementById('wo-site-plan');
   var spUrl=snap.site_plan_url;
@@ -5488,7 +5533,7 @@ function renderWorkOrderDetail(){
   detHtml+='<div><b>Status:</b> '+esc(wo.status?wo.status.charAt(0).toUpperCase()+wo.status.slice(1):'Pending')+'</div>';
   detHtml+='<div><b>Project:</b> '+esc(proj.name||'')+'</div>';
   if(addr)detHtml+='<div><b>Address:</b> '+esc(addr)+(snap.city_state?', '+esc(snap.city_state):'')+'</div>';
-  if(wo.scheduled_date){detHtml+='<div><b>Scheduled:</b> '+wo.scheduled_date+(wo.scheduled_end_date?' to '+wo.scheduled_end_date:'')+'</div>';if(wo.scheduled_time)detHtml+='<div><b>Time:</b> '+fmt12(wo.scheduled_time)+(wo.scheduled_end_time?' - '+fmt12(wo.scheduled_end_time):'')+'</div>';if(wo.scheduled_days&&wo.scheduled_days>1)detHtml+='<div><b>Duration:</b> '+wo.scheduled_days+' days</div>';}
+  if(wo.scheduled_date){detHtml+='<div><b>Scheduled:</b> '+fmtD(wo.scheduled_date)+(wo.scheduled_end_date?' to '+fmtD(wo.scheduled_end_date):'')+'</div>';if(wo.scheduled_time)detHtml+='<div><b>Time:</b> '+fmt12(wo.scheduled_time)+(wo.scheduled_end_time?' - '+fmt12(wo.scheduled_end_time):'')+'</div>';if(wo.scheduled_days&&wo.scheduled_days>1)detHtml+='<div><b>Duration:</b> '+wo.scheduled_days+' days</div>';}
   if(wo.onsite_contact)detHtml+='<div><b>On-Site Contact:</b> '+esc(wo.onsite_contact)+(wo.onsite_phone?' ('+esc(wo.onsite_phone)+')':'')+'</div>';
   if(linkedQ)detHtml+='<div><b>Linked Proposal:</b> '+esc(linkedQ.name||'Proposal')+'</div>';
   detHtml+='</div>';
