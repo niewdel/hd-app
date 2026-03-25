@@ -1027,6 +1027,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <button class="stab" data-field-hidden id="stab-library" onclick="showSettingsTab('library')">Bid Library</button>
           <button class="stab" data-field-hidden id="stab-badges" onclick="showSettingsTab('badges')">Layer Badges</button>
           <button class="stab" data-field-hidden id="stab-crews" onclick="showSettingsTab('crews')">Crew Costs</button>
+          <button class="stab" data-field-hidden id="stab-equipment" onclick="showSettingsTab('equipment')">Equipment</button>
+          <button class="stab" data-field-hidden id="stab-unitprices" onclick="showSettingsTab('unitprices')">Unit Prices</button>
         </div>
 
         <!-- General Tab -->
@@ -1108,10 +1110,20 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div class="card">
             <div class="card-hdr">
               <span class="card-title">Bid Items Library</span>
-              <button class="btn btn-sec btn-sm" onclick="addLibraryItem()">+ Add Item</button>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-sec btn-sm" onclick="loadDefaultLibrary()">Load Defaults</button>
+                <button class="btn btn-sec btn-sm" onclick="addLibraryItem()">+ Add Item</button>
+              </div>
             </div>
             <div class="card-body">
-              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Create standard line items with names, descriptions, units, and rates. Assign a badge to group related items together. Insert into proposals from the Additional Items section.</p>
+              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Standard line items with names, descriptions, units, and rates organized by division. Insert into proposals from the Additional Items section.</p>
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+                <label style="font-size:11px;font-weight:600;color:var(--dgray);">Filter:</label>
+                <select id="lib-cat-filter" onchange="renderLibraryList()" style="font-size:12px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;">
+                  <option value="">All Categories</option>
+                </select>
+                <span id="lib-count" style="font-size:11px;color:var(--dgray);"></span>
+              </div>
               <div id="library-list"></div>
               <div style="margin-top:12px;">
                 <button class="btn btn-red btn-sm" onclick="saveLibrary()">Save Library</button>
@@ -1129,6 +1141,36 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div class="card-body">
               <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Define your crews and their daily rates. These are used in job costing calculations.</p>
               <div id="crews-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="stab-content-equipment" style="display:none;">
+          <div class="card">
+            <div class="card-hdr">
+              <span class="card-title">Equipment Rate Card</span>
+              <button class="btn btn-sec btn-sm" onclick="addEquipment()">+ Add Equipment</button>
+            </div>
+            <div class="card-body">
+              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Equipment daily rates used for job costing. Set your fleet rates here and reference them when estimating grading, utilities, and other self-performed work.</p>
+              <div id="equipment-list"></div>
+              <div style="margin-top:12px;"><button class="btn btn-red btn-sm" onclick="saveEquipment()">Save Equipment</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="stab-content-unitprices" style="display:none;">
+          <div class="card">
+            <div class="card-hdr">
+              <span class="card-title">Unit Price Schedule</span>
+            </div>
+            <div class="card-body">
+              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Standard unit prices for unforeseen conditions. These rates appear on proposals as a reference schedule for additional work (rock excavation, undercut, dewatering, etc.).</p>
+              <div id="unitprice-list"></div>
+              <div style="margin-top:12px;display:flex;gap:8px;">
+                <button class="btn btn-red btn-sm" onclick="saveUnitPrices()">Save Prices</button>
+                <button class="btn btn-sec btn-sm" onclick="addUnitPrice()">+ Add Item</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1384,6 +1426,177 @@ var LBS_DEFAULT = {'ABC':150,'#57 Stone':150,'S9.5B':115,'S9.5C':115,'I19.0C':11
 var DDEPTH_DEFAULT = {'ABC':0,'#57 Stone':0,'S9.5B':0,'S9.5C':0,'I19.0C':0,'B25.0C':0,'Concrete':0};
 var LBADGE_DEFAULT = {'ABC':'b-base','#57 Stone':'b-base','S9.5B':'b-surface','S9.5C':'b-surface','I19.0C':'b-binder','B25.0C':'b-base','Concrete':'b-conc'};
 var BADGE_DEFS={'b-base':{label:'Base',color:'#8B5E3C'},'b-binder':{label:'Binder',color:'#2B5FA6'},'b-surface':{label:'Surface',color:'#27500A'},'b-conc':{label:'Concrete',color:'#6B4FA6'}};
+var LIB_CATEGORIES=['Asphalt','Stone / Aggregate','Concrete','Striping / Signage','Grading / Earthwork','Storm Drain','Sanitary Sewer','Water','Erosion Control','Land Clearing','Landscaping','General / Misc'];
+var DEFAULT_BID_LIBRARY=[
+  // ── ASPHALT ──
+  {name:'Heavy Duty Aggregate Base Course',desc:'Install 8" Aggregate Base Course',unit:'TON',rate:0,category:'Asphalt'},
+  {name:'Heavy Duty Asphalt Binder',desc:'Install 2.5" I19.0C Intermediate Course',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'Heavy Duty Asphalt Surface',desc:'Install 1.5" S9.5C Surface Course',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'Light Duty Aggregate Base Course',desc:'Install 6" Aggregate Base Course',unit:'TON',rate:0,category:'Asphalt'},
+  {name:'Light Duty Asphalt Surface',desc:'Install 2" S9.5C Surface Course',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'NCDOT Asphalt Base',desc:'Install 5" B25.0C Base Course',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'NCDOT Asphalt Intermediate',desc:'Install 4" I19.0C Intermediate Course',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'NCDOT Asphalt Surface',desc:'Install 3" S9.5C Surface Course',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'Mill Existing Asphalt (1.5")',desc:'Mill 1.5" existing asphalt surface',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'Mill Existing Asphalt (2")',desc:'Mill 2" existing asphalt surface',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'Mill Existing Asphalt (3")',desc:'Mill 3" existing asphalt full depth',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'Asphalt Patching',desc:'Full depth asphalt patch repair',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'Tack Coat',desc:'Apply tack coat to existing surface',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'Paving Fabric',desc:'Install paving fabric interlayer',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'Sawcutting',desc:'Sawcut existing pavement',unit:'LF',rate:0,category:'Asphalt'},
+  {name:'Asphalt Speed Bump',desc:'Furnish & install asphalt speed bump',unit:'EA',rate:0,category:'Asphalt'},
+  {name:'Pavement Removal',desc:'Remove and dispose of existing pavement',unit:'SY',rate:0,category:'Asphalt'},
+  // ── STONE / AGGREGATE ──
+  {name:'ABC Stone Base (4")',desc:'Furnish & install 4" ABC aggregate base',unit:'TON',rate:0,category:'Stone / Aggregate'},
+  {name:'ABC Stone Base (6")',desc:'Furnish & install 6" ABC aggregate base',unit:'TON',rate:0,category:'Stone / Aggregate'},
+  {name:'ABC Stone Base (8")',desc:'Furnish & install 8" ABC aggregate base',unit:'TON',rate:0,category:'Stone / Aggregate'},
+  {name:'#57 Stone',desc:'Furnish & install #57 stone',unit:'TON',rate:0,category:'Stone / Aggregate'},
+  {name:'#67 Stone',desc:'Furnish & install #67 stone',unit:'TON',rate:0,category:'Stone / Aggregate'},
+  {name:'#4 Stone (Rip Rap)',desc:'Furnish & install #4 stone rip rap',unit:'TON',rate:0,category:'Stone / Aggregate'},
+  {name:'Stone Shoulder Repair',desc:'Stone shoulder grading and repair',unit:'LF',rate:0,category:'Stone / Aggregate'},
+  {name:'Gravel Driveway / Parking',desc:'Furnish & install gravel surface',unit:'SY',rate:0,category:'Stone / Aggregate'},
+  // ── CONCRETE ──
+  {name:'Concrete Curb & Gutter (18" Std)',desc:'Install 18" 3000PSI standard curb & gutter',unit:'LF',rate:0,category:'Concrete'},
+  {name:'Concrete Curb & Gutter (24")',desc:'Install 24" 3000PSI curb & gutter',unit:'LF',rate:0,category:'Concrete'},
+  {name:'Concrete Curb & Gutter (30")',desc:'Install 30" 3000PSI curb & gutter',unit:'LF',rate:0,category:'Concrete'},
+  {name:'6" Vertical Curb',desc:'Install 6" vertical concrete curb',unit:'LF',rate:0,category:'Concrete'},
+  {name:'6" Mountable Curb',desc:'Install 6" mountable concrete curb',unit:'LF',rate:0,category:'Concrete'},
+  {name:'Valley Gutter',desc:'Install concrete valley gutter',unit:'LF',rate:0,category:'Concrete'},
+  {name:'Ribbon Curb',desc:'Install concrete ribbon curb',unit:'LF',rate:0,category:'Concrete'},
+  {name:'Concrete Flume',desc:'Install concrete flume',unit:'LF',rate:0,category:'Concrete'},
+  {name:'Concrete Sidewalk (4")',desc:'Install 4" concrete sidewalk',unit:'SF',rate:0,category:'Concrete'},
+  {name:'Concrete Sidewalk (6")',desc:'Install 6" concrete sidewalk',unit:'SF',rate:0,category:'Concrete'},
+  {name:'Concrete Driveway Apron',desc:'Install concrete driveway apron',unit:'SY',rate:0,category:'Concrete'},
+  {name:'Concrete Pad',desc:'Install concrete equipment/dumpster pad',unit:'SF',rate:0,category:'Concrete'},
+  {name:'ADA Ramp',desc:'Install ADA-compliant concrete ramp with detectable warning',unit:'EA',rate:0,category:'Concrete'},
+  {name:'Concrete Median',desc:'Install concrete median per plans',unit:'LF',rate:0,category:'Concrete'},
+  {name:'Thickened Edge',desc:'Install concrete thickened edge',unit:'LF',rate:0,category:'Concrete'},
+  // ── STRIPING / SIGNAGE ──
+  {name:'Pavement Markings (Latex Paint)',desc:'Install pavement markings per plans',unit:'LS',rate:0,category:'Striping / Signage'},
+  {name:'Pavement Markings (Thermoplastic)',desc:'Install thermoplastic pavement markings per plans',unit:'LS',rate:0,category:'Striping / Signage'},
+  {name:'4" White Line (Latex)',desc:'Install 4" white pavement stripe',unit:'LF',rate:0,category:'Striping / Signage'},
+  {name:'4" Yellow Line (Latex)',desc:'Install 4" yellow pavement stripe',unit:'LF',rate:0,category:'Striping / Signage'},
+  {name:'24" Stop Bar',desc:'Install 24" stop bar marking',unit:'EA',rate:0,category:'Striping / Signage'},
+  {name:'Handicap Stencil',desc:'Install handicap symbol stencil',unit:'EA',rate:0,category:'Striping / Signage'},
+  {name:'Arrow Stencil',desc:'Install directional arrow stencil',unit:'EA',rate:0,category:'Striping / Signage'},
+  {name:'Fire Lane Markings',desc:'Install fire lane curb markings and stencils',unit:'LF',rate:0,category:'Striping / Signage'},
+  {name:'Signage on U-Channel',desc:'Furnish & install U-Channel post & placard',unit:'EA',rate:400,category:'Striping / Signage'},
+  {name:'Signage on U-Channel in Bollard',desc:'Furnish & install U-Channel post & placard in 6" steel pipe bollard',unit:'EA',rate:1200,category:'Striping / Signage'},
+  {name:'Bollard (Steel Pipe)',desc:'Furnish & install 6" steel pipe bollard, painted yellow',unit:'EA',rate:0,category:'Striping / Signage'},
+  {name:'Wheel Stop',desc:'Furnish & install concrete wheel stop',unit:'EA',rate:0,category:'Striping / Signage'},
+  // ── GRADING / EARTHWORK ──
+  {name:'Mass Grading (Cut)',desc:'Excavate and relocate on-site per grading plans',unit:'CY',rate:0,category:'Grading / Earthwork'},
+  {name:'Mass Grading (Fill)',desc:'Place and compact fill material on-site per grading plans',unit:'CY',rate:0,category:'Grading / Earthwork'},
+  {name:'Import Select Fill',desc:'Furnish, deliver, place, and compact select fill material',unit:'CY',rate:0,category:'Grading / Earthwork'},
+  {name:'Export Spoil Material',desc:'Load, haul, and dispose of excess material off-site',unit:'CY',rate:0,category:'Grading / Earthwork'},
+  {name:'Fine Grading / Subgrade Prep',desc:'Fine grade subgrade to plan elevation within ±0.1 ft tolerance',unit:'SY',rate:0,category:'Grading / Earthwork'},
+  {name:'Proof Rolling',desc:'Proof roll subgrade with loaded dump truck to identify soft spots',unit:'SY',rate:0,category:'Grading / Earthwork'},
+  {name:'Rock Excavation (Machine)',desc:'Machine excavate rock and dispose on-site',unit:'CY',rate:50,category:'Grading / Earthwork'},
+  {name:'Rock Blasting & Waste On-Site',desc:'Drill, blast, and waste rock material on-site',unit:'CY',rate:28,category:'Grading / Earthwork'},
+  {name:'Rock Blasting & Export',desc:'Drill, blast, load, haul, and dispose of rock off-site',unit:'CY',rate:56,category:'Grading / Earthwork'},
+  {name:'Undercut Unsuitable (On-Site Disposal)',desc:'Excavate unsuitable soil and dispose on-site',unit:'CY',rate:10,category:'Grading / Earthwork'},
+  {name:'Undercut Unsuitable (Off-Site Disposal)',desc:'Excavate unsuitable soil, load, haul, and dispose off-site',unit:'CY',rate:26,category:'Grading / Earthwork'},
+  {name:'Replacement / Borrow Fill (On-Site)',desc:'Borrow suitable material from on-site source, place and compact',unit:'CY',rate:10,category:'Grading / Earthwork'},
+  {name:'Topsoil Strip & Stockpile',desc:'Strip topsoil and stockpile on-site for reuse',unit:'CY',rate:0,category:'Grading / Earthwork'},
+  {name:'Pond Excavation',desc:'Excavate detention/retention pond per grading plans',unit:'CY',rate:0,category:'Grading / Earthwork'},
+  {name:'Structural Fill',desc:'Furnish, place, and compact structural fill material',unit:'CY',rate:0,category:'Grading / Earthwork'},
+  {name:'Backfill (Utility Trench)',desc:'Backfill and compact utility trenches',unit:'CY',rate:0,category:'Grading / Earthwork'},
+  {name:'Dewatering',desc:'Dewatering operations',unit:'DAY',rate:500,category:'Grading / Earthwork'},
+  {name:'Street Washing',desc:'Street washing and sweeping operations',unit:'DAY',rate:500,category:'Grading / Earthwork'},
+  {name:'Daily Site Watering',desc:'Water truck for dust control',unit:'WK',rate:2250,category:'Grading / Earthwork'},
+  // ── STORM DRAIN ──
+  {name:'15" RCP Storm Pipe',desc:'Furnish & install 15" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
+  {name:'18" RCP Storm Pipe',desc:'Furnish & install 18" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
+  {name:'24" RCP Storm Pipe',desc:'Furnish & install 24" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
+  {name:'30" RCP Storm Pipe',desc:'Furnish & install 30" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
+  {name:'36" RCP Storm Pipe',desc:'Furnish & install 36" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
+  {name:'42" RCP Storm Pipe',desc:'Furnish & install 42" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
+  {name:'48" RCP Storm Pipe',desc:'Furnish & install 48" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
+  {name:'15" HDPE Storm Pipe',desc:'Furnish & install 15" HDPE storm drain pipe',unit:'LF',rate:0,category:'Storm Drain'},
+  {name:'18" HDPE Storm Pipe',desc:'Furnish & install 18" HDPE storm drain pipe',unit:'LF',rate:0,category:'Storm Drain'},
+  {name:'24" HDPE Storm Pipe',desc:'Furnish & install 24" HDPE storm drain pipe',unit:'LF',rate:0,category:'Storm Drain'},
+  {name:'Catch Basin / Drop Inlet',desc:'Furnish & install catch basin / drop inlet per plans',unit:'EA',rate:0,category:'Storm Drain'},
+  {name:'Junction Box',desc:'Furnish & install storm junction box per plans',unit:'EA',rate:0,category:'Storm Drain'},
+  {name:'Storm Manhole',desc:'Furnish & install storm drainage manhole per plans',unit:'EA',rate:0,category:'Storm Drain'},
+  {name:'Headwall',desc:'Furnish & install concrete headwall at pipe outfall',unit:'EA',rate:0,category:'Storm Drain'},
+  {name:'Flared End Section',desc:'Furnish & install flared end section at pipe outfall',unit:'EA',rate:0,category:'Storm Drain'},
+  {name:'Yard Inlet / Area Drain',desc:'Furnish & install yard inlet / area drain',unit:'EA',rate:0,category:'Storm Drain'},
+  {name:'Rip Rap (Class A)',desc:'Furnish & install Class A rip rap at outfall',unit:'TON',rate:0,category:'Storm Drain'},
+  {name:'Rip Rap (Class B)',desc:'Furnish & install Class B rip rap at outfall',unit:'TON',rate:0,category:'Storm Drain'},
+  {name:'Storm Pipe Depth Premium (>6\')',desc:'Additional cost per VF of depth over 6 feet',unit:'VF',rate:0,category:'Storm Drain'},
+  // ── SANITARY SEWER ──
+  {name:'8" PVC Sanitary Sewer',desc:'Furnish & install 8" PVC SDR-26 sanitary sewer pipe',unit:'LF',rate:0,category:'Sanitary Sewer'},
+  {name:'10" PVC Sanitary Sewer',desc:'Furnish & install 10" PVC sanitary sewer pipe',unit:'LF',rate:0,category:'Sanitary Sewer'},
+  {name:'12" PVC Sanitary Sewer',desc:'Furnish & install 12" PVC sanitary sewer pipe',unit:'LF',rate:0,category:'Sanitary Sewer'},
+  {name:'Sanitary Manhole',desc:'Furnish & install sanitary sewer manhole per plans',unit:'EA',rate:0,category:'Sanitary Sewer'},
+  {name:'Cleanout',desc:'Furnish & install sanitary sewer cleanout',unit:'EA',rate:0,category:'Sanitary Sewer'},
+  {name:'Service Lateral / Stub',desc:'Install sanitary service lateral to building stub',unit:'EA',rate:0,category:'Sanitary Sewer'},
+  {name:'Connect to Existing Sanitary',desc:'Connect new sanitary main to existing system',unit:'EA',rate:0,category:'Sanitary Sewer'},
+  {name:'Sanitary Sewer Testing (Air/Mandrel)',desc:'Air test and mandrel sanitary sewer pipe',unit:'LF',rate:0,category:'Sanitary Sewer'},
+  {name:'CCTV Inspection',desc:'Closed-circuit television inspection of sewer line',unit:'LF',rate:0,category:'Sanitary Sewer'},
+  {name:'Sewer Depth Premium (>6\')',desc:'Additional cost per VF of depth over 6 feet',unit:'VF',rate:0,category:'Sanitary Sewer'},
+  // ── WATER ──
+  {name:'6" DIP Water Main',desc:'Furnish & install 6" ductile iron water main',unit:'LF',rate:0,category:'Water'},
+  {name:'8" DIP Water Main',desc:'Furnish & install 8" ductile iron water main',unit:'LF',rate:0,category:'Water'},
+  {name:'12" DIP Water Main',desc:'Furnish & install 12" ductile iron water main',unit:'LF',rate:0,category:'Water'},
+  {name:'16" DIP Water Main',desc:'Furnish & install 16" ductile iron water main',unit:'LF',rate:0,category:'Water'},
+  {name:'6" Gate Valve',desc:'Furnish & install 6" gate valve and valve box',unit:'EA',rate:0,category:'Water'},
+  {name:'8" Gate Valve',desc:'Furnish & install 8" gate valve and valve box',unit:'EA',rate:0,category:'Water'},
+  {name:'12" Gate Valve',desc:'Furnish & install 12" gate valve and valve box',unit:'EA',rate:0,category:'Water'},
+  {name:'Fire Hydrant Assembly',desc:'Furnish & install fire hydrant assembly complete',unit:'EA',rate:0,category:'Water'},
+  {name:'Tapping Sleeve & Valve',desc:'Furnish & install tapping sleeve and valve for connection',unit:'EA',rate:0,category:'Water'},
+  {name:'Water Service Connection (3/4" - 1")',desc:'Install domestic water service connection',unit:'EA',rate:0,category:'Water'},
+  {name:'Water Service Connection (2")',desc:'Install 2" water service connection',unit:'EA',rate:0,category:'Water'},
+  {name:'Thrust Blocking',desc:'Install concrete thrust blocks at fittings',unit:'EA',rate:0,category:'Water'},
+  {name:'Pressure Test',desc:'Hydrostatic pressure test of water main',unit:'LS',rate:0,category:'Water'},
+  {name:'Bacteriological Test',desc:'Bacteriological (bac-t) sampling and testing',unit:'EA',rate:0,category:'Water'},
+  {name:'Connect to Existing Water',desc:'Connect new water main to existing system',unit:'EA',rate:0,category:'Water'},
+  // ── EROSION CONTROL ──
+  {name:'Silt Fence',desc:'Furnish & install silt fence per SWPPP',unit:'LF',rate:0,category:'Erosion Control'},
+  {name:'Silt Fence (Wire-Backed)',desc:'Furnish & install wire-backed silt fence',unit:'LF',rate:0,category:'Erosion Control'},
+  {name:'Construction Entrance',desc:'Furnish & install stabilized construction entrance',unit:'EA',rate:0,category:'Erosion Control'},
+  {name:'Inlet Protection',desc:'Furnish & install inlet protection per SWPPP',unit:'EA',rate:0,category:'Erosion Control'},
+  {name:'Sediment Basin',desc:'Construct temporary sediment basin per plans',unit:'EA',rate:0,category:'Erosion Control'},
+  {name:'Rock Check Dam',desc:'Install rock check dam in ditch line',unit:'EA',rate:0,category:'Erosion Control'},
+  {name:'Diversion Ditch',desc:'Excavate temporary diversion ditch',unit:'LF',rate:0,category:'Erosion Control'},
+  {name:'Temporary Seeding',desc:'Apply temporary seed and mulch',unit:'AC',rate:0,category:'Erosion Control'},
+  {name:'Erosion Control Blanket',desc:'Install erosion control blanket / matting',unit:'SY',rate:0,category:'Erosion Control'},
+  {name:'SWPPP Inspection',desc:'Routine SWPPP compliance inspection',unit:'EA',rate:0,category:'Erosion Control'},
+  {name:'Erosion Control Maintenance',desc:'Monthly erosion control BMP maintenance',unit:'MO',rate:7250,category:'Erosion Control'},
+  {name:'Wattle / Fiber Roll',desc:'Install sediment wattle / fiber roll',unit:'LF',rate:0,category:'Erosion Control'},
+  // ── LAND CLEARING ──
+  {name:'Clearing & Grubbing (Light)',desc:'Clear light brush and vegetation',unit:'AC',rate:0,category:'Land Clearing'},
+  {name:'Clearing & Grubbing (Heavy)',desc:'Clear heavy brush, trees, and vegetation',unit:'AC',rate:0,category:'Land Clearing'},
+  {name:'Tree Removal (6"-12" DBH)',desc:'Remove tree 6"-12" diameter at breast height',unit:'EA',rate:0,category:'Land Clearing'},
+  {name:'Tree Removal (12"-24" DBH)',desc:'Remove tree 12"-24" diameter at breast height',unit:'EA',rate:0,category:'Land Clearing'},
+  {name:'Tree Removal (24"+ DBH)',desc:'Remove tree 24"+ diameter at breast height',unit:'EA',rate:0,category:'Land Clearing'},
+  {name:'Stump Grinding',desc:'Grind stump 6" below grade',unit:'EA',rate:0,category:'Land Clearing'},
+  {name:'Structure Demolition',desc:'Demolish and remove existing structure',unit:'LS',rate:0,category:'Land Clearing'},
+  {name:'Concrete Demolition',desc:'Demolish and remove existing concrete',unit:'CY',rate:0,category:'Land Clearing'},
+  {name:'Debris Hauling',desc:'Load and haul debris to approved disposal site',unit:'LOAD',rate:0,category:'Land Clearing'},
+  {name:'Fence Removal',desc:'Remove and dispose of existing fence',unit:'LF',rate:0,category:'Land Clearing'},
+  // ── LANDSCAPING ──
+  {name:'Topsoil (4" Depth)',desc:'Furnish & spread 4" topsoil',unit:'SY',rate:0,category:'Landscaping'},
+  {name:'Topsoil (6" Depth)',desc:'Furnish & spread 6" topsoil',unit:'SY',rate:0,category:'Landscaping'},
+  {name:'Permanent Seeding',desc:'Furnish & apply permanent seed mix and fertilizer',unit:'AC',rate:0,category:'Landscaping'},
+  {name:'Sod',desc:'Furnish & install sod',unit:'SY',rate:0,category:'Landscaping'},
+  {name:'Mulch (3" Depth)',desc:'Furnish & install 3" mulch in landscape beds',unit:'SY',rate:0,category:'Landscaping'},
+  {name:'Shade Tree (2" Cal)',desc:'Furnish & plant 2" caliper shade tree',unit:'EA',rate:0,category:'Landscaping'},
+  {name:'Ornamental Tree',desc:'Furnish & plant ornamental tree per plans',unit:'EA',rate:0,category:'Landscaping'},
+  {name:'Shrub (3 Gallon)',desc:'Furnish & plant 3-gallon shrub per plans',unit:'EA',rate:0,category:'Landscaping'},
+  {name:'Ground Cover',desc:'Furnish & plant ground cover per plans',unit:'SF',rate:0,category:'Landscaping'},
+  // ── GENERAL / MISC ──
+  {name:'Traffic Control',desc:'Lane closure / flagger setup',unit:'LS',rate:2500,category:'General / Misc'},
+  {name:'Mobilization',desc:'Project mobilization and equipment setup',unit:'LS',rate:0,category:'General / Misc'},
+  {name:'Surveying / Staking',desc:'Construction staking and layout per plans',unit:'LS',rate:0,category:'General / Misc'},
+  {name:'As-Built Survey',desc:'As-built survey and record drawings',unit:'LS',rate:0,category:'General / Misc'},
+  {name:'Material Testing',desc:'Compaction and material testing services',unit:'LS',rate:0,category:'General / Misc'},
+  {name:'Temporary Fencing',desc:'Furnish & install temporary construction fencing',unit:'LF',rate:0,category:'General / Misc'},
+  {name:'Dumpster Pad',desc:'Construct concrete dumpster pad with approach',unit:'EA',rate:0,category:'General / Misc'},
+  {name:'Retaining Wall (Block)',desc:'Furnish & install segmental retaining wall',unit:'SF',rate:0,category:'General / Misc'},
+  {name:'Chain Link Fence',desc:'Furnish & install chain link fence',unit:'LF',rate:0,category:'General / Misc'},
+  {name:'Privacy Fence (6\' Wood)',desc:'Furnish & install 6-foot wood privacy fence',unit:'LF',rate:0,category:'General / Misc'}
+];
 var BID_LIBRARY=JSON.parse(localStorage.getItem('hd_bid_library')||'[]');
 var _libId=BID_LIBRARY.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},0);
 var LTYPES_DEFAULT = ['ABC','#57 Stone','S9.5B','S9.5C','I19.0C','B25.0C','Concrete'];
@@ -1481,49 +1694,39 @@ function addBadge(){var label=prompt("Badge label:");if(!label)return;var cls="b
 function saveBadges(){_saveSetting('hd_badge_defs',BADGE_DEFS);applyBadgeStyles();renderMatTable();renderAll();renderConc();toast("Badges saved","ok");}
 function renderLibraryList(){
   var c=document.getElementById("library-list");if(!c)return;c.innerHTML="";
-  if(!BID_LIBRARY.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>No items yet. Click + Add Item to create standard line items.</p>";return;}
+  // Populate category filter dropdown
+  var filterEl=document.getElementById("lib-cat-filter");
+  if(filterEl){
+    var curVal=filterEl.value;
+    var cats={};BID_LIBRARY.forEach(function(x){if(x.category)cats[x.category]=1;});
+    filterEl.innerHTML='<option value="">All Categories</option>';
+    LIB_CATEGORIES.forEach(function(cat){
+      if(cats[cat]){var o=document.createElement("option");o.value=cat;o.textContent=cat;if(cat===curVal)o.selected=true;filterEl.appendChild(o);}
+    });
+    // Any custom categories
+    Object.keys(cats).forEach(function(cat){
+      if(LIB_CATEGORIES.indexOf(cat)===-1){var o=document.createElement("option");o.value=cat;o.textContent=cat;if(cat===curVal)o.selected=true;filterEl.appendChild(o);}
+    });
+  }
+  var filterCat=(filterEl&&filterEl.value)||'';
+  var filtered=filterCat?BID_LIBRARY.filter(function(x){return x.category===filterCat;}):BID_LIBRARY;
+  var countEl=document.getElementById("lib-count");
+  if(countEl)countEl.textContent=filtered.length+' of '+BID_LIBRARY.length+' items';
+  if(!filtered.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>"+(BID_LIBRARY.length?"No items in this category.":"No items yet. Click Load Defaults to populate the library.")+"</p>";return;}
   var hdr=document.createElement("div");
-  hdr.style.cssText="display:grid;grid-template-columns:110px 110px 1fr 1fr 70px 90px 28px;gap:6px;padding:0 0 6px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;border-bottom:2px solid var(--bdr);margin-bottom:4px;";
-  hdr.innerHTML="<span>Badge</span><span>Material</span><span>Name</span><span>Description</span><span>Unit</span><span>$/Unit</span><span></span>";
+  hdr.style.cssText="display:grid;grid-template-columns:130px 1fr 1fr 70px 90px 28px;gap:6px;padding:0 0 6px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;border-bottom:2px solid var(--bdr);margin-bottom:4px;";
+  hdr.innerHTML="<span>Category</span><span>Name</span><span>Description</span><span>Unit</span><span>$/Unit</span><span></span>";
   c.appendChild(hdr);
-  BID_LIBRARY.forEach(function(item){
+  filtered.forEach(function(item){
     var row=document.createElement("div");
-    row.style.cssText="display:grid;grid-template-columns:110px 110px 1fr 1fr 70px 90px 28px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);";
-    // Badge dropdown
-    var bs=document.createElement("select");bs.style.fontSize="11px";
-    var noneOpt=document.createElement("option");noneOpt.value="";noneOpt.textContent="None";
-    if(!item.badge)noneOpt.selected=true;
-    bs.appendChild(noneOpt);
-    Object.keys(BADGE_DEFS).forEach(function(cls){
-      var o=document.createElement("option");o.value=cls;o.textContent=BADGE_DEFS[cls].label;
-      if(cls===item.badge)o.selected=true;
-      bs.appendChild(o);
+    row.style.cssText="display:grid;grid-template-columns:130px 1fr 1fr 70px 90px 28px;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdr);";
+    // Category dropdown
+    var cs=document.createElement("select");cs.style.cssText="font-size:11px;padding:2px;";
+    LIB_CATEGORIES.forEach(function(cat){
+      var o=document.createElement("option");o.value=cat;o.textContent=cat;if(cat===item.category)o.selected=true;cs.appendChild(o);
     });
-    var newBadgeOpt=document.createElement("option");newBadgeOpt.value="__new__";newBadgeOpt.textContent="+ New Badge";
-    bs.appendChild(newBadgeOpt);
-    bs.addEventListener("change",(function(it){return function(){
-      if(this.value==="__new__"){
-        var label=prompt("New badge label:");
-        if(!label){this.value=it.badge||"";return;}
-        var cls="b-"+label.toLowerCase().replace(/[^a-z0-9]/g,"-");
-        if(!BADGE_DEFS[cls])BADGE_DEFS[cls]={label:label,color:"#444"};
-        it.badge=cls;
-        renderLibraryList();renderBadgeList();
-      } else {it.badge=this.value;}
-    };})(item));
-    row.appendChild(bs);
-    // Material dropdown
-    var ms=document.createElement("select");ms.style.fontSize="11px";
-    var mNone=document.createElement("option");mNone.value="";mNone.textContent="None";
-    if(!item.material)mNone.selected=true;
-    ms.appendChild(mNone);
-    Object.keys(MAT).forEach(function(matName){
-      var o=document.createElement("option");o.value=matName;o.textContent=matName;
-      if(matName===item.material)o.selected=true;
-      ms.appendChild(o);
-    });
-    ms.addEventListener("change",(function(it){return function(){it.material=this.value;};})(item));
-    row.appendChild(ms);
+    cs.addEventListener("change",(function(it){return function(){it.category=this.value;};})(item));
+    row.appendChild(cs);
     // Name
     var ni=document.createElement("input");ni.type="text";ni.value=item.name||"";ni.placeholder="Item name";ni.style.fontSize="12px";
     ni.addEventListener("change",(function(it){return function(){it.name=this.value;};})(item));row.appendChild(ni);
@@ -1532,67 +1735,108 @@ function renderLibraryList(){
     di.addEventListener("change",(function(it){return function(){it.desc=this.value;};})(item));row.appendChild(di);
     // Unit
     var us=document.createElement("select");us.style.fontSize="12px";
-    ["LS","EA","LF","SY","SF","TON","CY","HR","DAY"].forEach(function(u){var o=document.createElement("option");o.value=u;o.textContent=u;if(u===item.unit)o.selected=true;us.appendChild(o);});
+    ["LS","EA","LF","SY","SF","TON","CY","HR","DAY","WK","MO","VF","AC","LOAD"].forEach(function(u){var o=document.createElement("option");o.value=u;o.textContent=u;if(u===item.unit)o.selected=true;us.appendChild(o);});
     us.addEventListener("change",(function(it){return function(){it.unit=this.value;};})(item));row.appendChild(us);
     // Rate
     var ri=document.createElement("input");ri.type="number";ri.value=item.rate||"";ri.min="0";ri.step="0.01";ri.style.fontSize="12px";
     ri.addEventListener("change",(function(it){return function(){it.rate=parseFloat(this.value)||0;};})(item));row.appendChild(ri);
     // Delete
-    var db=document.createElement("button");db.className="btn-ico";db.style.color="var(--red)";db.textContent="×";
+    var db=document.createElement("button");db.className="btn-ico";db.style.color="var(--red)";db.textContent="\u00d7";
     db.addEventListener("click",(function(id){return function(){BID_LIBRARY=BID_LIBRARY.filter(function(x){return x.id!==id;});renderLibraryList();};})(item.id));
     row.appendChild(db);
     c.appendChild(row);
   });
 }
-function addLibraryItem(){BID_LIBRARY.push({id:_libId++,name:"",desc:"",unit:"LS",rate:0,badge:"",material:""});renderLibraryList();}
+function addLibraryItem(){
+  var filterEl=document.getElementById("lib-cat-filter");
+  var cat=(filterEl&&filterEl.value)||'General / Misc';
+  BID_LIBRARY.push({id:_libId++,name:"",desc:"",unit:"LS",rate:0,badge:"",material:"",category:cat});
+  renderLibraryList();
+}
+function loadDefaultLibrary(){
+  if(BID_LIBRARY.length&&!confirm('This will add '+DEFAULT_BID_LIBRARY.length+' default items to your library. Existing items will be kept. Continue?'))return;
+  var existingNames={};BID_LIBRARY.forEach(function(x){existingNames[x.name]=1;});
+  var added=0;
+  DEFAULT_BID_LIBRARY.forEach(function(def){
+    if(existingNames[def.name])return;
+    BID_LIBRARY.push({id:_libId++,name:def.name,desc:def.desc,unit:def.unit,rate:def.rate||0,badge:def.badge||'',material:def.material||'',category:def.category||'General / Misc'});
+    added++;
+  });
+  saveLibrary();
+  renderLibraryList();
+  toast(added+' items added to library','ok');
+}
 function saveLibrary(){_saveSetting('hd_bid_library',BID_LIBRARY);toast("Library saved","ok");}
 function openLibraryPicker(){
-  if(!BID_LIBRARY.length){toast("Library empty — add items in Settings > Bid Library","err");return;}
+  if(!BID_LIBRARY.length){toast("Library empty — go to Settings > Bid Library and click Load Defaults","err");return;}
   var ex=document.getElementById("lib-picker-modal");if(ex)ex.remove();
   var modal=document.createElement("div");modal.id="lib-picker-modal";
   modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;";
   var box=document.createElement("div");
-  box.style.cssText="background:#fff;border-radius:10px;padding:20px;min-width:480px;max-width:600px;max-height:70vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18);";
-  var tr=document.createElement("div");tr.style.cssText="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;";
+  box.style.cssText="background:#fff;border-radius:10px;padding:20px;min-width:520px;max-width:640px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.18);";
+  // Header
+  var tr=document.createElement("div");tr.style.cssText="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0;";
   var tt=document.createElement("span");tt.style.cssText="font-weight:700;font-size:15px;";tt.textContent="Insert from Library";
-  var cl=document.createElement("button");cl.className="btn-ico";cl.textContent="×";cl.onclick=function(){modal.remove();};
+  var cl=document.createElement("button");cl.className="btn-ico";cl.textContent="\u00d7";cl.onclick=function(){modal.remove();};
   tr.appendChild(tt);tr.appendChild(cl);box.appendChild(tr);
-  // Group by badge
-  var grouped={};
-  BID_LIBRARY.forEach(function(item){
-    var bKey=item.badge||'_none';
-    if(!grouped[bKey])grouped[bKey]=[];
-    grouped[bKey].push(item);
-  });
-  Object.keys(grouped).forEach(function(bKey){
-    if(bKey!=='_none'){
-      var bDef=BADGE_DEFS[bKey];
-      if(bDef){
-        var gh=document.createElement("div");
-        gh.style.cssText="margin-top:10px;margin-bottom:4px;";
-        gh.innerHTML='<span class="badge '+bKey+'" style="font-size:11px;">'+esc(bDef.label)+'</span>';
-        box.appendChild(gh);
-      }
-    }
-    grouped[bKey].forEach(function(item){
-      var row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr);";
-      var info=document.createElement("div");info.style.flex="1";
-      var nm=document.createElement("div");nm.style.cssText="font-weight:600;font-size:13px;";nm.textContent=item.name||"(unnamed)";
-      var desc=document.createElement("div");desc.style.cssText="font-size:11px;color:var(--dgray);";
-      desc.textContent=(item.desc||"")+(item.rate?" · $"+item.rate+"/"+item.unit:"");
-      info.appendChild(nm);info.appendChild(desc);
-      var ins=document.createElement("button");ins.className="btn btn-red btn-sm";ins.textContent="Insert";
-      ins.addEventListener("click",function(){
-        extraItems.push({id:eid++,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:item.badge||""});
-        renderExtra();recalc();modal.remove();toast("Item added","ok");
-      });
-      row.appendChild(info);row.appendChild(ins);box.appendChild(row);
+  // Search + category filter
+  var filterBar=document.createElement("div");filterBar.style.cssText="display:flex;gap:8px;margin-bottom:10px;flex-shrink:0;";
+  var searchInp=document.createElement("input");searchInp.type="text";searchInp.placeholder="Search items...";searchInp.style.cssText="flex:1;padding:6px 10px;border:1px solid var(--bdr);border-radius:5px;font-size:12px;";
+  var catSel=document.createElement("select");catSel.style.cssText="font-size:12px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;";
+  var allOpt=document.createElement("option");allOpt.value="";allOpt.textContent="All Divisions";catSel.appendChild(allOpt);
+  var usedCats={};BID_LIBRARY.forEach(function(x){if(x.category)usedCats[x.category]=1;});
+  LIB_CATEGORIES.forEach(function(cat){if(usedCats[cat]){var o=document.createElement("option");o.value=cat;o.textContent=cat;catSel.appendChild(o);}});
+  filterBar.appendChild(searchInp);filterBar.appendChild(catSel);box.appendChild(filterBar);
+  // Scrollable item list
+  var listWrap=document.createElement("div");listWrap.style.cssText="flex:1;overflow-y:auto;";
+  function renderPickerItems(){
+    var q=(searchInp.value||'').toLowerCase();
+    var cat=catSel.value;
+    listWrap.innerHTML='';
+    // Group by category
+    var grouped={};
+    BID_LIBRARY.forEach(function(item){
+      if(cat&&item.category!==cat)return;
+      if(q&&(item.name||'').toLowerCase().indexOf(q)===-1&&(item.desc||'').toLowerCase().indexOf(q)===-1)return;
+      var k=item.category||'Other';
+      if(!grouped[k])grouped[k]=[];
+      grouped[k].push(item);
     });
-  });
+    var catOrder=LIB_CATEGORIES.concat(Object.keys(grouped).filter(function(k){return LIB_CATEGORIES.indexOf(k)===-1;}));
+    var shown=0;
+    catOrder.forEach(function(catName){
+      if(!grouped[catName])return;
+      var gh=document.createElement("div");
+      gh.style.cssText="margin-top:12px;margin-bottom:4px;padding:4px 8px;background:var(--lgray);border-radius:4px;font-size:11px;font-weight:700;color:var(--dgray);text-transform:uppercase;letter-spacing:0.5px;";
+      gh.textContent=catName;
+      listWrap.appendChild(gh);
+      grouped[catName].forEach(function(item){
+        shown++;
+        var row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);";
+        var info=document.createElement("div");info.style.flex="1";
+        var nm=document.createElement("div");nm.style.cssText="font-weight:600;font-size:13px;";nm.textContent=item.name||"(unnamed)";
+        var desc=document.createElement("div");desc.style.cssText="font-size:11px;color:var(--dgray);";
+        desc.textContent=(item.desc||"")+(item.rate?" \u00b7 $"+item.rate+"/"+item.unit:"");
+        info.appendChild(nm);info.appendChild(desc);
+        var ins=document.createElement("button");ins.className="btn btn-red btn-sm";ins.textContent="Insert";
+        ins.addEventListener("click",function(){
+          extraItems.push({id:eid++,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:item.badge||"",mat_cost:0,labor_cost:0});
+          renderExtra();recalc();toast("Item added","ok");
+        });
+        row.appendChild(info);row.appendChild(ins);listWrap.appendChild(row);
+      });
+    });
+    if(!shown)listWrap.innerHTML='<p style="color:var(--dgray);font-size:12px;padding:16px 0;">No matching items.</p>';
+  }
+  searchInp.addEventListener("input",renderPickerItems);
+  catSel.addEventListener("change",renderPickerItems);
+  renderPickerItems();
+  box.appendChild(listWrap);
   modal.appendChild(box);modal.addEventListener("click",function(e){if(e.target===modal)modal.remove();});
   document.body.appendChild(modal);
+  searchInp.focus();
 }
-function renderExtra(){var c=document.getElementById("extra-rows"),em=document.getElementById("extra-empty");if(!c)return;c.innerHTML="";em.style.display=extraItems.length?"none":"block";extraItems.forEach(function(i){var row=document.createElement("div");row.className="lyr-row";row.style.cssText="flex-wrap:wrap;gap:6px;align-items:flex-start;padding:8px 0;";var unitOpts=["LS","EA","LF","SY","SF","TON","CY"].map(function(u){return "<option"+(u===i.unit?" selected":"")+">"+u+"</option>";}).join("");var wrap=document.createElement("div");wrap.style.cssText="display:flex;flex-direction:column;gap:3px;flex:1;min-width:160px;";var ni=document.createElement("input");ni.type="text";ni.value=i.name||"";ni.placeholder="Item name";ni.style.cssText="width:100%;font-weight:500;";ni.addEventListener("change",(function(id){return function(){updExtraName(id,this.value);};})(i.id));var di=document.createElement("input");di.type="text";di.value=i.desc||"";di.placeholder="Description (appears on proposal)";di.style.cssText="width:100%;font-size:11px;color:var(--dgray);";di.addEventListener("change",(function(id){return function(){updExtraDesc(id,this.value);};})(i.id));wrap.appendChild(ni);wrap.appendChild(di);row.appendChild(wrap);var ql=document.createElement("label");ql.textContent="Qty";row.appendChild(ql);var qi=document.createElement("input");qi.type="number";qi.value=i.qty;qi.min="0";qi.step="1";qi.style.width="60px";qi.addEventListener("change",(function(id){return function(){updExtraNum(id,"qty",this.value);};})(i.id));row.appendChild(qi);var ul=document.createElement("label");ul.textContent="Unit";row.appendChild(ul);var us=document.createElement("select");us.style.width="66px";us.innerHTML=unitOpts;us.addEventListener("change",(function(id){return function(){updExtraUnit(id,this.value);};})(i.id));row.appendChild(us);var mcl=document.createElement("label");mcl.textContent="Mat $";mcl.style.cssText="font-size:11px;color:var(--dgray);";row.appendChild(mcl);var mci=document.createElement("input");mci.type="number";mci.value=i.mat_cost||"";mci.placeholder="0";mci.min="0";mci.step="1";mci.style.width="75px";mci.addEventListener("change",(function(id){return function(){updExtraNum(id,"mat_cost",this.value);};})(i.id));row.appendChild(mci);var lcl=document.createElement("label");lcl.textContent="Labor $";lcl.style.cssText="font-size:11px;color:var(--dgray);";row.appendChild(lcl);var lci=document.createElement("input");lci.type="number";lci.value=i.labor_cost||"";lci.placeholder="0";lci.min="0";lci.step="1";lci.style.width="75px";lci.addEventListener("change",(function(id){return function(){updExtraNum(id,"labor_cost",this.value);};})(i.id));row.appendChild(lci);var pl=document.createElement("label");pl.textContent="Bid $/unit";row.appendChild(pl);var pi=document.createElement("input");pi.type="number";pi.value=i.price||"";pi.placeholder="0.00";pi.min="0";pi.step=".01";pi.style.width="80px";pi.addEventListener("change",(function(id){return function(){updExtraNum(id,"price",this.value);};})(i.id));row.appendChild(pi);var rs=document.createElement("span");rs.className="lres";rs.setAttribute("data-extra",i.id);rs.innerHTML=i.subtotal>0?"Subtotal: <b>$"+fi(i.subtotal)+"</b>":"";row.appendChild(rs);var db=document.createElement("button");db.className="btn-ico";db.innerHTML="&#215;";db.addEventListener("click",(function(id){return function(){remExtra(id);};})(i.id));row.appendChild(db);c.appendChild(row);});recalc();}
+function renderExtra(){var c=document.getElementById("extra-rows"),em=document.getElementById("extra-empty");if(!c)return;c.innerHTML="";em.style.display=extraItems.length?"none":"block";extraItems.forEach(function(i){var row=document.createElement("div");row.className="lyr-row";row.style.cssText="flex-wrap:wrap;gap:6px;align-items:flex-start;padding:8px 0;";var unitOpts=["LS","EA","LF","SY","SF","TON","CY","HR","DAY","WK","MO","VF","AC","LOAD"].map(function(u){return "<option"+(u===i.unit?" selected":"")+">"+u+"</option>";}).join("");var wrap=document.createElement("div");wrap.style.cssText="display:flex;flex-direction:column;gap:3px;flex:1;min-width:160px;";var ni=document.createElement("input");ni.type="text";ni.value=i.name||"";ni.placeholder="Item name";ni.style.cssText="width:100%;font-weight:500;";ni.addEventListener("change",(function(id){return function(){updExtraName(id,this.value);};})(i.id));var di=document.createElement("input");di.type="text";di.value=i.desc||"";di.placeholder="Description (appears on proposal)";di.style.cssText="width:100%;font-size:11px;color:var(--dgray);";di.addEventListener("change",(function(id){return function(){updExtraDesc(id,this.value);};})(i.id));wrap.appendChild(ni);wrap.appendChild(di);row.appendChild(wrap);var ql=document.createElement("label");ql.textContent="Qty";row.appendChild(ql);var qi=document.createElement("input");qi.type="number";qi.value=i.qty;qi.min="0";qi.step="1";qi.style.width="60px";qi.addEventListener("change",(function(id){return function(){updExtraNum(id,"qty",this.value);};})(i.id));row.appendChild(qi);var ul=document.createElement("label");ul.textContent="Unit";row.appendChild(ul);var us=document.createElement("select");us.style.width="66px";us.innerHTML=unitOpts;us.addEventListener("change",(function(id){return function(){updExtraUnit(id,this.value);};})(i.id));row.appendChild(us);var mcl=document.createElement("label");mcl.textContent="Mat $";mcl.style.cssText="font-size:11px;color:var(--dgray);";row.appendChild(mcl);var mci=document.createElement("input");mci.type="number";mci.value=i.mat_cost||"";mci.placeholder="0";mci.min="0";mci.step="1";mci.style.width="75px";mci.addEventListener("change",(function(id){return function(){updExtraNum(id,"mat_cost",this.value);};})(i.id));row.appendChild(mci);var lcl=document.createElement("label");lcl.textContent="Labor $";lcl.style.cssText="font-size:11px;color:var(--dgray);";row.appendChild(lcl);var lci=document.createElement("input");lci.type="number";lci.value=i.labor_cost||"";lci.placeholder="0";lci.min="0";lci.step="1";lci.style.width="75px";lci.addEventListener("change",(function(id){return function(){updExtraNum(id,"labor_cost",this.value);};})(i.id));row.appendChild(lci);var pl=document.createElement("label");pl.textContent="Bid $/unit";row.appendChild(pl);var pi=document.createElement("input");pi.type="number";pi.value=i.price||"";pi.placeholder="0.00";pi.min="0";pi.step=".01";pi.style.width="80px";pi.addEventListener("change",(function(id){return function(){updExtraNum(id,"price",this.value);};})(i.id));row.appendChild(pi);var rs=document.createElement("span");rs.className="lres";rs.setAttribute("data-extra",i.id);rs.innerHTML=i.subtotal>0?"Subtotal: <b>$"+fi(i.subtotal)+"</b>":"";row.appendChild(rs);var db=document.createElement("button");db.className="btn-ico";db.innerHTML="&#215;";db.addEventListener("click",(function(id){return function(){remExtra(id);};})(i.id));row.appendChild(db);c.appendChild(row);});recalc();}
 async function doLogout(){
   try{await fetch("/auth/logout",{method:"POST"});}catch(e){}
   location.reload();
@@ -1651,6 +1895,10 @@ function loadStorage(){
     if(cr){try{CREWS=JSON.parse(cr);}catch(e){}}
     var bl=localStorage.getItem('hd_bid_library');
     if(bl){try{BID_LIBRARY=JSON.parse(bl);}catch(e){}}
+    var eq=localStorage.getItem('hd_equipment');
+    if(eq){try{EQUIPMENT=JSON.parse(eq);}catch(e){}}
+    var up=localStorage.getItem('hd_unit_prices');
+    if(up){try{UNIT_PRICES=JSON.parse(up);}catch(e){}}
   }catch(e){}
   // Async: fetch from Supabase and overlay
   _loadFromSupabase();
@@ -1675,7 +1923,7 @@ function _applyJCDefaults(d){
 }
 
 function _loadFromSupabase(){
-  fetch('/settings/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:['hd_sender','hd_presets','hd_badge_defs','hd_mat_prices','hd_jc_defaults','hd_crews','hd_bid_library','hd_handbook_url']})})
+  fetch('/settings/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:['hd_sender','hd_presets','hd_badge_defs','hd_mat_prices','hd_jc_defaults','hd_crews','hd_bid_library','hd_handbook_url','hd_equipment','hd_unit_prices']})})
     .then(function(r){return r.json();}).then(function(d){
       if(!d.ok||!d.values)return;
       var v=d.values;
@@ -1686,6 +1934,8 @@ function _loadFromSupabase(){
       if(v.hd_jc_defaults){_applyJCDefaults(v.hd_jc_defaults);try{localStorage.setItem('hd_jc_defaults',JSON.stringify(v.hd_jc_defaults));}catch(e){}}
       if(v.hd_crews){CREWS=v.hd_crews;_crewNextId=CREWS.reduce(function(mx,c){return Math.max(mx,c.id);},0)+1;try{localStorage.setItem('hd_crews',JSON.stringify(v.hd_crews));}catch(e){}}
       if(v.hd_bid_library){BID_LIBRARY=v.hd_bid_library;try{localStorage.setItem('hd_bid_library',JSON.stringify(v.hd_bid_library));}catch(e){}}
+      if(v.hd_equipment){EQUIPMENT=v.hd_equipment;_eqId=EQUIPMENT.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},17);try{localStorage.setItem('hd_equipment',JSON.stringify(v.hd_equipment));}catch(e){}}
+      if(v.hd_unit_prices){UNIT_PRICES=v.hd_unit_prices;_upId=UNIT_PRICES.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},11);try{localStorage.setItem('hd_unit_prices',JSON.stringify(v.hd_unit_prices));}catch(e){}}
       if(v.hd_handbook_url){var el=document.getElementById('dash-handbook-url');if(el)el.value=v.hd_handbook_url;}
     }).catch(function(){});
 }
@@ -4729,6 +4979,153 @@ function saveCrewCosts(){saveCrews();}
 function resetCrewCosts(){CREWS=JSON.parse(JSON.stringify(CREWS_DEFAULT));saveCrews();renderCrewsList();}
 function renderCrewCosts(){renderCrewsList();}
 
+// -- Equipment Rate Card -------------------------------------------------------
+var DEFAULT_EQUIPMENT=[
+  {id:1,name:'D6 Dozer',daily_rate:2800,notes:'Standard grading dozer'},
+  {id:2,name:'CAT 320 Excavator',daily_rate:2200,notes:'Standard excavator'},
+  {id:3,name:'CAT 330 Excavator',daily_rate:2800,notes:'Large excavator'},
+  {id:4,name:'Motor Grader',daily_rate:2500,notes:'Fine grading'},
+  {id:5,name:'Roller / Compactor',daily_rate:1200,notes:'Sheepsfoot or smooth drum'},
+  {id:6,name:'Skid Steer',daily_rate:950,notes:''},
+  {id:7,name:'Wheel Loader',daily_rate:1800,notes:''},
+  {id:8,name:'Tri-Axle Dump Truck',daily_rate:850,notes:'Per truck'},
+  {id:9,name:'Water Truck',daily_rate:750,notes:'Dust control'},
+  {id:10,name:'Backhoe',daily_rate:1200,notes:'Utility work'},
+  {id:11,name:'Track Loader',daily_rate:1600,notes:''},
+  {id:12,name:'Mini Excavator',daily_rate:800,notes:'Small utility / grading'},
+  {id:13,name:'Scraper',daily_rate:3200,notes:'High-volume earthmoving'},
+  {id:14,name:'Hammer / Breaker',daily_rate:1500,notes:'Rock excavation attachment'},
+  {id:15,name:'Paver',daily_rate:2000,notes:'Asphalt paver'},
+  {id:16,name:'Milling Machine',daily_rate:3500,notes:'Asphalt milling'}
+];
+var EQUIPMENT=JSON.parse(localStorage.getItem('hd_equipment')||'[]');
+var _eqId=EQUIPMENT.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},17);
+function renderEquipmentList(){
+  var wrap=document.getElementById('equipment-list');if(!wrap)return;
+  wrap.innerHTML='';
+  if(!EQUIPMENT.length){
+    wrap.innerHTML='<p style="color:var(--dgray);font-size:12px;">No equipment defined. Click + Add Equipment or use Load Defaults.</p>'
+      +'<button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="loadDefaultEquipment()">Load Defaults</button>';
+    return;
+  }
+  var tbl=document.createElement('table');
+  tbl.style.cssText='width:100%;border-collapse:collapse;font-size:13px;';
+  var thead=document.createElement('thead');
+  thead.innerHTML='<tr style="background:var(--lgray);"><th style="padding:8px 12px;text-align:left;font-weight:600;">Equipment</th><th style="padding:8px 12px;text-align:right;font-weight:600;">Daily Rate ($)</th><th style="padding:8px 12px;text-align:left;font-weight:600;">Notes</th><th style="padding:8px 4px;width:40px;"></th></tr>';
+  tbl.appendChild(thead);
+  var tbody=document.createElement('tbody');
+  EQUIPMENT.forEach(function(eq,idx){
+    var tr=document.createElement('tr');
+    if(idx%2)tr.style.background='var(--lgray)';
+    var tdName=document.createElement('td');tdName.style.padding='6px 12px';
+    var ni=document.createElement('input');ni.type='text';ni.value=eq.name;ni.placeholder='Equipment name';
+    ni.style.cssText='width:100%;font-size:13px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;';
+    (function(e){ni.addEventListener('change',function(){e.name=this.value;});})(eq);
+    tdName.appendChild(ni);tr.appendChild(tdName);
+    var tdRate=document.createElement('td');tdRate.style.cssText='padding:6px 12px;text-align:right;';
+    var ri=document.createElement('input');ri.type='number';ri.min='0';ri.step='50';ri.value=eq.daily_rate;
+    ri.style.cssText='width:110px;font-size:13px;padding:4px 8px;text-align:right;border:1px solid var(--bdr);border-radius:4px;';
+    (function(e){ri.addEventListener('change',function(){e.daily_rate=parseFloat(this.value)||0;});})(eq);
+    tdRate.appendChild(ri);tr.appendChild(tdRate);
+    var tdNotes=document.createElement('td');tdNotes.style.padding='6px 12px';
+    var nti=document.createElement('input');nti.type='text';nti.value=eq.notes||'';nti.placeholder='Notes';
+    nti.style.cssText='width:100%;font-size:12px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;color:var(--dgray);';
+    (function(e){nti.addEventListener('change',function(){e.notes=this.value;});})(eq);
+    tdNotes.appendChild(nti);tr.appendChild(tdNotes);
+    var tdDel=document.createElement('td');tdDel.style.cssText='padding:6px 4px;text-align:center;';
+    var db=document.createElement('button');db.className='btn-ico';db.style.color='var(--red)';db.innerHTML='&#10005;';
+    (function(id){db.addEventListener('click',function(){EQUIPMENT=EQUIPMENT.filter(function(x){return x.id!==id;});renderEquipmentList();});})(eq.id);
+    tdDel.appendChild(db);tr.appendChild(tdDel);
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);wrap.appendChild(tbl);
+}
+function addEquipment(){EQUIPMENT.push({id:_eqId++,name:'',daily_rate:0,notes:''});renderEquipmentList();}
+function saveEquipment(){_saveSetting('hd_equipment',EQUIPMENT);toast('Equipment rates saved','ok');}
+function loadDefaultEquipment(){
+  if(EQUIPMENT.length&&!confirm('Load default equipment? Existing items will be kept.'))return;
+  var existingNames={};EQUIPMENT.forEach(function(x){existingNames[x.name]=1;});
+  var added=0;
+  DEFAULT_EQUIPMENT.forEach(function(def){
+    if(existingNames[def.name])return;
+    EQUIPMENT.push({id:_eqId++,name:def.name,daily_rate:def.daily_rate,notes:def.notes||''});
+    added++;
+  });
+  saveEquipment();renderEquipmentList();
+  toast(added+' equipment items added','ok');
+}
+
+// -- Unit Price Schedule -------------------------------------------------------
+var DEFAULT_UNIT_PRICES=[
+  {id:1,name:'Undercut / Unsuitable Soil Disposed On-Site',unit:'CY',rate:10},
+  {id:2,name:'Replacement / Borrow From On-Site',unit:'CY',rate:10},
+  {id:3,name:'Undercut / Unsuitable Soil Disposed Off-Site',unit:'CY',rate:26},
+  {id:4,name:'Machine Excavated Rock Disposed On-Site',unit:'CY',rate:50},
+  {id:5,name:'Mass Rock Blasting and Waste On-Site',unit:'CY',rate:28},
+  {id:6,name:'Mass Rock Blasting and Export',unit:'CY',rate:56},
+  {id:7,name:'Dewatering',unit:'DAY',rate:500},
+  {id:8,name:'Street Washing',unit:'DAY',rate:500},
+  {id:9,name:'Daily Site Watering',unit:'WK',rate:2250},
+  {id:10,name:'Erosion Control Maintenance',unit:'MO',rate:7250}
+];
+var UNIT_PRICES=JSON.parse(localStorage.getItem('hd_unit_prices')||'[]');
+var _upId=UNIT_PRICES.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},11);
+function renderUnitPrices(){
+  var wrap=document.getElementById('unitprice-list');if(!wrap)return;
+  wrap.innerHTML='';
+  if(!UNIT_PRICES.length){
+    wrap.innerHTML='<p style="color:var(--dgray);font-size:12px;">No unit prices defined.</p>'
+      +'<button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="loadDefaultUnitPrices()">Load Defaults</button>';
+    return;
+  }
+  var tbl=document.createElement('table');
+  tbl.style.cssText='width:100%;border-collapse:collapse;font-size:13px;';
+  var thead=document.createElement('thead');
+  thead.innerHTML='<tr style="background:var(--lgray);"><th style="padding:8px 12px;text-align:left;font-weight:600;">Item</th><th style="padding:8px 12px;text-align:center;font-weight:600;width:80px;">Unit</th><th style="padding:8px 12px;text-align:right;font-weight:600;width:110px;">Rate ($)</th><th style="padding:8px 4px;width:40px;"></th></tr>';
+  tbl.appendChild(thead);
+  var tbody=document.createElement('tbody');
+  UNIT_PRICES.forEach(function(up,idx){
+    var tr=document.createElement('tr');
+    if(idx%2)tr.style.background='var(--lgray)';
+    var tdName=document.createElement('td');tdName.style.padding='6px 12px';
+    var ni=document.createElement('input');ni.type='text';ni.value=up.name;ni.style.cssText='width:100%;font-size:13px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;';
+    (function(u){ni.addEventListener('change',function(){u.name=this.value;});})(up);
+    tdName.appendChild(ni);tr.appendChild(tdName);
+    var tdUnit=document.createElement('td');tdUnit.style.cssText='padding:6px 12px;text-align:center;';
+    var us=document.createElement('select');us.style.cssText='font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;';
+    ['CY','TON','LF','SY','SF','EA','LS','DAY','WK','MO','HR','VF','AC','LOAD'].forEach(function(u){
+      var o=document.createElement('option');o.value=u;o.textContent=u;if(u===up.unit)o.selected=true;us.appendChild(o);
+    });
+    (function(u){us.addEventListener('change',function(){u.unit=this.value;});})(up);
+    tdUnit.appendChild(us);tr.appendChild(tdUnit);
+    var tdRate=document.createElement('td');tdRate.style.cssText='padding:6px 12px;text-align:right;';
+    var ri=document.createElement('input');ri.type='number';ri.min='0';ri.step='1';ri.value=up.rate;
+    ri.style.cssText='width:100%;font-size:13px;padding:4px 8px;text-align:right;border:1px solid var(--bdr);border-radius:4px;';
+    (function(u){ri.addEventListener('change',function(){u.rate=parseFloat(this.value)||0;});})(up);
+    tdRate.appendChild(ri);tr.appendChild(tdRate);
+    var tdDel=document.createElement('td');tdDel.style.cssText='padding:6px 4px;text-align:center;';
+    var db=document.createElement('button');db.className='btn-ico';db.style.color='var(--red)';db.innerHTML='&#10005;';
+    (function(id){db.addEventListener('click',function(){UNIT_PRICES=UNIT_PRICES.filter(function(x){return x.id!==id;});renderUnitPrices();});})(up.id);
+    tdDel.appendChild(db);tr.appendChild(tdDel);
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);wrap.appendChild(tbl);
+}
+function addUnitPrice(){UNIT_PRICES.push({id:_upId++,name:'',unit:'CY',rate:0});renderUnitPrices();}
+function saveUnitPrices(){_saveSetting('hd_unit_prices',UNIT_PRICES);toast('Unit prices saved','ok');}
+function loadDefaultUnitPrices(){
+  if(UNIT_PRICES.length&&!confirm('Load default unit prices? Existing items will be kept.'))return;
+  var existingNames={};UNIT_PRICES.forEach(function(x){existingNames[x.name]=1;});
+  var added=0;
+  DEFAULT_UNIT_PRICES.forEach(function(def){
+    if(existingNames[def.name])return;
+    UNIT_PRICES.push({id:_upId++,name:def.name,unit:def.unit,rate:def.rate});
+    added++;
+  });
+  saveUnitPrices();renderUnitPrices();
+  toast(added+' unit prices added','ok');
+}
+
 // -- Line Items tab ------------------------------------------------------------
 var liOverrides={}; // key: 'sec-{sid}-{lid}' or 'conc-{id}' or 'extra-{id}', val: {name,description,qty,unit,price}
 
@@ -5346,7 +5743,7 @@ async function duplicateProposal(id){
 }
 function resetAll(){
   sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;lastSavedQuoteId=null;
-  ['proj-name','proj-client','proj-addr','proj-cs'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('proj-notes').value='All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice. See Exhibit A on Page 3 for Site Plan & Takeoffs.';
+  ['proj-name','proj-client','proj-addr','proj-cs'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('proj-notes').value='All work to be performed in accordance with approved construction drawings, NCDOT standards, and applicable local/state regulations. Site must be accessible and clear of obstructions prior to mobilization. Quantities are based on engineer-provided plans; actual field-measured quantities may vary and will be billed at the stated unit prices. Any unforeseen conditions encountered during construction — including but not limited to rock excavation, unsuitable soils, groundwater, or utility conflicts — may be subject to additional charges via written change order at the unit prices stated herein. Rock excavation, undercut, and dewatering are excluded unless specifically listed as a bid item. All geotechnical and civil engineering services are the responsibility of the owner. Material pricing subject to market conditions at time of delivery. Payment due within 30 days of invoice.';
   document.getElementById('waste').value=5;document.getElementById('mob').value=10000;document.getElementById('mob-cost').value=5000;document.getElementById('contingency').value=0;
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('client-bar').style.display='none';
@@ -5368,14 +5765,16 @@ function loadSenderUI(){
   document.getElementById('s-phone').value=sender.phone||'';
 }
 function showSettingsTab(tab){
-  ['general','badges','presets','library','crews'].forEach(function(t){
-    document.getElementById('stab-content-'+t).style.display=t===tab?'':'none';
-    document.getElementById('stab-'+t).classList.toggle('on',t===tab);
+  ['general','badges','presets','library','crews','equipment','unitprices'].forEach(function(t){
+    var el=document.getElementById('stab-content-'+t);if(el)el.style.display=t===tab?'':'none';
+    var btn=document.getElementById('stab-'+t);if(btn)btn.classList.toggle('on',t===tab);
   });
   if(tab==='badges'){renderBadgeList();}
   if(tab==='presets'){renderPresetMgr();}
   if(tab==='library'){renderLibraryList();}
   if(tab==='crews'){renderCrewsList();}
+  if(tab==='equipment'){renderEquipmentList();}
+  if(tab==='unitprices'){renderUnitPrices();}
 }
 
 function applyBadgeStyles(){
