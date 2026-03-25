@@ -84,9 +84,11 @@ def login():
                 session['username'] = user['username']
                 session['full_name'] = user.get('full_name', username)
                 session['role'] = user.get('role', 'user')
+                session['email'] = user.get('email', '')
+                session['phone'] = user.get('phone', '')
                 session.permanent = True
                 log_access(user['username'], user.get('full_name',''), 'login', True)
-                return jsonify({'ok': True, 'role': session['role'], 'full_name': session['full_name']})
+                return jsonify({'ok': True, 'role': session['role'], 'full_name': session['full_name'], 'email': session['email'], 'phone': session['phone']})
             else:
                 log_access(username, '', 'login', False)
                 return jsonify({'error': 'Incorrect username or PIN'}), 401
@@ -110,7 +112,7 @@ def logout():
 
 @app.route('/auth/check')
 def auth_check():
-    return jsonify({'authenticated': bool(session.get('authenticated')), 'role': session.get('role','user'), 'username': session.get('username',''), 'full_name': session.get('full_name','')})
+    return jsonify({'authenticated': bool(session.get('authenticated')), 'role': session.get('role','user'), 'username': session.get('username',''), 'full_name': session.get('full_name',''), 'email': session.get('email',''), 'phone': session.get('phone','')})
 
 # ââ Proposals âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
@@ -342,11 +344,13 @@ def create_user():
     username = str(data.get('username','')).strip().lower()
     pin = str(data.get('pin','')).strip()
     full_name = str(data.get('full_name','')).strip()
+    email = str(data.get('email','')).strip()
+    phone = str(data.get('phone','')).strip()
     role = data.get('role','user')
     if not username or not pin: return jsonify({'ok':False,'error':'Username and PIN required'}), 400
     if role not in ('admin','user'): role = 'user'
     try:
-        r = http.post(sb_url('hd_users'), headers=sb_headers(), json={'username':username,'full_name':full_name,'pin_hash':hash_pin(pin),'role':role,'active':True,'created_by':session.get('username','admin')}, timeout=5)
+        r = http.post(sb_url('hd_users'), headers=sb_headers(), json={'username':username,'full_name':full_name,'email':email,'phone':phone,'pin_hash':hash_pin(pin),'role':role,'active':True,'created_by':session.get('username','admin')}, timeout=5)
         if r.status_code in (200,201):
             user = r.json()[0] if isinstance(r.json(),list) else r.json()
             user.pop('pin_hash',None)
@@ -361,6 +365,8 @@ def update_user(uid):
     data = request.get_json() or {}
     update = {}
     if 'full_name' in data: update['full_name'] = data['full_name']
+    if 'email' in data: update['email'] = str(data['email']).strip()
+    if 'phone' in data: update['phone'] = str(data['phone']).strip()
     if 'username' in data and data['username']:
         new_un = str(data['username']).strip().lower()
         if new_un: update['username'] = new_un
@@ -660,6 +666,34 @@ def setup_settings_table():
             if r2.status_code == 200:
                 return jsonify({'ok': True, 'method': 'pg/query'})
             return jsonify({'ok': False, 'error': 'Could not create table automatically. Please run the SQL manually in Supabase dashboard.', 'sql': sql.strip()})
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)})
+
+@app.route('/setup/user-fields', methods=['POST'])
+@require_admin
+def setup_user_fields():
+    """Add email and phone columns to hd_users if they don't exist."""
+    sql = """
+    ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS email TEXT DEFAULT '';
+    ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT '';
+    """
+    try:
+        svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+        r = http.post(
+            f'{SUPABASE_URL}/rest/v1/rpc/exec_sql',
+            headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
+            json={'query': sql}, timeout=10
+        )
+        if r.status_code != 200:
+            r2 = http.post(
+                f'{SUPABASE_URL}/pg/query',
+                headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
+                json={'query': sql}, timeout=10
+            )
+            if r2.status_code == 200:
+                return jsonify({'ok': True, 'method': 'pg/query'})
+            return jsonify({'ok': False, 'error': 'Run this SQL manually in Supabase: ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS email TEXT DEFAULT \'\'; ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT \'\';'})
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)})

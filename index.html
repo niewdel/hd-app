@@ -641,7 +641,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
                   <tr style="background:#FAFAFA;border-bottom:2px solid var(--bdr);">
                     <th style="padding:8px;text-align:left;" rowspan="2">Line Item</th>
                     <th style="padding:8px;text-align:center;border-left:1px solid var(--bdr);" colspan="3">Estimated</th>
-                    <th style="padding:8px;text-align:center;border-left:2px solid var(--red);background:#FFF5F5;" colspan="3">Actual</th>
+                    <th style="padding:8px;text-align:center;border-left:2px solid var(--red);background:#FFF5F5;" colspan="4">Actual</th>
                     <th style="padding:8px;text-align:center;border-left:1px solid var(--bdr);" colspan="2">Variance</th>
                   </tr>
                   <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);font-size:10px;text-transform:uppercase;">
@@ -651,6 +651,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
                     <th style="padding:4px 8px;border-left:2px solid var(--red);background:#FFF5F5;">Qty</th>
                     <th style="padding:4px 8px;background:#FFF5F5;">Cost</th>
                     <th style="padding:4px 8px;background:#FFF5F5;">Labor ($)</th>
+                    <th style="padding:4px 8px;background:#FFF5F5;">Trucking ($)</th>
                     <th style="padding:4px 8px;border-left:1px solid var(--bdr);">Qty +/-</th>
                     <th style="padding:4px 8px;">Cost +/-</th>
                   </tr>
@@ -667,6 +668,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
             <div id="eva-summary" style="background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;padding:12px 15px;">
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Actual Material Cost</span><span id="eva-actual-mat">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Actual Labor Cost</span><span id="eva-actual-labor">-</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Actual Trucking Cost</span><span id="eva-actual-truck">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;padding:4px 0;border-top:1px solid var(--bdr);margin-top:4px;"><span>Actual Total Cost</span><span id="eva-actual-total">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span style="color:var(--dgray);">Bid Price</span><span id="eva-bid-price">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:4px 0;border-top:2px solid var(--bdr);margin-top:4px;"><span>Actual Margin</span><span id="eva-actual-margin">-</span></div>
@@ -879,38 +881,18 @@ tr:nth-child(even) td{background:#FAFAFA;}
         <!-- General Tab -->
         <div id="stab-content-general">
           <div class="card">
-            <div class="card-hdr"><span class="card-title">Sender Information</span></div>
+            <div class="card-hdr"><span class="card-title">Account Information</span></div>
             <div class="card-body">
+              <p style="font-size:11px;color:var(--dgray);margin-bottom:10px;">Auto-populated from your account. Changes here update proposals you create.</p>
               <div class="fg fg3">
-                <div><label>Your Name</label><input id="s-name" type="text" placeholder="Justin Ledwein"/></div>
-                <div><label>Your Email</label><input id="s-email" type="text" placeholder="justin@hdgrading.com"/></div>
-                <div><label>Your Phone</label><input id="s-phone" type="text" placeholder="704-900-9722"/></div>
+                <div><label>Your Name</label><input id="s-name" type="text" placeholder="Full name"/></div>
+                <div><label>Your Email</label><input id="s-email" type="text" placeholder="email@hdgrading.com"/></div>
+                <div><label>Your Phone</label><input id="s-phone" type="text" placeholder="(555) 000-0000"/></div>
               </div>
-              <div style="margin-top:11px;"><button class="btn btn-red btn-sm" onclick="saveSender()">Save Settings</button></div>
+              <div style="margin-top:11px;"><button class="btn btn-red btn-sm" onclick="saveSender()">Save</button></div>
             </div>
           </div>
-          <div class="card" id="jc-settings-card">
-            <div class="card-hdr">
-              <span class="card-title">Job Cost Defaults</span>
-              <div style="display:flex;gap:7px;">
-                <button class="btn btn-sec btn-sm" onclick="saveJCDefaults()">Save</button>
-                <button class="btn btn-sec btn-sm" onclick="resetJCDefaults()">Reset</button>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="fg fg3">
-                <div><label>DEFAULT CREW DAY RATE ($)</label><input id="jc-default-crew-rate" type="number" min="0" step="100"/></div>
-                <div><label>DEFAULT OVERHEAD %</label><input id="jc-default-overhead-pct" type="number" min="0" step="1"/></div>
-                <div><label>ASPHALT PRODUCTIVITY (t/day)</label><input id="jc-default-productivity" type="number" min="1" step="10"/></div>
-              </div>
-              <div class="fg fg3" style="margin-top:10px;">
-                <div><label>TONS/TRUCK</label><input id="jc-default-tons-per-truck" type="number" min="1" step="10" value="100"/></div>
-                <div><label>TRUCK RATE ($/hr)</label><input id="jc-default-truck-rate" type="number" min="0" step="5" value="100"/></div>
-                <div><label>TRUCK HOURS/DAY</label><input id="jc-default-truck-hours" type="number" min="0" step="0.5" value="8"/></div>
-              </div>
-              <div id="jc-settings-indicator" style="margin-top:8px;font-size:11px;color:var(--dgray);"></div>
-            </div>
-          </div>
+          <!-- Job Cost Defaults removed — values baked into code: asphalt 400t/day, stone 800t/day, 100 tons/truck, truck $100/hr, 8hr/day -->
           <div class="card">
             <div class="card-hdr">
               <span class="card-title">Material Prices</span>
@@ -1077,6 +1059,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
     <div class="modal-hdr"><h3 id="user-modal-title">Add User</h3><button class="btn-ico" onclick="closeUserModal()" style="font-size:18px;">&#10005;</button></div>
     <div class="modal-body">
       <label>Full Name</label><input type="text" id="edit-full-name" placeholder="e.g. John Smith"/>
+      <label>Email</label><input type="email" id="edit-email" placeholder="e.g. john@hdgrading.com"/>
+      <label>Phone</label><input type="tel" id="edit-phone" placeholder="e.g. 704-555-0000"/>
       <label>Username <span style="font-size:11px;color:var(--dgray);">(lowercase, no spaces)</span></label><input type="text" id="edit-username" placeholder="e.g. jsmith" style="text-transform:lowercase;"/>
       <label>PIN <span id="pin-hint" style="font-size:11px;color:var(--dgray);">(4-8 digits)</span></label><input type="password" id="edit-pin" placeholder="Enter PIN" maxlength="8"/>
       <label>Role</label><select id="edit-role"><option value="user">Standard User</option><option value="admin">Admin</option></select>
@@ -1215,17 +1199,16 @@ async function doLogin(){
       window._userRole=d.role||'user';
       window._userName=d.full_name||username;
       window._userUsername=d.username||username;
+      // Set sender info from user account
+      window._userEmail=d.email||'';window._userPhone=d.phone||'';
+      sender={name:d.full_name||'',email:d.email||'',phone:d.phone||''};
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
       try{boot();}catch(e){console.warn('boot error:',e.message);}
+      // Re-apply user account sender after boot (boot may load stale settings)
+      sender={name:window._userName||'',email:window._userEmail||'',phone:window._userPhone||''};
       initSidebarCanvas();
       showAdminElements();
-    } else {
-      document.getElementById('pin-err').textContent=d.error||'Incorrect username or PIN.';
-      document.getElementById('pin-inp').value='';
-    }
-  }catch(e){document.getElementById('pin-err').textContent='Connection error. Try again.';}
-  finally{if(btn){btn.disabled=false;btn.textContent='Access Tool';}}
 }
 
 
@@ -1603,7 +1586,7 @@ function initJobCost(){
 }
 
 // ---- Estimates vs Actuals ----
-var evaActuals = {}; // keyed by line item key: {qty, cost, labor}
+var evaActuals = {}; // keyed by line item key: {qty, cost, labor, trucking}
 
 function buildEVAEstimates(){
   var items=[];
@@ -1645,23 +1628,25 @@ function renderEVA(){
   tbody.innerHTML='';if(tfoot)tfoot.innerHTML='';
   var items=buildEVAEstimates();
   if(!items.length){
-    tbody.innerHTML='<tr><td colspan="9" style="padding:16px;text-align:center;color:var(--dgray);">No line items in proposal yet.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="10" style="padding:16px;text-align:center;color:var(--dgray);">No line items in proposal yet.</td></tr>';
     return;
   }
-  var totEstCost=0,totActCost=0,totEstQty=0,totActQty=0,totActMatOnly=0,totActLabOnly=0;
+  var totEstCost=0,totActCost=0,totEstQty=0,totActQty=0,totActMatOnly=0,totActLabOnly=0,totActTruckOnly=0;
   items.forEach(function(item){
     var act=evaActuals[item.key]||{};
     var actQty=act.qty!==undefined?act.qty:null;
     var actCost=act.cost!==undefined?act.cost:null;
     var actLabor=act.labor!==undefined?act.labor:null;
-    var actTotal=(actCost!==null?actCost:0)+(actLabor!==null?actLabor:0);
-    var hasActual=actCost!==null||actLabor!==null;
+    var actTruck=act.trucking!==undefined?act.trucking:null;
+    var actTotal=(actCost!==null?actCost:0)+(actLabor!==null?actLabor:0)+(actTruck!==null?actTruck:0);
+    var hasActual=actCost!==null||actLabor!==null||actTruck!==null;
     var qtyVar=actQty!==null?(actQty-item.qty):null;
     var costVar=hasActual?(actTotal-item.estCost):null;
     totEstCost+=item.estCost;
     if(hasActual)totActCost+=actTotal;
     if(actCost!==null)totActMatOnly+=actCost;
     if(actLabor!==null)totActLabOnly+=actLabor;
+    if(actTruck!==null)totActTruckOnly+=actTruck;
     totEstQty+=item.qty;
     if(actQty!==null)totActQty+=actQty;
     var isConcrete=item.type==='concrete';
@@ -1671,6 +1656,9 @@ function renderEVA(){
     var laborCell=isConcrete
       ?'<td style="padding:8px;text-align:center;background:#FFF5F5;color:var(--dgray);font-size:10px;">N/A</td>'
       :'<td style="padding:8px;text-align:right;background:#FFF5F5;"><input type="number" value="'+(actLabor!==null?actLabor:'')+'" placeholder="—" min="0" step="1" style="width:80px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'labor\',this.value)"></td>';
+    var truckCell=isConcrete
+      ?'<td style="padding:8px;text-align:center;background:#FFF5F5;color:var(--dgray);font-size:10px;">N/A</td>'
+      :'<td style="padding:8px;text-align:right;background:#FFF5F5;"><input type="number" value="'+(actTruck!==null?actTruck:'')+'" placeholder="—" min="0" step="1" style="width:80px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'trucking\',this.value)"></td>';
     tr.innerHTML='<td style="padding:8px;"><div style="font-weight:600;font-size:12px;">'+esc(item.name)+'</div><div style="font-size:10px;color:var(--dgray);">'+esc(item.section)+'</div></td>'
       +'<td style="padding:8px;text-align:right;border-left:1px solid var(--bdr);">'+item.qty.toLocaleString()+'</td>'
       +'<td style="padding:8px;text-align:center;">'+item.unit+'</td>'
@@ -1678,6 +1666,7 @@ function renderEVA(){
       +'<td style="padding:8px;text-align:right;border-left:2px solid var(--red);background:#FFF5F5;"><input type="number" value="'+(actQty!==null?actQty:'')+'" placeholder="—" min="0" step="1" style="width:70px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'qty\',this.value)"></td>'
       +'<td style="padding:8px;text-align:right;background:#FFF5F5;"><input type="number" value="'+(actCost!==null?actCost:'')+'" placeholder="—" min="0" step="1" style="width:80px;font-size:12px;text-align:right;" onchange="updEVA(\''+item.key+'\',\'cost\',this.value)"></td>'
       +laborCell
+      +truckCell
       +'<td style="padding:8px;text-align:right;border-left:1px solid var(--bdr);" class="'+varQtyClass+'">'+(qtyVar!==null?(qtyVar>=0?'+':'')+qtyVar.toLocaleString():'—')+'</td>'
       +'<td style="padding:8px;text-align:right;" class="'+varCostClass+'">'+(costVar!==null?(costVar>=0?'+$':'-$')+fi(Math.abs(costVar)):'—')+'</td>';
     tbody.appendChild(tr);
@@ -1695,6 +1684,7 @@ function renderEVA(){
       +'<td style="padding:8px;text-align:right;border-left:2px solid var(--red);background:#FFF5F5;">'+(hasActuals?totActQty.toLocaleString():'—')+'</td>'
       +'<td style="padding:8px;text-align:right;background:#FFF5F5;">'+(hasActuals?'$'+fi(totActMatOnly):'—')+'</td>'
       +'<td style="padding:8px;text-align:right;background:#FFF5F5;">'+(hasActuals&&totActLabOnly>0?'$'+fi(totActLabOnly):'—')+'</td>'
+      +'<td style="padding:8px;text-align:right;background:#FFF5F5;">'+(hasActuals&&totActTruckOnly>0?'$'+fi(totActTruckOnly):'—')+'</td>'
       +'<td style="padding:8px;text-align:right;border-left:1px solid var(--bdr);"></td>'
       +'<td style="padding:8px;text-align:right;" class="'+tcClass+'">'+(totalCostVar!==null?(totalCostVar>=0?'+$':'-$')+fi(Math.abs(totalCostVar)):'—')+'</td>'
       +'</tr>';
@@ -1720,17 +1710,19 @@ function clearActuals(){
 function renderEVASummary(totEstCost,totActCost){
   var g=function(id){return document.getElementById(id);};
   var hasActuals=Object.keys(evaActuals).length>0;
-  var actMatCost=0,actLaborCost=0;
+  var actMatCost=0,actLaborCost=0,actTruckCost=0;
   var items=buildEVAEstimates();
   items.forEach(function(item){
     var act=evaActuals[item.key];
     if(!act)return;
     if(act.cost!==undefined)actMatCost+=act.cost;
     if(act.labor!==undefined)actLaborCost+=act.labor;
+    if(act.trucking!==undefined)actTruckCost+=act.trucking;
   });
-  var actTotal=hasActuals?actMatCost+actLaborCost:0;
+  var actTotal=hasActuals?actMatCost+actLaborCost+actTruckCost:0;
   if(g('eva-actual-mat'))g('eva-actual-mat').textContent=hasActuals?'$'+fi(actMatCost):'-';
   if(g('eva-actual-labor'))g('eva-actual-labor').textContent=hasActuals?'$'+fi(actLaborCost):'-';
+  if(g('eva-actual-truck'))g('eva-actual-truck').textContent=hasActuals&&actTruckCost>0?'$'+fi(actTruckCost):'-';
   if(g('eva-actual-total'))g('eva-actual-total').textContent=hasActuals?'$'+fi(actTotal):'-';
   // Bid price
   var bidPrice=0;
@@ -4801,10 +4793,10 @@ function initSidebarCanvas(){
 var _editingUserId=null;
 async function loadUsers(){var tbody=document.getElementById('users-tbody');if(!tbody)return;try{var r=await fetch('/admin/users');if(r.status===403){tbody.innerHTML='<tr><td colspan="6" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';window._adminUsers={};d.users.forEach(function(u){window._adminUsers[u.id]=u;var tr=document.createElement('tr');var created=u.created_at?new Date(u.created_at).toLocaleDateString():'-';tr.innerHTML='<td><b>'+esc(u.full_name||u.username)+'</b></td><td style="font-family:monospace;font-size:12px;">'+esc(u.username)+'</td><td><span class="role-badge role-'+u.role+'">'+u.role+'</span></td><td><span class="'+(u.active?'status-active':'status-inactive')+'">'+( u.active?'Active':'Inactive')+'</span></td><td style="font-size:12px;color:var(--dgray);">'+created+'</td><td style="white-space:nowrap;"><button class="btn btn-sec btn-sm" style="margin-right:4px;" onclick="openEditUserModal('+u.id+')">Edit</button>'+(u.username!==(window._userUsername||'')? '<button class="btn-ico" style="color:var(--red);" onclick="deactivateUser('+u.id+',\''+esc(u.username)+'\','+u.active+')">'+( u.active?'&#10005;':'&#10003;')+'</button>':'')+'</td>';tbody.appendChild(tr);});var sel=document.getElementById('log-user-filter');if(sel){sel.innerHTML='<option value="">All Users</option>';d.users.forEach(function(u){var o=document.createElement('option');o.value=u.username;o.textContent=u.full_name||u.username;sel.appendChild(o);});}}catch(e){tbody.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
 async function loadLogs(){var tbody=document.getElementById('logs-tbody');if(!tbody)return;tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">Loading...</td></tr>';try{var f=(document.getElementById('log-user-filter')||{}).value||'';var url='/admin/logs?limit=100'+(f?'&username='+encodeURIComponent(f):'');var r=await fetch(url);if(r.status===403){tbody.innerHTML='<tr><td colspan="5" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';if(!d.logs.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">No activity yet.</td></tr>';return;}d.logs.forEach(function(l){var tr=document.createElement('tr');if(!l.success)tr.className='log-row-fail';var ts=l.logged_at?new Date(l.logged_at).toLocaleString():'-';tr.innerHTML='<td style="font-size:12px;white-space:nowrap;">'+ts+'</td><td><b>'+esc(l.full_name||l.username)+'</b><br><span style="font-size:11px;color:var(--dgray);">'+esc(l.username)+'</span></td><td style="text-transform:capitalize;font-size:12px;">'+esc(l.action)+'</td><td>'+(l.success?'<span style="color:#27500A;font-weight:600;font-size:11px;">Success</span>':'<span style="color:var(--red);font-weight:600;font-size:11px;">Failed</span>')+'</td><td class="log-ip">'+esc(l.ip_address||'-')+'</td>';tbody.appendChild(tr);});}catch(e){tbody.innerHTML='<tr><td colspan="5" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
-function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value='user';document.getElementById('pin-hint').textContent='(4-8 digits)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
-function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value=u.role||'user';document.getElementById('pin-hint').textContent='(leave blank to keep current PIN)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');}
+function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-email').value='';document.getElementById('edit-phone').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value='user';document.getElementById('pin-hint').textContent='(4-8 digits)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
+function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-email').value=u.email||'';document.getElementById('edit-phone').value=u.phone||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-role').value=u.role||'user';document.getElementById('pin-hint').textContent='(leave blank to keep current PIN)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');}
 function closeUserModal(){document.getElementById('user-modal').classList.add('hidden');_editingUserId=null;}
-async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pin=document.getElementById('edit-pin').value.trim();var role=document.getElementById('edit-role').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,role:role};if(pin)upd.pin=pin;var origUser=window._adminUsers&&window._adminUsers[_editingUserId];if(origUser&&un!==origUser.username)upd.username=un;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){if(upd.username&&origUser.username===window._userUsername){window._userUsername=un;}closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pin||pin.length<4){errEl.textContent='PIN must be at least 4 digits.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,pin:pin,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
+async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var em=document.getElementById('edit-email').value.trim();var ph=document.getElementById('edit-phone').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pin=document.getElementById('edit-pin').value.trim();var role=document.getElementById('edit-role').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,email:em,phone:ph,role:role};if(pin)upd.pin=pin;var origUser=window._adminUsers&&window._adminUsers[_editingUserId];if(origUser&&un!==origUser.username)upd.username=un;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){if(upd.username&&origUser.username===window._userUsername){window._userUsername=un;}closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pin||pin.length<4){errEl.textContent='PIN must be at least 4 digits.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,email:em,phone:ph,pin:pin,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
 async function deactivateUser(uid,username,active){if(!confirm((active?'Deactivate':'Reactivate')+' "'+username+'"?'))return;var r=await fetch('/admin/users/'+uid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!active})});var d=await r.json();if(d.ok){loadUsers();toast('User '+(active?'deactivated':'reactivated'),'ok');}else toast('Error: '+(d.error||'failed'),'err');}
 
 // -- Work Order Detail View ---------------------------------------------------
@@ -5329,9 +5321,14 @@ function copyCalFeedUrl(){
       window._userRole=d.role||'user';
       window._userName=d.full_name||'';
       window._userUsername=d.username||'';
+      // Set sender info from user account
+      window._userEmail=d.email||'';window._userPhone=d.phone||'';
+      sender={name:d.full_name||'',email:d.email||'',phone:d.phone||''};
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
       try{boot();}catch(e){console.warn('boot error:',e.message);}
+      // Re-apply user account sender after boot (boot may load stale settings)
+      sender={name:window._userName||'',email:window._userEmail||'',phone:window._userPhone||''};
       initSidebarCanvas();
       showAdminElements();
     }
