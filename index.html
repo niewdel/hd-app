@@ -3451,6 +3451,8 @@ function updateLyrResult(sid2,lid2){
     resEl.innerHTML=sf>0?buildLyrResHTML(t,sy,matC,bidC):'<span style="opacity:.4">Enter SF above</span>';
   }
   if(muEl){muEl.textContent=bidC>0?mp.toFixed(1)+'%':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
+  var pptEl=document.querySelector('.lyr-ppt[data-lyr="'+sid2+'-'+lid2+'"]');
+  if(pptEl)pptEl.textContent=t>0?'$'+(bidC/t).toFixed(2):'—';
   updateSecFooter(sid2);
 }
 
@@ -3497,6 +3499,7 @@ function renderAll(){
         +'<div class="lyr-field"><label>Depth (in)</label><input type="number" value="'+l.depth+'" min=".5" step=".5" onchange="updLyrDepth('+s.id+','+l.id+',this.value)"></div>'
         +'<div class="lyr-field"><label>Days</label><input type="number" value="'+(l.days_override!==null&&l.days_override!==undefined?l.days_override:layerDays.toFixed(1))+'" min="0" step="0.5" title="Auto: '+layerDays.toFixed(2)+'d" onchange="updLyrDays('+s.id+','+l.id+',this.value,true)"></div>'
         +'<div class="lyr-field"><label>Trucks</label><input type="number" value="'+(l.trucks_override!==null&&l.trucks_override!==undefined?l.trucks_override:autoTrucks)+'" min="0" step="1" onchange="updTrucks('+s.id+','+l.id+',this.value)"></div>'
+        +'<div class="lyr-field"><label>$/Ton</label><span class="lyr-ppt" data-lyr="'+s.id+'-'+l.id+'" style="display:block;font-size:13px;font-weight:700;color:var(--red);padding:4px 0;">'+(t>0?'$'+(bidC/t).toFixed(2):'—')+'</span></div>'
         +'<div class="lyr-field"><label>Markup %</label><input type="number" value="'+l.markup+'" min="0" step="1" class="lyr-markup" data-lyr="'+s.id+'-'+l.id+'" onchange="updLyrMarkup('+s.id+','+l.id+',this.value)"></div>'
         +'<span class="mubadge '+(lmp>=0?'p':'n')+'" data-lyr="'+s.id+'-'+l.id+'">'+(bidC>0?lmp.toFixed(1)+'%':'')+'</span>'
         +'</div>'
