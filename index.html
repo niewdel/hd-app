@@ -3555,29 +3555,49 @@ function concBidPerUnit(i){if(!i.qty||i.qty<=0)return 0;return concBidTotal(i)/i
 function updateConcResult(id){
   var item=concItems.find(function(x){return x.id===id;});if(!item)return;
   var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];
-  var cy=calcConcCY(item);var matC=concMatCost(item);var labC=concLaborCost(item);var bidC=concBidTotal(item);var bR=concBidPerUnit(item);var mp=mu(matC+labC,bidC);
+  var cy=calcConcCY(item);var matC=concMatCost(item);var labC=concLaborCost(item);var bidC=concBidTotal(item);var bR=concBidPerUnit(item);
+  var costC=matC+labC;var mp=costC>0?((bidC-costC)/costC*100):0;
+  var d='<span style="margin:0 3px;color:#ddd;">&middot;</span>';
   var resEl=document.querySelector('.lres[data-conc="'+id+'"]');
   var muEl=document.querySelector('.mubadge[data-conc="'+id+'"]');
-  if(resEl)resEl.innerHTML=item.qty>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  mat <b>$'+fi(matC)+'</b> ('+cy.toFixed(2)+' CY)  labor <b>$'+fi(labC)+'</b>  bid <b>$'+fi(bidC)+'</b>'):'<span style="opacity:.5">enter qty and rates</span>';
-  if(muEl){muEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
+  if(resEl)resEl.innerHTML=item.qty>0&&item.sub>0
+    ?('<b>'+item.qty.toLocaleString()+'</b> '+ct.unit+d+'<b>'+cy.toFixed(2)+'</b> CY'+d+'Mat <b>$'+fi(matC)+'</b>'+d+'Labor <b>$'+fi(labC)+'</b>'+d+'Cost <b>$'+fi(costC)+'</b>'+d+'Total <b style="color:var(--red);">$'+fi(bidC)+'</b>')
+    :(item.qty>0&&cy>0?'<span style="color:#27500A;font-weight:600;">'+cy.toFixed(2)+' CY</span>':'<span style="opacity:.5">enter qty &amp; rates</span>');
+  if(muEl){muEl.textContent=item.qty>0&&bidC>0?mp.toFixed(1)+'%':'';muEl.className='mubadge '+(mp>=0?'p':'n');}
 }
 function renderConc(){
   var c=document.getElementById('conc-rows'),em=document.getElementById('conc-empty');
   c.innerHTML='';em.style.display=concItems.length?'none':'block';
   concItems.forEach(function(item){
     var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];
-    var cy=calcConcCY(item);var matC=concMatCost(item);var labC=concLaborCost(item);var bidC=concBidTotal(item);var bR=concBidPerUnit(item);var mp=mu(matC+labC,bidC);
-    var resHTML=item.qty>0&&item.sub>0?('<b>$'+bR.toFixed(2)+'/'+ct.unit+'</b>  mat <b>$'+fi(matC)+'</b> ('+cy.toFixed(2)+' CY)  labor <b>$'+fi(labC)+'</b>  bid <b>$'+fi(bidC)+'</b>'):(item.qty>0&&cy>0?'<span style="color:#27500A;font-weight:600;">'+cy.toFixed(2)+' CY</span>':'<span style="opacity:.5">enter qty &amp; sub rate</span>');
-    var muBadge='<span class="mubadge '+(mp>=0?'p':'n')+'" data-conc="'+item.id+'">'+(item.qty>0&&bidC>0?mp.toFixed(1)+'% MU':'')+'</span>';
+    var cy=calcConcCY(item);var matC=concMatCost(item);var labC=concLaborCost(item);var bidC=concBidTotal(item);var bR=concBidPerUnit(item);
+    var costC=matC+labC;var mp=costC>0?((bidC-costC)/costC*100):0;
+    var d='<span style="margin:0 3px;color:#ddd;">&middot;</span>';
+    var resHTML=item.qty>0&&item.sub>0
+      ?('<b>'+item.qty.toLocaleString()+'</b> '+ct.unit+d+'<b>'+cy.toFixed(2)+'</b> CY'+d+'Mat <b>$'+fi(matC)+'</b>'+d+'Labor <b>$'+fi(labC)+'</b>'+d+'Cost <b>$'+fi(costC)+'</b>'+d+'Total <b style="color:var(--red);">$'+fi(bidC)+'</b>')
+      :(item.qty>0&&cy>0?'<span style="color:#27500A;font-weight:600;">'+cy.toFixed(2)+' CY</span>':'<span style="opacity:.5">enter qty &amp; sub rate</span>');
     var ctOpts=CTYPES.map(function(ct2){return '<option value="'+ct2.id+'"'+(ct2.id===item.type?' selected':'')+'>'+ct2.name+'</option>';}).join('');
     var row=document.createElement('div');row.className='lyr-row';
-    row.innerHTML='<select onchange="updConcType('+item.id+',this.value)" style="min-width:138px">'+ctOpts+'</select>'
-      +'<label>'+ct.unit+'</label><input type="number" value="'+(item.qty||'')+'" placeholder="0" min="0" step="1" style="width:74px" onchange="updConcField('+item.id+',\'qty\',this.value)">'
-      +'<label>Mat $/CY</label><input type="number" value="'+(item.mat!==undefined?item.mat:200)+'" placeholder="200" min="0" step="1" style="width:72px" onchange="updConcField('+item.id+',\'mat\',parseFloat(this.value)||0)"/>'
-      +'<label>Sub $/'+ct.unit+'</label><input type="number" value="'+(item.sub||'')+'" placeholder="0.00" min="0" step=".25" style="width:76px" onchange="updConcField('+item.id+',\'sub\',this.value)">'
-      +'<label>Markup %</label><input type="number" value="'+item.markup+'" min="0" step="1" style="width:58px" onchange="updConcField('+item.id+',\'markup\',this.value)">'
-      +muBadge+'<span class="lres" data-conc="'+item.id+'">'+resHTML+'</span>'
-      +'<button class="btn-ico" onclick="remConc('+item.id+')">x</button>';
+    row.innerHTML=
+      // Top row: badge + type selector + delete
+      '<div class="lyr-top">'
+      +'<span class="badge b-conc" style="font-size:10px;flex-shrink:0;">Concrete</span>'
+      +'<select onchange="updConcType('+item.id+',this.value)" style="flex:1;font-size:13px;font-weight:600;padding:4px 8px;border:1px solid transparent;border-radius:5px;">'+ctOpts+'</select>'
+      +'<button class="btn-ico" onclick="remConc('+item.id+')" title="Remove" style="flex-shrink:0;opacity:.4;">×</button>'
+      +'</div>'
+      // Description
+      +'<input type="text" class="lyr-desc" value="'+esc(item.description||ct.desc||'')+'" placeholder="Description for PDF..." onchange="var i=concItems.find(function(x){return x.id==='+item.id+';});if(i)i.description=this.value;">'
+      // Fields row
+      +'<div class="lyr-fields">'
+      +'<div class="lyr-field"><label>'+ct.unit+'</label><input type="number" value="'+(item.qty||'')+'" placeholder="0" min="0" step="1" onchange="updConcField('+item.id+',\'qty\',this.value)"></div>'
+      +'<div class="lyr-field"><label>Mat $/CY</label><input type="number" value="'+(item.mat!==undefined?item.mat:200)+'" placeholder="200" min="0" step="1" onchange="updConcField('+item.id+',\'mat\',parseFloat(this.value)||0)"></div>'
+      +'<div class="lyr-field"><label>Sub $/'+ct.unit+'</label><input type="number" value="'+(item.sub||'')+'" placeholder="0" min="0" step=".25" onchange="updConcField('+item.id+',\'sub\',this.value)"></div>'
+      +'<div class="lyr-field"><label>$/'+ct.unit+'</label><span style="display:block;font-size:13px;font-weight:700;color:var(--red);padding:4px 0;">'+(item.qty>0&&bidC>0?'$'+bR.toFixed(2):'—')+'</span></div>'
+      +'<div class="lyr-field"><label>Markup %</label><input type="number" value="'+item.markup+'" min="0" step="1" onchange="updConcField('+item.id+',\'markup\',this.value)"></div>'
+      +'<span class="mubadge '+(mp>=0?'p':'n')+'" data-conc="'+item.id+'">'+(item.qty>0&&bidC>0?mp.toFixed(1)+'%':'')+'</span>'
+      +'</div>'
+      // Result strip
+      +'<div class="lyr-result"><span class="lres" data-conc="'+item.id+'">'+resHTML+'</span></div>';
     c.appendChild(row);
   });
   recalc();
