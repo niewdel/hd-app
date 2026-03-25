@@ -107,65 +107,31 @@ def _fi(n):
 
 
 def _info_block(data):
-    """Three-column info block matching the proposal PDF style."""
-    FW = W - inch
+    """Simple single-line info block with pipe separators."""
+    lbl_s = ParagraphStyle('lbl', fontName='Helvetica-Bold', fontSize=8, textColor=BLACK)
+    val_s = ParagraphStyle('val', fontName='Helvetica', fontSize=8, textColor=DGRAY, leading=11)
 
-    title_s  = ParagraphStyle('c_t', fontName='Helvetica-Bold', fontSize=11, textColor=BLACK, leading=14)
-    addr_s   = ParagraphStyle('c_a', fontName='Helvetica', fontSize=8, textColor=DGRAY, leading=11)
-    date_s   = ParagraphStyle('c_d', fontName='Helvetica-Bold', fontSize=8, textColor=RED, leading=11)
-    sec_s    = ParagraphStyle('c_sec', fontName='Helvetica-Bold', fontSize=7, textColor=RED, leading=9, spaceAfter=2)
-    name_s   = ParagraphStyle('c_n', fontName='Helvetica-Bold', fontSize=9, textColor=BLACK, leading=12)
-    detail_s = ParagraphStyle('c_det', fontName='Helvetica', fontSize=8, textColor=DGRAY, leading=11)
-
-    proj_cell = [
-        Paragraph(data.get('project_name', ''), title_s),
-        Paragraph(data.get('address', ''), addr_s),
-    ]
+    proj_name = data.get('project_name', '')
+    client = data.get('client_name', '')
+    address = data.get('address', '')
+    sender = data.get('sender_name', '')
+    date_str = data.get('date', '')
     doc_num = data.get('document_number', '')
-    if doc_num:
-        proj_cell.append(Paragraph(doc_num, date_s))
-    proj_cell.append(Paragraph(data.get('date', ''), date_s))
 
-    by_cell = [
-        Paragraph('PREPARED BY', sec_s),
-        Paragraph(data.get('sender_name', ''), name_s),
-    ]
-    if data.get('sender_email'):
-        by_cell.append(Paragraph(data['sender_email'], detail_s))
-    if data.get('sender_phone'):
-        by_cell.append(Paragraph(data['sender_phone'], detail_s))
+    info_parts = []
+    if proj_name: info_parts.append(f'<b>Project:</b> {proj_name}')
+    if doc_num: info_parts.append(f'<b>No:</b> {doc_num}')
+    if client: info_parts.append(f'<b>Client:</b> {client}')
+    if address: info_parts.append(f'<b>Address:</b> {address}')
+    if sender: info_parts.append(f'<b>Prepared by:</b> {sender}')
+    if date_str: info_parts.append(f'<b>Date:</b> {date_str}')
 
-    for_cell = [
-        Paragraph('PREPARED FOR', sec_s),
-        Paragraph(data.get('client_name', ''), name_s),
-    ]
-    if data.get('client_company'):
-        for_cell.append(Paragraph(data['client_company'], detail_s))
-    if data.get('client_email'):
-        for_cell.append(Paragraph(data['client_email'], detail_s))
-    if data.get('client_phone'):
-        for_cell.append(Paragraph(data['client_phone'], detail_s))
+    if not info_parts:
+        return Spacer(1, 0.01*inch)
 
-    cw_proj = FW * 0.42
-    cw_by   = FW * 0.27
-    cw_for  = FW * 0.31
-
-    wrapper = Table([[proj_cell, by_cell, for_cell]],
-                    colWidths=[cw_proj, cw_by, cw_for], hAlign='LEFT')
-    wrapper.setStyle(TableStyle([
-        ('TOPPADDING',    (0,0),(-1,-1), 10),
-        ('BOTTOMPADDING', (0,0),(-1,-1), 10),
-        ('LEFTPADDING',   (0,0),(0,-1),  0),
-        ('LEFTPADDING',   (1,0),(-1,-1), 14),
-        ('RIGHTPADDING',  (0,0),(-1,-1), 6),
-        ('LINEBEFORE',    (1,0),(1,-1),  1.0, MGRAY),
-        ('LINEBEFORE',    (2,0),(2,-1),  1.0, MGRAY),
-        ('LINEABOVE',     (0,0),(-1,0),  1.0, BLACK),
-        ('LINEBELOW',     (0,-1),(-1,-1),1.0, MGRAY),
-        ('VALIGN',        (0,0),(-1,-1), 'TOP'),
-        ('BACKGROUND',    (0,0),(-1,-1), WHITE),
-    ]))
-    return wrapper
+    info_text = '&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;'.join(info_parts)
+    return Paragraph(info_text, ParagraphStyle('info', fontName='Helvetica', fontSize=9,
+                                                textColor=DGRAY, leading=14))
 
 
 def _section_banner(text, cw):
