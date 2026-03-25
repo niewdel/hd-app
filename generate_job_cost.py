@@ -88,11 +88,13 @@ def build(data, out_path):
 
     # -- Cost Breakdown Table
     mat   = float(data.get('mat_cost', 0) or 0)
-    equip = float(data.get('equip_cost', 0) or 0)
+    truck = float(data.get('truck_cost', 0) or 0)
     labor = float(data.get('labor_cost', 0) or 0)
     ovh_pct = float(data.get('overhead_pct', 0) or 0)
     overhead = float(data.get('overhead', 0) or 0)
     total_cost = float(data.get('total_cost', 0) or 0)
+    if total_cost <= 0:
+        total_cost = mat + labor + truck + overhead
     bid_price = float(data.get('bid_price', 0) or 0)
     margin_dollar = data.get('margin_dollar')
     margin_pct = data.get('margin_pct')
@@ -112,8 +114,8 @@ def build(data, out_path):
     cost_data = [
         [Paragraph('COST CATEGORY', hdr), Paragraph('AMOUNT', ParagraphStyle('ah', fontName='Helvetica-Bold', fontSize=9, textColor=colors.white, alignment=TA_RIGHT))],
         row('Materials',   '$'+fi(mat)   if mat   > 0 else '--'),
-        row('Equipment',   '$'+fi(equip) if equip > 0 else '--'),
         row('Labor',       '$'+fi(labor) if labor > 0 else '--'),
+        row('Trucking',    '$'+fi(truck) if truck > 0 else '--'),
         row('Overhead (' + str(int(ovh_pct)) + '%)', '$'+fi(overhead) if overhead > 0 else '--'),
         row('Total Cost',  '$'+fi(total_cost), bold_row=True),
         row('Bid Price',   '$'+fi(bid_price),  bold_row=True),

@@ -1647,8 +1647,8 @@ async function exportJobCostPDF(){
   var fmtDate=date?(function(){var p=date.split('-');return p[1]+'/'+p[2]+'/'+p[0];})():'';
   var payload={
     project_name:projName, client_name:client, date:fmtDate,
-    mat_cost:jc.matCost, labor_cost:jc.laborCost,
-    overhead_pct:jc.ovhPct, overhead:jc.overhead, total_cost:jc.totalCost,
+    mat_cost:jc.matCost, labor_cost:jc.laborCost, truck_cost:jc.truckCost||0,
+    overhead_pct:0, overhead:0, total_cost:jc.totalCost, equip_cost:0,
     bid_price:jc.bidPrice, margin_dollar:jc.marginDollar, margin_pct:jc.marginPct,
     sender_name:sender.name, sender_phone:sender.phone, sender_email:sender.email
   };
@@ -5128,11 +5128,8 @@ async function loadClientsForAutocomplete(){
     if(d.ok&&d.clients){
       clientsList=d.clients;
       clients=clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||'',address:c.address||'',city_state:c.city_state||''};});
-      console.log('Clients loaded for autocomplete:',clients.length);
-    } else {
-      console.warn('Client load returned:',d);
     }
-  }catch(e){console.error('Failed to load clients for autocomplete:',e);}
+  }catch(e){}
 }
 
 async function renderClients() {
