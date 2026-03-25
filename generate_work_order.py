@@ -180,6 +180,8 @@ def build(data, out_path):
         Spacer(1, 4),
         Paragraph(addr_lines, st['info_val']),
     ]
+    onsite_contact = data.get('onsite_contact', '')
+    onsite_phone   = data.get('onsite_phone', '')
     mid_col = [
         Paragraph('<b>FOREMAN</b>', st['info_lbl']),
         Paragraph('_______________________________', st['info_val']),
@@ -187,13 +189,18 @@ def build(data, out_path):
         Paragraph('<b>PHONE</b>', st['info_lbl']),
         Paragraph('_______________________________', st['info_val']),
     ]
+    if onsite_contact:
+        mid_col.append(Spacer(1, 4))
+        mid_col.append(Paragraph('<b>ON-SITE CONTACT</b>', st['info_lbl']))
+        mid_col.append(Paragraph(onsite_contact + ('  ' + onsite_phone if onsite_phone else ''), st['info_val']))
     right_col = [
-        Paragraph('<b>CLIENT</b>', st['info_lbl']),
-        Paragraph(client, st['info_val']),
-        Spacer(1, 4),
         Paragraph('<b>DATE</b>', st['info_lbl']),
         Paragraph(date_str, st['info_val']),
     ]
+    if client:
+        right_col.append(Spacer(1, 4))
+        right_col.append(Paragraph('<b>CLIENT</b>', st['info_lbl']))
+        right_col.append(Paragraph(client, st['info_val']))
     if sender:
         right_col.append(Spacer(1, 4))
         right_col.append(Paragraph('<b>ISSUED BY</b>', st['info_lbl']))

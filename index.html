@@ -377,6 +377,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="nav-grp">Manage</div>
       <div class="nav-item" onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents</div>
       <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
+      <div class="nav-item" onclick="showPanel('schedule',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg>Schedule</div>
       <div class="nav-grp">Config</div>
       <div class="nav-item" onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
       <div class="nav-item admin-only" id="nav-admin" data-admin-hidden onclick="showPanel('admin',this);loadUsers();loadLogs();">
@@ -981,6 +982,64 @@ tr:nth-child(even) td{background:#FAFAFA;}
           </div>
         </div>
       </div>
+      <!-- WORK ORDER DETAIL PANEL -->
+      <div class="panel" id="panel-workorder"><div class="content" style="padding:20px;">
+        <div id="wo-detail-header" style="margin-bottom:16px;"></div>
+        <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;">
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Scope of Work</span></div>
+              <div class="card-body" id="wo-scope"><p style="color:var(--dgray);font-size:12px;">No items.</p></div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Materials</span></div>
+              <div class="card-body" id="wo-materials"><p style="color:var(--dgray);font-size:12px;">No materials data.</p></div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Crew Notes</span></div>
+              <div class="card-body" id="wo-notes"><p style="color:var(--dgray);font-size:12px;">No notes.</p></div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Site Plan</span></div>
+              <div class="card-body" id="wo-site-plan"><p style="color:var(--dgray);font-size:12px;">No site plan.</p></div>
+            </div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Details</span></div>
+              <div class="card-body" id="wo-details"><p style="color:var(--dgray);font-size:12px;">Loading...</p></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+
+      <!-- SCHEDULE PANEL -->
+      <div class="panel" id="panel-schedule"><div class="content" style="padding:20px;">
+        <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;">
+          <!-- Queue sidebar -->
+          <div>
+            <div class="card">
+              <div class="card-hdr"><span class="card-title">Ready to Schedule</span></div>
+              <div class="card-body" id="sched-queue" style="min-height:200px;"><p style="color:var(--dgray);font-size:12px;">No jobs waiting.</p></div>
+            </div>
+          </div>
+          <!-- Calendar -->
+          <div>
+            <div class="card">
+              <div class="card-hdr" style="display:flex;align-items:center;gap:10px;">
+                <button class="btn btn-sec btn-sm" onclick="schedCalNav(-1)">&lsaquo;</button>
+                <span class="card-title" id="sched-cal-title" style="flex:1;text-align:center;"></span>
+                <button class="btn btn-sec btn-sm" onclick="schedCalNav(1)">&rsaquo;</button>
+                <button class="btn btn-sec btn-sm" onclick="schedCalNav(0)">Today</button>
+              </div>
+              <div class="card-body" style="padding:8px;">
+                <div id="sched-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+
       <div class="panel" id="panel-admin">
   <div class="card">
     <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">User Management</span><button class="btn btn-red btn-sm" onclick="openAddUserModal()">+ Add User</button></div>
@@ -2338,10 +2397,11 @@ function _renderProjectSummaryInner(proj){
         var dot=document.createElement('span');
         dot.style.cssText='width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(statusColors[wo.status]||'#999')+';';
         row.appendChild(dot);
-        var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+        var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;cursor:pointer;';
         info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(wo.name||'Work Order')+'</div>'
           +'<div style="font-size:11px;color:var(--dgray);">'+(wo.assigned_to?esc(wo.assigned_to)+' &middot; ':'')+(wo.date?esc(wo.date):'')+'</div>'
           +(wo.description?'<div style="font-size:11px;color:#555;margin-top:2px;">'+esc(wo.description)+'</div>':'');
+        (function(woId){info.addEventListener('click',function(){openWorkOrderView(woId);});})(wo.id);
         row.appendChild(info);
         var statusBtn=document.createElement('select');statusBtn.style.cssText='font-size:11px;padding:2px 6px;border:1px solid var(--bdr);border-radius:4px;background:#fff;cursor:pointer;';
         ['pending','active','complete'].forEach(function(s){
@@ -2508,26 +2568,47 @@ function addProjectNote(){
   });
 }
 
-function openWorkOrderModal(){
+function openWorkOrderModal(editWoId){
   if(!_currentProjectId)return;
   var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
   if(!proj)return;
   var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var linked=snap.linked_proposals||[];
+  var editing=null;
+  if(editWoId){
+    editing=(snap.work_orders||[]).find(function(w){return w.id===editWoId;});
+  }
   var ex=document.getElementById('wo-modal');if(ex)ex.remove();
   var modal=document.createElement('div');modal.id='wo-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
   var box=document.createElement('div');
-  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:440px;max-width:92vw;';
-  box.innerHTML='<h3 style="margin:0 0 16px;font-size:15px;">Add Work Order</h3>'
-    +'<div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Name</label><input id="wo-name" class="inp" placeholder="e.g. Grading Phase 1" style="width:100%;"></div>'
-    +'<div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Description</label><textarea id="wo-desc" rows="3" class="inp" placeholder="Work order details..." style="width:100%;resize:vertical;"></textarea></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'
-    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Assigned To</label><input id="wo-assigned" class="inp" placeholder="Crew or person" style="width:100%;"></div>'
-    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Status</label><select id="wo-status" class="inp" style="width:100%;"><option value="pending">Pending</option><option value="active">Active</option><option value="complete">Complete</option></select></div>'
+  box.style.cssText='background:#fff;border-radius:10px;padding:24px;width:520px;max-width:94vw;max-height:90vh;overflow-y:auto;';
+  // Build proposal options
+  var propOpts='<option value="">— None —</option>';
+  linked.forEach(function(qid){
+    var q=savedQuotes.find(function(x){return x.id===qid;});
+    if(q){
+      var sel=(editing&&editing.linked_proposal===qid)?' selected':'';
+      propOpts+='<option value="'+qid+'"'+sel+'>'+esc(q.name||'Proposal #'+qid)+'</option>';
+    }
+  });
+  box.innerHTML='<h3 style="margin:0 0 16px;font-size:15px;">'+(editing?'Edit':'Add')+' Work Order</h3>'
+    +'<div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Name *</label><input id="wo-name" class="inp" placeholder="e.g. Grading Phase 1" style="width:100%;" value="'+esc(editing?editing.name:'')+'"></div>'
+    +(linked.length?'<div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Linked Proposal</label><select id="wo-proposal" class="inp" style="width:100%;">'+propOpts+'</select><div style="font-size:10px;color:var(--dgray);margin-top:2px;">Materials and scope will auto-populate from this proposal</div></div>':'')
+    +'<div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Description / Scope</label><textarea id="wo-desc" rows="3" class="inp" placeholder="Work order scope and details..." style="width:100%;resize:vertical;">'+esc(editing?editing.description:'')+'</textarea></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'
+    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Assigned To</label><input id="wo-assigned" class="inp" placeholder="Crew or person" style="width:100%;" value="'+esc(editing?editing.assigned_to:'')+'"></div>'
+    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Status</label><select id="wo-status" class="inp" style="width:100%;"><option value="pending"'+(editing&&editing.status==='pending'?' selected':(!editing?' selected':''))+'>Pending</option><option value="active"'+(editing&&editing.status==='active'?' selected':'')+'>Active</option><option value="complete"'+(editing&&editing.status==='complete'?' selected':'')+'>Complete</option></select></div>'
     +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'
+    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">On-Site Contact</label><input id="wo-contact" class="inp" placeholder="Name" style="width:100%;" value="'+esc(editing?editing.onsite_contact:'')+'"></div>'
+    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Contact Phone</label><input id="wo-contact-phone" class="inp" placeholder="(555) 000-0000" style="width:100%;" value="'+esc(editing?editing.onsite_phone:'')+'"></div>'
+    +'</div>'
+    +'<div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Crew Notes</label><textarea id="wo-crew-notes" rows="2" class="inp" placeholder="Special instructions for the crew..." style="width:100%;resize:vertical;">'+esc(editing?editing.crew_notes:'')+'</textarea></div>'
+    +'<div style="margin-bottom:14px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Scheduled Date</label><input type="date" id="wo-sched-date" class="inp" style="width:200px;" value="'+(editing&&editing.scheduled_date?editing.scheduled_date:'')+'"></div>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
     +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'wo-modal\').remove()">Cancel</button>'
-    +'<button class="btn btn-red btn-sm" id="wo-save">Save Work Order</button></div>';
+    +'<button class="btn btn-red btn-sm" id="wo-save">'+(editing?'Update':'Save')+' Work Order</button></div>';
   modal.appendChild(box);
   modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
   document.body.appendChild(modal);
@@ -2535,19 +2616,33 @@ function openWorkOrderModal(){
     var name=document.getElementById('wo-name').value.trim();
     if(!name){toast('Enter a work order name','err');return;}
     if(!snap.work_orders)snap.work_orders=[];
-    var wo={
-      id:Date.now(),
+    var propSel=document.getElementById('wo-proposal');
+    var linkedProp=propSel?parseInt(propSel.value)||null:null;
+    var woData={
       name:name,
       description:document.getElementById('wo-desc').value.trim(),
       assigned_to:document.getElementById('wo-assigned').value.trim(),
       status:document.getElementById('wo-status').value,
+      onsite_contact:document.getElementById('wo-contact').value.trim(),
+      onsite_phone:document.getElementById('wo-contact-phone').value.trim(),
+      crew_notes:document.getElementById('wo-crew-notes').value.trim(),
+      scheduled_date:document.getElementById('wo-sched-date').value||null,
+      linked_proposal:linkedProp,
       date:new Date().toISOString().split('T')[0]
     };
-    snap.work_orders.push(wo);
-    addProjectActivity(snap,'wo','Work order "'+name+'" created');
+    if(editing){
+      woData.id=editing.id;woData.date=editing.date;
+      var idx=snap.work_orders.findIndex(function(w){return w.id===editing.id;});
+      if(idx>-1)snap.work_orders[idx]=woData;
+      addProjectActivity(snap,'wo','Work order "'+name+'" updated');
+    } else {
+      woData.id=Date.now();
+      snap.work_orders.push(woData);
+      addProjectActivity(snap,'wo','Work order "'+name+'" created');
+    }
     fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
       .then(function(r){return r.json();}).then(function(d){
-        if(d.ok){proj.snap=snap;toast('Work order added','ok');modal.remove();renderProjectSummary();}
+        if(d.ok){proj.snap=snap;toast('Work order '+(editing?'updated':'added'),'ok');modal.remove();renderProjectSummary();}
         else toast(d.error||'Failed','err');
       }).catch(function(e){toast('Error: '+e.message,'err');});
   });
@@ -2885,6 +2980,12 @@ var TOPBAR_CFG = {
   pipeline:[{html:'+ Create Project',cls:'btn btn-red btn-sm',fn:'openProjectModal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderPipeline()'}],
   clients:[{html:'+ Add Client',cls:'btn btn-red btn-sm',fn:'openClientModal()'}],
   jobcost:[{html:'&lsaquo; Back to Project',cls:'btn btn-sec btn-sm',fn:"showPanel('project',null)"},{html:'Export Job Cost PDF',cls:'btn btn-red btn-sm',fn:'exportJobCostPDF()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderEVA()'}],
+  workorder:[
+    {html:'Export PDF',cls:'btn btn-red btn-sm',fn:'exportWorkOrderPDF()'},
+    {html:'Edit',cls:'btn btn-sec btn-sm',fn:'editWorkOrder()'},
+    {html:'&lsaquo; Back to Project',cls:'btn btn-sec btn-sm',fn:"showPanel('project',null)"}
+  ],
+  schedule:[{html:'Export to Google Calendar',cls:'btn btn-sec btn-sm',fn:'exportScheduleToGCal()'},{html:'Refresh',cls:'btn btn-sec btn-sm',fn:'renderSchedule()'}],
   admin:[],
   settings:[]
 };
@@ -2907,7 +3008,7 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients',admin:'Admin Panel'}[id]||id;
+  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule'}[id]||id;
   document.getElementById('topbar-title').textContent=_panelTitle;
   updateMobTitle(_panelTitle);
   if(id==='saved'){renderSaved();loadCOList();}
@@ -2922,6 +3023,8 @@ function showPanel(id,el){
   if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
   if(id==='pipeline')setTimeout(renderPipeline,50);
   if(id==='clients')setTimeout(renderClients,50);
+  if(id==='workorder')renderWorkOrderDetail();
+  if(id==='schedule')renderSchedule();
   if(typeof isMobile!=='undefined'&&isMobile)closeMobileNav();
 }
 
@@ -4155,6 +4258,7 @@ async function renderPipeline() {
     var dp = await results[1].json();
     if (!ds.ok || !dp.ok) throw new Error('Failed to load');
     pipelineStages = ds.stages;
+    _pipelineStages = ds.stages;
     pipelineProposals = dp.proposals;
 
     // Only show projects in pipeline (proposals stay attached to their projects)
@@ -4268,7 +4372,8 @@ async function renderPipeline() {
 async function moveCard(proposalId, stageId) {
   try {
     await fetch('/pipeline/move/'+proposalId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage_id:stageId})});
-    renderPipeline();
+    await renderPipeline();
+    autoCreateWorkOrder(proposalId,stageId);
     toast('Moved','ok');
   } catch(e){toast('Move failed: '+e.message,'err');}
 }
@@ -4584,6 +4689,390 @@ function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];
 function closeUserModal(){document.getElementById('user-modal').classList.add('hidden');_editingUserId=null;}
 async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pin=document.getElementById('edit-pin').value.trim();var role=document.getElementById('edit-role').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,role:role};if(pin)upd.pin=pin;var origUser=window._adminUsers&&window._adminUsers[_editingUserId];if(origUser&&un!==origUser.username)upd.username=un;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){if(upd.username&&origUser.username===window._userUsername){window._userUsername=un;}closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pin||pin.length<4){errEl.textContent='PIN must be at least 4 digits.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,pin:pin,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
 async function deactivateUser(uid,username,active){if(!confirm((active?'Deactivate':'Reactivate')+' "'+username+'"?'))return;var r=await fetch('/admin/users/'+uid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!active})});var d=await r.json();if(d.ok){loadUsers();toast('User '+(active?'deactivated':'reactivated'),'ok');}else toast('Error: '+(d.error||'failed'),'err');}
+
+// -- Work Order Detail View ---------------------------------------------------
+var _currentWorkOrderId=null;
+
+function openWorkOrderView(woId){
+  _currentWorkOrderId=woId;
+  showPanel('workorder',null);
+}
+
+function renderWorkOrderDetail(){
+  if(!_currentProjectId||!_currentWorkOrderId)return;
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var wo=(snap.work_orders||[]).find(function(w){return w.id===_currentWorkOrderId;});
+  if(!wo){document.getElementById('wo-detail-header').innerHTML='<p style="color:var(--red);">Work order not found.</p>';return;}
+
+  // Header
+  var statusColors={pending:'#999',active:'#2B5FA6',complete:'#27500A'};
+  var hdr=document.getElementById('wo-detail-header');
+  hdr.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">'
+    +'<h2 style="margin:0;font-size:20px;font-weight:800;">'+esc(wo.name)+'</h2>'
+    +'<span style="font-size:10px;font-weight:700;color:#fff;background:'+(statusColors[wo.status]||'#999')+';padding:3px 10px;border-radius:4px;text-transform:uppercase;">'+esc(wo.status)+'</span>'
+    +'</div>'
+    +'<div style="font-size:12px;color:var(--dgray);">'+esc(proj.name||'')+(wo.date?' &middot; Created '+wo.date:'')+(wo.scheduled_date?' &middot; Scheduled '+wo.scheduled_date:'')+'</div>';
+
+  // Scope of Work
+  var scopeEl=document.getElementById('wo-scope');
+  var linkedQ=wo.linked_proposal?savedQuotes.find(function(q){return q.id===wo.linked_proposal;}):null;
+  var scopeHtml='';
+  if(wo.description){
+    scopeHtml+='<div style="font-size:13px;line-height:1.6;margin-bottom:10px;">'+esc(wo.description).replace(/\n/g,'<br>')+'</div>';
+  }
+  if(linkedQ){
+    var qs=typeof linkedQ.snap==='string'?JSON.parse(linkedQ.snap||'{}'):linkedQ.snap||{};
+    var secs=qs.sections||[];var cItems=qs.concItems||[];var eItems=qs.extraItems||[];
+    var items=[];
+    secs.forEach(function(sec){
+      (sec.layers||[]).forEach(function(lyr){
+        items.push({name:sec.name+' — '+lyr.mat,desc:lyr.desc||'',qty:Math.round(lyr.tons||0),unit:'TON'});
+      });
+    });
+    cItems.forEach(function(ci){
+      items.push({name:ci.name||ci.type,desc:ci.desc||'',qty:ci.qty||0,unit:ci.unit||'LF'});
+    });
+    eItems.forEach(function(ei){
+      items.push({name:ei.name,desc:ei.desc||'',qty:ei.qty||0,unit:ei.unit||'EA'});
+    });
+    if(items.length){
+      scopeHtml+='<table style="width:100%;font-size:12px;border-collapse:collapse;">';
+      scopeHtml+='<tr style="background:var(--lgray);"><th style="text-align:left;padding:6px 8px;font-size:11px;">Item</th><th style="text-align:left;padding:6px 8px;font-size:11px;">Description</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Qty</th><th style="text-align:center;padding:6px 8px;font-size:11px;">Unit</th></tr>';
+      items.forEach(function(it,i){
+        scopeHtml+='<tr style="border-bottom:1px solid var(--bdr);'+(i%2?'background:#FAFAFA;':'')+'"><td style="padding:6px 8px;font-weight:600;">'+esc(it.name)+'</td><td style="padding:6px 8px;color:#555;">'+esc(it.desc)+'</td><td style="padding:6px 8px;text-align:right;">'+it.qty.toLocaleString()+'</td><td style="padding:6px 8px;text-align:center;">'+esc(it.unit)+'</td></tr>';
+      });
+      scopeHtml+='</table>';
+    }
+  }
+  scopeEl.innerHTML=scopeHtml||'<p style="color:var(--dgray);font-size:12px;">No scope items.</p>';
+
+  // Materials
+  var matEl=document.getElementById('wo-materials');
+  var matHtml='';
+  if(linkedQ){
+    var qs2=typeof linkedQ.snap==='string'?JSON.parse(linkedQ.snap||'{}'):linkedQ.snap||{};
+    var secs2=qs2.sections||[];
+    var matRows=[];
+    secs2.forEach(function(sec){
+      (sec.layers||[]).forEach(function(lyr){
+        if(lyr.mat)matRows.push({section:sec.name,material:lyr.mat,depth:lyr.depth||'',tons:Math.round(lyr.tons||0)});
+      });
+    });
+    if(matRows.length){
+      matHtml+='<table style="width:100%;font-size:12px;border-collapse:collapse;">';
+      matHtml+='<tr style="background:var(--lgray);"><th style="text-align:left;padding:6px 8px;font-size:11px;">Section</th><th style="text-align:left;padding:6px 8px;font-size:11px;">Material</th><th style="text-align:center;padding:6px 8px;font-size:11px;">Depth</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Est. Tons</th></tr>';
+      var totalTons=0;
+      matRows.forEach(function(r,i){
+        totalTons+=r.tons;
+        matHtml+='<tr style="border-bottom:1px solid var(--bdr);'+(i%2?'background:#FAFAFA;':'')+'"><td style="padding:6px 8px;">'+esc(r.section)+'</td><td style="padding:6px 8px;font-weight:600;">'+esc(r.material)+'</td><td style="padding:6px 8px;text-align:center;">'+(r.depth?r.depth+'"':'')+'</td><td style="padding:6px 8px;text-align:right;">'+r.tons.toLocaleString()+'</td></tr>';
+      });
+      matHtml+='<tr style="font-weight:700;border-top:2px solid #333;"><td colspan="3" style="padding:6px 8px;">Total</td><td style="padding:6px 8px;text-align:right;">'+totalTons.toLocaleString()+' tons</td></tr>';
+      matHtml+='</table>';
+    }
+  }
+  matEl.innerHTML=matHtml||'<p style="color:var(--dgray);font-size:12px;">No materials data. Link a proposal to populate.</p>';
+
+  // Crew Notes
+  var notesEl=document.getElementById('wo-notes');
+  var notesHtml='';
+  if(wo.crew_notes)notesHtml+='<div style="font-size:13px;line-height:1.6;">'+esc(wo.crew_notes).replace(/\n/g,'<br>')+'</div>';
+  if(wo.assigned_to)notesHtml+='<div style="margin-top:8px;font-size:12px;"><b>Assigned To:</b> '+esc(wo.assigned_to)+'</div>';
+  notesEl.innerHTML=notesHtml||'<p style="color:var(--dgray);font-size:12px;">No crew notes.</p>';
+
+  // Site Plan
+  var spEl=document.getElementById('wo-site-plan');
+  var spUrl=snap.site_plan_url;
+  if(spUrl){
+    var isPdf=spUrl.toLowerCase().indexOf('.pdf')>-1;
+    spEl.innerHTML=(isPdf
+      ?'<iframe src="'+esc(spUrl)+'" style="width:100%;height:280px;border:1px solid var(--bdr);border-radius:6px;" frameborder="0"></iframe>'
+      :'<img src="'+esc(spUrl)+'" style="max-width:100%;border-radius:6px;border:1px solid var(--bdr);"/>');
+  } else {
+    spEl.innerHTML='<p style="color:var(--dgray);font-size:12px;">No site plan uploaded for this project.</p>';
+  }
+
+  // Details
+  var detEl=document.getElementById('wo-details');
+  var detHtml='<div style="font-size:13px;line-height:2;">';
+  detHtml+='<div><b>Status:</b> '+esc(wo.status?wo.status.charAt(0).toUpperCase()+wo.status.slice(1):'Pending')+'</div>';
+  detHtml+='<div><b>Created:</b> '+(wo.date||'—')+'</div>';
+  if(wo.scheduled_date)detHtml+='<div><b>Scheduled:</b> '+wo.scheduled_date+'</div>';
+  if(wo.onsite_contact)detHtml+='<div><b>On-Site Contact:</b> '+esc(wo.onsite_contact)+(wo.onsite_phone?' ('+esc(wo.onsite_phone)+')':'')+'</div>';
+  if(linkedQ)detHtml+='<div><b>Linked Proposal:</b> '+esc(linkedQ.name||'Proposal')+'</div>';
+  detHtml+='<div><b>Project:</b> '+esc(proj.name||'')+'</div>';
+  detHtml+='</div>';
+  detEl.innerHTML=detHtml;
+}
+
+function editWorkOrder(){
+  if(_currentWorkOrderId)openWorkOrderModal(_currentWorkOrderId);
+}
+
+function exportWorkOrderPDF(){
+  if(!_currentProjectId||!_currentWorkOrderId)return;
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var wo=(snap.work_orders||[]).find(function(w){return w.id===_currentWorkOrderId;});
+  if(!wo){toast('Work order not found','err');return;}
+  // Build payload for PDF — NO pricing
+  var payload={
+    project_name:proj.name||'',
+    address:snap.address||'',
+    city_state:snap.city_state||'',
+    client_name:'', // exclude client personal info
+    date:wo.date||new Date().toISOString().split('T')[0],
+    notes:wo.crew_notes||'',
+    line_items:[],
+    sections:[],
+    total_tons:0,total_sf:0,total_sy:0,
+    onsite_contact:wo.onsite_contact||'',
+    onsite_phone:wo.onsite_phone||'',
+    sender_name:'',sender_phone:''
+  };
+  // Pull scope from linked proposal
+  var linkedQ=wo.linked_proposal?savedQuotes.find(function(q){return q.id===wo.linked_proposal;}):null;
+  if(linkedQ){
+    var qs=typeof linkedQ.snap==='string'?JSON.parse(linkedQ.snap||'{}'):linkedQ.snap||{};
+    var secs=qs.sections||[];
+    payload.sections=secs.map(function(sec){
+      return {name:sec.name,layers:(sec.layers||[]).map(function(l){return {material:l.mat,depth:l.depth,tons:Math.round(l.tons||0)};})};
+    });
+    secs.forEach(function(sec){
+      (sec.layers||[]).forEach(function(lyr){
+        payload.line_items.push({name:sec.name+' — '+(lyr.mat||''),description:lyr.desc||'',qty:Math.round(lyr.tons||0),unit:'TON'});
+        payload.total_tons+=(lyr.tons||0);
+      });
+      payload.total_sf+=(sec.sf||0);
+      payload.total_sy+=Math.round((sec.sf||0)/9);
+    });
+    (qs.concItems||[]).forEach(function(ci){
+      payload.line_items.push({name:ci.name||ci.type,description:ci.desc||'',qty:ci.qty||0,unit:ci.unit||'LF'});
+    });
+    (qs.extraItems||[]).forEach(function(ei){
+      payload.line_items.push({name:ei.name,description:ei.desc||'',qty:ei.qty||0,unit:ei.unit||'EA'});
+    });
+  } else if(wo.description){
+    payload.line_items.push({name:wo.name,description:wo.description,qty:1,unit:'LS'});
+  }
+  // Sender info from localStorage
+  var si=JSON.parse(localStorage.getItem('hd_sender_info')||'{}');
+  payload.sender_name=si.name||'';payload.sender_phone=si.phone||'';
+
+  fetch('/generate-wo-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){
+      if(!r.ok)throw new Error('PDF generation failed');
+      return r.blob();
+    }).then(function(blob){
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a');a.href=url;a.download='HD_WorkOrder_'+esc(wo.name).replace(/\s+/g,'_')+'.pdf';
+      document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+      toast('Work order PDF downloaded','ok');
+    }).catch(function(e){toast('Error: '+e.message,'err');});
+}
+
+// -- Auto-Create Work Order on Approved Stage ---------------------------------
+function autoCreateWorkOrder(projectId,stageId){
+  // Find the Approved stage
+  if(!_pipelineStages)return;
+  var approvedStage=_pipelineStages.find(function(s){return s.name==='Approved';});
+  if(!approvedStage||stageId!==approvedStage.id)return;
+  var proj=pipelineProposals.find(function(p){return p.id===projectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  if(!snap.is_project)return;
+  // Check if work orders already exist
+  if(snap.work_orders&&snap.work_orders.length>0)return;
+  var linked=snap.linked_proposals||[];
+  if(!linked.length)return;
+  // If single proposal, auto-create
+  if(linked.length===1){
+    var q=savedQuotes.find(function(x){return x.id===linked[0];});
+    if(!snap.work_orders)snap.work_orders=[];
+    snap.work_orders.push({
+      id:Date.now(),name:proj.name+' — Work Order',description:'Auto-created when project moved to Approved.',
+      assigned_to:'',status:'pending',date:new Date().toISOString().split('T')[0],
+      linked_proposal:linked[0],onsite_contact:'',onsite_phone:'',crew_notes:'',scheduled_date:null
+    });
+    addProjectActivity(snap,'wo','Work order auto-created (Approved)');
+    fetch('/projects/update/'+projectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+      .then(function(){proj.snap=snap;toast('Work order auto-created','ok');});
+  } else {
+    // Multiple proposals — prompt user to select
+    _currentProjectId=projectId;
+    toast('Project approved — add a work order and select a proposal','ok');
+    setTimeout(function(){openWorkOrderModal();},500);
+  }
+}
+
+var _pipelineStages=null;
+
+// -- Schedule Page ------------------------------------------------------------
+var _schedMonth=new Date().getMonth();
+var _schedYear=new Date().getFullYear();
+
+function schedCalNav(dir){
+  if(dir===0){_schedMonth=new Date().getMonth();_schedYear=new Date().getFullYear();}
+  else{_schedMonth+=dir;if(_schedMonth>11){_schedMonth=0;_schedYear++;}if(_schedMonth<0){_schedMonth=11;_schedYear--;}}
+  renderSchedule();
+}
+
+function renderSchedule(){
+  var titleEl=document.getElementById('sched-cal-title');
+  var gridEl=document.getElementById('sched-cal-grid');
+  var queueEl=document.getElementById('sched-queue');
+  if(!titleEl||!gridEl||!queueEl)return;
+
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  titleEl.textContent=months[_schedMonth]+' '+_schedYear;
+
+  // Collect all work orders with scheduled_date across all projects
+  var allWOs=[];
+  var approvedStage=null;
+  if(_pipelineStages)approvedStage=_pipelineStages.find(function(s){return s.name==='Approved'||s.name==='Scheduled'||s.name==='In Progress';});
+  pipelineProposals.forEach(function(p){
+    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    if(!snap.is_project)return;
+    (snap.work_orders||[]).forEach(function(wo){
+      allWOs.push({wo:wo,project:p,snap:snap});
+    });
+  });
+
+  // Queue — unscheduled work orders from approved+ projects
+  var unscheduled=allWOs.filter(function(item){return !item.wo.scheduled_date&&item.wo.status!=='complete';});
+  queueEl.innerHTML='';
+  if(unscheduled.length){
+    unscheduled.forEach(function(item){
+      var card=document.createElement('div');
+      card.style.cssText='padding:8px 10px;margin-bottom:6px;background:var(--lgray);border-radius:6px;border:1px solid var(--bdr);cursor:grab;font-size:12px;';
+      card.setAttribute('draggable','true');
+      card.dataset.woId=item.wo.id;
+      card.dataset.projectId=item.project.id;
+      card.innerHTML='<div style="font-weight:700;font-size:13px;">'+esc(item.wo.name)+'</div>'
+        +'<div style="color:var(--dgray);font-size:11px;">'+esc(item.project.name)+(item.wo.assigned_to?' &middot; '+esc(item.wo.assigned_to):'')+'</div>';
+      card.addEventListener('dragstart',function(ev){
+        ev.dataTransfer.setData('text/plain',JSON.stringify({woId:item.wo.id,projectId:item.project.id}));
+        card.style.opacity='0.5';
+      });
+      card.addEventListener('dragend',function(){card.style.opacity='1';});
+      queueEl.appendChild(card);
+    });
+  } else {
+    queueEl.innerHTML='<p style="color:var(--dgray);font-size:12px;">No unscheduled work orders.</p>';
+  }
+
+  // Calendar grid
+  gridEl.innerHTML='';
+  var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  days.forEach(function(d){
+    var hdr=document.createElement('div');
+    hdr.style.cssText='text-align:center;font-weight:700;font-size:11px;padding:6px 0;color:var(--dgray);';
+    hdr.textContent=d;
+    gridEl.appendChild(hdr);
+  });
+
+  var firstDay=new Date(_schedYear,_schedMonth,1).getDay();
+  var daysInMonth=new Date(_schedYear,_schedMonth+1,0).getDate();
+  var today=new Date();var todayStr=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+
+  // Empty cells before first day
+  for(var i=0;i<firstDay;i++){
+    var empty=document.createElement('div');
+    empty.style.cssText='min-height:80px;background:#FAFAFA;border-radius:4px;';
+    gridEl.appendChild(empty);
+  }
+
+  for(var d=1;d<=daysInMonth;d++){
+    var dateStr=_schedYear+'-'+String(_schedMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var cell=document.createElement('div');
+    var isToday=dateStr===todayStr;
+    cell.style.cssText='min-height:80px;border:1px solid var(--bdr);border-radius:4px;padding:4px;font-size:11px;'+(isToday?'background:#FFF5F5;border-color:var(--red);':'');
+    cell.dataset.date=dateStr;
+    var dayNum=document.createElement('div');
+    dayNum.style.cssText='font-weight:700;font-size:12px;margin-bottom:4px;'+(isToday?'color:var(--red);':'');
+    dayNum.textContent=d;
+    cell.appendChild(dayNum);
+
+    // Show scheduled work orders for this date
+    var dayWOs=allWOs.filter(function(item){return item.wo.scheduled_date===dateStr;});
+    dayWOs.forEach(function(item){
+      var tag=document.createElement('div');
+      var stColors={pending:'#999',active:'#2B5FA6',complete:'#27500A'};
+      tag.style.cssText='background:'+(stColors[item.wo.status]||'#999')+';color:#fff;padding:2px 5px;border-radius:3px;font-size:10px;font-weight:600;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      tag.textContent=item.wo.name;
+      tag.title=item.project.name+' — '+item.wo.name;
+      (function(woId,projId){tag.addEventListener('click',function(){
+        _currentProjectId=projId;openWorkOrderView(woId);
+      });})(item.wo.id,item.project.id);
+      cell.appendChild(tag);
+    });
+
+    // Drop target
+    cell.addEventListener('dragover',function(ev){ev.preventDefault();this.style.background='#E8F5E9';});
+    cell.addEventListener('dragleave',function(){this.style.background=isToday?'#FFF5F5':'';});
+    (function(ds,isT){cell.addEventListener('drop',function(ev){
+      ev.preventDefault();this.style.background=isT?'#FFF5F5':'';
+      try{
+        var data=JSON.parse(ev.dataTransfer.getData('text/plain'));
+        scheduleWorkOrder(data.projectId,data.woId,ds);
+      }catch(e){}
+    });})(dateStr,isToday);
+
+    gridEl.appendChild(cell);
+  }
+}
+
+function scheduleWorkOrder(projectId,woId,dateStr){
+  var proj=pipelineProposals.find(function(p){return p.id===projectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var wo=(snap.work_orders||[]).find(function(w){return w.id===woId;});
+  if(!wo)return;
+  wo.scheduled_date=dateStr;
+  addProjectActivity(snap,'wo','Work order "'+wo.name+'" scheduled for '+dateStr);
+  fetch('/projects/update/'+projectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.ok){proj.snap=snap;toast('Scheduled for '+dateStr,'ok');renderSchedule();}
+      else toast('Failed to schedule','err');
+    });
+}
+
+function exportScheduleToGCal(){
+  // Build ICS file for all scheduled work orders in current month view
+  var allWOs=[];
+  pipelineProposals.forEach(function(p){
+    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    if(!snap.is_project)return;
+    (snap.work_orders||[]).forEach(function(wo){
+      if(wo.scheduled_date)allWOs.push({wo:wo,project:p,snap:snap});
+    });
+  });
+  if(!allWOs.length){toast('No scheduled work orders to export','err');return;}
+  var lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//HD Hauling//Work Orders//EN','CALSCALE:GREGORIAN'];
+  allWOs.forEach(function(item){
+    var d=item.wo.scheduled_date.replace(/-/g,'');
+    lines.push('BEGIN:VEVENT');
+    lines.push('DTSTART;VALUE=DATE:'+d);
+    lines.push('DTEND;VALUE=DATE:'+d);
+    lines.push('SUMMARY:'+item.wo.name+' — '+item.project.name);
+    var desc=[];
+    if(item.wo.assigned_to)desc.push('Crew: '+item.wo.assigned_to);
+    if(item.wo.onsite_contact)desc.push('Contact: '+item.wo.onsite_contact+(item.wo.onsite_phone?' ('+item.wo.onsite_phone+')':''));
+    if(item.wo.description)desc.push(item.wo.description);
+    if(desc.length)lines.push('DESCRIPTION:'+desc.join('\\n').replace(/\n/g,'\\n'));
+    var addr=item.snap.address||'';if(item.snap.city_state)addr+=(addr?', ':'')+item.snap.city_state;
+    if(addr)lines.push('LOCATION:'+addr);
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  var blob=new Blob([lines.join('\r\n')],{type:'text/calendar'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download='hd_schedule.ics';
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  toast('Calendar file downloaded — import into Google Calendar','ok');
+}
 
 // Startup: check auth on every page load so _userRole is set from server
 (async function(){
