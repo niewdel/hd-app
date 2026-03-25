@@ -407,21 +407,22 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <div id="dash-weather" class="card" style="margin-bottom:16px;">
             <div class="card-body" style="padding:10px 14px;"><div style="font-size:12px;color:var(--dgray);">Loading weather...</div></div>
           </div>
-          <!-- Pipeline Board -->
-          <div class="card" style="margin-bottom:16px;">
-            <div class="card-hdr"><span class="card-title">Project Pipeline</span><button class="btn btn-sec btn-sm" onclick="renderPipeline()">Refresh</button></div>
-            <div class="card-body" style="padding:8px;overflow-x:auto;">
-              <div id="pipeline-board">
-                <div style="color:var(--dgray);font-size:13px;padding:20px;">Loading pipeline...</div>
-              </div>
-            </div>
-          </div>
           <!-- Stats row -->
           <div id="dash-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;"></div>
-          <!-- Calendar + Documents row -->
+          <!-- Upcoming WO + Recent Projects (same row) -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+            <div class="card">
+              <div class="card-hdr"><span class="card-title">Upcoming Work Orders</span></div>
+              <div class="card-body" id="dash-upcoming-wo"><p style="font-size:12px;color:var(--dgray);">No upcoming work orders.</p></div>
+            </div>
+            <div class="card">
+              <div class="card-hdr"><span class="card-title">Recent Projects</span></div>
+              <div class="card-body" id="dash-recent-projects"><p style="font-size:12px;color:var(--dgray);">No recent projects.</p></div>
+            </div>
+          </div>
+          <!-- Bid Calendar + Company Resources -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
-            <div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="card">
               <div class="card-hdr"><span class="card-title">Bid Calendar</span></div>
               <div class="card-body" style="padding:0;">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bdr);">
@@ -438,41 +439,43 @@ tr:nth-child(even) td{background:#FAFAFA;}
                 </div>
               </div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
-              <div class="card-hdr"><span class="card-title">Upcoming Work Orders</span></div>
-              <div class="card-body" id="dash-upcoming-wo"><p style="font-size:12px;color:var(--dgray);">No upcoming work orders.</p></div>
-            </div>
             <div class="card">
-              <div class="card-hdr"><span class="card-title">Recent Projects</span></div>
-              <div class="card-body" id="dash-recent-projects"><p style="font-size:12px;color:var(--dgray);">No recent projects.</p></div>
-            </div>
-            </div>
-            <div>
-              <div class="card" style="margin-bottom:14px;">
-                <div class="card-hdr">
-                  <span class="card-title">Company Handbook</span>
-                  <a href="https://drive.google.com/file/d/13jfOJiSAwPwxKBb5XeUGXpHF2u6Uq0DD/view" target="_blank" class="btn btn-sec btn-sm" style="text-decoration:none;">Open in Drive</a>
-                </div>
-                <div class="card-body" style="padding:0;">
-                  <iframe src="https://drive.google.com/file/d/13jfOJiSAwPwxKBb5XeUGXpHF2u6Uq0DD/preview" style="width:100%;height:400px;border:none;border-radius:0 0 var(--rad) var(--rad);" allow="autoplay"></iframe>
-                </div>
-              </div>
-              <div class="card">
-                <div class="card-hdr"><span class="card-title">Email Signature</span></div>
-                <div class="card-body" id="dash-signature">
-                  <p style="font-size:11px;color:var(--dgray);margin-bottom:8px;">Copy the text below into your Gmail signature settings. Replace the placeholders with your info. Copy the logo separately (right-click &gt; Copy Image). <strong style="color:var(--red);">After pasting the logo, click on it and select "Medium" size so it formats correctly.</strong></p>
-                  <div id="dash-sig-content" style="font-family:Arial,sans-serif;font-size:13px;line-height:1.6;border:1px solid var(--bdr);border-radius:6px;padding:16px;background:#FAFAFA;user-select:all;">
-                    <p style="font-weight:700;color:var(--red);margin-bottom:0;font-size:14px;">First Name</p>
-                    <p style="color:#555;font-size:12px;margin-bottom:4px;">Company Title</p>
-                    <p style="font-size:12px;color:#555;margin-bottom:1px;">E: <span style="color:#0055B2;">email@hdgrading.com</span></p>
-                    <p style="font-size:12px;color:#555;margin-bottom:8px;">C: Cell Number | O: 704-791-8982</p>
-                    <img id="dash-sig-logo" src="hd_logo.png" alt="HD Hauling &amp; Grading" style="height:70px;width:auto;display:block;margin-bottom:8px;"/>
-                    <p style="font-size:8px;color:#888;line-height:1.3;margin:0;"><strong>CONFIDENTIALITY NOTICE:</strong> This email and any attachments are intended solely for the named recipient(s) and may contain confidential information. If you have received this email in error, please immediately notify the sender and permanently delete this email and any attachments without reading, forwarding, copying, or disclosing their contents. Any unauthorized use, disclosure, or distribution is prohibited and may be unlawful.</p>
+              <div class="card-hdr"><span class="card-title">Company Resources</span></div>
+              <div class="card-body" id="dash-resources">
+                <div style="display:grid;gap:10px;">
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--bdr);border-radius:8px;cursor:pointer;background:#FAFAFA;" onclick="toggleDashResource('handbook')">
+                    <div style="font-size:24px;">&#128214;</div>
+                    <div style="flex:1;"><div style="font-weight:700;font-size:13px;">Employee Handbook</div><div style="font-size:11px;color:var(--dgray);">Company policies and procedures</div></div>
+                    <span style="font-size:14px;color:var(--dgray);" id="res-handbook-arrow">&#9654;</span>
                   </div>
-                  <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                    <button class="btn btn-sec btn-sm" onclick="copySignature()">Copy Signature Text</button>
-                    <button class="btn btn-sec btn-sm" onclick="copySignatureLogo()">Copy Logo Image</button>
-                    <button class="btn btn-sec btn-sm" onclick="window.open('https://mail.google.com/mail/u/0/#settings/general','_blank')">Open Gmail Settings</button>
+                  <div id="res-handbook-content" style="display:none;padding:0 0 10px;">
+                    <div style="display:flex;gap:8px;margin-bottom:8px;">
+                      <a href="https://drive.google.com/file/d/13jfOJiSAwPwxKBb5XeUGXpHF2u6Uq0DD/view" target="_blank" class="btn btn-sec btn-sm" style="text-decoration:none;">Open in Drive</a>
+                    </div>
+                    <iframe src="https://drive.google.com/file/d/13jfOJiSAwPwxKBb5XeUGXpHF2u6Uq0DD/preview" style="width:100%;height:350px;border:1px solid var(--bdr);border-radius:6px;" allow="autoplay"></iframe>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--bdr);border-radius:8px;cursor:pointer;background:#FAFAFA;" onclick="toggleDashResource('signature')">
+                    <div style="font-size:24px;">&#9993;</div>
+                    <div style="flex:1;"><div style="font-weight:700;font-size:13px;">Email Signature</div><div style="font-size:11px;color:var(--dgray);">Copy your Gmail signature template</div></div>
+                    <span style="font-size:14px;color:var(--dgray);" id="res-signature-arrow">&#9654;</span>
+                  </div>
+                  <div id="res-signature-content" style="display:none;" >
+                    <div id="dash-signature">
+                      <p style="font-size:11px;color:var(--dgray);margin-bottom:8px;">Copy the text below into your Gmail signature settings. Replace the placeholders with your info. Copy the logo separately (right-click &gt; Copy Image). <strong style="color:var(--red);">After pasting the logo, click on it and select "Medium" size so it formats correctly.</strong></p>
+                      <div id="dash-sig-content" style="font-family:Arial,sans-serif;font-size:13px;line-height:1.6;border:1px solid var(--bdr);border-radius:6px;padding:16px;background:#FAFAFA;user-select:all;">
+                        <p style="font-weight:700;color:var(--red);margin-bottom:0;font-size:14px;">First Name</p>
+                        <p style="color:#555;font-size:12px;margin-bottom:4px;">Company Title</p>
+                        <p style="font-size:12px;color:#555;margin-bottom:1px;">E: <span style="color:#0055B2;">email@hdgrading.com</span></p>
+                        <p style="font-size:12px;color:#555;margin-bottom:8px;">C: Cell Number | O: 704-791-8982</p>
+                        <img id="dash-sig-logo" src="hd_logo.png" alt="HD Hauling &amp; Grading" style="height:70px;width:auto;display:block;margin-bottom:8px;"/>
+                        <p style="font-size:8px;color:#888;line-height:1.3;margin:0;"><strong>CONFIDENTIALITY NOTICE:</strong> This email and any attachments are intended solely for the named recipient(s) and may contain confidential information. If you have received this email in error, please immediately notify the sender and permanently delete this email and any attachments without reading, forwarding, copying, or disclosing their contents. Any unauthorized use, disclosure, or distribution is prohibited and may be unlawful.</p>
+                      </div>
+                      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <button class="btn btn-sec btn-sm" onclick="copySignature()">Copy Signature Text</button>
+                        <button class="btn btn-sec btn-sm" onclick="copySignatureLogo()">Copy Logo Image</button>
+                        <button class="btn btn-sec btn-sm" onclick="window.open('https://mail.google.com/mail/u/0/#settings/general','_blank')">Open Gmail Settings</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -741,7 +744,16 @@ tr:nth-child(even) td{background:#FAFAFA;}
       </div></div>
 
       <!-- PROJECTS LIST PANEL -->
-      <div class="panel" id="panel-projects"><div class="content">
+      <div class="panel" id="panel-projects"><div class="content" style="padding:16px;max-width:none;">
+        <!-- Pipeline board at top of projects -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-hdr"><span class="card-title">Project Pipeline</span><button class="btn btn-sec btn-sm" onclick="renderPipeline()">Refresh</button></div>
+          <div class="card-body" style="padding:8px;overflow-x:auto;">
+            <div id="pipeline-board">
+              <div style="color:var(--dgray);font-size:13px;padding:20px;">Loading pipeline...</div>
+            </div>
+          </div>
+        </div>
         <div id="projects-list"><p style="color:var(--dgray);font-size:13px;">Loading projects...</p></div>
       </div></div>
 
@@ -2209,6 +2221,14 @@ function renderDayEntries(dateKey){
 function renderDashSignature(){
   // Signature is a template with placeholders — don't overwrite with user data
 }
+function toggleDashResource(name){
+  var content=document.getElementById('res-'+name+'-content');
+  var arrow=document.getElementById('res-'+name+'-arrow');
+  if(!content)return;
+  var open=content.style.display!=='none';
+  content.style.display=open?'none':'';
+  if(arrow)arrow.innerHTML=open?'&#9654;':'&#9660;';
+}
 
 function copySignature(){
   var html='<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.6;">'
@@ -2527,7 +2547,7 @@ function _renderProjectSummaryInner(proj){
         // Detail row
         var details=[];
         if(wo.assigned_to)details.push(esc(wo.assigned_to));
-        if(wo.scheduled_date)details.push('Scheduled: '+esc(wo.scheduled_date)+(wo.scheduled_time?' at '+fmt12(wo.scheduled_time):''));
+        if(wo.scheduled_date){var sd='Scheduled: '+esc(wo.scheduled_date)+(wo.scheduled_end_date?' to '+esc(wo.scheduled_end_date):'')+(wo.scheduled_time?' at '+fmt12(wo.scheduled_time):'')+(wo.scheduled_end_time?' - '+fmt12(wo.scheduled_end_time):'')+(wo.scheduled_days&&wo.scheduled_days>1?' ('+wo.scheduled_days+' days)':'');details.push(sd);}
         else if(wo.date)details.push('Created: '+esc(wo.date));
         if(details.length){
           var detEl=document.createElement('div');detEl.style.cssText='font-size:12px;color:var(--dgray);margin-bottom:4px;';
@@ -2748,8 +2768,16 @@ function openWorkOrderModal(editWoId){
     +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Contact Phone</label><input id="wo-contact-phone" class="inp" placeholder="(555) 000-0000" style="width:100%;" value="'+esc(editing?editing.onsite_phone:'')+'"></div>'
     +'</div>'
     +'<div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Crew Notes</label><textarea id="wo-crew-notes" rows="2" class="inp" placeholder="Special instructions for the crew..." style="width:100%;resize:vertical;">'+esc(editing?editing.crew_notes:'')+'</textarea></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;"><div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Scheduled Date</label><input type="date" id="wo-sched-date" class="inp" style="width:100%;" value="'+(editing&&editing.scheduled_date?editing.scheduled_date:'')+'"></div>'
-    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Scheduled Time <span style="font-weight:400;color:var(--dgray);">(optional)</span></label><input type="time" id="wo-sched-time" class="inp" style="width:100%;" value="'+(editing&&editing.scheduled_time?editing.scheduled_time:'')+'"></div></div>'
+    +'<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--dgray);text-transform:uppercase;letter-spacing:0.5px;">Scheduling</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:10px;margin-bottom:10px;">'
+    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Start Date</label><input type="date" id="wo-sched-date" class="inp" style="width:100%;" value="'+(editing&&editing.scheduled_date?editing.scheduled_date:'')+'"></div>'
+    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">End Date <span style="font-weight:400;color:var(--dgray);">(opt)</span></label><input type="date" id="wo-sched-end-date" class="inp" style="width:100%;" value="'+(editing&&editing.scheduled_end_date?editing.scheduled_end_date:'')+'"></div>'
+    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Days</label><input type="number" id="wo-sched-days" class="inp" min="1" step="1" placeholder="1" style="width:100%;" value="'+(editing&&editing.scheduled_days?editing.scheduled_days:'')+'"></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'
+    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Start Time <span style="font-weight:400;color:var(--dgray);">(opt)</span></label><input type="time" id="wo-sched-time" class="inp" style="width:100%;" value="'+(editing&&editing.scheduled_time?editing.scheduled_time:'')+'"></div>'
+    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">End Time <span style="font-weight:400;color:var(--dgray);">(opt)</span></label><input type="time" id="wo-sched-end-time" class="inp" style="width:100%;" value="'+(editing&&editing.scheduled_end_time?editing.scheduled_end_time:'')+'"></div>'
+    +'</div>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
     +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'wo-modal\').remove()">Cancel</button>'
     +'<button class="btn btn-red btn-sm" id="wo-save">'+(editing?'Update':'Save')+' Work Order</button></div>';
@@ -2771,7 +2799,10 @@ function openWorkOrderModal(editWoId){
       onsite_phone:document.getElementById('wo-contact-phone').value.trim(),
       crew_notes:document.getElementById('wo-crew-notes').value.trim(),
       scheduled_date:document.getElementById('wo-sched-date').value||null,
+      scheduled_end_date:document.getElementById('wo-sched-end-date').value||null,
+      scheduled_days:parseInt(document.getElementById('wo-sched-days').value)||1,
       scheduled_time:document.getElementById('wo-sched-time').value||null,
+      scheduled_end_time:document.getElementById('wo-sched-end-time').value||null,
       linked_proposal:linkedProp,
       date:new Date().toISOString().split('T')[0]
     };
@@ -4948,7 +4979,7 @@ function renderWorkOrderDetail(){
     +'<div style="font-size:14px;font-weight:600;color:#555;margin-bottom:2px;">'+esc(wo.name)+'</div>'
     +'<div style="font-size:12px;color:var(--dgray);">'
     +(addr?esc(addr)+(snap.city_state?', '+esc(snap.city_state):''):'')
-    +(wo.scheduled_date?(addr?' &middot; ':'')+'Scheduled '+wo.scheduled_date+(wo.scheduled_time?' at '+fmt12(wo.scheduled_time):''):'')
+    +(wo.scheduled_date?(addr?' &middot; ':'')+'Scheduled '+wo.scheduled_date+(wo.scheduled_end_date?' to '+wo.scheduled_end_date:'')+(wo.scheduled_time?' at '+fmt12(wo.scheduled_time):'')+(wo.scheduled_days&&wo.scheduled_days>1?' ('+wo.scheduled_days+'d)':''):'')
     +'</div>';
 
   // Scope of Work
@@ -5030,7 +5061,7 @@ function renderWorkOrderDetail(){
   detHtml+='<div><b>Status:</b> '+esc(wo.status?wo.status.charAt(0).toUpperCase()+wo.status.slice(1):'Pending')+'</div>';
   detHtml+='<div><b>Project:</b> '+esc(proj.name||'')+'</div>';
   if(addr)detHtml+='<div><b>Address:</b> '+esc(addr)+(snap.city_state?', '+esc(snap.city_state):'')+'</div>';
-  if(wo.scheduled_date)detHtml+='<div><b>Scheduled:</b> '+wo.scheduled_date+(wo.scheduled_time?' at '+fmt12(wo.scheduled_time):'')+'</div>';
+  if(wo.scheduled_date){detHtml+='<div><b>Scheduled:</b> '+wo.scheduled_date+(wo.scheduled_end_date?' to '+wo.scheduled_end_date:'')+'</div>';if(wo.scheduled_time)detHtml+='<div><b>Time:</b> '+fmt12(wo.scheduled_time)+(wo.scheduled_end_time?' - '+fmt12(wo.scheduled_end_time):'')+'</div>';if(wo.scheduled_days&&wo.scheduled_days>1)detHtml+='<div><b>Duration:</b> '+wo.scheduled_days+' days</div>';}
   if(wo.onsite_contact)detHtml+='<div><b>On-Site Contact:</b> '+esc(wo.onsite_contact)+(wo.onsite_phone?' ('+esc(wo.onsite_phone)+')':'')+'</div>';
   if(linkedQ)detHtml+='<div><b>Linked Proposal:</b> '+esc(linkedQ.name||'Proposal')+'</div>';
   detHtml+='</div>';
@@ -5225,17 +5256,18 @@ function renderSchedule(){
       var addr=snap.address||'';
       var cityState=snap.city_state||'';
       var fullAddr=addr+(cityState?(addr?', ':'')+cityState:'');
-      // Calculate total tonnage from linked proposal
+      // Calculate total tonnage from linked proposal or project's linked proposals
       var totalTons=0;
-      if(item.wo.linked_proposal){
-        var lq=savedQuotes.find(function(q){return q.id===item.wo.linked_proposal;});
+      var proposalIds=item.wo.linked_proposal?[item.wo.linked_proposal]:(snap.linked_proposals||[]);
+      proposalIds.forEach(function(pid){
+        var lq=savedQuotes.find(function(q){return q.id===pid;});
         if(lq){
           var lqs=typeof lq.snap==='string'?JSON.parse(lq.snap||'{}'):lq.snap||{};
           (lqs.sections||[]).forEach(function(sec){
             (sec.layers||[]).forEach(function(lyr){totalTons+=Math.round(lyr.tons||0);});
           });
         }
-      }
+      });
       var card=document.createElement('div');
       card.style.cssText='padding:12px 14px;margin-bottom:8px;background:#fff;border-radius:8px;border:1px solid var(--bdr);cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.06);';
       card.setAttribute('draggable','true');
@@ -5297,7 +5329,13 @@ function renderSchedule(){
     // Work orders for this day
     var body=document.createElement('div');
     body.style.cssText='flex:1;padding:4px;';
-    var dayWOs=allWOs.filter(function(item){return item.wo.scheduled_date===dateStr;});
+    var dayWOs=allWOs.filter(function(item){
+      if(!item.wo.scheduled_date)return false;
+      if(item.wo.scheduled_date===dateStr)return true;
+      // Multi-day: check if dateStr falls between start and end
+      if(item.wo.scheduled_end_date&&dateStr>item.wo.scheduled_date&&dateStr<=item.wo.scheduled_end_date)return true;
+      return false;
+    });
     dayWOs.sort(function(a,b){return (a.wo.scheduled_time||'99:99')>(b.wo.scheduled_time||'99:99')?1:-1;});
     dayWOs.forEach(function(item){
       var snap=item.snap;
@@ -5305,11 +5343,13 @@ function renderSchedule(){
       var tag=document.createElement('div');
       var stColors={pending:'#999',active:'#2B5FA6',complete:'#27500A'};
       tag.style.cssText='background:'+(stColors[item.wo.status]||'#999')+';color:#fff;padding:5px 6px;border-radius:4px;font-size:10px;margin-bottom:4px;cursor:pointer;';
-      var timeStr=item.wo.scheduled_time?fmt12(item.wo.scheduled_time):'';
+      var timeStr='';
+      if(item.wo.scheduled_time)timeStr=fmt12(item.wo.scheduled_time)+(item.wo.scheduled_end_time?' - '+fmt12(item.wo.scheduled_end_time):'');
+      var daysStr=item.wo.scheduled_days&&item.wo.scheduled_days>1?item.wo.scheduled_days+'d':'';
       tag.innerHTML='<div style="font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.wo.name)+'</div>'
         +'<div style="opacity:.85;font-size:9px;">'+esc(item.project.name)+'</div>'
         +(addr?'<div style="opacity:.75;font-size:9px;">'+esc(addr)+'</div>':'')
-        +(timeStr?'<div style="opacity:.85;font-size:9px;margin-top:1px;">'+timeStr+'</div>':'');
+        +(timeStr||daysStr?'<div style="opacity:.85;font-size:9px;margin-top:1px;">'+(timeStr?timeStr:'')+(timeStr&&daysStr?' &middot; ':'')+daysStr+'</div>':'');
       tag.title=item.project.name+' — '+item.wo.name+(addr?'\n'+addr:'')+(timeStr?'\n'+timeStr:'');
       (function(woId,projId){tag.addEventListener('click',function(){
         _currentProjectId=projId;openWorkOrderView(woId);
