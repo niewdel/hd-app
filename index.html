@@ -4433,13 +4433,15 @@ function openPresetModal(editIdx){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
   var box=document.createElement('div');
   box.style.cssText='background:#fff;border-radius:10px;padding:24px;min-width:520px;max-width:640px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18);';
-  var layers=preset.layers.map(function(l){return {type:l.type,depth:l.depth,rate:l.rate};});
+  var layers=preset.layers.map(function(l){return {type:l.type,depth:l.depth,rate:l.rate,description:l.description||''};});
 
   function renderRows(){
     var rows=box.querySelector('#pm-layers');rows.innerHTML='';
     layers.forEach(function(l,i){
       var row=document.createElement('div');
-      row.style.cssText='display:grid;grid-template-columns:1fr 80px 90px 32px;gap:8px;align-items:center;margin-bottom:8px;';
+      row.style.cssText='margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;';
+      var topRow=document.createElement('div');
+      topRow.style.cssText='display:grid;grid-template-columns:1fr 80px 90px 32px;gap:8px;align-items:center;margin-bottom:6px;';
       var ts=document.createElement('select');ts.style.fontSize='13px';
       LTYPES.forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;if(t===l.type)o.selected=true;ts.appendChild(o);});
       ts.onchange=function(){layers[i].type=this.value;};
@@ -4449,7 +4451,13 @@ function openPresetModal(editIdx){
       ri.onchange=function(){layers[i].rate=parseFloat(this.value)||0;};
       var db=document.createElement('button');db.className='btn-ico';db.style.color='var(--red)';db.textContent='×';
       db.onclick=function(){layers.splice(i,1);renderRows();};
-      row.appendChild(ts);row.appendChild(di);row.appendChild(ri);row.appendChild(db);
+      topRow.appendChild(ts);topRow.appendChild(di);topRow.appendChild(ri);topRow.appendChild(db);
+      row.appendChild(topRow);
+      var descIn=document.createElement('input');descIn.type='text';descIn.value=l.description||'';
+      descIn.placeholder='Line item description for PDF (e.g. Install 2" S9.5C Surface Course)';
+      descIn.style.cssText='width:100%;font-size:12px;color:var(--dgray);padding:4px 8px;border:1px solid var(--bdr);border-radius:5px;';
+      descIn.onchange=function(){layers[i].description=this.value;};
+      row.appendChild(descIn);
       rows.appendChild(row);
     });
   }
@@ -4463,7 +4471,7 @@ function openPresetModal(editIdx){
     +'<div style="display:grid;grid-template-columns:1fr 80px 90px 32px;gap:8px;margin-bottom:6px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;">'
     +'<span>Material</span><span>Depth (in)</span><span>$/ton Rate</span><span></span></div>'
     +'<div id="pm-layers"></div>'
-    +'<button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="window._presetModalLayers.push({type:LTYPES[0],depth:4,rate:50});window._presetModalRenderRows();">+ Add Layer</button>'
+    +'<button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="window._presetModalLayers.push({type:LTYPES[0],depth:4,rate:50,description:\'\'});window._presetModalRenderRows();">+ Add Layer</button>'
     +'<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bdr);">'
     +'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'preset-modal\').remove()">Cancel</button>'
     +'<button class="btn btn-red btn-sm" onclick="savePresetModal()">Save Preset</button>'
@@ -4484,7 +4492,7 @@ function savePresetModal(){
   if(!name.trim()){toast('Please enter a preset name','err');return;}
   var layers=window._presetModalLayers;
   if(!layers||!layers.length){toast('Add at least one layer','err');return;}
-  var preset={name:name.trim(),layers:layers.map(function(l){return {type:l.type,depth:l.depth,rate:l.rate};})};
+  var preset={name:name.trim(),layers:layers.map(function(l){return {type:l.type,depth:l.depth,rate:l.rate,description:l.description||''};})};
   if(window._presetModalEditIdx!==null&&window._presetModalEditIdx!==undefined){
     PRESETS[window._presetModalEditIdx]=preset;
   } else {
