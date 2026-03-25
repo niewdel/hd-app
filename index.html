@@ -38,19 +38,24 @@ body{font-family:var(--font);background:#EBEBEB;color:var(--blk);font-size:14px;
 /* App */
 #app{display:none;}
 #app.on{display:grid;grid-template-columns:210px 1fr;min-height:100vh;}
-.sb{background:var(--blk);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
-.sb-logo{padding:18px 14px 14px;border-bottom:1px solid #1e1e1e;}
-.sb-logo img{height:54px;width:auto;}
-.sb-logo p{font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-top:9px;}
-.sb nav{flex:1;padding:10px 0;overflow-y:auto;}
-.nav-grp{font-size:10px;font-weight:600;color:#444;text-transform:uppercase;letter-spacing:.08em;padding:10px 14px 3px;}
-.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:13px;color:#888;cursor:pointer;border-left:2px solid transparent;transition:all .12s;}
-.nav-item:hover{background:#181818;color:#ccc;}
-.nav-item.on{background:#181818;color:#fff;border-left-color:var(--red);}
-.nav-item svg{width:14px;height:14px;flex-shrink:0;}
-.sb-foot{padding:10px 14px;border-top:1px solid #1e1e1e;}
-.sb-foot button{background:none;border:none;color:#555;font-size:12px;cursor:pointer;font-family:var(--font);}
-.sb-foot button:hover{color:#888;}
+.sb{background:var(--blk);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sb-canvas{position:absolute;inset:0;z-index:0;pointer-events:none;}
+.sb-logo{position:relative;z-index:1;padding:16px 14px 14px;border-bottom:1px solid rgba(255,255,255,.06);}
+.sb-monogram{display:flex;align-items:center;gap:0;}
+.sb-monogram-h{font-size:32px;font-weight:900;color:var(--red);line-height:1;font-family:var(--font);letter-spacing:-1px;}
+.sb-monogram-d{font-size:32px;font-weight:900;color:#666;line-height:1;font-family:var(--font);letter-spacing:-1px;}
+.sb-monogram-arc{width:3px;height:22px;background:linear-gradient(180deg,var(--red),#666);border-radius:2px;margin:0 2px;align-self:center;}
+.sb-brand{font-size:8px;font-weight:600;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:2.5px;margin-top:6px;}
+.sb nav{position:relative;z-index:1;flex:1;padding:6px 0;overflow-y:auto;}
+.nav-grp{font-size:9px;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:1.5px;padding:14px 14px 4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 14px;font-size:12px;color:rgba(255,255,255,.45);cursor:pointer;border-left:2px solid transparent;transition:all .15s;position:relative;}
+.nav-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.8);}
+.nav-item.on{background:rgba(204,0,0,.08);color:#fff;border-left-color:var(--red);}
+.nav-item svg{width:13px;height:13px;flex-shrink:0;opacity:.7;}
+.nav-item.on svg{opacity:1;}
+.sb-foot{position:relative;z-index:1;padding:10px 14px;border-top:1px solid rgba(255,255,255,.06);}
+.sb-foot button{background:none;border:none;color:rgba(255,255,255,.25);font-size:11px;cursor:pointer;font-family:var(--font);letter-spacing:.5px;transition:color .15s;}
+.sb-foot button:hover{color:rgba(255,255,255,.5);}
 .main{overflow-y:auto;}
 .topbar{background:#fff;border-bottom:1px solid var(--bdr);padding:11px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
 .topbar-title{font-size:15px;font-weight:600;}
@@ -346,28 +351,29 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
 
   <aside class="sb">
+    <canvas id="sb-canvas" class="sb-canvas"></canvas>
     <div class="sb-logo">
-      <img src="/hd_logo.png" alt="HD Hauling &amp; Grading"/>
+      <div class="sb-monogram">
+        <span class="sb-monogram-h">H</span><span class="sb-monogram-arc"></span><span class="sb-monogram-d">D</span>
+      </div>
+      <div class="sb-brand">Hauling &amp; Grading</div>
     </div>
     <nav>
       <div class="nav-item on" onclick="showPanel('dashboard',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg>Dashboard</div>
       <div class="nav-item" onclick="showPanel('projects',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg>Projects</div>
-      <div class="nav-item" onclick="showPanel('build',this)">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Create Proposal
-      </div>
-      <div class="nav-item" onclick="showPanel('co',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h8l3 3v9H2V2zm5 4H4v1h3V6zm5 2H4v1h6V8zm0 2H4v1h6v-1z"/></svg>Create CO</div>
-      <div class="nav-item" onclick="showPanel('saved',this)">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents
-      </div>
+      <div class="nav-grp">Create</div>
+      <div class="nav-item" onclick="showPanel('build',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z"/></svg>Proposal</div>
+      <div class="nav-item" onclick="showPanel('co',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h8l3 3v9H2V2zm5 4H4v1h3V6zm5 2H4v1h6V8zm0 2H4v1h6v-1z"/></svg>Change Order</div>
+      <div class="nav-grp">Manage</div>
+      <div class="nav-item" onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents</div>
       <div class="nav-item" onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
+      <div class="nav-grp">Analyze</div>
       <div class="nav-item" onclick="showPanel('analytics',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v3H1zm4-4h3v7H5zm4-4h3v11H9zm4-6h2v17h-2z"/></svg>Analytics</div>
-
       <div class="nav-item" onclick="showPanel('jobcost',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3v1.5H10v1H8.5V9H10v1H8.5V11.5h-1V10H6V9h1.5V6.5H6v-1h1.5V4h1z"/></svg>Job Costing</div>
-      <div class="nav-item" onclick="showPanel('settings',this)">
-        <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings
-      </div>
+      <div class="nav-grp">Config</div>
+      <div class="nav-item" onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
       <div class="nav-item admin-only" id="nav-admin" data-admin-hidden onclick="showPanel('admin',this);loadUsers();loadLogs();">
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg>
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg>
         Admin
       </div>
     </nav>
@@ -1102,6 +1108,7 @@ async function doLogin(){
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
       try{boot();}catch(e){console.warn('boot error:',e.message);}
+      initSidebarCanvas();
       showAdminElements();
     } else {
       document.getElementById('pin-err').textContent=d.error||'Incorrect username or PIN.';
@@ -4344,6 +4351,26 @@ async function deleteClient(id) {
 document.addEventListener('click',function(e){if(e.target.id==='client-modal')closeClientModal();});
 function initLoginCanvas(){var cv=document.getElementById('login-canvas');if(!cv)return;var ctx=cv.getContext('2d');var W,H,pts;var N=55;function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}function rr(a,b){return a+Math.random()*(b-a);}function init(){resize();pts=[];for(var i=0;i<N;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:rr(-0.15,0.15),vy:rr(-0.15,0.15),r:rr(1,2)});}function draw(){ctx.clearRect(0,0,W,H);for(var i=0;i<N;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;}for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){var dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<150){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(170,170,170,'+(1-dist/150)*0.15+')';ctx.lineWidth=0.5;ctx.stroke();}if(dist<75){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(204,0,0,'+(1-dist/75)*0.2+')';ctx.lineWidth=0.6;ctx.stroke();}}for(var i=0;i<N;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,6.28);ctx.fillStyle='rgba(255,255,255,0.22)';ctx.fill();}requestAnimationFrame(draw);}window.addEventListener('resize',resize);init();draw();}initLoginCanvas();
 
+function initSidebarCanvas(){
+  var cv=document.getElementById('sb-canvas');if(!cv)return;
+  var ctx=cv.getContext('2d');var W,H,pts;var N=18;
+  function resize(){var sb=cv.parentElement;W=cv.width=sb.offsetWidth;H=cv.height=sb.offsetHeight;}
+  function rr(a,b){return a+Math.random()*(b-a);}
+  function init(){resize();pts=[];for(var i=0;i<N;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:rr(-0.08,0.08),vy:rr(-0.08,0.08),r:rr(0.8,1.5)});}
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(var i=0;i<N;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;}
+    for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){
+      var dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<120){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(255,255,255,'+(1-dist/120)*0.04+')';ctx.lineWidth=0.5;ctx.stroke();}
+      if(dist<60){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(204,0,0,'+(1-dist/60)*0.08+')';ctx.lineWidth=0.5;ctx.stroke();}
+    }
+    for(var i=0;i<N;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,6.28);ctx.fillStyle='rgba(255,255,255,0.08)';ctx.fill();}
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize);init();draw();
+}
+
 var _editingUserId=null;
 async function loadUsers(){var tbody=document.getElementById('users-tbody');if(!tbody)return;try{var r=await fetch('/admin/users');if(r.status===403){tbody.innerHTML='<tr><td colspan="6" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';window._adminUsers={};d.users.forEach(function(u){window._adminUsers[u.id]=u;var tr=document.createElement('tr');var created=u.created_at?new Date(u.created_at).toLocaleDateString():'-';tr.innerHTML='<td><b>'+esc(u.full_name||u.username)+'</b></td><td style="font-family:monospace;font-size:12px;">'+esc(u.username)+'</td><td><span class="role-badge role-'+u.role+'">'+u.role+'</span></td><td><span class="'+(u.active?'status-active':'status-inactive')+'">'+( u.active?'Active':'Inactive')+'</span></td><td style="font-size:12px;color:var(--dgray);">'+created+'</td><td style="white-space:nowrap;"><button class="btn btn-sec btn-sm" style="margin-right:4px;" onclick="openEditUserModal('+u.id+')">Edit</button>'+(u.username!==(window._userUsername||'')? '<button class="btn-ico" style="color:var(--red);" onclick="deactivateUser('+u.id+',\''+esc(u.username)+'\','+u.active+')">'+( u.active?'&#10005;':'&#10003;')+'</button>':'')+'</td>';tbody.appendChild(tr);});var sel=document.getElementById('log-user-filter');if(sel){sel.innerHTML='<option value="">All Users</option>';d.users.forEach(function(u){var o=document.createElement('option');o.value=u.username;o.textContent=u.full_name||u.username;sel.appendChild(o);});}}catch(e){tbody.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
 async function loadLogs(){var tbody=document.getElementById('logs-tbody');if(!tbody)return;tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">Loading...</td></tr>';try{var f=(document.getElementById('log-user-filter')||{}).value||'';var url='/admin/logs?limit=100'+(f?'&username='+encodeURIComponent(f):'');var r=await fetch(url);if(r.status===403){tbody.innerHTML='<tr><td colspan="5" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';if(!d.logs.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">No activity yet.</td></tr>';return;}d.logs.forEach(function(l){var tr=document.createElement('tr');if(!l.success)tr.className='log-row-fail';var ts=l.logged_at?new Date(l.logged_at).toLocaleString():'-';tr.innerHTML='<td style="font-size:12px;white-space:nowrap;">'+ts+'</td><td><b>'+esc(l.full_name||l.username)+'</b><br><span style="font-size:11px;color:var(--dgray);">'+esc(l.username)+'</span></td><td style="text-transform:capitalize;font-size:12px;">'+esc(l.action)+'</td><td>'+(l.success?'<span style="color:#27500A;font-weight:600;font-size:11px;">Success</span>':'<span style="color:var(--red);font-weight:600;font-size:11px;">Failed</span>')+'</td><td class="log-ip">'+esc(l.ip_address||'-')+'</td>';tbody.appendChild(tr);});}catch(e){tbody.innerHTML='<tr><td colspan="5" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
@@ -4365,6 +4392,7 @@ async function deactivateUser(uid,username,active){if(!confirm((active?'Deactiva
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
       try{boot();}catch(e){console.warn('boot error:',e.message);}
+      initSidebarCanvas();
       showAdminElements();
     }
   }catch(e){}
