@@ -4505,20 +4505,6 @@ async function renderPipeline() {
 
     board.innerHTML = '';
 
-    var statRow = document.createElement('div');
-    statRow.className = 'kb-stat-row';
-    [{lbl:'Active Projects',val:active.length,col:'var(--blk)'},
-     {lbl:'Win Rate',val:winRate+'%',col:winRate>=50?'#27500A':winRate>=30?'#B25000':'#A32D2D'},
-     {lbl:'Won Revenue',val:'$'+Math.round(wonTotal).toLocaleString(),col:'#27500A'},
-     {lbl:'Total Projects',val:pipelineItems.length,col:'var(--blk)'},
-    ].forEach(function(s){
-      var d=document.createElement('div');d.className='kb-stat';
-      d.innerHTML='<div class="kb-stat-lbl">'+s.lbl+'</div>'
-        +'<div class="kb-stat-val" style="color:'+s.col+'">'+s.val+'</div>';
-      statRow.appendChild(d);
-    });
-    board.appendChild(statRow);
-
     var cols = document.createElement('div');
     cols.style.cssText = 'display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;align-items:flex-start;';
 
@@ -4552,46 +4538,14 @@ async function renderPipeline() {
       });
       cardsDiv.dataset.stageId=stage.id;
 
-      cards.forEach(function(p){
-        var card = document.createElement('div');
-        var sn = p.pipeline_stages ? p.pipeline_stages.name : '';
-        var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
-        card.className = 'kb-card'+(sn==='Won'?' kb-won':sn==='Lost'?' kb-lost':sn==='Disqualified'?' kb-disq':'');
-        card.draggable=true;
-        card.addEventListener('dragstart',function(e){e.dataTransfer.setData('text/plain',p.id);e.dataTransfer.effectAllowed='move';this.classList.add('dragging');});
-        card.addEventListener('dragend',function(){this.classList.remove('dragging');document.querySelectorAll('.kb-cards.drag-over').forEach(function(el){el.classList.remove('drag-over');});});
-        var moveOpts = pipelineStages.filter(function(s){return s.id!==stage.id;})
-          .map(function(s){return '<option value="'+s.id+'">'+esc(s.name)+'</option>';}).join('');
-        var dueStr='';
-        if(snap.bid_due_date){
-          var dueParts=snap.bid_due_date.split('-');
-          dueStr='<div style="font-size:10px;color:var(--red);font-weight:600;margin-top:3px;">Bid Due: '+dueParts[1]+'/'+dueParts[2]+'/'+dueParts[0]+(snap.bid_due_time?' @ '+fmt12(snap.bid_due_time):'')+'</div>';
-        }
-        var linkedCount=snap.linked_proposals?snap.linked_proposals.length:0;
-        var coCount=snap.change_orders?snap.change_orders.length:0;
-        var countsBadge=(linkedCount||coCount)?'<div style="font-size:9px;color:var(--dgray);margin-top:3px;">'+linkedCount+' proposal'+(linkedCount!==1?'s':'')+' &middot; '+coCount+' CO'+(coCount!==1?'s':'')+'</div>':'';
-        var actions='<button class="btn btn-sec btn-sm kb-open-btn" onclick="openProjectSummary('+p.id+')">View</button>'
-          +'<button class="btn btn-sec btn-sm kb-open-btn" onclick="editProject('+p.id+')">Edit</button>';
-        var addrLine=snap.address?'<div style="font-size:10px;color:var(--dgray);margin-top:1px;">'+esc(snap.address)+'</div>':'';
-        var projNumStr=snap.project_number?'<div style="font-size:9px;font-weight:700;color:var(--red);font-family:monospace;margin-bottom:2px;">'+esc(snap.project_number)+'</div>':'';
-        card.innerHTML = projNumStr+'<div class="kb-card-name" style="cursor:pointer;" onclick="openProjectSummary('+p.id+')">'+esc(p.name||'Untitled')+'</div>'
-          +'<div class="kb-card-client">'+esc(p.client||'')+addrLine+'</div>'
-          +'<div class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'-')+'</div>'
-          +countsBadge
-          +'<div class="kb-card-date">'+(p.date||((p.created_at||'').split('T')[0])||'')+dueStr+'</div>'
-          +'<div class="kb-card-moves">'
-        +actions
-        +(moveOpts?'<select class="kb-stage-select" onchange="moveCard('+p.id+',parseInt(this.value))"><option value="">Move to...</option>'+moveOpts+'</select>':'')
-        +'</div>';
-        cardsDiv.appendChild(card);
-      });
+      // Pipeline shows stages only (no project cards) — projects listed below
+      if(!cards.length){
+        var empty=document.createElement('div');
+        empty.style.cssText='padding:12px;font-size:11px;color:var(--dgray);text-align:center;';
+        empty.textContent='No projects';
+        cardsDiv.appendChild(empty);
+      }
       col.appendChild(cardsDiv);
-
-      var addBtn = document.createElement('button');
-      addBtn.className = 'kb-add-btn';
-      addBtn.textContent = '+ Add to stage';
-      addBtn.onclick = function(){showPanel('build',document.querySelector('.nav-item'));};
-      col.appendChild(addBtn);
       cols.appendChild(col);
     });
     board.appendChild(cols);
