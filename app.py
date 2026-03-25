@@ -233,13 +233,46 @@ def pipeline_move(proposal_id):
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
+def _next_project_number():
+    """Generate next project number: HD-YYMM-### format."""
+    from datetime import datetime
+    now = datetime.now()
+    prefix = f'HD-{now.strftime("%y%m")}'
+    # Get current counter from hd_settings
+    try:
+        r = http.get(sb_url('hd_settings', '?key=eq.project_counter'), headers=sb_headers(), timeout=5)
+        rows = r.json() if r.status_code == 200 else []
+        counter_data = rows[0]['value'] if rows else {}
+    except Exception:
+        counter_data = {}
+    current_month = now.strftime('%y%m')
+    if counter_data.get('month') == current_month:
+        seq = counter_data.get('seq', 0) + 1
+    else:
+        seq = 1
+    # Save updated counter
+    new_val = {'month': current_month, 'seq': seq}
+    try:
+        h = {**sb_headers(), 'Prefer': 'return=representation'}
+        if rows:
+            http.patch(sb_url('hd_settings', '?key=eq.project_counter'), headers=h,
+                      json={'value': new_val}, timeout=5)
+        else:
+            http.post(sb_url('hd_settings'), headers=h,
+                     json={'key': 'project_counter', 'value': new_val}, timeout=5)
+    except Exception:
+        pass
+    return f'{prefix}-{seq:03d}'
+
 @app.route('/projects/create', methods=['POST'])
 @require_auth
 def project_create():
     data = request.get_json() or {}
     try:
+        project_number = _next_project_number()
         snap = {
             'is_project': True,
+            'project_number': project_number,
             'address': data.get('address', ''),
             'city_state': data.get('city_state', ''),
             'bid_due_date': data.get('bid_due_date', ''),
@@ -261,8 +294,8 @@ def project_create():
         r = http.post(sb_url('proposals'), headers=sb_headers(), json=payload, timeout=10)
         r.raise_for_status()
         result = r.json()
-        log_access(session.get('username',''), session.get('full_name',''), f'created project "{data.get("name","")}"')
-        return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
+        log_access(session.get('username',''), session.get('full_name',''), f'created project "{data.get("name","")}" ({project_number})')
+        return jsonify({'ok': True, 'id': result[0]['id'] if result else None, 'project_number': project_number})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 

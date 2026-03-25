@@ -53,6 +53,7 @@ def S():
 class HDCanvas(pdfcanvas.Canvas):
     def __init__(self, *args, **kwargs):
         self._date = kwargs.pop('date_str', '')
+        self._doc_number = kwargs.pop('doc_number', '')
         super().__init__(*args, **kwargs)
         self._pages = []
     def showPage(self):
@@ -78,7 +79,15 @@ class HDCanvas(pdfcanvas.Canvas):
         self.drawRightString(W - RM, H - 0.52*inch, 'PROPOSAL & CONTRACT')
         self.setFont('Helvetica', 9)
         self.setFillColor(DGRAY)
-        self.drawRightString(W - RM, H - 0.70*inch, self._date)
+        right_y = H - 0.70*inch
+        if self._doc_number:
+            self.setFont('Helvetica-Bold', 9)
+            self.setFillColor(RED)
+            self.drawRightString(W - RM, right_y, self._doc_number)
+            right_y -= 0.14*inch
+            self.setFont('Helvetica', 9)
+            self.setFillColor(DGRAY)
+        self.drawRightString(W - RM, right_y, self._date)
         self.setStrokeColor(BLACK)
         self.setLineWidth(1.0)
         self.line(LM, H - 0.88*inch, W - RM, H - 0.88*inch)
@@ -93,10 +102,11 @@ class HDCanvas(pdfcanvas.Canvas):
         self.restoreState()
 
 
-def canvas_maker(date_str):
+def canvas_maker(date_str, doc_number=''):
     class _C(HDCanvas):
         def __init__(self, *a, **kw):
             kw['date_str'] = date_str
+            kw['doc_number'] = doc_number
             super().__init__(*a, **kw)
     return _C
 
@@ -143,12 +153,17 @@ class CoverPage(Flowable):
         c.setFillColor(DGRAY)
         c.drawCentredString(mid, ah * 0.408, 'Proposal & Contract')
 
+        doc_num = d.get('document_number', '')
+        if doc_num:
+            c.setFont('Helvetica-Bold', 12)
+            c.setFillColor(RED)
+            c.drawCentredString(mid, ah * 0.384, doc_num)
+
         date_str = d.get('date', '')
         if date_str:
             c.setFont('Helvetica', 13)
             c.setFillColor(colors.HexColor('#999999'))
-            # ~15% more spacing between subtitle and date
-            c.drawCentredString(mid, ah * 0.384, date_str)
+            c.drawCentredString(mid, ah * (0.362 if doc_num else 0.384), date_str)
 
         fy = 0.55 * inch
         lx = aw * 0.18
@@ -805,7 +820,7 @@ def build(data, out_path):
 
     story += approval_page(data, st)
 
-    doc.build(story, canvasmaker=canvas_maker(data.get('date','')))
+    doc.build(story, canvasmaker=canvas_maker(data.get('date',''), data.get('document_number','')))
     print(f'OK: {out_path}')
 
 if __name__ == '__main__':

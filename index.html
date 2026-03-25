@@ -2323,6 +2323,7 @@ async function renderProjectsList(){
       card.addEventListener('click',function(){openProjectSummary(p.id);});
       // Left: name + client + address
       var left=document.createElement('div');left.style.cssText='flex:1;min-width:0;';
+      if(snap.project_number){var pnEl=document.createElement('div');pnEl.style.cssText='font-size:10px;font-weight:700;color:var(--red);font-family:monospace;letter-spacing:.5px;margin-bottom:1px;';pnEl.textContent=snap.project_number;left.appendChild(pnEl);}
       var nameRow=document.createElement('div');nameRow.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:3px;';
       var nameEl=document.createElement('span');nameEl.style.cssText='font-weight:700;font-size:14px;';nameEl.textContent=p.name||'Untitled';
       var badge=document.createElement('span');badge.style.cssText='font-size:9px;font-weight:700;color:#fff;padding:2px 7px;border-radius:3px;text-transform:uppercase;background:'+stage.color+';';badge.textContent=stage.name;
@@ -2454,7 +2455,9 @@ function _renderProjectSummaryInner(proj){
       var dp=snap.bid_due_date.split('-');
       dueStr='Due '+dp[1]+'/'+dp[2]+'/'+dp[0]+(snap.bid_due_time?' @ '+fmt12(snap.bid_due_time):'');
     }
+    var projNum=snap.project_number||'';
     hdr.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">'
+      +(projNum?'<span style="font-size:12px;font-weight:700;color:var(--red);font-family:monospace;letter-spacing:.5px;">'+esc(projNum)+'</span>':'')
       +'<h2 style="margin:0;font-size:22px;font-weight:800;">'+esc(proj.name||'Untitled Project')+'</h2>'
       +'<span style="font-size:10px;font-weight:700;color:#fff;background:'+stageColor+';padding:3px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;">'+esc(stageName)+'</span>'
       +(dueStr?'<span style="font-size:11px;font-weight:700;color:var(--red);margin-left:4px;">'+dueStr+'</span>':'')
@@ -3708,8 +3711,22 @@ function buildPayload(){
   var fmtDate=date?new Date(date+'T12:00:00').toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}):'';
   var line_items=getLineItemsForPayload();
   var total=line_items.reduce(function(s,x){return s+x.subtotal;},0);
+  // Get project number if we're in a project context
+  var _projNumber='';
+  if(window._pendingProjectLink){
+    var _pp=pipelineProposals.find(function(x){return x.id===window._pendingProjectLink;});
+    if(_pp){var _ps=typeof _pp.snap==='string'?JSON.parse(_pp.snap):_pp.snap||{};_projNumber=_ps.project_number||'';}
+  }
+  // Build proposal document number (P suffix)
+  var _proposalIdx=1;
+  if(_projNumber&&window._pendingProjectLink){
+    var _pp2=pipelineProposals.find(function(x){return x.id===window._pendingProjectLink;});
+    if(_pp2){var _ps2=typeof _pp2.snap==='string'?JSON.parse(_pp2.snap):_pp2.snap||{};_proposalIdx=(_ps2.linked_proposals||[]).length+1;}
+  }
+  var _docNumber=_projNumber?_projNumber+'-P'+_proposalIdx:'';
   return{
     project_name:name,address:addr,city_state:cs,date:fmtDate,
+    project_number:_projNumber,document_number:_docNumber,
     sender_name:sender.name||'HD Hauling & Grading',sender_email:sender.email||'',sender_phone:sender.phone||'',
     company:'HD Hauling & Grading',client_name:client,client_email:selectedClient.email||'',client_phone:selectedClient.phone||'',client_company:selectedClient.company||'',
     notes:notes,total:parseFloat(total.toFixed(2)),line_items:line_items,
@@ -4002,7 +4019,7 @@ async function exportPDF(){
     var blob=await r.blob();
     var url=URL.createObjectURL(blob);
     var a=document.createElement('a');
-    a.href=url;a.download='HD_Proposal_'+p.project_name.replace(/\s+/g,'_')+'.pdf';
+    a.href=url;a.download=(p.document_number||'HD_Proposal')+'_'+p.project_name.replace(/\s+/g,'_')+'.pdf';
     a.click();URL.revokeObjectURL(url);
     toast('PDF downloaded','ok');
     // Auto-move to "Estimate Sent" in pipeline if we have a saved quote
@@ -4030,7 +4047,7 @@ async function exportDOCX(){
     var blob=await r.blob();
     var url=URL.createObjectURL(blob);
     var a=document.createElement('a');
-    a.href=url;a.download='HD_Proposal_'+p.project_name.replace(/\s+/g,'_')+'.docx';
+    a.href=url;a.download=(p.document_number||'HD_Proposal')+'_'+p.project_name.replace(/\s+/g,'_')+'.docx';
     a.click();URL.revokeObjectURL(url);
     toast('Word doc downloaded','ok');
   }catch(e){toast('Word error: '+e.message,'err');}
@@ -4556,7 +4573,8 @@ async function renderPipeline() {
         var actions='<button class="btn btn-sec btn-sm kb-open-btn" onclick="openProjectSummary('+p.id+')">View</button>'
           +'<button class="btn btn-sec btn-sm kb-open-btn" onclick="editProject('+p.id+')">Edit</button>';
         var addrLine=snap.address?'<div style="font-size:10px;color:var(--dgray);margin-top:1px;">'+esc(snap.address)+'</div>':'';
-        card.innerHTML = '<div class="kb-card-name" style="cursor:pointer;" onclick="openProjectSummary('+p.id+')">'+esc(p.name||'Untitled')+'</div>'
+        var projNumStr=snap.project_number?'<div style="font-size:9px;font-weight:700;color:var(--red);font-family:monospace;margin-bottom:2px;">'+esc(snap.project_number)+'</div>':'';
+        card.innerHTML = projNumStr+'<div class="kb-card-name" style="cursor:pointer;" onclick="openProjectSummary('+p.id+')">'+esc(p.name||'Untitled')+'</div>'
           +'<div class="kb-card-client">'+esc(p.client||'')+addrLine+'</div>'
           +'<div class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'-')+'</div>'
           +countsBadge
@@ -5002,8 +5020,13 @@ function renderWorkOrderDetail(){
   // Header — project name first, then work order name
   var statusColors={pending:'#999',active:'#2B5FA6',complete:'#27500A'};
   var addr=snap.address||'';
+  var projNum=snap.project_number||'';
+  // Generate WO suffix number
+  var woIdx=(snap.work_orders||[]).findIndex(function(w){return w.id===wo.id;})+1;
+  var woDocNum=projNum?(projNum+'-WO'+woIdx):'';
   var hdr=document.getElementById('wo-detail-header');
-  hdr.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px;">'
+  hdr.innerHTML=(woDocNum?'<div style="font-size:11px;font-weight:700;color:var(--red);font-family:monospace;letter-spacing:.5px;margin-bottom:2px;">'+esc(woDocNum)+'</div>':'')
+    +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px;">'
     +'<h2 style="margin:0;font-size:22px;font-weight:800;">'+esc(proj.name||'Project')+'</h2>'
     +'<span style="font-size:10px;font-weight:700;color:#fff;background:'+(statusColors[wo.status]||'#999')+';padding:3px 10px;border-radius:4px;text-transform:uppercase;">'+esc(wo.status)+'</span>'
     +'</div>'
