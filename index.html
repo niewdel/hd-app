@@ -805,13 +805,13 @@ tr:nth-child(even) td{background:#FAFAFA;}
                     <table style="width:100%;border-collapse:collapse;font-size:13px;">
                       <thead>
                         <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);">
-                          <th style="padding:8px 12px;text-align:left;font-weight:600;">Type</th>
-                          <th style="padding:8px 12px;text-align:left;font-weight:600;">Description</th>
-                          <th style="padding:8px 12px;text-align:right;font-weight:600;">Qty</th>
-                          <th style="padding:8px 12px;text-align:left;font-weight:600;">Unit</th>
-                          <th style="padding:8px 12px;text-align:right;font-weight:600;">Unit Price</th>
-                          <th style="padding:8px 12px;text-align:right;font-weight:600;">Subtotal</th>
-                          <th style="padding:8px 6px;"></th>
+                          <th style="padding:8px 12px;text-align:left;font-weight:600;width:70px;">Type</th>
+                          <th style="padding:8px 8px;text-align:left;font-weight:600;">Description</th>
+                          <th style="padding:8px 8px;text-align:right;font-weight:600;width:80px;">Qty</th>
+                          <th style="padding:8px 8px;text-align:left;font-weight:600;width:70px;">Unit</th>
+                          <th style="padding:8px 8px;text-align:right;font-weight:600;width:100px;">Unit Price</th>
+                          <th style="padding:8px 12px;text-align:right;font-weight:600;width:100px;">Subtotal</th>
+                          <th style="padding:8px 6px;width:30px;"></th>
                         </tr>
                       </thead>
                       <tbody id="co-lines"></tbody>
@@ -2952,29 +2952,29 @@ function renderCOLines(){
     var typeClass = 'co-type-'+line.type;
     var sub = line.type==='nocost'?'--':'$'+(((parseFloat(line.qty)||1)*(parseFloat(line.price)||0)).toFixed(2));
     var lid = line.id;
-    var td0=document.createElement('td'); td0.style.cssText='padding:6px 12px;';
+    var td0=document.createElement('td'); td0.style.cssText='padding:6px 12px;width:70px;';
     var sp=document.createElement('span'); sp.className=typeClass; sp.textContent=typeLabel;
     td0.appendChild(sp); tr.appendChild(td0);
     var td1=document.createElement('td'); td1.style.cssText='padding:6px 8px;';
-    var inp1=document.createElement('input'); inp1.style.cssText='width:100%;min-width:180px;';
+    var inp1=document.createElement('input'); inp1.style.cssText='width:100%;';
     inp1.value=line.desc||''; inp1.placeholder='Description';
     inp1.addEventListener('change',function(){updateCOLine(lid,'desc',this.value);});
     td1.appendChild(inp1); tr.appendChild(td1);
-    var td2=document.createElement('td'); td2.style.cssText='padding:6px 8px;';
-    var inp2=document.createElement('input'); inp2.type='number'; inp2.style.cssText='width:70px;text-align:right;'; inp2.value=line.qty||1;
+    var td2=document.createElement('td'); td2.style.cssText='padding:6px 8px;width:80px;';
+    var inp2=document.createElement('input'); inp2.type='number'; inp2.style.cssText='width:100%;text-align:right;'; inp2.value=line.qty||1;
     inp2.addEventListener('change',function(){updateCOLine(lid,'qty',parseFloat(this.value)||1);});
     td2.appendChild(inp2); tr.appendChild(td2);
-    var td3=document.createElement('td'); td3.style.cssText='padding:6px 8px;';
-    var sel=document.createElement('select'); sel.style.width='70px';
+    var td3=document.createElement('td'); td3.style.cssText='padding:6px 8px;width:70px;';
+    var sel=document.createElement('select'); sel.style.cssText='width:100%;';
     ['LS','SY','SF','TN','LF','EA','HR','DAY'].forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;if(u===line.unit)o.selected=true;sel.appendChild(o);});
     sel.addEventListener('change',function(){updateCOLine(lid,'unit',this.value);});
     td3.appendChild(sel); tr.appendChild(td3);
-    var td4=document.createElement('td'); td4.style.cssText='padding:6px 8px;';
-    var inp4=document.createElement('input'); inp4.type='number'; inp4.style.cssText='width:90px;text-align:right;'; inp4.value=line.price||0;
+    var td4=document.createElement('td'); td4.style.cssText='padding:6px 8px;width:100px;';
+    var inp4=document.createElement('input'); inp4.type='number'; inp4.style.cssText='width:100%;text-align:right;'; inp4.value=line.price||0;
     if(line.type==='nocost') inp4.disabled=true;
     inp4.addEventListener('change',function(){updateCOLine(lid,'price',parseFloat(this.value)||0);});
     td4.appendChild(inp4); tr.appendChild(td4);
-    var td5=document.createElement('td'); td5.style.cssText='padding:6px 12px;text-align:right;font-weight:600;'; td5.textContent=sub; tr.appendChild(td5);
+    var td5=document.createElement('td'); td5.style.cssText='padding:6px 12px;text-align:right;font-weight:600;width:100px;'; td5.textContent=sub; tr.appendChild(td5);
     var td6=document.createElement('td'); td6.style.cssText='padding:6px 6px;';
     var remBtn=document.createElement('button'); remBtn.className='btn-ico'; remBtn.innerHTML='x';
     remBtn.addEventListener('click',function(){removeCOLine(lid);});
@@ -2987,7 +2987,7 @@ function renderCOLines(){
 function updateCOLine(id,field,val){
   var line = coLines.find(function(l){return l.id===id;});
   if(line) line[field]=val;
-  recalcCO();
+  renderCOLines();
 }
 
 function recalcCO(){
@@ -3071,11 +3071,18 @@ function linkCOToProposal(qid){
   if(!qid)return;
   var q=savedQuotes.find(function(x){return x.id==qid;});
   if(!q)return;
-  var snap=typeof q.snap==='string'?JSON.parse(q.snap):q.snap;
-  var el=document.getElementById;
+  var snap=typeof q.snap==='string'?JSON.parse(q.snap):q.snap||{};
   document.getElementById('co-project').value=snap.name||q.name||'';
   document.getElementById('co-client').value=snap.client||q.client||'';
   document.getElementById('co-orig-amount').value=q.total||0;
+  // Auto-fill original contract date from proposal date
+  var origDateEl=document.getElementById('co-orig-date');
+  if(origDateEl){
+    var pDate=snap.date||q.date||'';
+    // Convert from MM/DD/YYYY to YYYY-MM-DD if needed
+    if(pDate&&pDate.indexOf('/')>-1){var dp=pDate.split('/');if(dp.length===3)pDate=dp[2]+'-'+dp[0].padStart(2,'0')+'-'+dp[1].padStart(2,'0');}
+    origDateEl.value=pDate;
+  }
   recalcCO();
 }
 
@@ -3083,7 +3090,12 @@ function populateCOProposalDropdown(){
   var sel=document.getElementById('co-proposal-link');
   if(!sel)return;
   sel.innerHTML='<option value="">-- Select a saved proposal (optional) --</option>';
+  var seen={};
   savedQuotes.forEach(function(q){
+    var sn=typeof q.snap==='string'?JSON.parse(q.snap||'{}'):q.snap||{};
+    if(sn.is_project)return; // Skip projects
+    if(seen[q.id])return; // Skip duplicates
+    seen[q.id]=true;
     var opt=document.createElement('option');
     opt.value=q.id;
     opt.textContent=(q.name||'Unnamed')+' - $'+Math.round(q.total||0).toLocaleString();
