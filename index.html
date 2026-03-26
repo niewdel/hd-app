@@ -7770,45 +7770,147 @@ function schedCalNav(dir){
   renderSchedule();
 }
 
-// Weather cache
+// Weather cache & config
 var _weatherCache=null;var _weatherCacheTime=0;
 var WEATHER_ICONS={0:'\u2600\uFE0F',1:'\uD83C\uDF24',2:'\u26C5',3:'\u2601\uFE0F',45:'\uD83C\uDF2B',48:'\uD83C\uDF2B',51:'\uD83C\uDF27',53:'\uD83C\uDF27',55:'\uD83C\uDF27',61:'\uD83C\uDF27',63:'\uD83C\uDF27\uFE0F',65:'\uD83C\uDF27\uFE0F',71:'\u2744\uFE0F',73:'\u2744\uFE0F',75:'\u2744\uFE0F',80:'\uD83C\uDF26',81:'\uD83C\uDF27',82:'\uD83C\uDF27\uFE0F',95:'\u26A1',96:'\u26A1',99:'\u26A1'};
+var WEATHER_DESC={0:'Clear Sky',1:'Mostly Clear',2:'Partly Cloudy',3:'Overcast',45:'Foggy',48:'Freezing Fog',51:'Light Drizzle',53:'Drizzle',55:'Heavy Drizzle',61:'Light Rain',63:'Rain',65:'Heavy Rain',71:'Light Snow',73:'Snow',75:'Heavy Snow',80:'Light Showers',81:'Showers',82:'Heavy Showers',95:'Thunderstorm',96:'Thunderstorm w/ Hail',99:'Severe Thunderstorm'};
 function fetchWeather(cb){
   if(_weatherCache&&Date.now()-_weatherCacheTime<1800000){cb(_weatherCache);return;}
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=35.4088&longitude=-80.5795&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&temperature_unit=fahrenheit&timezone=America%2FNew_York')
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=35.4088&longitude=-80.5795'
+    +'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,uv_index'
+    +'&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,wind_speed_10m_max,wind_gusts_10m_max,uv_index_max,sunrise,sunset,precipitation_sum'
+    +'&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York')
     .then(function(r){return r.json();}).then(function(d){
-      _weatherCache=d.daily||null;_weatherCacheTime=Date.now();cb(_weatherCache);
+      _weatherCache={daily:d.daily||null,current:d.current||null};_weatherCacheTime=Date.now();cb(_weatherCache);
     }).catch(function(){cb(null);});
 }
 
+function windDir(deg){
+  var dirs=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  return dirs[Math.round(deg/22.5)%16];
+}
+function fmtTime12(iso){if(!iso)return '';var d=new Date(iso);var h=d.getHours();var m=d.getMinutes();var ampm=h>=12?'PM':'AM';h=h%12;if(!h)h=12;return h+':'+String(m).padStart(2,'0')+' '+ampm;}
+function uvLabel(uv){if(uv<=2)return{text:'Low',color:'#27500A'};if(uv<=5)return{text:'Moderate',color:'#F5A623'};if(uv<=7)return{text:'High',color:'#E65100'};if(uv<=10)return{text:'Very High',color:'#CC0000'};return{text:'Extreme',color:'#880088'};}
+
 function renderWeatherWidget(elId){
   var el=document.getElementById(elId);if(!el)return;
-  fetchWeather(function(daily){
-    if(!daily){el.innerHTML='<div class="card-body" style="padding:10px 14px;"><div style="font-size:12px;color:var(--dgray);">Weather unavailable</div></div>';return;}
-    var html='<div class="card-body" style="padding:12px 18px;">';
-    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">';
-    html+='<span style="font-size:12px;font-weight:700;color:var(--dgray);letter-spacing:1px;">CONCORD, NC &mdash; 7-DAY FORECAST</span>';
-    html+='<a href="https://weather.com/weather/tenday/l/Concord+NC+28025" target="_blank" class="btn btn-sec btn-sm" style="text-decoration:none;font-size:11px;">View on Weather.com</a>';
-    html+='</div>';
-    html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;text-align:center;">';
+  fetchWeather(function(data){
+    if(!data||!data.daily){el.innerHTML='<div class="card-body" style="padding:14px 18px;"><div style="font-size:12px;color:var(--dgray);">Weather unavailable</div></div>';return;}
+    var daily=data.daily;var cur=data.current;
     var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    // --- Current conditions banner ---
+    var curCode=cur?cur.weather_code:daily.weathercode[0];
+    var curIcon=WEATHER_ICONS[curCode]||'\u2601\uFE0F';
+    var curDesc=WEATHER_DESC[curCode]||'';
+    var curTemp=cur?Math.round(cur.temperature_2m):Math.round(daily.temperature_2m_max[0]);
+    var feelsLike=cur?Math.round(cur.apparent_temperature):curTemp;
+    var humidity=cur?cur.relative_humidity_2m:null;
+    var windSpd=cur?Math.round(cur.wind_speed_10m):Math.round(daily.wind_speed_10m_max[0]);
+    var windGust=cur?Math.round(cur.wind_gusts_10m):Math.round(daily.wind_gusts_10m_max[0]);
+    var windDeg=cur?cur.wind_direction_10m:0;
+    var uvNow=cur?cur.uv_index:daily.uv_index_max[0];
+    var uvInfo=uvLabel(uvNow);
+    var sunrise=daily.sunrise?daily.sunrise[0]:'';
+    var sunset=daily.sunset?daily.sunset[0]:'';
+    var todayRain=daily.precipitation_probability_max[0]||0;
+    var todayPrecip=daily.precipitation_sum?daily.precipitation_sum[0]:0;
+
+    // High wind warning for construction
+    var windWarn=windSpd>=20||windGust>=35;
+
+    var h='<div class="card-body" style="padding:0;overflow:hidden;">';
+    // Top: current conditions — dark header
+    h+='<div style="background:#1A1A1A;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">';
+    h+='<div style="flex-shrink:0;text-align:center;min-width:80px;">';
+    h+='<div style="font-size:42px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));">'+curIcon+'</div>';
+    h+='<div style="font-size:10px;color:#aaa;margin-top:4px;text-transform:uppercase;letter-spacing:.5px;">'+esc(curDesc)+'</div>';
+    h+='</div>';
+    h+='<div style="flex:1;min-width:140px;">';
+    h+='<div style="font-size:10px;font-weight:700;color:#CC0000;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;">Concord, NC</div>';
+    h+='<div style="display:flex;align-items:baseline;gap:6px;">';
+    h+='<span data-weather-temp style="font-size:38px;font-weight:900;line-height:1;letter-spacing:-1px;">'+curTemp+'&deg;</span>';
+    h+='<span style="font-size:12px;color:#999;">Feels '+feelsLike+'&deg;</span>';
+    h+='</div>';
+    h+='<div data-weather-desc style="font-size:11px;color:#bbb;margin-top:2px;">H: '+Math.round(daily.temperature_2m_max[0])+'&deg; &nbsp; L: '+Math.round(daily.temperature_2m_min[0])+'&deg;</div>';
+    h+='</div>';
+    // Right: key stats grid
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:11px;min-width:200px;">';
+    // Wind
+    h+='<div style="display:flex;align-items:center;gap:5px;'+(windWarn?'color:#FF6B35;font-weight:700;':'color:#ccc;')+'">';
+    h+='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>';
+    h+=windSpd+' mph'+(windGust>windSpd+5?' (gusts '+windGust+')':'');
+    h+=' '+windDir(windDeg);
+    h+='</div>';
+    // Humidity
+    h+='<div style="display:flex;align-items:center;gap:5px;color:#ccc;">';
+    h+='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>';
+    h+=(humidity!==null?humidity+'%':'--')+' humidity';
+    h+='</div>';
+    // Rain
+    h+='<div style="display:flex;align-items:center;gap:5px;'+(todayRain>=50?'color:#FF6B35;font-weight:700;':'color:#ccc;')+'">';
+    h+='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><path d="M8 16l-2 4m7-4l-2 4m7-4l-2 4"/></svg>';
+    h+=todayRain+'% rain'+(todayPrecip>0?' ('+todayPrecip.toFixed(1)+' in)':'');
+    h+='</div>';
+    // UV
+    h+='<div style="display:flex;align-items:center;gap:5px;color:'+uvInfo.color+';">';
+    h+='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>';
+    h+='UV '+Math.round(uvNow)+' ('+uvInfo.text+')';
+    h+='</div>';
+    // Sunrise/Sunset
+    h+='<div style="display:flex;align-items:center;gap:5px;color:#ccc;">';
+    h+='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><path d="M4.22 10.22l1.42 1.42m12.72 0l1.42-1.42M2 18h2m16 0h2"/></svg>';
+    h+=fmtTime12(sunrise);
+    h+='</div>';
+    h+='<div style="display:flex;align-items:center;gap:5px;color:#ccc;">';
+    h+='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><path d="M4.22 10.22l1.42 1.42m12.72 0l1.42-1.42M2 18h2m16 0h2"/></svg>';
+    h+=fmtTime12(sunset);
+    h+='</div>';
+    h+='</div>';
+    h+='</div>';
+
+    // Wind warning banner
+    if(windWarn){
+      h+='<div style="background:#FFF3E0;border-bottom:1px solid #FFB74D;padding:6px 20px;font-size:11px;font-weight:700;color:#E65100;display:flex;align-items:center;gap:6px;">';
+      h+='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E65100" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+      h+='HIGH WIND ADVISORY &mdash; Gusts up to '+windGust+' mph. Review crane/lifting operations.';
+      h+='</div>';
+    }
+
+    // 7-day forecast strip
+    h+='<div style="padding:12px 16px 14px;background:#fff;">';
+    h+='<div style="font-size:10px;font-weight:700;color:var(--dgray);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">7-Day Forecast</div>';
+    h+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;">';
     for(var i=0;i<daily.time.length&&i<7;i++){
       var dt=new Date(daily.time[i]+'T12:00:00');
       var code=daily.weathercode[i];
       var icon=WEATHER_ICONS[code]||'\u2601\uFE0F';
       var rain=daily.precipitation_probability_max[i]||0;
+      var wind=Math.round(daily.wind_speed_10m_max[i]);
+      var precip=daily.precipitation_sum?daily.precipitation_sum[i]:0;
+      var isToday=i===0;
       var rainWarn=rain>=50;
-      html+='<div style="padding:10px 6px;border-radius:8px;'+(rainWarn?'background:#FFF3E0;border:1px solid #FFB74D;':'background:#FAFAFA;border:1px solid var(--bdr);')+'">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--dgray);">'+dayNames[dt.getDay()]+'</div>'
-        +'<div style="font-size:11px;color:var(--dgray);">'+String(dt.getMonth()+1)+'/'+dt.getDate()+'</div>'
-        +'<div style="font-size:28px;line-height:1.4;">'+icon+'</div>'
-        +'<div style="font-size:16px;font-weight:800;">'+Math.round(daily.temperature_2m_max[i])+'&deg;</div>'
-        +'<div style="font-size:12px;color:var(--dgray);">'+Math.round(daily.temperature_2m_min[i])+'&deg;</div>'
-        +'<div style="font-size:10px;margin-top:4px;'+(rainWarn?'color:#E65100;font-weight:700;':'color:var(--dgray);')+'">'+rain+'% chance<br>of rain</div>'
-        +'</div>';
+      var windDanger=wind>=20;
+      // Card style
+      var cardBg=isToday?'background:#F8F0F0;border:1.5px solid #CC0000;':(rainWarn?'background:#FFF8F0;border:1px solid #FFB74D;':'background:#F8F8F8;border:1px solid #EBEBEB;');
+      h+='<div style="padding:8px 4px;border-radius:8px;'+cardBg+'position:relative;transition:transform .15s;" onmouseenter="this.style.transform=\'translateY(-2px)\'" onmouseleave="this.style.transform=\'none\'">';
+      if(isToday)h+='<div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:#CC0000;color:#fff;font-size:8px;font-weight:800;padding:1px 6px;border-radius:0 0 4px 4px;letter-spacing:.5px;">TODAY</div>';
+      h+='<div style="font-size:10px;font-weight:700;color:'+(isToday?'#CC0000':'var(--dgray)')+';margin-top:'+(isToday?'8px':'0')+';">'+dayNames[dt.getDay()]+'</div>';
+      h+='<div style="font-size:9px;color:#aaa;">'+String(dt.getMonth()+1)+'/'+dt.getDate()+'</div>';
+      h+='<div style="font-size:24px;line-height:1.3;margin:2px 0;">'+icon+'</div>';
+      h+='<div style="font-size:15px;font-weight:800;color:#1A1A1A;">'+Math.round(daily.temperature_2m_max[i])+'&deg;</div>';
+      h+='<div style="font-size:11px;color:#999;">'+Math.round(daily.temperature_2m_min[i])+'&deg;</div>';
+      // Rain + wind mini stats
+      h+='<div style="margin-top:4px;font-size:9px;line-height:1.4;">';
+      h+='<div style="'+(rainWarn?'color:#E65100;font-weight:700;':'color:#aaa;')+'">'+rain+'%'+(precip>0?' '+precip.toFixed(1)+'"':'')+'</div>';
+      h+='<div style="'+(windDanger?'color:#E65100;font-weight:700;':'color:#bbb;')+'">'+wind+' mph</div>';
+      h+='</div>';
+      h+='</div>';
     }
-    html+='</div></div>';
-    el.innerHTML=html;
+    h+='</div>';
+    h+='</div>';
+    h+='</div>';
+    el.innerHTML=h;
   });
 }
 function renderSchedWeather(){renderWeatherWidget('sched-weather');}
