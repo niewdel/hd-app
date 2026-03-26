@@ -240,19 +240,18 @@ body.dark ::-webkit-scrollbar-thumb:hover{background:#555;}
 .login-bar img{height:42px;width:auto;display:block;}
 .login-body{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;}
 .login-card{width:540px;max-width:90vw;text-align:center;}
-.login-eyebrow{margin-bottom:18px;display:flex;flex-direction:column;align-items:center;gap:8px;}
-.login-mono{display:flex;align-items:center;gap:0;}
+.login-eyebrow{margin-bottom:18px;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.login-mono{display:flex;align-items:center;gap:2px;}
 .login-mono-h{font-size:72px;font-weight:900;color:var(--red);line-height:1;font-family:var(--font);letter-spacing:-2px;}
 .login-mono-d{font-size:72px;font-weight:900;color:#666;line-height:1;font-family:var(--font);letter-spacing:-2px;}
-.login-mono-arc{width:5px;height:48px;background:linear-gradient(180deg,var(--red),#666);border-radius:3px;margin:0 3px;align-self:center;}
 .login-brand{font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:4px;}
 .login-heading{font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;margin-bottom:6px;}
 .login-sub{font-family:'Poppins',sans-serif;font-size:14px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;margin-bottom:36px;}
 .login-rule{width:32px;height:2px;background:var(--red);margin:0 auto 36px;border-radius:2px;}
-.pin-input{width:100%;padding:15px 20px;text-align:center;font-size:26px;font-weight:700;letter-spacing:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:#fff;margin-bottom:12px;font-family:var(--font);box-sizing:border-box;transition:border-color .2s,background .2s;}
+.pin-input{width:100%;height:48px;padding:0 20px;text-align:center;font-size:14px;font-weight:700;letter-spacing:2px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:#fff;margin-bottom:12px;font-family:var(--font);box-sizing:border-box;transition:border-color .2s,background .2s;}
 .pin-input:focus{outline:none;border-color:var(--red);background:rgba(204,0,0,0.04);}
-.pin-input::placeholder{color:rgba(255,255,255,0.12);letter-spacing:10px;font-size:18px;}
-.pin-btn{width:100%;padding:14px 20px;background:var(--red);color:#fff;border:none;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-family:var(--font);transition:background .2s,opacity .2s;}
+.pin-input::placeholder{color:rgba(255,255,255,0.12);letter-spacing:2px;font-size:14px;}
+.pin-btn{width:100%;height:48px;padding:0 20px;background:var(--red);color:#fff;border:none;border-radius:3px;font-size:14px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-family:var(--font);transition:background .2s,opacity .2s;}
 .pin-btn:hover{background:#b30000;}
 .pin-btn:active{opacity:.85;}
 .pin-err{font-size:11px;color:#ff6b6b;margin-top:12px;min-height:16px;letter-spacing:0.3px;}
@@ -593,12 +592,12 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <div class="login-body">
     <div class="login-card">
       <div class="login-eyebrow">
-        <div class="login-mono"><span class="login-mono-h">H</span><span class="login-mono-arc"></span><span class="login-mono-d">D</span></div>
+        <div class="login-mono"><span class="login-mono-h">H</span><span class="login-mono-d">D</span></div>
         <div class="login-brand">Hauling &amp; Grading</div>
       </div>
       <div class="login-sub">Internal use only &nbsp;&middot;&nbsp; Authorized access required</div>
       <div class="login-rule"></div>
-      <input class="pin-input" id="login-username" type="text" placeholder="Username" style="font-size:14px;letter-spacing:1px;margin-bottom:10px;text-transform:lowercase;" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off" spellcheck="false"/>
+      <input class="pin-input" id="login-username" type="text" placeholder="Username" style="text-transform:lowercase;" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off" spellcheck="false"/>
       <input class="pin-input" id="pin-inp" type="password" maxlength="8" placeholder="&bull;&bull;&bull;&bull;" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off"/>
       <button class="pin-btn" onclick="doLogin()">Access Tool</button>
       <div class="pin-err" id="pin-err"></div>
