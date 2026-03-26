@@ -1212,16 +1212,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
         <!-- General Tab -->
         <div id="stab-content-general">
           <div class="card">
-            <div class="card-hdr"><span class="card-title">Appearance</span></div>
-            <div class="card-body dark-mode-card">
-              <div>
-                <div style="font-weight:600;font-size:13px;">Dark Mode</div>
-                <div style="font-size:11px;color:var(--dgray);margin-top:2px;">Switch to a dark color scheme for reduced eye strain</div>
-              </div>
-              <label class="dark-switch"><input type="checkbox" id="dark-switch-cb" onchange="toggleDarkMode()"><span class="slider"></span></label>
-            </div>
-          </div>
-          <div class="card">
             <div class="card-hdr"><span class="card-title">Account Information</span></div>
             <div class="card-body">
               <p style="font-size:11px;color:var(--dgray);margin-bottom:10px;">Auto-populated from your account. Changes here update proposals you create.</p>
@@ -1232,6 +1222,16 @@ tr:nth-child(even) td{background:#FAFAFA;}
               </div>
               <div style="margin-top:11px;"><button class="btn btn-red btn-sm" onclick="saveSender()">Save</button></div>
               <div id="pin-change-notice" style="display:none;margin-top:12px;padding:10px 14px;background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;font-size:12px;color:var(--dgray);">To change your PIN, contact a system administrator.</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Appearance</span></div>
+            <div class="card-body dark-mode-card">
+              <div>
+                <div style="font-weight:600;font-size:13px;">Dark Mode</div>
+                <div style="font-size:11px;color:var(--dgray);margin-top:2px;">Switch to a dark color scheme for reduced eye strain</div>
+              </div>
+              <label class="dark-switch"><input type="checkbox" id="dark-switch-cb" onchange="toggleDarkMode()"><span class="slider"></span></label>
             </div>
           </div>
         </div>
