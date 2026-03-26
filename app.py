@@ -1040,6 +1040,23 @@ def notifications_list():
                        'setup_sql': _NOTIF_SQL.strip(), 'error': str(e)})
 
 
+@app.route('/notifications/debug')
+@require_auth
+def notifications_debug():
+    """Debug endpoint to check notification table status."""
+    username = session.get('username', '')
+    results = {'username': username}
+    try:
+        url = sb_url('hd_notifications', '?select=*&limit=5')
+        results['query_url'] = url
+        r = http.get(url, headers=sb_headers(), timeout=5)
+        results['status_code'] = r.status_code
+        results['response_body'] = r.text[:500]
+        results['response_headers'] = dict(r.headers)
+    except Exception as e:
+        results['error'] = str(e)
+    return jsonify(results)
+
 @app.route('/notifications/unread-count')
 @require_auth
 def notifications_unread_count():
