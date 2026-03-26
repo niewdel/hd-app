@@ -9121,8 +9121,9 @@ function _makeCloudSprite(w,h,dark){
   ox.scale(dpr,dpr);
   var cx=w/2,cy=h*0.52;
   // Colors: light clouds are bright white-gray, dark clouds are steel-gray
-  var R=dark?95:210,G=dark?105:218,B=dark?125:228;
-  var coreA=dark?0.22:0.18; // solid opacity for puff centers
+  // Kept subtle so text remains readable on the dark banner
+  var R=dark?100:200,G=dark?110:210,B=dark?130:222;
+  var coreA=dark?0.07:0.06; // subtle — many puffs compound together
   var puffs=[];
 
   // --- Define puff clusters for a realistic cumulus shape ---
@@ -9154,49 +9155,38 @@ function _makeCloudSprite(w,h,dark){
     }
   }
 
-  // Draw puffs with sharp-core gradients (holds opacity to 50% of radius before fading)
+  // Draw puffs — solid center fading to soft edge, readable text stays clear
   for(var i=0;i<puffs.length;i++){
     var p=puffs[i];
     var g=ox.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
     g.addColorStop(0,'rgba('+R+','+G+','+B+','+p.a+')');
-    g.addColorStop(0.45,'rgba('+R+','+G+','+B+','+(p.a*0.85)+')');
-    g.addColorStop(0.7,'rgba('+R+','+G+','+B+','+(p.a*0.4)+')');
+    g.addColorStop(0.35,'rgba('+R+','+G+','+B+','+(p.a*0.7)+')');
+    g.addColorStop(0.65,'rgba('+R+','+G+','+B+','+(p.a*0.3)+')');
     g.addColorStop(1,'rgba('+R+','+G+','+B+',0)');
     ox.fillStyle=g;
     ox.beginPath();ox.arc(p.x,p.y,p.r,0,Math.PI*2);ox.fill();
   }
 
-  // Highlight pass — bright white on top surface (simulates light from above)
+  // Highlight pass — subtle bright edges on top to give shape definition
   if(!dark){
-    for(var i=0;i<15;i++){
+    for(var i=0;i<10;i++){
       var hx=cx+(Math.random()-0.4)*w*0.55;
       var hy=cy-h*0.15-Math.random()*h*0.15;
       var hr=w*0.04+Math.random()*w*0.05;
       var hg=ox.createRadialGradient(hx,hy,0,hx,hy,hr);
-      hg.addColorStop(0,'rgba(255,255,255,0.12)');
-      hg.addColorStop(0.5,'rgba(255,255,255,0.04)');
+      hg.addColorStop(0,'rgba(255,255,255,0.04)');
+      hg.addColorStop(0.5,'rgba(255,255,255,0.015)');
       hg.addColorStop(1,'rgba(255,255,255,0)');
       ox.fillStyle=hg;ox.beginPath();ox.arc(hx,hy,hr,0,Math.PI*2);ox.fill();
     }
   }
 
-  // Shadow pass — darker underside for 3D depth
+  // Shadow pass — subtle darker underside for 3D depth
   var sg=ox.createLinearGradient(0,cy-h*0.05,0,cy+h*0.25);
   sg.addColorStop(0,'rgba(0,0,0,0)');
-  sg.addColorStop(0.5,'rgba(40,50,70,'+(dark?0.08:0.04)+')');
-  sg.addColorStop(1,'rgba(30,40,60,'+(dark?0.12:0.06)+')');
+  sg.addColorStop(0.5,'rgba(40,50,70,'+(dark?0.03:0.015)+')');
+  sg.addColorStop(1,'rgba(30,40,60,'+(dark?0.04:0.02)+')');
   ox.fillStyle=sg;ox.fillRect(0,cy-h*0.05,w,h*0.35);
-
-  // Inner shadow on the bottom half — adds depth
-  for(var i=0;i<6;i++){
-    var sx=cx+(Math.random()-0.5)*w*0.4;
-    var sy=cy+h*0.03+Math.random()*h*0.08;
-    var sr=w*0.06+Math.random()*w*0.05;
-    var shg=ox.createRadialGradient(sx,sy,0,sx,sy,sr);
-    shg.addColorStop(0,'rgba(50,60,80,'+(dark?0.06:0.03)+')');
-    shg.addColorStop(1,'rgba(50,60,80,0)');
-    ox.fillStyle=shg;ox.beginPath();ox.arc(sx,sy,sr,0,Math.PI*2);ox.fill();
-  }
   return oc;
 }
 
