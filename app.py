@@ -1025,13 +1025,16 @@ def setup_notifications_table():
 @require_auth
 def notifications_list():
     """Get notifications for the current user."""
-    ensure_notif_table()
     username = session.get('username', '')
     try:
         r = http.get(
             sb_url('hd_notifications', f'?recipient=eq.{username}&dismissed=eq.false&order=created_at.desc&limit=50'),
             headers=sb_headers(), timeout=5)
-        return jsonify({'ok': True, 'notifications': r.json() if r.status_code == 200 else []})
+        if r.status_code == 200:
+            return jsonify({'ok': True, 'notifications': r.json()})
+        # Table probably doesn't exist
+        return jsonify({'ok': True, 'notifications': [], 'needs_setup': True,
+                       'setup_sql': _NOTIF_SQL.strip()})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
@@ -1039,7 +1042,6 @@ def notifications_list():
 @app.route('/notifications/unread-count')
 @require_auth
 def notifications_unread_count():
-    ensure_notif_table()
     username = session.get('username', '')
     try:
         r = http.get(
@@ -1048,7 +1050,7 @@ def notifications_unread_count():
         count = len(r.json()) if r.status_code == 200 else 0
         return jsonify({'ok': True, 'count': count})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return jsonify({'ok': True, 'count': 0})
 
 
 @app.route('/notifications/read/<int:nid>', methods=['POST'])
@@ -1087,7 +1089,6 @@ def notifications_dismiss(nid):
 @require_auth
 def notifications_send():
     """Create notifications — used for @mentions, assignments, stage changes, etc."""
-    ensure_notif_table()
     data = request.get_json() or {}
     recipients = data.get('recipients', [])
     ntype = data.get('type', 'info')

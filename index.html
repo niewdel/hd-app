@@ -8947,9 +8947,22 @@ function toggleNotifPanel(){
 function loadNotifications(){
   fetch('/notifications/list').then(function(r){return r.json();}).then(function(d){
     if(!d.ok)return;
+    if(d.needs_setup){
+      _notifCache=[];
+      var c=document.getElementById('notif-list');if(!c)return;
+      c.innerHTML='<div style="padding:20px;text-align:center;"><div style="font-weight:600;margin-bottom:8px;">Notifications Setup Required</div><p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">The notifications table needs to be created in Supabase. Run this SQL in the Supabase SQL Editor:</p><pre style="text-align:left;font-size:10px;background:var(--lgray);padding:10px;border-radius:6px;overflow-x:auto;max-height:200px;">'+esc(d.setup_sql||'')+'</pre><button class="btn btn-red btn-sm" style="margin-top:10px;" onclick="copyNotifSQL()">Copy SQL</button></div>';
+      window._notifSetupSQL=d.setup_sql||'';
+      return;
+    }
     _notifCache=d.notifications||[];
     renderNotifList();
   }).catch(function(){});
+}
+
+function copyNotifSQL(){
+  if(window._notifSetupSQL){
+    navigator.clipboard.writeText(window._notifSetupSQL).then(function(){toast('SQL copied to clipboard','ok');}).catch(function(){toast('Could not copy','err');});
+  }
 }
 
 function pollNotifCount(){
