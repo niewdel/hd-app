@@ -1354,11 +1354,10 @@ tr:nth-child(even) td{background:var(--lgray);}
       <div class="panel on" id="panel-dashboard">
         <div style="padding:4px 0;max-width:none;">
 
-          <!-- Greeting -->
-          <div class="dash-hero">
-            <div class="dash-hero-text">
-              <h2 id="dash-greeting" class="mc-greeting">Good morning</h2>
-              <p class="mc-date-line" id="dash-date-line"></p>
+          <!-- Daily Weather Forecast Banner (top of dashboard) -->
+          <div id="dash-weather-strip" style="margin-bottom:16px;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;">
+            <div class="wx-current-bar" id="dash-wx-current">
+              <span style="color:var(--dgray);font-size:12px;">Loading weather...</span>
             </div>
           </div>
 
@@ -1374,10 +1373,11 @@ tr:nth-child(even) td{background:var(--lgray);}
             <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
           </div>
 
-          <!-- Daily Weather Forecast Banner -->
-          <div id="dash-weather-strip" style="margin-bottom:20px;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;">
-            <div class="wx-current-bar" id="dash-wx-current">
-              <span style="color:var(--dgray);font-size:12px;">Loading weather...</span>
+          <!-- Greeting -->
+          <div class="dash-hero">
+            <div class="dash-hero-text">
+              <h2 id="dash-greeting" class="mc-greeting">Good morning</h2>
+              <p class="mc-date-line" id="dash-date-line"></p>
             </div>
           </div>
 
@@ -1408,8 +1408,6 @@ tr:nth-child(even) td{background:var(--lgray);}
             </div>
           </div>
 
-          <!-- Pipeline Snapshot (admin/estimator only) -->
-          <div id="dash-pipeline-snapshot" data-field-hidden class="dash-pipeline-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;"></div>
 
         </div>
       </div>
@@ -4134,7 +4132,6 @@ function renderDashboard(){
   renderDashUpcomingWO();
   renderDashTodaySchedule();
   renderDashRecentActivity();
-  renderDashPipelineSnapshot();
   updateNavBadges();
   // Set date line
   var dl=document.getElementById('dash-date-line');
