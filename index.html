@@ -193,6 +193,11 @@ body.dark [style*="border:1px solid var(--bdr)"]{border-color:#444 !important;}
 body.dark [style*="border:2px solid var(--red)"]{border-color:#ff4444 !important;}
 /* Sidebar stays dark in both modes */
 body.dark .sb{background:#111;}
+/* Dashboard bid calendar cells */
+body.dark .dk-cal-cell{background:#2a2a2a !important;color:#e0e0e0;}
+body.dark .dk-cal-today{background:#2a1a1a !important;border-color:#CC0000 !important;}
+body.dark .dk-cal-bid{background:#2a2210 !important;border-color:#E6A800 !important;}
+body.dark .dk-cal-selected{background:var(--red) !important;color:#fff !important;}
 /* Login bar stays white even in dark mode (login screen is already dark-themed) */
 body.dark .login-bar{background:#ffffff;}
 /* Dynamic elements created via JS — use .dk-card class for dark mode */
@@ -3019,6 +3024,7 @@ function renderDashCal(){
     var isToday=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
     var hasBids=dashBidDueDates[dateKey]&&dashBidDueDates[dateKey].length>0;
     var isSelected=dashSelectedDate===dateKey;
+    cell.className='dk-cal-cell'+(isSelected?' dk-cal-selected':(isToday?' dk-cal-today':(hasBids?' dk-cal-bid':'')));
     cell.style.cssText='padding:8px 4px;text-align:center;font-size:12px;border-radius:4px;cursor:pointer;position:relative;'
       +(isSelected?'background:var(--red);color:#fff;font-weight:700;':(isToday?'background:#FEE;font-weight:600;border:1px solid var(--red);':(hasBids?'background:#FFF8E6;border:1px solid #E6A800;':'background:#FAFAFA;')))
       +(hasBids&&!isSelected?'font-weight:600;':'');
@@ -3937,7 +3943,8 @@ function renderProjectNotesFeed(snap){
     list.style.cssText='max-height:220px;overflow-y:auto;padding-right:4px;';
     allNotes.forEach(function(n){
       var bubble=document.createElement('div');
-      bubble.style.cssText='padding:8px 12px;background:#F8F8F8;border-radius:8px;border-left:3px solid var(--red);margin-bottom:6px;position:relative;';
+      bubble.className='dk-card';
+      bubble.style.cssText='padding:8px 12px;border-radius:8px;border-left:3px solid var(--red);margin-bottom:6px;position:relative;';
       var meta=document.createElement('div');
       meta.style.cssText='font-size:10px;color:var(--dgray);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;';
       var who=document.createElement('span');
