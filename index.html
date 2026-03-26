@@ -367,7 +367,7 @@ body.dark .topbar-bell{color:#98989D;}body.dark .topbar-bell:hover{background:#3
 .topbar-bell .notif-dot{position:absolute;top:4px;right:4px;width:9px;height:9px;background:var(--red);border-radius:50%;display:none;border:2px solid #fff;}
 .topbar-bell .notif-dot.on{display:block;animation:notifPulse 2s infinite;}
 body.dark .topbar-bell .notif-dot{border-color:#1C1C1E;}
-.content{padding:24px;max-width:1080px;}
+.content{padding:24px;max-width:1400px;width:100%;}
 
 /* Panels */
 .panel{display:none;}.panel.on{display:block;width:100%;box-sizing:border-box;animation:panelIn .2s ease both;}
@@ -839,9 +839,7 @@ tr:nth-child(even) td{background:var(--lgray);}
   <div class="fab" id="fab" style="display:none;">
     <button class="fab-trigger" id="fab-trigger" onclick="toggleFab()">+</button>
     <div class="fab-menu" id="fab-menu">
-      <button class="fab-action" onclick="toggleFab();showPanel('build');">New Proposal</button>
-      <button class="fab-action" onclick="toggleFab();showPanel('co');">Change Order</button>
-      <button class="fab-action" onclick="toggleFab();showPanel('clients');setTimeout(function(){var b=document.querySelector('#panel-clients .btn');if(b)b.click();},200);">Add Client</button>
+      <button class="fab-action" onclick="toggleFab();showPanel('projects');">New Project</button>
     </div>
   </div>
 
@@ -884,10 +882,6 @@ tr:nth-child(even) td{background:var(--lgray);}
             <div>
               <h2 id="dash-greeting" style="font-size:22px;font-weight:700;margin-bottom:2px;">Good morning</h2>
               <p style="font-size:13px;color:var(--dgray);">Here's what's happening today.</p>
-            </div>
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-sec btn-sm" onclick="showPanel('build')">New Proposal</button>
-              <button class="btn btn-sec btn-sm" onclick="showPanel('schedule')">View Schedule</button>
             </div>
           </div>
 
