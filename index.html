@@ -546,7 +546,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <div class="panel" id="panel-build" data-field-hidden>
 
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Project Information</span></div>
+          <div class="card-hdr"><span class="card-title">Project Information</span><span id="proposal-doc-badge" style="display:none;background:#fef3f2;color:var(--red);padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700;font-family:monospace;margin-left:12px;letter-spacing:.5px;"></span></div>
           <div class="card-body">
             <div class="fg fg2" style="margin-bottom:11px;">
               <div><label>Project Name</label><input id="proj-name" type="text" placeholder="e.g. Smith Commercial Lot"/></div>
@@ -899,7 +899,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
       <!-- CHANGE ORDERS PANEL -->
       <div class="panel" id="panel-co" data-field-hidden><div class="content">
                 <div class="card">
-                  <div class="card-hdr"><span class="card-title">Change Order Info</span></div>
+                  <div class="card-hdr"><span class="card-title">Change Order Info</span><span id="co-doc-badge" style="display:none;background:#fef3f2;color:var(--red);padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700;font-family:monospace;margin-left:12px;letter-spacing:.5px;"></span></div>
                   <div class="card-body">
                     <div style="margin-bottom:10px;">
                       <label>Link to Proposal</label>
@@ -910,7 +910,7 @@ tr:nth-child(even) td{background:#FAFAFA;}
                     <div class="fg fg4">
                       <div><label>Project Name</label><input id="co-project" type="text" placeholder="Project name..."/></div>
                       <div><label>Client Name</label><input id="co-client" type="text" placeholder="Client name..."/></div>
-                      <div><label>Change Order #</label><input id="co-number" type="number" value="1" min="1"/></div>
+                      <div><label>Change Order #</label><input id="co-number" type="number" value="1" min="1" oninput="updateCODocBadge()"/></div>
                       <div><label>Date</label><input id="co-date" type="date"/></div>
                     </div>
                     <div class="fg fg2" style="margin-top:11px;">
@@ -2889,6 +2889,7 @@ function createProposalFromProject(projectId){
   lastSavedQuoteId=null;
   window._pendingProjectLink=projectId;
   showPanel('build',document.querySelector('[onclick*=build]'));
+  updateProposalDocBadge();
   toast('Fill out the proposal — it will auto-link to this project on save','ok');
 }
 
@@ -2904,6 +2905,7 @@ function createCOFromProject(projectId){
   var el3=document.getElementById('co-orig-amount');if(el3)el3.value=totals.proposalTotal;
   window._pendingCOProjectLink=projectId;
   showPanel('co',document.querySelector('[onclick*=co]'));
+  updateCODocBadge();
   toast('Fill out the change order — it will auto-link to this project on save','ok');
 }
 
@@ -4290,7 +4292,8 @@ function showPanel(id,el){
   if(id==='crewcosts')renderCrewCosts();
   if(id==='dashboard'){renderPipeline().then(function(){renderDashboard();}).catch(function(){renderDashboard();});}
   if(id==='project')renderProjectSummary();
-  if(id==='co'){populateCOProposalDropdown();}
+  if(id==='build')updateProposalDocBadge();
+  if(id==='co'){populateCOProposalDropdown();updateCODocBadge();}
   if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');var pn=document.getElementById('pin-change-notice');if(pn&&isFieldUser())pn.style.display='block';}
   if(id==='jobcost'){renderJobCost();renderEVA();}
   if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
@@ -4887,6 +4890,31 @@ function buildPayload(){
   };
 }
 
+function updateProposalDocBadge(){
+  var badge=document.getElementById('proposal-doc-badge');if(!badge)return;
+  var docNum='';
+  if(window._pendingProjectLink){
+    var pp=pipelineProposals.find(function(x){return x.id===window._pendingProjectLink;});
+    if(pp){var ps=typeof pp.snap==='string'?JSON.parse(pp.snap):pp.snap||{};var pn=ps.project_number||'';
+      if(pn){var idx=(ps.linked_proposals||[]).length+1;docNum=pn+'-P'+idx;}}
+  }
+  if(!docNum&&lastSavedQuoteId)docNum='P-'+lastSavedQuoteId;
+  if(docNum){badge.textContent=docNum;badge.style.display='';}
+  else{badge.style.display='none';}
+}
+function updateCODocBadge(){
+  var badge=document.getElementById('co-doc-badge');if(!badge)return;
+  var coNum=parseInt((document.getElementById('co-number')||{}).value)||1;
+  var docNum='';
+  if(window._pendingCOProjectLink){
+    var pp=pipelineProposals.find(function(x){return x.id===window._pendingCOProjectLink;});
+    if(pp){var ps=typeof pp.snap==='string'?JSON.parse(pp.snap):pp.snap||{};var pn=ps.project_number||'';
+      if(pn)docNum=pn+'-CO'+coNum;}
+  }
+  if(!docNum)docNum='CO-'+coNum;
+  badge.textContent=docNum;badge.style.display='';
+}
+
 // -- Crew Costs tab ------------------------------------------------------------
 function loadCrewCosts(){
   // Legacy — crews now loaded via loadStorage/Supabase
@@ -5440,6 +5468,7 @@ async function saveQuote(){
     var d=await r.json();
     if(d.ok){
       lastSavedQuoteId=d.id;
+      updateProposalDocBadge();
       // Update local cache
       var existing=savedQuotes.find(function(q){return q.id===d.id;});
       if(existing){existing.name=name;existing.client=snap.client;existing.date=snap.date;existing.total=p.total;existing.snap=JSON.stringify(snap);}
@@ -5494,6 +5523,7 @@ function loadQuote(id){
   lastSavedQuoteId=q.id;
   evaActuals=d.eva_actuals||{};
   showPanel('build',document.querySelector('.nav-item'));
+  updateProposalDocBadge();
   renderAll();renderConc();renderExtra();
   toast('Quote loaded');
 }
