@@ -8677,22 +8677,27 @@ function initLoginCanvas(){var cv=document.getElementById('login-canvas');if(!cv
 
 function initSidebarCanvas(){
   var cv=document.getElementById('sb-canvas');if(!cv)return;
-  var ctx=cv.getContext('2d');var W,H,pts;var N=18;
-  function resize(){var sb=cv.parentElement;W=cv.width=sb.offsetWidth;H=cv.height=sb.offsetHeight;}
+  var ctx=cv.getContext('2d');var W,H,pts;var N=12;
+  // Always size to the full expanded width so animation looks correct in both states
+  function resize(){
+    var sb=cv.parentElement;
+    W=cv.width=240;
+    H=cv.height=sb.offsetHeight||window.innerHeight;
+  }
   function rr(a,b){return a+Math.random()*(b-a);}
-  function init(){resize();pts=[];for(var i=0;i<N;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:rr(-0.08,0.08),vy:rr(-0.08,0.08),r:rr(0.8,1.5)});}
+  function init(){resize();pts=[];for(var i=0;i<N;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:rr(-0.06,0.06),vy:rr(-0.06,0.06),r:rr(0.6,1.2)});}
   function draw(){
     ctx.clearRect(0,0,W,H);
     for(var i=0;i<N;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;}
     for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){
       var dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,dist=Math.sqrt(dx*dx+dy*dy);
-      if(dist<120){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(255,255,255,'+(1-dist/120)*0.04+')';ctx.lineWidth=0.5;ctx.stroke();}
-      if(dist<60){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(204,0,0,'+(1-dist/60)*0.08+')';ctx.lineWidth=0.5;ctx.stroke();}
+      if(dist<100){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(255,255,255,'+(1-dist/100)*0.03+')';ctx.lineWidth=0.5;ctx.stroke();}
+      if(dist<50){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(204,0,0,'+(1-dist/50)*0.06+')';ctx.lineWidth=0.5;ctx.stroke();}
     }
-    for(var i=0;i<N;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,6.28);ctx.fillStyle='rgba(255,255,255,0.08)';ctx.fill();}
+    for(var i=0;i<N;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,6.28);ctx.fillStyle='rgba(255,255,255,0.06)';ctx.fill();}
     requestAnimationFrame(draw);
   }
-  window.addEventListener('resize',resize);init();draw();
+  window.addEventListener('resize',function(){resize();});init();draw();
 }
 
 var _editingUserId=null;
