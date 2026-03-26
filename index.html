@@ -787,12 +787,12 @@ tr:nth-child(even) td{background:#FAFAFA;}
             </div>
             <!-- Material tracking moved to work orders -->
             <div class="card" data-field-hidden style="margin-bottom:14px;">
-              <div class="card-hdr"><span class="card-title">Job Costing</span></div>
-              <div class="card-body" id="ps-job-costing"><p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p></div>
-            </div>
-            <div class="card" data-field-hidden style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Invoices</span></div>
               <div class="card-body" id="ps-invoices"><p style="color:var(--dgray);font-size:12px;">No invoices yet.</p></div>
+            </div>
+            <div class="card" data-field-hidden style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Job Costing</span></div>
+              <div class="card-body" id="ps-job-costing"><p style="color:var(--dgray);font-size:12px;">Attach a proposal to view job costing data.</p></div>
             </div>
           </div>
           <!-- Right column -->
@@ -7358,32 +7358,61 @@ function renderWOEquipment(wo,snap){
   if(wo.equipment.length){
     var tbl=document.createElement('table');
     tbl.style.cssText='width:100%;font-size:12px;border-collapse:collapse;margin-bottom:8px;';
-    tbl.innerHTML='<thead><tr style="background:var(--lgray);"><th style="text-align:left;padding:6px 8px;font-size:11px;">Equipment</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Hours</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Rate ($/hr)</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Total</th><th style="width:28px;"></th></tr></thead>';
+    tbl.innerHTML='<thead><tr style="background:var(--lgray);"><th style="text-align:left;padding:6px 8px;font-size:11px;">Equipment</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Qty</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Daily Rate</th><th style="text-align:right;padding:6px 8px;font-size:11px;">Total</th><th style="width:28px;"></th></tr></thead>';
     var tbody=document.createElement('tbody');
     wo.equipment.forEach(function(eq,idx){
       var tr=document.createElement('tr');tr.style.borderBottom='1px solid var(--bdr)';
       if(idx%2)tr.style.background='#FAFAFA';
-      // Name
+      // Name — dropdown from EQUIPMENT list + custom option
       var td1=document.createElement('td');td1.style.padding='6px 8px';
-      var n=document.createElement('input');n.type='text';n.value=eq.name||'';n.placeholder='e.g. CAT 320 Excavator';
-      n.style.cssText='width:100%;font-size:12px;padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;';
-      (function(i){n.addEventListener('change',function(){wo.equipment[i].name=this.value;});})(idx);
-      td1.appendChild(n);tr.appendChild(td1);
-      // Hours
+      var sel=document.createElement('select');
+      sel.style.cssText='width:100%;font-size:12px;padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;';
+      var customOpt=document.createElement('option');customOpt.value='__custom__';customOpt.textContent='— Custom —';
+      sel.appendChild(customOpt);
+      var eqList=(typeof EQUIPMENT!=='undefined'&&EQUIPMENT.length)?EQUIPMENT:DEFAULT_EQUIPMENT;
+      eqList.forEach(function(e){
+        var o=document.createElement('option');o.value=e.name;o.textContent=e.name;
+        if(eq.name===e.name)o.selected=true;
+        sel.appendChild(o);
+      });
+      // If current name doesn't match any option and isn't empty, select custom
+      var matched=eqList.some(function(e){return e.name===eq.name;});
+      if(!matched&&eq.name)sel.value='__custom__';
+      (function(i){sel.addEventListener('change',function(){
+        if(this.value==='__custom__'){
+          wo.equipment[i].name='';
+          wo.equipment[i].daily_rate=0;
+        } else {
+          wo.equipment[i].name=this.value;
+          var found=eqList.find(function(e){return e.name===wo.equipment[i].name;});
+          if(found)wo.equipment[i].daily_rate=found.daily_rate;
+        }
+        renderWOEquipment(wo,snap);
+      });})(idx);
+      td1.appendChild(sel);
+      // If custom, show text input below
+      if(!matched&&eq.name){
+        var customIn=document.createElement('input');customIn.type='text';customIn.value=eq.name;customIn.placeholder='Custom equipment name';
+        customIn.style.cssText='width:100%;font-size:11px;padding:2px 6px;border:1px solid var(--bdr);border-radius:4px;margin-top:4px;';
+        (function(i){customIn.addEventListener('change',function(){wo.equipment[i].name=this.value;});})(idx);
+        td1.appendChild(customIn);
+      }
+      tr.appendChild(td1);
+      // Qty (days)
       var td2=document.createElement('td');td2.style.cssText='padding:6px 8px;text-align:right;';
-      var h=document.createElement('input');h.type='number';h.min='0';h.step='0.5';h.value=eq.hours||0;
-      h.style.cssText='width:60px;font-size:12px;text-align:right;padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;';
-      (function(i){h.addEventListener('change',function(){wo.equipment[i].hours=parseFloat(this.value)||0;renderWOEquipment(wo,snap);});})(idx);
-      td2.appendChild(h);tr.appendChild(td2);
-      // Rate
+      var qIn=document.createElement('input');qIn.type='number';qIn.min='0';qIn.step='0.5';qIn.value=eq.qty||1;
+      qIn.style.cssText='width:55px;font-size:12px;text-align:right;padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;';
+      (function(i){qIn.addEventListener('change',function(){wo.equipment[i].qty=parseFloat(this.value)||0;renderWOEquipment(wo,snap);});})(idx);
+      td2.appendChild(qIn);tr.appendChild(td2);
+      // Daily Rate
       var td3=document.createElement('td');td3.style.cssText='padding:6px 8px;text-align:right;';
-      var r=document.createElement('input');r.type='number';r.min='0';r.step='5';r.value=eq.rate||0;
-      r.style.cssText='width:70px;font-size:12px;text-align:right;padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;';
-      (function(i){r.addEventListener('change',function(){wo.equipment[i].rate=parseFloat(this.value)||0;renderWOEquipment(wo,snap);});})(idx);
-      td3.appendChild(r);tr.appendChild(td3);
+      var rIn=document.createElement('input');rIn.type='number';rIn.min='0';rIn.step='50';rIn.value=eq.daily_rate||0;
+      rIn.style.cssText='width:80px;font-size:12px;text-align:right;padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;';
+      (function(i){rIn.addEventListener('change',function(){wo.equipment[i].daily_rate=parseFloat(this.value)||0;renderWOEquipment(wo,snap);});})(idx);
+      td3.appendChild(rIn);tr.appendChild(td3);
       // Total
       var td4=document.createElement('td');td4.style.cssText='padding:6px 8px;text-align:right;font-weight:600;';
-      td4.textContent='$'+((eq.hours||0)*(eq.rate||0)).toLocaleString();
+      td4.textContent='$'+Math.round((eq.qty||1)*(eq.daily_rate||0)).toLocaleString();
       tr.appendChild(td4);
       // Delete
       var td5=document.createElement('td');td5.style.cssText='padding:6px 4px;text-align:center;';
@@ -7393,12 +7422,19 @@ function renderWOEquipment(wo,snap){
       tbody.appendChild(tr);
     });
     tbl.appendChild(tbody);
+    // Totals footer
+    var grandTotal=wo.equipment.reduce(function(s,e){return s+Math.round((e.qty||1)*(e.daily_rate||0));},0);
+    var tfoot=document.createElement('tfoot');
+    tfoot.innerHTML='<tr style="font-weight:700;border-top:2px solid #333;"><td colspan="3" style="padding:6px 8px;">Daily Equipment Total</td><td style="padding:6px 8px;text-align:right;">$'+grandTotal.toLocaleString()+'</td><td></td></tr>';
+    tbl.appendChild(tfoot);
     el.appendChild(tbl);
   }
   var btnRow=document.createElement('div');btnRow.style.cssText='display:flex;gap:8px;align-items:center;';
   var addBtn=document.createElement('button');addBtn.className='btn btn-sec btn-sm';addBtn.textContent='+ Add Equipment';
   addBtn.addEventListener('click',function(){
-    wo.equipment.push({name:'',hours:8,rate:100});
+    var eqList=(typeof EQUIPMENT!=='undefined'&&EQUIPMENT.length)?EQUIPMENT:DEFAULT_EQUIPMENT;
+    var first=eqList.length?eqList[0]:{name:'',daily_rate:0};
+    wo.equipment.push({name:first.name,qty:1,daily_rate:first.daily_rate});
     renderWOEquipment(wo,snap);
   });
   btnRow.appendChild(addBtn);
@@ -7411,12 +7447,6 @@ function renderWOEquipment(wo,snap){
         });
     });
     btnRow.appendChild(saveBtn);
-    // Total cost
-    var total=wo.equipment.reduce(function(s,e){return s+(e.hours||0)*(e.rate||0);},0);
-    var totalSpan=document.createElement('span');
-    totalSpan.style.cssText='font-size:12px;font-weight:600;color:var(--dgray);';
-    totalSpan.textContent='Total: $'+total.toLocaleString();
-    btnRow.appendChild(totalSpan);
   }
   el.appendChild(btnRow);
 }
