@@ -375,6 +375,18 @@ def clients_delete(client_id):
 # ââ PDF / DOCX ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 
+@app.route('/users/list')
+@require_auth
+def list_users_basic():
+    """Return active users (username, full_name, role) for @mentions and assignment."""
+    try:
+        r = http.get(sb_url('hd_users', '?active=eq.true&select=id,username,full_name,role&order=full_name.asc'), headers=sb_headers(), timeout=5)
+        users = r.json() if r.status_code == 200 else []
+        return jsonify({'ok': True, 'users': users})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
 @app.route('/admin/users', methods=['GET'])
 @require_admin
 def get_users():
@@ -945,6 +957,132 @@ def setup_user_fields():
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)})
+
+# ── Notifications ─────────────────────────────────────────────────────────────
+
+@app.route('/setup/notifications-table', methods=['POST'])
+@require_admin
+def setup_notifications_table():
+    """Create hd_notifications table. Run once."""
+    sql = """
+    CREATE TABLE IF NOT EXISTS hd_notifications (
+        id SERIAL PRIMARY KEY,
+        recipient TEXT NOT NULL,
+        type TEXT NOT NULL DEFAULT 'info',
+        title TEXT NOT NULL,
+        body TEXT DEFAULT '',
+        project_id INT,
+        project_name TEXT DEFAULT '',
+        link TEXT DEFAULT '',
+        read BOOLEAN DEFAULT FALSE,
+        dismissed BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        created_by TEXT DEFAULT ''
+    );
+    ALTER TABLE hd_notifications DISABLE ROW LEVEL SECURITY;
+    CREATE INDEX IF NOT EXISTS idx_notif_recipient ON hd_notifications(recipient, dismissed, created_at DESC);
+    """
+    svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+    try:
+        r = http.post(f'{SUPABASE_URL}/rest/v1/rpc/exec_sql',
+            headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
+            json={'query': sql}, timeout=10)
+        if r.status_code != 200:
+            r2 = http.post(f'{SUPABASE_URL}/pg/query',
+                headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
+                json={'query': sql}, timeout=10)
+            if r2.status_code == 200:
+                return jsonify({'ok': True, 'method': 'pg/query'})
+            return jsonify({'ok': False, 'error': 'Run this SQL manually in Supabase dashboard.', 'sql': sql.strip()})
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)})
+
+
+@app.route('/notifications/list')
+@require_auth
+def notifications_list():
+    """Get notifications for the current user."""
+    username = session.get('username', '')
+    try:
+        r = http.get(
+            sb_url('hd_notifications', f'?recipient=eq.{username}&dismissed=eq.false&order=created_at.desc&limit=50'),
+            headers=sb_headers(), timeout=5)
+        return jsonify({'ok': True, 'notifications': r.json() if r.status_code == 200 else []})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@app.route('/notifications/unread-count')
+@require_auth
+def notifications_unread_count():
+    username = session.get('username', '')
+    try:
+        r = http.get(
+            sb_url('hd_notifications', f'?recipient=eq.{username}&dismissed=eq.false&read=eq.false&select=id'),
+            headers=sb_headers(), timeout=5)
+        count = len(r.json()) if r.status_code == 200 else 0
+        return jsonify({'ok': True, 'count': count})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@app.route('/notifications/read/<int:nid>', methods=['POST'])
+@require_auth
+def notifications_read(nid):
+    try:
+        http.patch(sb_url('hd_notifications', f'?id=eq.{nid}'), headers=sb_headers(), json={'read': True}, timeout=5)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@app.route('/notifications/read-all', methods=['POST'])
+@require_auth
+def notifications_read_all():
+    username = session.get('username', '')
+    try:
+        http.patch(sb_url('hd_notifications', f'?recipient=eq.{username}&read=eq.false'),
+            headers=sb_headers(), json={'read': True}, timeout=5)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@app.route('/notifications/dismiss/<int:nid>', methods=['POST'])
+@require_auth
+def notifications_dismiss(nid):
+    try:
+        http.patch(sb_url('hd_notifications', f'?id=eq.{nid}'), headers=sb_headers(), json={'dismissed': True}, timeout=5)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@app.route('/notifications/send', methods=['POST'])
+@require_auth
+def notifications_send():
+    """Create notifications — used for @mentions, assignments, etc."""
+    data = request.get_json() or {}
+    recipients = data.get('recipients', [])
+    ntype = data.get('type', 'info')
+    title = data.get('title', '')
+    body = data.get('body', '')
+    project_id = data.get('project_id')
+    project_name = data.get('project_name', '')
+    created_by = session.get('username', '')
+    if not recipients or not title:
+        return jsonify({'ok': False, 'error': 'recipients and title required'}), 400
+    try:
+        rows = [{'recipient': r, 'type': ntype, 'title': title, 'body': body,
+                 'project_id': project_id, 'project_name': project_name,
+                 'created_by': created_by} for r in recipients if r != created_by]
+        if rows:
+            http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=rows, timeout=10)
+        return jsonify({'ok': True, 'sent': len(rows)})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 
 # ── Settings (shared key/value store in hd_settings table) ──────────────────
 
