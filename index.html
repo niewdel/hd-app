@@ -236,7 +236,12 @@ body.dark ::-webkit-scrollbar-thumb:hover{background:#555;}
 .login-bar img{height:42px;width:auto;display:block;}
 .login-body{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;}
 .login-card{width:540px;max-width:90vw;text-align:center;}
-.login-eyebrow{font-family:'Poppins',sans-serif;font-size:36px;font-weight:700;letter-spacing:4px;color:var(--red);text-transform:uppercase;margin-bottom:18px;white-space:nowrap;}
+.login-eyebrow{margin-bottom:18px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.login-mono{display:flex;align-items:center;gap:0;}
+.login-mono-h{font-size:72px;font-weight:900;color:var(--red);line-height:1;font-family:var(--font);letter-spacing:-2px;}
+.login-mono-d{font-size:72px;font-weight:900;color:#666;line-height:1;font-family:var(--font);letter-spacing:-2px;}
+.login-mono-arc{width:5px;height:48px;background:linear-gradient(180deg,var(--red),#666);border-radius:3px;margin:0 3px;align-self:center;}
+.login-brand{font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:4px;}
 .login-heading{font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;margin-bottom:6px;}
 .login-sub{font-family:'Poppins',sans-serif;font-size:14px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;margin-bottom:36px;}
 .login-rule{width:32px;height:2px;background:var(--red);margin:0 auto 36px;border-radius:2px;}
@@ -583,7 +588,10 @@ tr:nth-child(even) td{background:#FAFAFA;}
   <canvas id="login-canvas"></canvas>
   <div class="login-body">
     <div class="login-card">
-      <div class="login-eyebrow">HD Hauling &amp; Grading</div>
+      <div class="login-eyebrow">
+        <div class="login-mono"><span class="login-mono-h">H</span><span class="login-mono-arc"></span><span class="login-mono-d">D</span></div>
+        <div class="login-brand">Hauling &amp; Grading</div>
+      </div>
       <div class="login-sub">Internal use only &nbsp;&middot;&nbsp; Authorized access required</div>
       <div class="login-rule"></div>
       <input class="pin-input" id="login-username" type="text" placeholder="Username" style="font-size:14px;letter-spacing:1px;margin-bottom:10px;text-transform:lowercase;" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off" spellcheck="false"/>
