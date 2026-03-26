@@ -4108,6 +4108,11 @@ function loadCO(id){
   var co=savedCOs.find(function(x){return x.id===id;});
   if(!co){toast('Change order not found','err');return;}
   var snap=typeof co.snap==='string'?JSON.parse(co.snap||'{}'):co.snap||{};
+  // Set project link from parent project
+  if(!window._pendingCOProjectLink){
+    var parentId=findParentProjectForCO(id);
+    if(parentId)window._pendingCOProjectLink=parentId;
+  }
   // Switch to CO panel
   showPanel('co',document.querySelector('[onclick*="co"]'));
   // Populate fields
@@ -4278,6 +4283,15 @@ function renderTopbar(panelId){
 }
 
 function showPanel(id,el){
+  // Proposals, COs, and work orders require a project context
+  if(id==='build'&&!window._pendingProjectLink&&!lastSavedQuoteId){
+    showPanel('projects',document.querySelector('[onclick*=projects]'));
+    toast('Create or select a project first to build a proposal','err');return;
+  }
+  if(id==='co'&&!window._pendingCOProjectLink){
+    showPanel('projects',document.querySelector('[onclick*=projects]'));
+    toast('Create or select a project first to create a change order','err');return;
+  }
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
   document.getElementById('panel-'+id).classList.add('on');
@@ -4888,6 +4902,23 @@ function buildPayload(){
     }),
     _date_iso:date,
   };
+}
+
+function findParentProject(proposalId){
+  for(var i=0;i<(pipelineProposals||[]).length;i++){
+    var p=pipelineProposals[i];
+    var s=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    if(s.is_project&&(s.linked_proposals||[]).indexOf(proposalId)>=0)return p.id;
+  }
+  return null;
+}
+function findParentProjectForCO(coId){
+  for(var i=0;i<(pipelineProposals||[]).length;i++){
+    var p=pipelineProposals[i];
+    var s=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    if(s.is_project&&(s.change_orders||[]).some(function(co){return co.id===coId;}))return p.id;
+  }
+  return null;
 }
 
 function updateProposalDocBadge(){
@@ -5522,6 +5553,11 @@ function loadQuote(id){
   extraItems=d.extraItems||[];eid=extraItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
   lastSavedQuoteId=q.id;
   evaActuals=d.eva_actuals||{};
+  // Set project link from parent project if not already set
+  if(!window._pendingProjectLink){
+    var parentId=findParentProject(q.id);
+    if(parentId)window._pendingProjectLink=parentId;
+  }
   showPanel('build',document.querySelector('.nav-item'));
   updateProposalDocBadge();
   renderAll();renderConc();renderExtra();
@@ -6035,8 +6071,12 @@ async function moveCard(proposalId, stageId) {
 }
 
 function loadProposalFromPipeline(id) {
+  // Set project link before loading
+  if(!window._pendingProjectLink){
+    var parentId=findParentProject(id);
+    if(parentId)window._pendingProjectLink=parentId;
+  }
   loadQuote(id);
-  showPanel('build', document.querySelector('.nav-item'));
 }
 
 // -- Project Create / Edit from Pipeline --
