@@ -2148,7 +2148,44 @@ function loadDefaultLibrary(){
   renderLibraryList();
   toast(added+' items added to library','ok');
 }
-function saveLibrary(){_saveSetting('hd_bid_library',BID_LIBRARY);toast("Library saved","ok");}
+function saveLibrary(){
+  // Cascade: if any library item name or rate changed, update PRESETS that reference them
+  if(window._libSnapshot){
+    var snap=window._libSnapshot;
+    BID_LIBRARY.forEach(function(item){
+      var old=snap[item.id];
+      if(!old)return;
+      if(old.name && old.name!==item.name){
+        // Rename in presets
+        PRESETS.forEach(function(p){
+          if(!p.layers)return;
+          p.layers.forEach(function(l){if(l.type===old.name)l.type=item.name;if(l.description===old.name)l.description=item.name;});
+        });
+      }
+      if(old.rate!==item.rate || old.desc!==item.desc || old.unit!==item.unit || old.name!==item.name){
+        // Update presets that reference this item by current name
+        PRESETS.forEach(function(p){
+          if(!p.layers)return;
+          p.layers.forEach(function(l){
+            if(l.type===item.name){l.rate=item.rate;l.description=item.desc;}
+          });
+        });
+      }
+    });
+    _saveSetting('hd_presets',PRESETS);
+    delete window._libSnapshot;
+  }
+  _saveSetting('hd_bid_library',BID_LIBRARY);
+  toast("Library saved","ok");
+}
+
+// Snapshot library state before editing so we can detect renames
+function _snapshotLibrary(){
+  window._libSnapshot={};
+  BID_LIBRARY.forEach(function(item){
+    window._libSnapshot[item.id]={name:item.name,rate:item.rate,desc:item.desc,unit:item.unit};
+  });
+}
 function openLibraryPicker(){
   if(!BID_LIBRARY.length){toast("Library empty — go to Settings > Bid Library and click Load Defaults","err");return;}
   var ex=document.getElementById("lib-picker-modal");if(ex)ex.remove();
@@ -5241,6 +5278,15 @@ function saveMatPrices(){
     materials.push({name:k, cost:MAT[k]||0, unit:MAT_UNIT[k]||'TON', trade:MAT_TRADE[k]||'b-general'});
   });
   _saveSetting('hd_mat_prices', {materials:materials, updated:Date.now()});
+  // Cascade: sync material costs into bid library items that reference them
+  var libChanged=false;
+  BID_LIBRARY.forEach(function(item){
+    if(item.material && MAT[item.material]!==undefined){
+      var newCost=MAT[item.material]||0;
+      if(item.mat_cost!==newCost){item.mat_cost=newCost;libChanged=true;}
+    }
+  });
+  if(libChanged)_saveSetting('hd_bid_library',BID_LIBRARY);
   var el=document.getElementById('mat-prices-updated');
   if(el) el.textContent='Last updated: '+new Date().toLocaleDateString();
   updateMatIndicator();
@@ -5823,6 +5869,7 @@ function loadCrewCosts(){
 }
 function saveCrews(){
   _saveSetting('hd_crews',CREWS);
+  toast('Crew rates saved','ok');
 }
 function addCrew(){
   CREWS.push({id:_crewNextId++, name:'', trade:'other', daily_rate:0, productivity:0, prod_unit:'TON'});
@@ -5972,7 +6019,57 @@ function renderEquipmentList(){
   tbl.appendChild(tbody);wrap.appendChild(tbl);
 }
 function addEquipment(){EQUIPMENT.push({id:_eqId++,name:'',daily_rate:0,notes:''});renderEquipmentList();}
-function saveEquipment(){_saveSetting('hd_equipment',EQUIPMENT);toast('Equipment rates saved','ok');}
+function saveEquipment(){
+  // Cascade: if equipment name or rate changed, update work order equipment in project snaps
+  if(window._eqSnapshot){
+    var snap=window._eqSnapshot;
+    var changes=[];
+    EQUIPMENT.forEach(function(eq){
+      var old=snap[eq.id];
+      if(!old)return;
+      if(old.name!==eq.name || old.daily_rate!==eq.daily_rate){
+        changes.push({oldName:old.name,newName:eq.name,newRate:eq.daily_rate});
+      }
+    });
+    if(changes.length){_cascadeEquipmentChanges(changes);}
+    delete window._eqSnapshot;
+  }
+  _saveSetting('hd_equipment',EQUIPMENT);
+  toast('Equipment rates saved','ok');
+}
+
+function _snapshotEquipment(){
+  window._eqSnapshot={};
+  EQUIPMENT.forEach(function(eq){
+    window._eqSnapshot[eq.id]={name:eq.name,daily_rate:eq.daily_rate};
+  });
+}
+
+function _cascadeEquipmentChanges(changes){
+  // Update equipment references in all project work orders
+  if(typeof pipelineProposals==='undefined'||!pipelineProposals)return;
+  pipelineProposals.forEach(function(proj){
+    var snap=typeof proj.snap==='string'?JSON.parse(proj.snap||'{}'):proj.snap||{};
+    if(!snap.work_orders)return;
+    var modified=false;
+    snap.work_orders.forEach(function(wo){
+      if(!wo.equipment)return;
+      wo.equipment.forEach(function(eq){
+        changes.forEach(function(ch){
+          if(eq.name===ch.oldName){
+            eq.name=ch.newName;
+            eq.rate=ch.newRate;
+            eq.daily_rate=ch.newRate;
+            modified=true;
+          }
+        });
+      });
+    });
+    if(modified){
+      fetch('/projects/update/'+proj.id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})}).catch(function(){});
+    }
+  });
+}
 function loadDefaultEquipment(){
   if(EQUIPMENT.length&&!confirm('Load default equipment? Existing items will be kept.'))return;
   var existingNames={};EQUIPMENT.forEach(function(x){existingNames[x.name]=1;});
@@ -6730,9 +6827,9 @@ function showSettingsTab(tab){
   if(tab==='materials'){renderMatTable();}
   if(tab==='badges'){renderBadgeList();}
   if(tab==='presets'){renderPresetMgr();}
-  if(tab==='library'){renderLibraryList();}
+  if(tab==='library'){_snapshotLibrary();renderLibraryList();}
   if(tab==='crews'){renderCrewsList();}
-  if(tab==='equipment'){renderEquipmentList();}
+  if(tab==='equipment'){_snapshotEquipment();renderEquipmentList();}
 }
 
 function applyBadgeStyles(){
