@@ -9,7 +9,7 @@
 <title>HD Hauling &amp; Grading - Proposal Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -18,61 +18,68 @@ html{scroll-behavior:smooth;}
 ::selection{background:var(--red-soft);color:var(--red);}
 :focus-visible{outline:2px solid var(--red);outline-offset:2px;border-radius:var(--rad-s);}
 :root{
-  --red:#CC0000;--red-h:#AA0000;--red-soft:rgba(204,0,0,0.12);
-  --blk:#1A1A1A;--wht:#fff;--lgray:#F8F7F5;--mgray:#E8E6E3;--dgray:#6B6B6B;--bdr:#D5D3D0;
-  --rad:12px;--rad-s:8px;--rad-l:16px;
-  --font:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  --shadow-s:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.03);
-  --shadow-m:0 4px 16px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.05);
-  --shadow-l:0 12px 48px rgba(0,0,0,.12);
-  --glass:rgba(255,255,255,0.82);--glass-blur:blur(20px);
+  --red:#CC0000;--red-h:#E03030;--red-soft:rgba(204,0,0,0.10);
+  --accent:#CC0000;
+  --blk:#1A1A1A;--wht:#fff;--lgray:#F7F7F8;--mgray:#EBEBED;--dgray:#71717A;--bdr:#E4E4E7;
+  --bg-base:#FAFAFA;--bg-el:#fff;--bg-sub:#F4F4F5;
+  --rad:10px;--rad-s:6px;--rad-l:14px;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --shadow-s:0 1px 2px rgba(0,0,0,.05);
+  --shadow-m:0 4px 12px rgba(0,0,0,.08);
+  --shadow-l:0 12px 40px rgba(0,0,0,.12);
+  --glass:rgba(255,255,255,0.85);--glass-blur:blur(20px);
+  --rail-w:56px;--sidebar-w:240px;--topbar-h:52px;
+  --transition:200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-body{font-family:var(--font);background:#F2F0ED;color:var(--blk);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+body{font-family:var(--font);background:var(--bg-base);color:var(--blk);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 
 /* Dark Mode — CSS Variable Overrides */
 body.dark{
-  --blk:#F5F5F7;--wht:#1C1C1E;--lgray:#2C2C2E;--mgray:#3A3A3C;
-  --dgray:#A1A1A6;--bdr:rgba(255,255,255,0.08);
-  --shadow-s:0 1px 3px rgba(0,0,0,.3),0 4px 12px rgba(0,0,0,.15);
-  --shadow-m:0 4px 16px rgba(0,0,0,.3),0 8px 32px rgba(0,0,0,.2);
-  --shadow-l:0 12px 48px rgba(0,0,0,.4);
-  --glass:rgba(28,28,30,0.72);--glass-blur:blur(20px);
-  background:#141416;color:#F5F5F7;
+  --blk:#E4E4E7;--wht:#18181B;--lgray:#27272A;--mgray:#3F3F46;
+  --dgray:#A1A1AA;--bdr:rgba(255,255,255,0.06);
+  --bg-base:#09090B;--bg-el:#18181B;--bg-sub:#27272A;
+  --shadow-s:0 1px 2px rgba(0,0,0,.4);
+  --shadow-m:0 4px 12px rgba(0,0,0,.5);
+  --shadow-l:0 12px 40px rgba(0,0,0,.6);
+  --glass:rgba(24,24,27,0.80);--glass-blur:blur(24px);
+  --red-h:#FF4444;--red-soft:rgba(204,0,0,0.15);
+  background:#09090B;color:#E4E4E7;
 }
-body.dark .main{background:#141416;}
+body.dark .main{background:#09090B;}
 /* Topbar */
-body.dark .topbar{background:var(--glass);border-bottom-color:rgba(255,255,255,0.06);}
-body.dark .topbar-title{color:#F5F5F7;}
+body.dark .topbar{background:#18181B;border-bottom-color:rgba(255,255,255,0.06);}
+body.dark .topbar-title{color:#E4E4E7;}
 /* Cards & modals */
-body.dark .card{background:#1C1C1E;border-color:#3A3A3C;color:#F5F5F7;}
-body.dark .card-hdr{background:#232326 !important;border-bottom-color:#3A3A3C;}
-body.dark .modal{background:#1C1C1E;border-color:#3A3A3C;color:#F5F5F7;}
-body.dark .modal-overlay{background:rgba(0,0,0,.75);}
-body.dark .modal-hdr{border-bottom-color:#3A3A3C;}
-body.dark .modal-foot{border-top-color:#3A3A3C;}
-body.dark .modal-body input,body.dark .modal-body textarea{background:#2C2C2E;color:#F5F5F7;border-color:#48484A;}
+body.dark .card{background:#18181B;border-color:rgba(255,255,255,0.06);color:#E4E4E7;}
+body.dark .card-hdr{background:transparent !important;border-bottom-color:rgba(255,255,255,0.06);}
+body.dark .modal{background:#18181B;border-color:rgba(255,255,255,0.08);color:#E4E4E7;}
+body.dark .modal-overlay{background:rgba(0,0,0,.60);backdrop-filter:blur(4px);}
+body.dark .modal-hdr{border-bottom-color:rgba(255,255,255,0.06);}
+body.dark .modal-foot{border-top-color:rgba(255,255,255,0.06);}
+body.dark .modal-body input,body.dark .modal-body textarea{background:#27272A;color:#E4E4E7;border-color:#3F3F46;}
 /* Forms */
-body.dark input,body.dark select,body.dark textarea{background:#2C2C2E;color:#F5F5F7;border-color:#48484A;}
-body.dark input::placeholder,body.dark textarea::placeholder{color:#636366;}
-body.dark input:focus,body.dark select:focus,body.dark textarea:focus{border-color:#78788A;}
+body.dark input,body.dark select,body.dark textarea{background:#27272A;color:#E4E4E7;border-color:#3F3F46;}
+body.dark input::placeholder,body.dark textarea::placeholder{color:#71717A;}
+body.dark input:focus,body.dark select:focus,body.dark textarea:focus{border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
 /* Buttons */
-body.dark .btn-sec{background:#2C2C2E;color:#F5F5F7;border-color:#48484A;}
-body.dark .btn-sec:hover{background:#3A3A3C;}
-body.dark .btn-outline{color:#F5F5F7;border-color:#58585E;}
-body.dark .btn-outline:hover{background:#3A3A3C;}
-body.dark .btn-ico{color:#A1A1A6;}
-body.dark .btn-ico:hover{color:#FF453A;}
+body.dark .btn-sec{background:#27272A;color:#E4E4E7;border-color:#3F3F46;}
+body.dark .btn-sec:hover{background:#3F3F46;}
+body.dark .btn-primary{background:#E4E4E7;color:#18181B;}
+body.dark .btn-outline{color:#E4E4E7;border-color:#3F3F46;}
+body.dark .btn-outline:hover{background:#3F3F46;}
+body.dark .btn-ico{color:#71717A;}
+body.dark .btn-ico:hover{color:var(--red-h);}
 /* Tables */
-body.dark table th{background:#2C2C2E;color:#D1D1D6;}
-body.dark table td{border-color:#3A3A3C;color:#F5F5F7;}
-body.dark table tr:hover{background:#2C2C2E;}
-body.dark tr:nth-child(even) td{background:#28282A !important;}
+body.dark table th{background:#1F1F23;color:#A1A1AA;}
+body.dark table td{border-color:rgba(255,255,255,0.06);color:#E4E4E7;}
+body.dark table tr:hover{background:#1F1F23;}
+body.dark tr:nth-child(even) td{background:rgba(255,255,255,0.02) !important;}
 body.dark .admin-table th{background:#2C2C2E;color:#A1A1A6;border-bottom-color:#48484A;}
 body.dark .admin-table tr:hover td{background:#2C2C2E;}
 /* Sections (proposal builder) */
-body.dark .sec{background:#1C1C1E;border-color:#3A3A3C;}
-body.dark .sec-hdr{background:#232326 !important;border-bottom-color:#3A3A3C;}
-body.dark .sec-foot{background:#232326 !important;border-top-color:#3A3A3C;}
+body.dark .sec{background:#18181B;border-color:rgba(255,255,255,0.06);}
+body.dark .sec-hdr{background:rgba(255,255,255,0.03) !important;border-bottom-color:rgba(255,255,255,0.06);}
+body.dark .sec-foot{background:rgba(255,255,255,0.03) !important;border-top-color:rgba(255,255,255,0.06);}
 body.dark .sec-foot-item .sf-val{color:#F5F5F7;}
 body.dark .lyr-row{border-bottom-color:#3A3A3C;}
 body.dark .lyr-row:hover{background:#28282A;}
@@ -84,7 +91,7 @@ body.dark .lyr-top input[type="text"]{color:#F5F5F7;}
 body.dark .chip{background:#2C2C2E;border-color:#48484A;color:#F5F5F7;}
 body.dark .chip:hover{border-color:var(--red);color:#FF453A;}
 /* Metrics */
-body.dark .metric{background:#1C1C1E;border-color:#3A3A3C;}
+body.dark .metric{background:#18181B;border-color:rgba(255,255,255,0.06);}
 body.dark .metric-val{color:#F5F5F7;}
 body.dark .metric-lbl{color:#A1A1A6;}
 /* Analytics cards */
@@ -93,9 +100,9 @@ body.dark .a-card-val{color:#F5F5F7;}
 body.dark .a-card-lbl{color:#A1A1A6;}
 body.dark .a-card-sub{color:#8E8E93;}
 /* Pipeline / Kanban */
-body.dark .kb-col{background:#232326;}
-body.dark .kb-card{background:#2C2C2E;border-color:#48484A;color:#F5F5F7;}
-body.dark .kb-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.3);}
+body.dark .kb-col{background:#18181B;}
+body.dark .kb-card{background:#27272A;border-color:rgba(255,255,255,0.06);color:#E4E4E7;}
+body.dark .kb-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.4);border-color:rgba(255,255,255,0.10);}
 body.dark .kb-stat{background:#1C1C1E;border-color:#3A3A3C;}
 body.dark .kb-stat-val{color:#F5F5F7;}
 body.dark .kb-stat-lbl{color:#A1A1A6;}
@@ -105,14 +112,14 @@ body.dark .kb-add-btn{border-color:#48484A;color:#8E8E93;}
 body.dark .kb-add-btn:hover{border-color:#636366;background:#2C2C2E;}
 body.dark .kb-stage-select{background:#2C2C2E;color:#F5F5F7;border-color:#48484A;}
 /* Client cards */
-body.dark .client-card{background:#1C1C1E;border-color:#3A3A3C;}
-body.dark .sub-card{background:#1C1C1E;border-color:#3A3A3C;}
+body.dark .client-card{background:#18181B;border-color:rgba(255,255,255,0.06);}
+body.dark .sub-card{background:#18181B;border-color:rgba(255,255,255,0.06);}
 body.dark .clients-tab-btn{color:#A1A1A6;}
 body.dark .clients-tab-btn.on{background:#1C1C1E;color:#FF453A;}
 body.dark .clients-tab-btn:hover{background:rgba(255,255,255,.05);}
 /* Phase tabs */
-body.dark .phase-tab{background:#2C2C2E;border-color:#48484A;color:#A1A1A6;}
-body.dark .phase-tab.on{background:#F5F5F7;color:#111;border-color:#F5F5F7;}
+body.dark .phase-tab{background:#27272A;border-color:#3F3F46;color:#A1A1AA;}
+body.dark .phase-tab.on{background:var(--accent);color:#fff;border-color:var(--accent);}
 body.dark .phase-tab:hover:not(.on){border-color:#636366;color:#F5F5F7;}
 /* Change orders */
 body.dark .co-summary{background:#232326 !important;border-color:#3A3A3C;}
@@ -120,12 +127,12 @@ body.dark .co-summary{background:#232326 !important;border-color:#3A3A3C;}
 body.dark .mat-indicator{background:#2C2C2E;border-color:#48484A;color:#A1A1A6;}
 body.dark .mat-indicator:hover{border-color:#636366;}
 /* Settings tabs */
-body.dark .stab{color:#A1A1A6;}
-body.dark .stab:hover{color:#F5F5F7;}
-body.dark .stab.on{color:#FF453A;border-bottom-color:#FF453A;}
-body.dark .settings-tab-bar{border-bottom-color:#3A3A3C;}
+body.dark .stab{color:#71717A;}
+body.dark .stab:hover{color:#E4E4E7;}
+body.dark .stab.on{color:#E4E4E7;border-bottom-color:#E4E4E7;}
+body.dark .settings-tab-bar{border-bottom-color:rgba(255,255,255,0.06);}
 /* Badges — boost contrast in dark mode */
-body.dark .b-asphalt{background:#3A3A3C;color:#D1D1D6;}
+body.dark .b-asphalt{background:rgba(255,255,255,0.08);color:#A1A1AA;}
 body.dark .b-stone{background:#3C301E;color:#D6B47E;}
 body.dark .b-concrete{background:#2C2852;color:#B4ACE8;}
 body.dark .b-grading{background:#3C321A;color:#D6BA74;}
@@ -161,19 +168,19 @@ body.dark .sched-view-btn:hover{background:#3A3A3C;}
 /* Sidebar (does not use variables so override explicitly) */
 body.dark .sb-foot button:not(.dark-toggle){color:rgba(255,255,255,.35);}
 /* Labels & misc text */
-body.dark label{color:#A1A1A6;}
+body.dark label{color:#A1A1AA;}
 body.dark hr{border-color:#3A3A3C;}
 body.dark .stat-card{background:#1C1C1E;border-color:#3A3A3C;color:#F5F5F7;}
 /* Inline style overrides — backgrounds that use inline style and can't be variable-swapped */
-body.dark [style*="background:#FAFAFA"]{background:#232326 !important;}
-body.dark [style*="background:#F8F8F8"]{background:#232326 !important;}
-body.dark [style*="background:#F5F5F5"]{background:#232326 !important;}
-body.dark [style*="background:#F4F4F4"]{background:#232326 !important;}
-body.dark [style*="background:#F0F0F0"]{background:#232326 !important;}
-body.dark [style*="background:#FCFCFC"]{background:#1C1C1E !important;}
-body.dark [style*="background:#fff"]{background:#1C1C1E !important;}
-body.dark [style*="background:#FFF"]{background:#1C1C1E !important;}
-body.dark [style*="background:white"]{background:#1C1C1E !important;}
+body.dark [style*="background:#FAFAFA"]{background:#1F1F23 !important;}
+body.dark [style*="background:#F8F8F8"]{background:#1F1F23 !important;}
+body.dark [style*="background:#F5F5F5"]{background:#1F1F23 !important;}
+body.dark [style*="background:#F4F4F4"]{background:#1F1F23 !important;}
+body.dark [style*="background:#F0F0F0"]{background:#1F1F23 !important;}
+body.dark [style*="background:#FCFCFC"]{background:#18181B !important;}
+body.dark [style*="background:#fff"]{background:#18181B !important;}
+body.dark [style*="background:#FFF"]{background:#18181B !important;}
+body.dark [style*="background:white"]{background:#18181B !important;}
 body.dark [style*="background:#EFEFEF"]{background:#3A3A3C !important;}
 body.dark [style*="background:#eee"]{background:#3A3A3C !important;}
 body.dark [style*="background:#FFF5F5"]{background:#2C1B1D !important;}
@@ -190,21 +197,21 @@ body.dark [style*="background:#EAF3DE"]{background:#1C2C1D !important;}
 body.dark [style*="background:#E6F1FB"]{background:#1C2234 !important;}
 /* Inline text color overrides for dark mode readability */
 body.dark [style*="color:var(--blk)"]{color:#F5F5F7 !important;}
-body.dark [style*="color:#111"]{color:#F5F5F7 !important;}
-body.dark [style*="color:#1A1A1A"]{color:#F5F5F7 !important;}
-body.dark [style*="color:#141416"]{color:#F5F5F7 !important;}
-body.dark [style*="color:#333"]{color:#D1D1D6 !important;}
-body.dark [style*="color:#555"]{color:#A1A1A6 !important;}
+body.dark [style*="color:#111"]{color:#E4E4E7 !important;}
+body.dark [style*="color:#1A1A1A"]{color:#E4E4E7 !important;}
+body.dark [style*="color:#141416"]{color:#E4E4E7 !important;}
+body.dark [style*="color:#333"]{color:#D4D4D8 !important;}
+body.dark [style*="color:#555"]{color:#A1A1AA !important;}
 body.dark [style*="color:var(--dgray)"]{color:#A1A1A6 !important;}
 /* Inline border overrides */
-body.dark [style*="border-bottom:1px solid #eee"]{border-bottom-color:#3A3A3C !important;}
-body.dark [style*="border-bottom:1px solid #f0f0f0"]{border-bottom-color:#3A3A3C !important;}
-body.dark [style*="border-bottom:1px solid #F0F0F0"]{border-bottom-color:#3A3A3C !important;}
-body.dark [style*="border:1px solid #EBEBEB"]{border-color:#48484A !important;}
-body.dark [style*="border:1px solid var(--bdr)"]{border-color:#48484A !important;}
+body.dark [style*="border-bottom:1px solid #eee"]{border-bottom-color:rgba(255,255,255,0.06) !important;}
+body.dark [style*="border-bottom:1px solid #f0f0f0"]{border-bottom-color:rgba(255,255,255,0.06) !important;}
+body.dark [style*="border-bottom:1px solid #F0F0F0"]{border-bottom-color:rgba(255,255,255,0.06) !important;}
+body.dark [style*="border:1px solid #EBEBEB"]{border-color:rgba(255,255,255,0.08) !important;}
+body.dark [style*="border:1px solid var(--bdr)"]{border-color:rgba(255,255,255,0.06) !important;}
 body.dark [style*="border:2px solid var(--red)"]{border-color:#FF453A !important;}
 /* Sidebar stays dark in both modes */
-body.dark .sb{background:#111;}
+body.dark .sb{background:#0F0F11;}
 /* Dashboard bid calendar cells */
 body.dark .dk-cal-cell{background:#2C2C2E !important;color:#F5F5F7;}
 body.dark .dk-cal-today{background:#2C1B1D !important;border-color:#CC0000 !important;}
@@ -317,29 +324,42 @@ body.dark .mention-dropdown{background:#1C1C1E;border-color:#48484A;}
 .login-footer{position:relative;z-index:2;text-align:center;padding:20px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.12);}
 /* App */
 #app{display:none;}
-#app.on{display:grid;grid-template-columns:230px 1fr;min-height:100vh;}
-.sb{background:#111;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+#app.on{display:grid;grid-template-columns:var(--rail-w) 1fr;min-height:100vh;transition:grid-template-columns var(--transition);}
+#app.on.sb-expanded{grid-template-columns:var(--sidebar-w) 1fr;}
+.sb{background:#111;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;width:var(--rail-w);transition:width var(--transition);z-index:20;min-width:var(--rail-w);}
+.sb:hover:not(.pinned){position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);box-shadow:4px 0 24px rgba(0,0,0,.3);}
+.sb.pinned{width:var(--sidebar-w);}
 .sb-canvas{position:absolute;inset:0;z-index:0;pointer-events:none;}
-.sb-logo{position:relative;z-index:1;padding:18px 18px 16px;border-bottom:1px solid rgba(255,255,255,.06);}
-.sb-monogram{display:flex;align-items:center;gap:0;}
-.sb-monogram-h{font-size:32px;font-weight:900;color:var(--red);line-height:1;font-family:var(--font);letter-spacing:-1px;}
-.sb-monogram-d{font-size:32px;font-weight:900;color:#666;line-height:1;font-family:var(--font);letter-spacing:-1px;}
-.sb-monogram-arc{width:3px;height:22px;background:linear-gradient(180deg,var(--red),#666);border-radius:2px;margin:0 2px;align-self:center;}
-.sb-brand{font-size:8px;font-weight:600;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:2.5px;margin-top:6px;}
-.sb nav{position:relative;z-index:1;flex:1;padding:6px 0;overflow-y:auto;}
-.nav-grp{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1.5px;padding:16px 18px 6px;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:13px;color:rgba(255,255,255,.45);cursor:pointer;border-left:2px solid transparent;transition:all .15s;position:relative;}
-.nav-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.8);}
-.nav-item.on{background:rgba(204,0,0,.1);color:#fff;border-left-color:var(--red);border-radius:0 8px 8px 0;}
-.nav-item svg{width:13px;height:13px;flex-shrink:0;opacity:.7;}
+.sb-logo{position:relative;z-index:1;padding:14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);height:var(--topbar-h);min-height:var(--topbar-h);}
+.sb-monogram{display:flex;align-items:center;gap:0;flex-shrink:0;}
+.sb-monogram-h{font-size:22px;font-weight:800;color:var(--red);line-height:1;font-family:var(--font);letter-spacing:-0.5px;}
+.sb-monogram-d{font-size:22px;font-weight:800;color:#666;line-height:1;font-family:var(--font);letter-spacing:-0.5px;}
+.sb-monogram-arc{display:none;}
+.sb-brand{font-size:11px;font-weight:600;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;opacity:0;transition:opacity .15s;margin-top:0;}
+.sb:hover .sb-brand,.sb.pinned .sb-brand{opacity:1;}
+.sb nav{position:relative;z-index:1;flex:1;padding:8px 8px;overflow-y:auto;overflow-x:hidden;}
+.nav-grp{font-size:9px;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:1.2px;padding:16px 6px 6px;white-space:nowrap;overflow:hidden;opacity:0;height:0;transition:opacity .15s;}
+.sb:hover .nav-grp,.sb.pinned .nav-grp{opacity:1;height:auto;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;font-size:13px;color:rgba(255,255,255,.45);cursor:pointer;border-radius:var(--rad-s);transition:all .15s;position:relative;white-space:nowrap;overflow:hidden;border-left:none;margin-bottom:1px;}
+.nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);}
+.nav-item.on{background:rgba(255,255,255,.08);color:#fff;}
+.nav-item.on::before{content:'';position:absolute;left:0;top:25%;height:50%;width:3px;background:var(--red);border-radius:0 3px 3px 0;}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.5;}
+.nav-item:hover svg{opacity:.8;}
 .nav-item.on svg{opacity:1;}
-.nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:9px;font-weight:700;margin-left:auto;padding:0 4px;}
-.sb-foot{position:relative;z-index:1;padding:12px 18px;border-top:1px solid rgba(255,255,255,.06);}
-.sb-foot button{background:none;border:none;color:rgba(255,255,255,.25);font-size:11px;cursor:pointer;font-family:var(--font);letter-spacing:.5px;transition:color .15s;}
-.sb-foot button:hover{color:rgba(255,255,255,.5);}
-.main{overflow-y:auto;}
-.topbar{background:var(--glass);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-bottom:1px solid var(--bdr);padding:13px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
-.topbar-title{font-size:15px;font-weight:600;min-width:0;flex:1;}
+.nav-label{overflow:hidden;opacity:0;transition:opacity .15s;flex:1;min-width:0;}
+.sb:hover .nav-label,.sb.pinned .nav-label{opacity:1;}
+.nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:9px;font-weight:700;margin-left:auto;padding:0 4px;opacity:0;transition:opacity .15s;}
+.sb:hover .nav-badge,.sb.pinned .nav-badge{opacity:1;}
+.sb-foot{position:relative;z-index:1;padding:12px 8px;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:6px;overflow:hidden;}
+.sb-foot button{background:none;border:none;color:rgba(255,255,255,.3);font-size:11px;cursor:pointer;font-family:var(--font);transition:color .15s;white-space:nowrap;}
+.sb-foot button:hover{color:rgba(255,255,255,.6);}
+.sb-pin{background:none !important;border:none !important;color:rgba(255,255,255,.2) !important;cursor:pointer;padding:4px;display:flex;align-items:center;opacity:0;transition:opacity .15s;}
+.sb:hover .sb-pin,.sb.pinned .sb-pin{opacity:1;}
+.sb.pinned .sb-pin{color:rgba(255,255,255,.6) !important;}
+.main{overflow-y:auto;background:var(--bg-base);}
+.topbar{background:var(--bg-el);border-bottom:1px solid var(--bdr);padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;height:var(--topbar-h);min-height:var(--topbar-h);}
+.topbar-title{font-size:14px;font-weight:600;min-width:0;flex:1;display:flex;align-items:center;gap:8px;}
 .topbar-actions{display:flex;gap:7px;align-items:center;}
 .topbar-bell{position:relative;background:none;border:none;color:#666;cursor:pointer;padding:6px;border-radius:6px;transition:background .15s,color .15s;}
 .topbar-bell:hover{background:var(--lgray);color:var(--blk);}
@@ -347,7 +367,7 @@ body.dark .topbar-bell{color:#98989D;}body.dark .topbar-bell:hover{background:#3
 .topbar-bell .notif-dot{position:absolute;top:4px;right:4px;width:9px;height:9px;background:var(--red);border-radius:50%;display:none;border:2px solid #fff;}
 .topbar-bell .notif-dot.on{display:block;animation:notifPulse 2s infinite;}
 body.dark .topbar-bell .notif-dot{border-color:#1C1C1E;}
-.content{padding:22px;max-width:1080px;}
+.content{padding:24px;max-width:1080px;}
 
 /* Panels */
 .panel{display:none;}.panel.on{display:block;width:100%;box-sizing:border-box;animation:panelIn .2s ease both;}
@@ -378,14 +398,66 @@ body.dark .topbar-bell .notif-dot{border-color:#1C1C1E;}
 .sched-view-btn{background:transparent;border:none;padding:5px 14px;font-size:11px;font-weight:600;color:var(--dgray);cursor:pointer;font-family:var(--font);border-radius:6px;transition:all .15s;}
 .sched-view-btn:hover{color:var(--blk);}
 .sched-view-active{background:var(--wht);color:var(--blk);box-shadow:var(--shadow-s);}
-body.dark .sched-seg{background:rgba(255,255,255,0.06);}
-body.dark .sched-view-active{background:rgba(255,255,255,0.12);color:#F5F5F7;}
+body.dark .sched-seg{background:rgba(255,255,255,0.04);}
+body.dark .sched-view-active{background:rgba(255,255,255,0.10);color:#E4E4E7;box-shadow:0 1px 2px rgba(0,0,0,.3);}
+
+
+/* Command Palette Trigger */
+.cmdk-trigger{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-sub);border:1px solid var(--bdr);border-radius:var(--rad-s);font-size:13px;color:var(--dgray);cursor:pointer;transition:all .15s;font-family:var(--font);min-width:200px;}
+.cmdk-trigger:hover{border-color:var(--dgray);color:var(--blk);}
+.cmdk-trigger kbd{margin-left:auto;font-size:10px;padding:1px 5px;background:var(--bg-el);border:1px solid var(--bdr);border-radius:4px;color:var(--dgray);font-family:var(--font);}
+body.dark .cmdk-trigger{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);}
+body.dark .cmdk-trigger:hover{border-color:rgba(255,255,255,0.15);}
+body.dark .cmdk-trigger kbd{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.08);}
+/* Command Palette Modal */
+.cmdk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:999;display:none;align-items:flex-start;justify-content:center;padding-top:min(20vh,160px);}
+.cmdk-overlay.open{display:flex;}
+.cmdk-box{background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad-l);width:560px;max-width:92vw;max-height:60vh;display:flex;flex-direction:column;box-shadow:var(--shadow-l);overflow:hidden;}
+body.dark .cmdk-box{background:#1C1C1E;border-color:rgba(255,255,255,0.10);}
+.cmdk-input-wrap{padding:16px;border-bottom:1px solid var(--bdr);}
+.cmdk-input{width:100%;border:none;background:transparent;font-size:16px;font-family:var(--font);color:var(--blk);outline:none;padding:0;}
+.cmdk-input::placeholder{color:var(--dgray);}
+body.dark .cmdk-input{color:#E4E4E7;}
+.cmdk-results{overflow-y:auto;flex:1;padding:8px;}
+.cmdk-group-title{font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.08em;padding:8px 12px 4px;}
+.cmdk-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--rad-s);cursor:pointer;font-size:13px;color:var(--blk);transition:background .1s;}
+.cmdk-item:hover,.cmdk-item.active{background:var(--bg-sub);}
+body.dark .cmdk-item:hover,body.dark .cmdk-item.active{background:rgba(255,255,255,0.06);}
+.cmdk-item svg{width:16px;height:16px;color:var(--dgray);flex-shrink:0;}
+.cmdk-item-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cmdk-item-hint{font-size:11px;color:var(--dgray);}
+.cmdk-empty{padding:24px;text-align:center;color:var(--dgray);font-size:13px;}
+
+/* Slide-in Detail Panel */
+.detail-panel{position:fixed;right:0;top:0;bottom:0;width:60vw;max-width:720px;background:var(--bg-el);border-left:1px solid var(--bdr);z-index:50;transform:translateX(100%);transition:transform 250ms cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:var(--shadow-l);}
+.detail-panel.open{transform:translateX(0);}
+body.dark .detail-panel{background:#18181B;border-left-color:rgba(255,255,255,0.06);}
+.detail-hdr{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--bdr);min-height:var(--topbar-h);flex-shrink:0;}
+.detail-hdr-title{font-size:14px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.detail-hdr-btn{background:none;border:1px solid var(--bdr);border-radius:var(--rad-s);padding:5px 10px;font-size:12px;cursor:pointer;color:var(--dgray);font-family:var(--font);transition:all .15s;display:flex;align-items:center;gap:4px;}
+.detail-hdr-btn:hover{border-color:var(--dgray);color:var(--blk);}
+body.dark .detail-hdr-btn{border-color:rgba(255,255,255,0.08);color:#A1A1AA;}
+body.dark .detail-hdr-btn:hover{border-color:rgba(255,255,255,0.15);color:#E4E4E7;}
+.detail-body{flex:1;overflow-y:auto;padding:20px;}
+.detail-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.2);z-index:49;display:none;}
+.detail-backdrop.open{display:block;}
+
+/* Floating Action Button */
+.fab{position:fixed;bottom:24px;right:24px;z-index:40;display:flex;flex-direction:column-reverse;align-items:flex-end;gap:8px;}
+.fab-trigger{width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(204,0,0,0.3);transition:all .2s;font-size:24px;}
+.fab-trigger:hover{transform:scale(1.05);box-shadow:0 6px 24px rgba(204,0,0,0.4);}
+.fab-trigger.open{transform:rotate(45deg);}
+.fab-menu{display:none;flex-direction:column;gap:6px;align-items:flex-end;}
+.fab-trigger.open+.fab-menu{display:flex;}
+.fab-action{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad-s);font-size:12px;font-weight:500;cursor:pointer;box-shadow:var(--shadow-m);white-space:nowrap;color:var(--blk);font-family:var(--font);transition:all .15s;}
+.fab-action:hover{box-shadow:var(--shadow-l);transform:translateY(-1px);}
+body.dark .fab-action{background:#27272A;border-color:rgba(255,255,255,0.08);color:#E4E4E7;}
 
 /* Cards */
-.card{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-s);transition:box-shadow .2s,transform .2s;}
-.card-hdr{padding:11px 15px;border-bottom:1px solid var(--bdr);background:var(--lgray);display:flex;align-items:center;justify-content:space-between;}
+.card{background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad);margin-bottom:16px;overflow:hidden;box-shadow:var(--shadow-s);transition:box-shadow .2s,transform .2s;}
+.card-hdr{padding:12px 16px;border-bottom:1px solid var(--bdr);background:transparent;display:flex;align-items:center;justify-content:space-between;}
 .card-title{font-size:13px;font-weight:600;}
-.card-body{padding:15px;}
+.card-body{padding:16px;}
 
 /* Forms */
 .fg{display:grid;gap:11px;}
@@ -394,14 +466,15 @@ body.dark .sched-view-active{background:rgba(255,255,255,0.12);color:#F5F5F7;}
 .fg4{grid-template-columns:1fr 1fr 1fr 1fr;}
 label{display:block;font-size:11px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
 input,select,textarea{width:100%;padding:8px 12px;border:1px solid var(--bdr);border-radius:var(--rad-s);font-size:13px;font-family:var(--font);color:var(--blk);background:var(--wht);transition:border .12s,box-shadow .12s;}
-input:focus,select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px var(--red-soft);}
+input:focus,select:focus{outline:none;border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,0.12);}
 textarea{resize:vertical;min-height:52px;}
 
 /* Buttons */
 .btn{display:inline-flex;align-items:center;gap:5px;padding:8px 18px;border-radius:var(--rad-s);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .12s;font-family:var(--font);}
-.btn-red{background:linear-gradient(180deg,#D40000,#BB0000);color:#fff;}
+.btn-primary{background:var(--blk);color:var(--wht);font-weight:600;}
+.btn-red{background:var(--accent);color:#fff;}
 .btn-blue{background:#0055B2;color:#fff;border-color:#0055B2;}
-.btn-blue:hover{background:#0044A0;border-color:#0044A0;}.btn-red:hover{background:linear-gradient(180deg,#C00000,#A50000);}
+.btn-blue:hover{background:#0044A0;border-color:#0044A0;}.btn-primary:hover{opacity:.85;}.btn-red:hover{opacity:.9;}
 .btn-sec{background:var(--wht);color:var(--blk);border:1px solid var(--bdr);}.btn-sec:hover{background:var(--lgray);}
 .btn-dark{background:#1e1e1e;color:#fff;}.btn-dark:hover{background:#333;}
 .btn-sm{padding:4px 10px;font-size:12px;}
@@ -713,29 +786,26 @@ tr:nth-child(even) td{background:var(--lgray);}
       <div class="sb-brand">Hauling &amp; Grading</div>
     </div>
     <nav>
-      <div class="nav-item on" onclick="showPanel('dashboard',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg>Dashboard</div>
-      <div class="nav-item" onclick="showPanel('projects',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg>Projects<span class="nav-badge" id="nav-badge-projects" style="display:none;"></span></div>
+      <div class="nav-item on" onclick="showPanel('dashboard',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg><span class="nav-label">Dashboard</span></div>
+      <div class="nav-item" onclick="showPanel('projects',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg><span class="nav-label">Projects</span><span class="nav-badge" id="nav-badge-projects" style="display:none;"></span></div>
       <div class="nav-grp">Manage</div>
-      <div class="nav-item" data-field-hidden onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg>Saved Documents</div>
-      <div class="nav-item" data-field-hidden onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>Clients</div>
-      <div class="nav-item" data-field-hidden onclick="showPanel('subs',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M7 7a3 3 0 100-6 3 3 0 000 6zm-4 7s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H3zm8-8a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm3 8h-1c0-1.5-.8-3-2.2-3.8.5-.1 1-.2 1.5-.2 2.8 0 4 2 4 3s-1 1-1 1h-1.3z"/></svg>Subcontractors</div>
-      <div class="nav-item" onclick="showPanel('schedule',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg>Schedule<span class="nav-badge" id="nav-badge-schedule" style="display:none;"></span></div>
-      <div class="nav-item" data-field-hidden onclick="showPanel('reports',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h3v12H2zm4.5 3h3v9h-3zM11 7h3v7h-3z"/></svg>Reports</div>
+      <div class="nav-item" data-field-hidden onclick="showPanel('saved',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg><span class="nav-label">Saved Documents</span></div>
+      <div class="nav-item" data-field-hidden onclick="showPanel('clients',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg><span class="nav-label">Clients</span></div>
+      <div class="nav-item" data-field-hidden onclick="showPanel('subs',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M7 7a3 3 0 100-6 3 3 0 000 6zm-4 7s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H3zm8-8a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm3 8h-1c0-1.5-.8-3-2.2-3.8.5-.1 1-.2 1.5-.2 2.8 0 4 2 4 3s-1 1-1 1h-1.3z"/></svg><span class="nav-label">Subcontractors</span></div>
+      <div class="nav-item" onclick="showPanel('schedule',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg><span class="nav-label">Schedule</span><span class="nav-badge" id="nav-badge-schedule" style="display:none;"></span></div>
+      <div class="nav-item" data-field-hidden onclick="showPanel('reports',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h3v12H2zm4.5 3h3v9h-3zM11 7h3v7h-3z"/></svg><span class="nav-label">Reports</span></div>
       <div class="nav-grp">Config</div>
-      <div class="nav-item" onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Settings</div>
-      <div class="nav-item" onclick="showPanel('bugs',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1C5.8 1 4 2.8 4 5v1H2.5a.5.5 0 00-.5.5V8c0 3.6 2.5 6.6 6 7 3.5-.4 6-3.4 6-7V6.5a.5.5 0 00-.5-.5H12V5c0-2.2-1.8-4-4-4zM6 5a2 2 0 114 0v1H6V5zm-3 3h10c-.2 2.8-2.3 5.2-5 5.5C5.3 13.2 3.2 10.8 3 8z"/></svg>Bug Report</div>
-      <div class="nav-item admin-only" data-admin-hidden onclick="showPanel('roadmap',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v3a.5.5 0 01-.5.5h-3a.5.5 0 01-.5-.5v-3zm0 5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v3a.5.5 0 01-.5.5h-3a.5.5 0 01-.5-.5v-3zm0 5a.5.5 0 01.5-.5h3a.5.5 0 010 1h-3a.5.5 0 01-.5-.5zM7 3h7v1H7zm0 5h7v1H7zm0 5h7v1H7z"/></svg>Roadmap</div>
+      <div class="nav-item" onclick="showPanel('settings',this)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><span class="nav-label">Settings</span></div>
+      <div class="nav-item" onclick="showPanel('bugs',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1C5.8 1 4 2.8 4 5v1H2.5a.5.5 0 00-.5.5V8c0 3.6 2.5 6.6 6 7 3.5-.4 6-3.4 6-7V6.5a.5.5 0 00-.5-.5H12V5c0-2.2-1.8-4-4-4zM6 5a2 2 0 114 0v1H6V5zm-3 3h10c-.2 2.8-2.3 5.2-5 5.5C5.3 13.2 3.2 10.8 3 8z"/></svg><span class="nav-label">Bug Report</span></div>
+      <div class="nav-item admin-only" data-admin-hidden onclick="showPanel('roadmap',this)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v3a.5.5 0 01-.5.5h-3a.5.5 0 01-.5-.5v-3zm0 5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v3a.5.5 0 01-.5.5h-3a.5.5 0 01-.5-.5v-3zm0 5a.5.5 0 01.5-.5h3a.5.5 0 010 1h-3a.5.5 0 01-.5-.5zM7 3h7v1H7zm0 5h7v1H7zm0 5h7v1H7z"/></svg><span class="nav-label">Roadmap</span></div>
       <div class="nav-item admin-only" id="nav-admin" data-admin-hidden onclick="showPanel('admin',this);loadUsers();showAdminTab('company');">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg>
-        Admin
-      </div>
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg><span class="nav-label">Admin</span></div>
     </nav>
-    <div class="sb-foot" style="display:flex;align-items:center;justify-content:space-between;">
-      <div style="display:flex;align-items:center;gap:8px;"><button onclick="doLogout()">Sign out</button><span id="app-version-badge" style="font-size:8px;color:rgba(255,255,255,.25);letter-spacing:.3px;line-height:1.1;"></span></div>
-      <button class="notif-bell" onclick="toggleNotifPanel()" title="Notifications">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="notif-dot" id="notif-dot"></span>
-      </button>
+    <div class="sb-foot">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <button onclick="doLogout()" title="Sign out"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span class="nav-label"> Sign out</span></button>
+        <button class="sb-pin" onclick="toggleSbPin()" title="Pin sidebar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v10l3.5-3.5"/><circle cx="12" cy="12" r="10" fill="none"/></svg></button>
+      </div>
     </div>
   </aside>
 
@@ -754,13 +824,49 @@ tr:nth-child(even) td{background:var(--lgray);}
     </div>
   </div>
 
+  <!-- Detail Slide-in Panel -->
+  <div class="detail-backdrop" id="detail-backdrop" onclick="closeDetailPanel()"></div>
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-hdr">
+      <span class="detail-hdr-title" id="detail-title">Details</span>
+      <button class="detail-hdr-btn" onclick="expandDetailToFull()" title="Open full page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg> Expand</button>
+      <button class="detail-hdr-btn" onclick="closeDetailPanel()" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </div>
+
+  <!-- Floating Action Button -->
+  <div class="fab" id="fab" style="display:none;">
+    <button class="fab-trigger" id="fab-trigger" onclick="toggleFab()">+</button>
+    <div class="fab-menu" id="fab-menu">
+      <button class="fab-action" onclick="toggleFab();showPanel('build');">New Proposal</button>
+      <button class="fab-action" onclick="toggleFab();showPanel('co');">Change Order</button>
+      <button class="fab-action" onclick="toggleFab();showPanel('clients');setTimeout(function(){var b=document.querySelector('#panel-clients .btn');if(b)b.click();},200);">Add Client</button>
+    </div>
+  </div>
+
+  <!-- Command Palette -->
+  <div class="cmdk-overlay" id="cmdk-overlay" onclick="if(event.target===this)closeCmdK()">
+    <div class="cmdk-box">
+      <div class="cmdk-input-wrap">
+        <input class="cmdk-input" id="cmdk-input" type="text" placeholder="Search proposals, clients, or type a command..." autocomplete="off" oninput="filterCmdK(this.value)" onkeydown="cmdkKeydown(event)"/>
+      </div>
+      <div class="cmdk-results" id="cmdk-results"></div>
+    </div>
+  </div>
+
   <div class="main">
     <div class="topbar">
       <span class="topbar-title" id="topbar-title">Dashboard</span>
-      <div style="display:flex;align-items:center;gap:10px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="cmdk-trigger" onclick="openCmdK()" title="Search (⌘K)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Search...</span>
+          <kbd>⌘K</kbd>
+        </button>
         <div class="topbar-actions" id="topbar-actions"></div>
         <button class="topbar-bell" onclick="toggleNotifPanel()" title="Notifications">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span class="notif-dot" id="notif-dot-topbar"></span>
         </button>
       </div>
@@ -771,78 +877,92 @@ tr:nth-child(even) td{background:var(--lgray);}
 
       <!-- DASHBOARD PANEL -->
       <div class="panel on" id="panel-dashboard">
-        <div class="content" style="padding:16px;max-width:none;">
-          <!-- Weather (full width, top) -->
-          <div id="dash-weather" class="card" style="margin-bottom:16px;">
-            <div class="card-body" style="padding:10px 14px;"><div style="font-size:12px;color:var(--dgray);">Loading weather...</div></div>
-          </div>
-          <!-- Stats row -->
-          <div id="dash-stats" data-field-hidden style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;"></div>
-          <!-- Upcoming WO + Recent Projects (same row) -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
-            <div class="card">
-              <div class="card-hdr"><span class="card-title">Upcoming Work Orders</span></div>
-              <div class="card-body" id="dash-upcoming-wo"><p style="font-size:12px;color:var(--dgray);">No upcoming work orders.</p></div>
+        <div style="padding:4px 0;max-width:none;">
+
+          <!-- Greeting + Quick Actions Row -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div>
+              <h2 id="dash-greeting" style="font-size:22px;font-weight:700;margin-bottom:2px;">Good morning</h2>
+              <p style="font-size:13px;color:var(--dgray);">Here's what's happening today.</p>
             </div>
-            <div class="card">
-              <div class="card-hdr"><span class="card-title">Recent Projects</span></div>
-              <div class="card-body" id="dash-recent-projects"><p style="font-size:12px;color:var(--dgray);">No recent projects.</p></div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sec btn-sm" onclick="showPanel('build')">New Proposal</button>
+              <button class="btn btn-sec btn-sm" onclick="showPanel('schedule')">View Schedule</button>
             </div>
           </div>
-          <!-- Bid Calendar + Company Resources -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
-            <div class="card" data-field-hidden>
-              <div class="card-hdr"><span class="card-title">Bid Calendar</span></div>
-              <div class="card-body" style="padding:0;">
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bdr);">
-                  <button class="btn btn-sec btn-sm" onclick="dashCalNav(-1)">&lsaquo; Prev</button>
-                  <span id="dash-cal-month" style="font-weight:600;font-size:14px;"></span>
-                  <button class="btn btn-sec btn-sm" onclick="dashCalNav(1)">Next &rsaquo;</button>
-                </div>
-                <div id="dash-cal-grid" style="padding:8px;"></div>
-                <div style="padding:0 14px 10px;">
-                  <div id="dash-cal-selected-label" style="font-weight:600;font-size:13px;margin-bottom:6px;display:none;">Bids for <span id="dash-cal-selected-date"></span></div>
-                  <div id="dash-day-entries">
-                    <p style="font-size:12px;color:var(--dgray);">Click a date to view bid deadlines.</p>
-                  </div>
+
+          <!-- KPI Metric Cards -->
+          <div id="dash-stats" data-field-hidden style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;"></div>
+
+          <!-- Weather (compact) -->
+          <div id="dash-weather" style="margin-bottom:20px;border-radius:var(--rad);overflow:hidden;border:1px solid var(--bdr);">
+            <div style="padding:10px 14px;"><div style="font-size:12px;color:var(--dgray);">Loading weather...</div></div>
+          </div>
+
+          <!-- Two-column: Upcoming + Recent -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+            <div style="background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;">
+              <div style="padding:14px 16px;border-bottom:1px solid var(--bdr);font-size:13px;font-weight:600;">Upcoming Work Orders</div>
+              <div id="dash-upcoming-wo" style="padding:14px 16px;"><p style="font-size:12px;color:var(--dgray);">No upcoming work orders.</p></div>
+            </div>
+            <div style="background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;">
+              <div style="padding:14px 16px;border-bottom:1px solid var(--bdr);font-size:13px;font-weight:600;">Recent Projects</div>
+              <div id="dash-recent-projects" style="padding:14px 16px;"><p style="font-size:12px;color:var(--dgray);">No recent projects.</p></div>
+            </div>
+          </div>
+
+          <!-- Bid Calendar + Resources -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+            <div data-field-hidden style="background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bdr);">
+                <span style="font-size:13px;font-weight:600;">Bid Calendar</span>
+                <div style="display:flex;gap:4px;">
+                  <button class="btn btn-sec btn-sm" onclick="dashCalNav(-1)" style="padding:2px 8px;">&lsaquo;</button>
+                  <span id="dash-cal-month" style="font-weight:600;font-size:13px;min-width:100px;text-align:center;"></span>
+                  <button class="btn btn-sec btn-sm" onclick="dashCalNav(1)" style="padding:2px 8px;">&rsaquo;</button>
                 </div>
               </div>
+              <div id="dash-cal-grid" style="padding:10px;"></div>
+              <div style="padding:0 16px 12px;">
+                <div id="dash-cal-selected-label" style="font-weight:600;font-size:13px;margin-bottom:6px;display:none;">Bids for <span id="dash-cal-selected-date"></span></div>
+                <div id="dash-day-entries"><p style="font-size:12px;color:var(--dgray);">Click a date to view bid deadlines.</p></div>
+              </div>
             </div>
-            <div class="card">
-              <div class="card-hdr"><span class="card-title">Company Resources</span></div>
-              <div class="card-body" id="dash-resources">
-                <div style="display:grid;gap:10px;">
-                  <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--bdr);border-radius:8px;cursor:pointer;background:#FAFAFA;" onclick="toggleDashResource('handbook')">
-                    <div style="font-size:24px;">&#128214;</div>
-                    <div style="flex:1;"><div style="font-weight:700;font-size:13px;">Employee Handbook</div><div style="font-size:11px;color:var(--dgray);">Company policies and procedures</div></div>
-                    <span style="font-size:14px;color:var(--dgray);" id="res-handbook-arrow">&#9654;</span>
+            <div style="background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;">
+              <div style="padding:14px 16px;border-bottom:1px solid var(--bdr);font-size:13px;font-weight:600;">Company Resources</div>
+              <div id="dash-resources" style="padding:14px 16px;">
+                <div style="display:grid;gap:8px;">
+                  <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--rad-s);cursor:pointer;transition:background .12s;" onclick="toggleDashResource('handbook')" onmouseover="this.style.background='var(--bg-sub)'" onmouseout="this.style.background='transparent'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                    <div style="flex:1;"><div style="font-weight:600;font-size:13px;">Employee Handbook</div><div style="font-size:11px;color:var(--dgray);">Policies &amp; procedures</div></div>
+                    <span style="font-size:11px;color:var(--dgray);" id="res-handbook-arrow">&#9654;</span>
                   </div>
                   <div id="res-handbook-content" style="display:none;padding:0 0 10px;">
                     <div style="display:flex;gap:8px;margin-bottom:8px;">
                       <a href="https://drive.google.com/file/d/13jfOJiSAwPwxKBb5XeUGXpHF2u6Uq0DD/view" target="_blank" class="btn btn-sec btn-sm" style="text-decoration:none;">Open in Drive</a>
                     </div>
-                    <iframe src="https://drive.google.com/file/d/13jfOJiSAwPwxKBb5XeUGXpHF2u6Uq0DD/preview" style="width:100%;height:350px;border:1px solid var(--bdr);border-radius:6px;" allow="autoplay"></iframe>
+                    <iframe src="https://drive.google.com/file/d/13jfOJiSAwPwxKBb5XeUGXpHF2u6Uq0DD/preview" style="width:100%;height:300px;border:1px solid var(--bdr);border-radius:var(--rad-s);" allow="autoplay"></iframe>
                   </div>
-                  <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--bdr);border-radius:8px;cursor:pointer;background:#FAFAFA;" onclick="toggleDashResource('signature')">
-                    <div style="font-size:24px;">&#9993;</div>
-                    <div style="flex:1;"><div style="font-weight:700;font-size:13px;">Email Signature</div><div style="font-size:11px;color:var(--dgray);">Copy your Gmail signature template</div></div>
-                    <span style="font-size:14px;color:var(--dgray);" id="res-signature-arrow">&#9654;</span>
+                  <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--rad-s);cursor:pointer;transition:background .12s;" onclick="toggleDashResource('signature')" onmouseover="this.style.background='var(--bg-sub)'" onmouseout="this.style.background='transparent'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <div style="flex:1;"><div style="font-weight:600;font-size:13px;">Email Signature</div><div style="font-size:11px;color:var(--dgray);">Gmail signature template</div></div>
+                    <span style="font-size:11px;color:var(--dgray);" id="res-signature-arrow">&#9654;</span>
                   </div>
-                  <div id="res-signature-content" style="display:none;" >
+                  <div id="res-signature-content" style="display:none;">
                     <div id="dash-signature">
-                      <p style="font-size:11px;color:var(--dgray);margin-bottom:8px;">Copy the text below into your Gmail signature settings. Replace the placeholders with your info. Copy the logo separately (right-click &gt; Copy Image). <strong style="color:var(--red);">After pasting the logo, click on it and select "Medium" size so it formats correctly.</strong></p>
-                      <div id="dash-sig-content" style="font-family:Arial,sans-serif;font-size:13px;line-height:1.6;border:1px solid var(--bdr);border-radius:6px;padding:16px;background:#FAFAFA;user-select:all;">
+                      <p style="font-size:11px;color:var(--dgray);margin-bottom:8px;">Copy below into Gmail signature settings. Replace placeholders with your info.</p>
+                      <div id="dash-sig-content" style="font-family:Arial,sans-serif;font-size:13px;line-height:1.6;border:1px solid var(--bdr);border-radius:var(--rad-s);padding:14px;background:var(--bg-sub);user-select:all;">
                         <p style="font-weight:700;color:var(--red);margin-bottom:0;font-size:14px;">First Name</p>
-                        <p style="color:#555;font-size:12px;margin-bottom:4px;">Company Title</p>
-                        <p style="font-size:12px;color:#555;margin-bottom:1px;">E: <span style="color:#0055B2;">email@hdgrading.com</span></p>
-                        <p style="font-size:12px;color:#555;margin-bottom:8px;">C: Cell Number | O: 704-791-8982</p>
-                        <img id="dash-sig-logo" src="hd_logo.png" alt="HD Hauling &amp; Grading" style="height:70px;width:auto;display:block;margin-bottom:8px;"/>
-                        <p style="font-size:8px;color:#888;line-height:1.3;margin:0;"><strong>CONFIDENTIALITY NOTICE:</strong> This email and any attachments are intended solely for the named recipient(s) and may contain confidential information. If you have received this email in error, please immediately notify the sender and permanently delete this email and any attachments without reading, forwarding, copying, or disclosing their contents. Any unauthorized use, disclosure, or distribution is prohibited and may be unlawful.</p>
+                        <p style="color:var(--dgray);font-size:12px;margin-bottom:4px;">Company Title</p>
+                        <p style="font-size:12px;color:var(--dgray);margin-bottom:1px;">E: <span style="color:#3B82F6;">email@hdgrading.com</span></p>
+                        <p style="font-size:12px;color:var(--dgray);margin-bottom:8px;">C: Cell Number | O: 704-791-8982</p>
+                        <img id="dash-sig-logo" src="hd_logo.png" alt="HD Hauling &amp; Grading" style="height:60px;width:auto;display:block;margin-bottom:8px;"/>
+                        <p style="font-size:8px;color:var(--dgray);line-height:1.3;margin:0;"><strong>CONFIDENTIALITY NOTICE:</strong> This email and any attachments are intended solely for the named recipient(s) and may contain confidential information.</p>
                       </div>
-                      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                        <button class="btn btn-sec btn-sm" onclick="copySignature()">Copy Signature Text</button>
-                        <button class="btn btn-sec btn-sm" onclick="copySignatureLogo()">Copy Logo Image</button>
-                        <button class="btn btn-sec btn-sm" onclick="window.open('https://mail.google.com/mail/u/0/#settings/general','_blank')">Open Gmail Settings</button>
+                      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                        <button class="btn btn-sec btn-sm" onclick="copySignature()">Copy Text</button>
+                        <button class="btn btn-sec btn-sm" onclick="copySignatureLogo()">Copy Logo</button>
+                        <button class="btn btn-sec btn-sm" onclick="window.open('https://mail.google.com/mail/u/0/#settings/general','_blank')">Gmail Settings</button>
                       </div>
                     </div>
                   </div>
@@ -850,6 +970,7 @@ tr:nth-child(even) td{background:var(--lgray);}
               </div>
             </div>
           </div>
+
         </div>
       </div>
 
@@ -1193,7 +1314,7 @@ tr:nth-child(even) td{background:var(--lgray);}
                 <div id="cs-notes-list"></div>
                 <div style="margin-top:10px;display:flex;gap:8px;">
                   <input id="cs-note-input" type="text" placeholder="Add a note..." style="flex:1;padding:6px 10px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;"/>
-                  <button class="btn btn-red btn-sm" onclick="addClientNote()">Add</button>
+                  <button class="btn btn-primary btn-sm" onclick="addClientNote()">Add</button>
                 </div>
               </div>
             </div>
@@ -1337,7 +1458,7 @@ tr:nth-child(even) td{background:var(--lgray);}
                 <div><label>Your Email</label><input id="s-email" type="text" placeholder="email@hdgrading.com"/></div>
                 <div><label>Your Phone</label><input id="s-phone" type="text" placeholder="(555) 000-0000"/></div>
               </div>
-              <div style="margin-top:11px;"><button class="btn btn-red btn-sm" onclick="saveSender()">Save</button></div>
+              <div style="margin-top:11px;"><button class="btn btn-primary btn-sm" onclick="saveSender()">Save</button></div>
               <div id="pin-change-notice" style="display:none;margin-top:12px;padding:10px 14px;background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;font-size:12px;color:var(--dgray);">To change your PIN, contact a system administrator.</div>
             </div>
           </div>
@@ -1379,7 +1500,7 @@ tr:nth-child(even) td{background:var(--lgray);}
                 <input type="password" id="sec-confirm-pw" class="inp" placeholder="Confirm new password" style="width:100%;"/>
                 <input type="text" id="sec-pw-hint" class="inp" placeholder="Password hint (optional)" style="width:100%;"/>
                 <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
-                  <button class="btn btn-red btn-sm" onclick="changeOwnPassword()">Update Password</button>
+                  <button class="btn btn-primary btn-sm" onclick="changeOwnPassword()">Update Password</button>
                   <span id="sec-pw-status" style="font-size:12px;"></span>
                 </div>
               </div>
@@ -1437,7 +1558,7 @@ tr:nth-child(even) td{background:var(--lgray);}
                 </table>
               </div>
               <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                <button class="btn btn-red btn-sm" onclick="saveMatPrices()">Save Prices</button>
+                <button class="btn btn-primary btn-sm" onclick="saveMatPrices()">Save Prices</button>
                 <button class="btn btn-sec btn-sm" onclick="openAddMaterialForm()">+ Add Material</button>
                 <button class="btn btn-sec btn-sm" onclick="resetMatPrices()">Reset Defaults</button>
                 <span id="mat-prices-updated" style="font-size:11px;color:var(--dgray);"></span>
@@ -1451,7 +1572,7 @@ tr:nth-child(even) td{background:var(--lgray);}
                   <div><label style="font-size:11px;">Unit</label><select id="add-mat-unit" style="font-size:12px;"><option>TON</option><option>CY</option><option>SY</option><option>LF</option><option>EA</option><option>GAL</option><option>AC</option><option>SF</option><option>HR</option></select></div>
                 </div>
                 <div style="margin-top:10px;display:flex;gap:8px;">
-                  <button class="btn btn-red btn-sm" onclick="confirmAddMaterial()">Add</button>
+                  <button class="btn btn-primary btn-sm" onclick="confirmAddMaterial()">Add</button>
                   <button class="btn btn-sec btn-sm" onclick="closeAddMaterialForm()">Cancel</button>
                 </div>
               </div>
@@ -1470,7 +1591,7 @@ tr:nth-child(even) td{background:var(--lgray);}
               <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Badge colors and labels apply live to all layers in the proposal builder.</p>
               <div id="badge-list"></div>
               <div style="margin-top:12px;">
-                <button class="btn btn-red btn-sm" onclick="saveBadges()">Save Badges</button>
+                <button class="btn btn-primary btn-sm" onclick="saveBadges()">Save Badges</button>
               </div>
             </div>
           </div>
@@ -1511,7 +1632,7 @@ tr:nth-child(even) td{background:var(--lgray);}
               </div>
               <div id="library-list"></div>
               <div style="margin-top:12px;">
-                <button class="btn btn-red btn-sm" onclick="saveLibrary()">Save Library</button>
+                <button class="btn btn-primary btn-sm" onclick="saveLibrary()">Save Library</button>
               </div>
             </div>
           </div>
@@ -1539,7 +1660,7 @@ tr:nth-child(even) td{background:var(--lgray);}
             <div class="card-body">
               <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Equipment daily rates used for job costing. Set your fleet rates here and reference them when estimating grading, utilities, and other self-performed work.</p>
               <div id="equipment-list"></div>
-              <div style="margin-top:12px;"><button class="btn btn-red btn-sm" onclick="saveEquipment()">Save Equipment</button></div>
+              <div style="margin-top:12px;"><button class="btn btn-primary btn-sm" onclick="saveEquipment()">Save Equipment</button></div>
             </div>
           </div>
         </div>
@@ -1707,7 +1828,7 @@ tr:nth-child(even) td{background:var(--lgray);}
           <div><label>Tagline</label><input type="text" id="co-tagline" class="inp" placeholder="e.g. Quality paving since 2005" style="width:100%;"/></div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;">
-          <button class="btn btn-red btn-sm" onclick="saveCompanyInfo()">Save Company Info</button>
+          <button class="btn btn-primary btn-sm" onclick="saveCompanyInfo()">Save Company Info</button>
           <span id="co-save-status" style="font-size:11px;color:var(--dgray);"></span>
         </div>
       </div>
@@ -1820,7 +1941,7 @@ tr:nth-child(even) td{background:var(--lgray);}
       <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Target Version</label>
       <input type="text" id="rm-version" class="inp" style="width:100%;" placeholder="e.g. v1.1, v2.0, Backlog"/>
     </div>
-    <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="document.getElementById('roadmap-modal').classList.add('hidden')">Cancel</button><button class="btn btn-red btn-sm" onclick="saveRoadmapItem()">Save</button></div>
+    <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="document.getElementById('roadmap-modal').classList.add('hidden')">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveRoadmapItem()">Save</button></div>
   </div>
 </div>
 
@@ -2244,6 +2365,7 @@ async function doLogin(){
       showAdminElements();
       loadLastLogin();
       initAutoLogout();
+      _showFab();
     } else {
       var errMsg=d.error||'Incorrect username or password.';
       if(d.hint){errMsg+='\nHint: '+d.hint;}
@@ -2494,9 +2616,193 @@ async function doLogout(){
   location.reload();
 }
 
+// ── Sidebar Pin Toggle ──
+function toggleSbPin(){
+  var sb=document.querySelector('.sb');
+  var app=document.getElementById('app');
+  if(sb.classList.contains('pinned')){
+    sb.classList.remove('pinned');
+    app.classList.remove('sb-expanded');
+    localStorage.setItem('hd_sb_pinned','0');
+  } else {
+    sb.classList.add('pinned');
+    app.classList.add('sb-expanded');
+    localStorage.setItem('hd_sb_pinned','1');
+  }
+}
+function _restoreSbPin(){
+  if(localStorage.getItem('hd_sb_pinned')==='1'){
+    var sb=document.querySelector('.sb');
+    var app=document.getElementById('app');
+    if(sb)sb.classList.add('pinned');
+    if(app)app.classList.add('sb-expanded');
+  }
+}
+
+// ── Command Palette (Cmd+K) ──
+var _cmdkItems=[];
+function _buildCmdKIndex(){
+  _cmdkItems=[];
+  // Navigation targets
+  var panels=[
+    {label:'Dashboard',panel:'dashboard',icon:'home'},
+    {label:'Projects',panel:'projects',icon:'grid'},
+    {label:'Build Proposal',panel:'build',icon:'file'},
+    {label:'Saved Documents',panel:'saved',icon:'folder'},
+    {label:'Clients',panel:'clients',icon:'users'},
+    {label:'Subcontractors',panel:'subs',icon:'users'},
+    {label:'Schedule',panel:'schedule',icon:'calendar'},
+    {label:'Change Orders',panel:'co',icon:'file'},
+    {label:'Reports',panel:'reports',icon:'chart'},
+    {label:'Analytics',panel:'analytics',icon:'chart'},
+    {label:'Settings',panel:'settings',icon:'gear'},
+    {label:'Admin',panel:'admin',icon:'shield'},
+  ];
+  panels.forEach(function(p){
+    _cmdkItems.push({type:'nav',label:p.label,action:function(){showPanel(p.panel);closeCmdK();}});
+  });
+  // Actions
+  _cmdkItems.push({type:'action',label:'New Proposal',action:function(){showPanel('build');closeCmdK();}});
+  _cmdkItems.push({type:'action',label:'Add Client',action:function(){showPanel('clients');closeCmdK();setTimeout(function(){var b=document.querySelector('#panel-clients .btn-red');if(b)b.click();},200);}});
+  _cmdkItems.push({type:'action',label:'Export PDF',action:function(){exportPDF();closeCmdK();}});
+  _cmdkItems.push({type:'action',label:'Toggle Dark Mode',action:function(){var t=document.getElementById('dark-toggle');if(t)t.click();closeCmdK();}});
+}
+
+function openCmdK(){
+  _buildCmdKIndex();
+  // Also index saved proposals and clients
+  try{
+    fetch('/quotes/list').then(function(r){return r.json();}).then(function(d){
+      if(d.quotes){d.quotes.slice(0,20).forEach(function(q){
+        var snap=typeof q.snap==='string'?JSON.parse(q.snap||'{}'):q.snap||{};
+        _cmdkItems.push({type:'proposal',label:snap.name||'Untitled',hint:snap.client||'',action:function(){loadQuote(q.id);closeCmdK();}});
+      });}
+    });
+  }catch(e){}
+  try{
+    fetch('/clients/list').then(function(r){return r.json();}).then(function(d){
+      if(d.clients){d.clients.slice(0,20).forEach(function(c){
+        _cmdkItems.push({type:'client',label:c.name||'Unknown',hint:c.company||'',action:function(){showPanel('clients');closeCmdK();}});
+      });}
+    });
+  }catch(e){}
+  var overlay=document.getElementById('cmdk-overlay');
+  overlay.classList.add('open');
+  var inp=document.getElementById('cmdk-input');
+  inp.value='';
+  inp.focus();
+  _renderCmdKResults('');
+}
+function closeCmdK(){
+  document.getElementById('cmdk-overlay').classList.remove('open');
+}
+var _cmdkActive=0;
+function filterCmdK(q){_cmdkActive=0;_renderCmdKResults(q);}
+function _renderCmdKResults(q){
+  var container=document.getElementById('cmdk-results');
+  container.innerHTML='';
+  var matches=_cmdkItems;
+  if(q){
+    var lq=q.toLowerCase();
+    matches=_cmdkItems.filter(function(item){
+      return item.label.toLowerCase().indexOf(lq)!==-1||(item.hint||'').toLowerCase().indexOf(lq)!==-1;
+    });
+  }
+  if(matches.length===0){container.innerHTML='<div class="cmdk-empty">No results found</div>';return;}
+  // Group by type
+  var groups={};
+  matches.forEach(function(m){
+    var g=m.type==='nav'?'Navigation':m.type==='action'?'Actions':m.type==='proposal'?'Proposals':'Clients';
+    if(!groups[g])groups[g]=[];
+    groups[g].push(m);
+  });
+  var idx=0;
+  Object.keys(groups).forEach(function(gName){
+    var title=document.createElement('div');title.className='cmdk-group-title';title.textContent=gName;
+    container.appendChild(title);
+    groups[gName].forEach(function(item){
+      var row=document.createElement('div');row.className='cmdk-item';
+      if(idx===_cmdkActive)row.classList.add('active');
+      row.dataset.idx=idx;
+      var iconSvg='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
+      if(item.type==='nav')iconSvg='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+      else if(item.type==='action')iconSvg='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>';
+      row.innerHTML=iconSvg+'<span class="cmdk-item-label">'+item.label+'</span>'+(item.hint?'<span class="cmdk-item-hint">'+item.hint+'</span>':'');
+      row.addEventListener('click',function(){item.action();});
+      container.appendChild(row);
+      idx++;
+    });
+  });
+  window._cmdkMatches=matches;
+}
+function cmdkKeydown(ev){
+  var matches=window._cmdkMatches||[];
+  if(ev.key==='Escape'){closeCmdK();ev.preventDefault();return;}
+  if(ev.key==='ArrowDown'){ev.preventDefault();_cmdkActive=Math.min(_cmdkActive+1,matches.length-1);_highlightCmdK();return;}
+  if(ev.key==='ArrowUp'){ev.preventDefault();_cmdkActive=Math.max(_cmdkActive-1,0);_highlightCmdK();return;}
+  if(ev.key==='Enter'){ev.preventDefault();if(matches[_cmdkActive])matches[_cmdkActive].action();return;}
+}
+function _highlightCmdK(){
+  var items=document.querySelectorAll('.cmdk-item');
+  items.forEach(function(el,i){el.classList.toggle('active',parseInt(el.dataset.idx)===_cmdkActive);});
+  var active=document.querySelector('.cmdk-item.active');
+  if(active)active.scrollIntoView({block:'nearest'});
+}
+// Global keyboard shortcut
+document.addEventListener('keydown',function(ev){
+  if((ev.metaKey||ev.ctrlKey)&&ev.key==='k'){ev.preventDefault();openCmdK();}
+  if(ev.key==='Escape'){closeCmdK();closeDetailPanel();}
+});
+
+// ── Detail Panel ──
+var _detailExpandFn=null;
+function openDetailPanel(title,contentHtml,expandFn){
+  var panel=document.getElementById('detail-panel');
+  var backdrop=document.getElementById('detail-backdrop');
+  document.getElementById('detail-title').textContent=title;
+  document.getElementById('detail-body').innerHTML=contentHtml;
+  _detailExpandFn=expandFn||null;
+  panel.classList.add('open');
+  backdrop.classList.add('open');
+}
+function closeDetailPanel(){
+  document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('detail-backdrop').classList.remove('open');
+  _detailExpandFn=null;
+}
+function expandDetailToFull(){
+  closeDetailPanel();
+  if(_detailExpandFn)_detailExpandFn();
+}
+
+
+// ── Dashboard Greeting ──
+function _setDashGreeting(){
+  var h=new Date().getHours();
+  var g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  if(window._userName)g+=', '+window._userName.split(' ')[0];
+  var el=document.getElementById('dash-greeting');
+  if(el)el.textContent=g;
+}
+
+// ── Floating Action Button ──
+function toggleFab(){
+  var trigger=document.getElementById('fab-trigger');
+  trigger.classList.toggle('open');
+}
+function _showFab(){
+  var fab=document.getElementById('fab');
+  if(fab)fab.style.display='';
+}
+function _hideFab(){
+  var fab=document.getElementById('fab');
+  if(fab){fab.style.display='none';document.getElementById('fab-trigger').classList.remove('open');}
+}
+
 function boot(){
   loadStorage();
   loadNotifPrefs();
+  _restoreSbPin();
   applyBadgeStyles();
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   var coD=document.getElementById('co-date');if(coD)coD.value=new Date().toISOString().split('T')[0];
@@ -2527,6 +2833,7 @@ function boot(){
   });
   // Show admin-only elements if admin
   showAdminElements();
+  _showFab();
 }
 
 // -- Storage (Supabase-backed, localStorage fallback) --------------------------
@@ -3271,6 +3578,7 @@ function loadDashBidDates(){
 }
 
 function renderDashboard(){
+  _setDashGreeting();
   loadDashBidDates();
   renderDashWeather();
   renderDashStats();
