@@ -499,38 +499,67 @@ body.dark .mc-notif-item.unread{background:rgba(204,0,0,0.08);border-left-color:
 }
 body.dark .mc-notif-group{background:rgba(255,255,255,0.02);}
 
-/* Dashboard hero section */
+/* ── Dashboard v3 — clear hierarchy, distinct sections ─── */
 .dash-hero{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:20px;gap:16px;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:20px 0 16px;gap:16px;border-bottom:1px solid var(--bdr);margin-bottom:20px;
 }
 .dash-hero-text{flex:1;}
 .mc-greeting{
-  font-family:var(--font-display);font-size:24px;font-weight:800;
-  line-height:1.15;margin-bottom:2px;text-wrap:balance;
+  font-family:var(--font-display);font-size:22px;font-weight:700;
+  line-height:1.2;margin-bottom:2px;color:var(--blk);
 }
 .mc-date-line{
-  font-size:12px;color:var(--dgray);font-weight:500;
-  font-family:var(--font-display);
+  font-size:13px;color:var(--dgray);font-weight:400;
 }
-/* Today's ops card — visual emphasis */
-.dash-today-card{border-left:3px solid var(--red);}
-/* Pipeline snapshot row */
+/* Weather — inline, no container */
+.dash-weather-chip{
+  display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dgray);
+  flex-shrink:0;padding:0;background:none;border:none;
+}
+body.dark .dash-weather-chip{background:none;border:none;}
+.dash-weather-chip:hover{box-shadow:none;}
+body.dark .dash-weather-chip:hover{box-shadow:none;}
+
+/* Stats strip — connected bar */
+.dash-stats-bar{
+  display:flex;border:1px solid var(--bdr);border-radius:8px;
+  background:var(--wht);overflow:hidden;margin-bottom:20px;
+}
+.dash-stat-cell{
+  flex:1;padding:14px 16px;border-right:1px solid var(--bdr);
+  display:flex;flex-direction:column;gap:1px;
+}
+.dash-stat-cell:last-child{border-right:none;}
+.dash-stat-val{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2;color:var(--blk);}
+.dash-stat-val.warn{color:var(--red);}
+.dash-stat-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--dgray);}
+.dash-stat-sub{font-size:10px;color:var(--dgray);opacity:.6;}
+body.dark .dash-stats-bar{background:rgba(24,24,27,0.5);border-color:rgba(255,255,255,0.06);}
+body.dark .dash-stat-cell{border-right-color:rgba(255,255,255,0.06);}
+body.dark .dash-stat-val{color:#E4E4E7;}
+
+/* Today card — prominent with colored top edge */
+.dash-today-card{border-top:3px solid var(--red);border-radius:8px;}
+.dash-today-card .mc-sec-hdr{font-size:14px;font-weight:700;font-family:var(--font);text-transform:none;color:var(--blk);padding:12px 18px;}
+body.dark .dash-today-card .mc-sec-hdr{color:#E4E4E7;}
+
+/* Section cards — white, subtle shadow, no hover glow */
+.dash-section{
+  background:var(--wht);border:1px solid var(--bdr);border-radius:8px;overflow:hidden;
+}
+body.dark .dash-section{background:rgba(24,24,27,0.5);border-color:rgba(255,255,255,0.06);}
+.dash-section-hdr{
+  padding:12px 18px;border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.dash-section-title{font-size:14px;font-weight:700;color:var(--blk);}
+body.dark .dash-section-title{color:#E4E4E7;}
+
+/* Pipeline snapshot — compact row */
 .dash-pipeline-row .mc-card{padding:14px 18px;text-align:center;}
 .dash-pipeline-row .mc-card .mc-kpi-val{font-size:22px;}
 .dash-pipeline-row .mc-card .mc-kpi-lbl{font-size:10px;}
-/* Weather chip */
-.dash-weather-chip{
-  display:flex;align-items:center;gap:10px;padding:10px 18px;
-  font-size:13px;flex-shrink:0;
-  background:var(--bg-el);border:1px solid var(--bdr);border-radius:12px;
-  transition:box-shadow .2s,border-color .2s;
-}
-.dash-weather-chip:hover{box-shadow:var(--shadow-s);border-color:rgba(0,0,0,0.08);}
-body.dark .dash-weather-chip{
-  background:rgba(24,24,27,0.65);border-color:rgba(255,255,255,0.06);
-}
-body.dark .dash-weather-chip:hover{box-shadow:0 2px 8px rgba(0,0,0,.3);}
 
 /* Project card redesign */
 .mc-proj-card{
@@ -1031,11 +1060,13 @@ tr:nth-child(even) td{background:var(--lgray);}
   #jc-summary { padding: 10px 12px; }
 
   /* --- Dashboard mobile --- */
-  #dash-stats { grid-template-columns: 1fr 1fr !important; }
+  .dash-stats-bar { flex-wrap: wrap; }
+  .dash-stat-cell { flex: 1 1 45%; min-width: 120px; }
   #dash-weather-mini { display: none !important; }
-  .dash-hero { margin-bottom: 16px; }
-  .mc-greeting { font-size: 20px; }
-  .dash-split { grid-template-columns: 1fr !important; }
+  .dash-hero { margin-bottom: 12px; padding: 14px 0 10px; }
+  .mc-greeting { font-size: 18px; }
+  .dash-section-hdr .dash-section-title { font-size: 13px; }
+  #panel-dashboard > div > div[style*="grid-template-columns:3fr"] { grid-template-columns: 1fr !important; }
   #dash-pipeline-snapshot { grid-template-columns: 1fr !important; }
 
   /* --- Schedule: stack queue and calendar vertically --- */
@@ -1256,9 +1287,9 @@ tr:nth-child(even) td{background:var(--lgray);}
 
       <!-- DASHBOARD PANEL -->
       <div class="panel on" id="panel-dashboard">
-        <div class="mc-stagger" style="padding:4px 0;max-width:none;">
+        <div style="padding:4px 0;max-width:none;">
 
-          <!-- Greeting Row (compact) -->
+          <!-- Greeting + Weather -->
           <div class="dash-hero">
             <div class="dash-hero-text">
               <h2 id="dash-greeting" class="mc-greeting">Good morning</h2>
@@ -1269,44 +1300,38 @@ tr:nth-child(even) td{background:var(--lgray);}
             </div>
           </div>
 
-          <!-- KPI Strip -->
-          <div id="dash-stats" data-field-hidden aria-busy="true" aria-label="Dashboard statistics" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
-            <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:40%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
-            <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:40%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
-            <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:40%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
-            <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:40%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
+          <!-- Stats Bar -->
+          <div id="dash-stats" data-field-hidden class="dash-stats-bar" aria-busy="true" aria-label="Dashboard statistics">
+            <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+            <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+            <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+            <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
           </div>
 
-          <!-- Today's Ops (primary card, full width) -->
-          <div class="mc-card dash-today-card" style="margin-bottom:20px;">
-            <div class="mc-sec-hdr">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-              <span id="dash-today-label">Today</span>
-              <span class="mc-sec-line"></span>
+          <!-- Today's Schedule — most prominent card -->
+          <div class="dash-section dash-today-card" style="margin-bottom:20px;">
+            <div class="dash-section-hdr">
+              <span class="dash-section-title" id="dash-today-label">Today</span>
               <button class="btn btn-sec btn-sm" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Full Schedule</button>
             </div>
-            <div id="dash-today-schedule" style="padding:0;">
+            <div id="dash-today-schedule">
               <div class="empty-state" style="padding:24px 18px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="empty-state-title">No work orders today</div><div class="empty-state-desc">Scheduled jobs will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Open Schedule</button></div>
             </div>
           </div>
 
-          <!-- This Week (60%) + Activity (40%) -->
-          <div class="dash-split" style="display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:20px;">
-            <div class="mc-card">
-              <div class="mc-sec-hdr">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <span>This Week</span>
-                <span class="mc-sec-line"></span>
+          <!-- This Week + Activity — side by side -->
+          <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:20px;">
+            <div class="dash-section">
+              <div class="dash-section-hdr">
+                <span class="dash-section-title">This Week</span>
               </div>
-              <div id="dash-upcoming-wo" style="padding:0;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
+              <div id="dash-upcoming-wo"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
             </div>
-            <div class="mc-card">
-              <div class="mc-sec-hdr">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                <span>Activity</span>
-                <span class="mc-sec-line"></span>
+            <div class="dash-section">
+              <div class="dash-section-hdr">
+                <span class="dash-section-title">Recent Activity</span>
               </div>
-              <div id="dash-recent-activity" style="padding:0;max-height:340px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
+              <div id="dash-recent-activity" style="max-height:360px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
             </div>
           </div>
 
@@ -4071,7 +4096,7 @@ function renderDashTodaySchedule(){
       }
     });
   });
-  if(!todayWOs.length){c.innerHTML='<div class="empty-state" style="padding:24px 18px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="empty-state-title">No work orders today</div><div class="empty-state-desc">Scheduled jobs will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel(\'schedule\',document.querySelector(\'[onclick*=schedule]\'))">Open Schedule</button></div>';return;}
+  if(!todayWOs.length){c.innerHTML='<div class="empty-state" style="padding:32px 18px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="empty-state-title">No work orders today</div><div class="empty-state-desc">Scheduled jobs will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel(\'schedule\',document.querySelector(\'[onclick*=schedule]\'))">Open Schedule</button></div>';return;}
   todayWOs.forEach(function(item){
     var row=document.createElement('div');
     row.className='mc-list-item';
@@ -4277,15 +4302,12 @@ function renderDashStats(){
     stats.push({lbl:'Bids Due',val:bidsDueWeek,bar:bidsDueWeek>0?kpiAccent:'var(--dgray)',sub:'next 7 days',warn:bidsDueWeek>0});
     if(canSeePricing()&&decided>0)stats.push({lbl:'Win Rate',val:winRate+'%',bar:kpiAccent,sub:wonProjects+'W / '+lostProjects+'L'});
   }
-  c.style.gridTemplateColumns='repeat('+stats.length+',1fr)';
+  c.innerHTML='';
   stats.forEach(function(s){
-    var div=document.createElement('div');div.className='mc-card mc-kpi';
-    div.style.position='relative';div.style.overflow='hidden';
-    var valColor=s.warn?'var(--red)':'var(--blk)';
-    div.innerHTML='<div style="position:absolute;top:0;left:0;width:3px;height:100%;border-radius:0 2px 2px 0;background:'+(s.bar||'var(--red)')+';"></div>'
-      +'<div class="mc-kpi-lbl">'+s.lbl+'</div>'
-      +'<div class="mc-kpi-val" style="color:'+valColor+'">'+s.val+'</div>'
-      +(s.sub?'<div class="mc-kpi-sub">'+s.sub+'</div>':'');
+    var div=document.createElement('div');div.className='dash-stat-cell';
+    div.innerHTML='<div class="dash-stat-val'+(s.warn?' warn':'')+'">'+s.val+'</div>'
+      +'<div class="dash-stat-lbl">'+s.lbl+'</div>'
+      +(s.sub?'<div class="dash-stat-sub">'+s.sub+'</div>':'');
     c.appendChild(div);
   });
 }
