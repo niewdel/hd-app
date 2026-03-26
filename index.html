@@ -216,25 +216,32 @@ body.dark #sched-cal-grid>div{background:#222 !important;border-color:#444 !impo
 body.dark #sched-cal-grid .dk-today{background:#2a1a1a !important;border-color:#CC0000 !important;}
 body.dark #sched-cal-grid .dk-day-hdr{background:#1e1e1e !important;}
 body.dark #sched-cal-grid .dk-today-hdr{background:var(--red) !important;}
-/* Weather animated backgrounds */
-@keyframes wx-rain{0%{transform:translateY(-100%) translateX(0);}100%{transform:translateY(200%) translateX(-20px);}}
-@keyframes wx-snow{0%{transform:translateY(-100%) rotate(0deg);}100%{transform:translateY(300%) rotate(360deg);}}
-@keyframes wx-cloud-drift{0%{transform:translateX(-10%);}50%{transform:translateX(5%);}100%{transform:translateX(-10%);}}
-@keyframes wx-cloud-drift2{0%{transform:translateX(5%);}50%{transform:translateX(-8%);}100%{transform:translateX(5%);}}
-@keyframes wx-sun-pulse{0%{opacity:.15;transform:scale(1);}50%{opacity:.25;transform:scale(1.08);}100%{opacity:.15;transform:scale(1);}}
-@keyframes wx-sun-rotate{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-@keyframes wx-fog-drift{0%{transform:translateX(-5%);opacity:.3;}50%{transform:translateX(5%);opacity:.5;}100%{transform:translateX(-5%);opacity:.3;}}
-@keyframes wx-lightning{0%,100%{opacity:0;}92%{opacity:0;}94%{opacity:.7;}96%{opacity:0;}97%{opacity:.4;}98%{opacity:0;}}
-@keyframes wx-ray{0%{opacity:.04;transform:scaleY(1);}50%{opacity:.08;transform:scaleY(1.1);}100%{opacity:.04;transform:scaleY(1);}}
+/* Weather animated backgrounds — realistic */
+@keyframes wx-rain-fall{0%{transform:translateY(-20px) translateX(0);}100%{transform:translateY(160px) translateX(-12px);}}
+@keyframes wx-rain-heavy{0%{transform:translateY(-20px) translateX(0);}100%{transform:translateY(160px) translateX(-18px);}}
+@keyframes wx-splash{0%{transform:scale(0);opacity:.6;}50%{transform:scale(1);opacity:.3;}100%{transform:scale(1.5);opacity:0;}}
+@keyframes wx-snow-fall{0%{transform:translateY(-15px) translateX(0px);}25%{transform:translateY(35px) translateX(8px);}50%{transform:translateY(85px) translateX(-4px);}75%{transform:translateY(130px) translateX(10px);}100%{transform:translateY(180px) translateX(2px);}}
+@keyframes wx-cloud-slow{0%{transform:translateX(0);}100%{transform:translateX(60px);}}
+@keyframes wx-cloud-med{0%{transform:translateX(0);}100%{transform:translateX(-45px);}}
+@keyframes wx-cloud-fast{0%{transform:translateX(0);}100%{transform:translateX(80px);}}
+@keyframes wx-sun-breathe{0%,100%{opacity:.22;transform:scale(1);}50%{opacity:.32;transform:scale(1.06);}}
+@keyframes wx-sun-halo{0%,100%{opacity:.08;transform:scale(1) rotate(0deg);}50%{opacity:.14;transform:scale(1.03) rotate(3deg);}}
+@keyframes wx-ray-shimmer{0%,100%{opacity:.05;}30%{opacity:.12;}60%{opacity:.04;}}
+@keyframes wx-fog-crawl{0%{transform:translateX(-8%) scaleX(1);}50%{transform:translateX(6%) scaleX(1.05);}100%{transform:translateX(-8%) scaleX(1);}}
+@keyframes wx-bolt{0%,100%{opacity:0;}0.5%{opacity:0;}1%{opacity:.9;}2%{opacity:.1;}2.5%{opacity:.6;}3.5%{opacity:0;}50%{opacity:0;}}
+@keyframes wx-bolt-glow{0%,100%{opacity:0;}1%{opacity:.15;}3%{opacity:.05;}3.5%{opacity:0;}50%{opacity:0;}}
+@keyframes wx-mist-float{0%{transform:translateX(-3%) translateY(0);}33%{transform:translateX(4%) translateY(-2px);}66%{transform:translateX(-1%) translateY(2px);}100%{transform:translateX(-3%) translateY(0);}}
 .wx-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;border-radius:inherit;}
 .wx-bg-content{position:relative;z-index:1;}
-.wx-drop{position:absolute;width:1.5px;background:linear-gradient(to bottom,transparent,rgba(150,200,255,.6));border-radius:0 0 2px 2px;animation:wx-rain linear infinite;}
-.wx-flake{position:absolute;border-radius:50%;background:rgba(255,255,255,.7);animation:wx-snow linear infinite;}
-.wx-cloud{position:absolute;border-radius:50%;filter:blur(20px);}
-.wx-sun-glow{position:absolute;border-radius:50%;animation:wx-sun-pulse 4s ease-in-out infinite;}
-.wx-sun-rays{position:absolute;animation:wx-sun-rotate 30s linear infinite;}
-.wx-fog-band{position:absolute;width:120%;height:30%;border-radius:50%;filter:blur(30px);animation:wx-fog-drift ease-in-out infinite;}
-.wx-lightning-flash{position:absolute;inset:0;background:rgba(255,255,255,.15);animation:wx-lightning 6s ease-in-out infinite;}
+.wx-drop{position:absolute;background:linear-gradient(to bottom,transparent 0%,rgba(170,200,230,.15) 30%,rgba(140,180,220,.5) 100%);border-radius:0 0 1px 1px;}
+.wx-drop-heavy{position:absolute;background:linear-gradient(to bottom,transparent 0%,rgba(130,170,210,.2) 20%,rgba(100,150,200,.65) 100%);border-radius:0 0 1px 1px;}
+.wx-splash-ring{position:absolute;width:6px;height:2px;border:1px solid rgba(150,190,230,.3);border-radius:50%;animation:wx-splash .6s ease-out forwards;}
+.wx-flake{position:absolute;border-radius:50%;animation:wx-snow-fall linear infinite;}
+.wx-flake::after{content:'';position:absolute;inset:-1px;border-radius:50%;background:inherit;filter:blur(1px);opacity:.5;}
+.wx-cloud-shape{position:absolute;border-radius:50%;}
+.wx-fog-layer{position:absolute;width:140%;height:40%;border-radius:50%;animation:wx-fog-crawl ease-in-out infinite;}
+.wx-bolt-path{position:absolute;animation:wx-bolt 8s ease-in-out infinite;}
+.wx-bolt-glow-layer{position:absolute;inset:0;animation:wx-bolt-glow 8s ease-in-out infinite;}
 /* Weather widget — dark banner is already dark, forecast cards need dark overrides */
 body.dark [data-weather-day]{background:#2a2a2a !important;border-color:#444 !important;color:#e0e0e0 !important;}
 body.dark [data-weather-day][data-weather-selected]{background:#3a1a1a !important;border-color:#CC0000 !important;}
@@ -9100,77 +9107,186 @@ function fmtTime12(iso){if(!iso)return '';var d=new Date(iso);var h=d.getHours()
 function uvLabel(uv){if(uv<=2)return{text:'Low',color:'#27500A'};if(uv<=5)return{text:'Moderate',color:'#F5A623'};if(uv<=7)return{text:'High',color:'#E65100'};if(uv<=10)return{text:'Very High',color:'#CC0000'};return{text:'Extreme',color:'#880088'};}
 
 function _wxBgHtml(code){
-  // Weather code -> category
   var cat='clear';
   if(code===0)cat='clear';
   else if(code<=2)cat='partly';
   else if(code===3)cat='overcast';
   else if(code===45||code===48)cat='fog';
   else if(code>=51&&code<=55)cat='drizzle';
-  else if(code>=61&&code<=65||code>=80&&code<=82)cat='rain';
+  else if((code>=61&&code<=63)||code===80||code===81)cat='rain';
+  else if(code===65||code===82)cat='heavyrain';
   else if(code>=71&&code<=75)cat='snow';
   else if(code>=95)cat='storm';
   var h='<div class="wx-bg">';
+
+  // --- Helper: realistic cloud cluster (multiple overlapping ellipses) ---
+  function cloud(x,y,w,opacity,blur,anim,dur,delay){
+    var b=blur||25;var a=anim||'wx-cloud-slow';
+    var h2='<div style="position:absolute;left:'+x+'%;top:'+y+'%;animation:'+a+' '+dur+'s linear infinite;animation-delay:'+delay+'s;">';
+    // Core mass
+    h2+='<div class="wx-cloud-shape" style="width:'+w+'px;height:'+Math.round(w*0.35)+'px;background:rgba(160,170,185,'+opacity+');filter:blur('+b+'px);"></div>';
+    // Upper billow
+    h2+='<div class="wx-cloud-shape" style="width:'+Math.round(w*0.6)+'px;height:'+Math.round(w*0.3)+'px;background:rgba(170,180,195,'+(opacity*0.8)+');filter:blur('+(b-3)+'px);top:-'+Math.round(w*0.12)+'px;left:'+Math.round(w*0.15)+'px;"></div>';
+    // Side billow
+    h2+='<div class="wx-cloud-shape" style="width:'+Math.round(w*0.45)+'px;height:'+Math.round(w*0.25)+'px;background:rgba(155,165,180,'+(opacity*0.6)+');filter:blur('+(b+5)+'px);top:'+Math.round(w*0.05)+'px;left:-'+Math.round(w*0.1)+'px;"></div>';
+    h2+='</div>';
+    return h2;
+  }
+
+  // --- Helper: rain drops with angle and variable thickness ---
+  function rainDrops(count,minH,maxH,minDur,maxDur,minOp,maxOp,cls){
+    var r='';cls=cls||'wx-drop';
+    for(var i=0;i<count;i++){
+      var x=Math.random()*110-5;
+      var ht=minH+Math.random()*(maxH-minH);
+      var w=0.8+Math.random()*1.2;
+      var dur=minDur+Math.random()*(maxDur-minDur);
+      var del=-Math.random()*dur*2;
+      var op=minOp+Math.random()*(maxOp-minOp);
+      var anim=cls==='wx-drop-heavy'?'wx-rain-heavy':'wx-rain-fall';
+      r+='<div class="'+cls+'" style="left:'+x.toFixed(1)+'%;width:'+w.toFixed(1)+'px;height:'+ht.toFixed(0)+'px;opacity:'+op.toFixed(2)+';animation:'+anim+' '+dur.toFixed(2)+'s linear infinite;animation-delay:'+del.toFixed(2)+'s;transform:rotate(-8deg);"></div>';
+    }
+    // Splash rings at bottom
+    for(var s=0;s<Math.min(count/3,12);s++){
+      var sx=Math.random()*100;
+      var sd=-Math.random()*3;
+      r+='<div class="wx-splash-ring" style="left:'+sx.toFixed(1)+'%;bottom:'+Math.round(Math.random()*8)+'px;animation-delay:'+sd.toFixed(2)+'s;animation-iteration-count:infinite;"></div>';
+    }
+    return r;
+  }
+
   if(cat==='clear'){
-    // Golden sun glow + rotating ray pattern
-    h+='<div style="position:absolute;top:-30px;right:10%;width:140px;height:140px;background:radial-gradient(circle,rgba(255,180,50,.3) 0%,rgba(255,120,20,.1) 40%,transparent 70%);border-radius:50%;animation:wx-sun-pulse 5s ease-in-out infinite;"></div>';
-    // Sun rays as thin lines radiating out
-    for(var r=0;r<12;r++){
-      var angle=r*30;
-      h+='<div style="position:absolute;top:0;right:calc(10% + 62px);width:2px;height:60px;background:linear-gradient(to bottom,rgba(255,200,80,.12),transparent);transform-origin:bottom center;transform:rotate('+angle+'deg) translateY(-50px);animation:wx-ray '+(3+r%3)+'s ease-in-out infinite;animation-delay:'+(-r*0.4)+'s;"></div>';
+    // Warm atmospheric glow — layered radial gradients like a real golden hour sky
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(40,25,10,.3) 0%,rgba(25,18,8,.15) 40%,rgba(15,12,8,.05) 100%);"></div>';
+    // Primary sun glow — large, soft, positioned top-right
+    h+='<div style="position:absolute;top:-40px;right:8%;width:180px;height:180px;background:radial-gradient(circle,rgba(255,190,60,.35) 0%,rgba(255,150,30,.18) 25%,rgba(255,120,10,.06) 50%,transparent 70%);border-radius:50%;animation:wx-sun-breathe 6s ease-in-out infinite;"></div>';
+    // Secondary halo — wider, dimmer
+    h+='<div style="position:absolute;top:-60px;right:4%;width:260px;height:260px;background:radial-gradient(circle,rgba(255,200,80,.1) 0%,rgba(255,160,40,.04) 40%,transparent 65%);border-radius:50%;animation:wx-sun-halo 8s ease-in-out infinite;"></div>';
+    // Light rays fanning down — tapered gradients at angles
+    for(var r=0;r<8;r++){
+      var angle=-20+r*12;var len=80+Math.random()*40;var w=20+Math.random()*30;
+      h+='<div style="position:absolute;top:-10px;right:calc(8% + 80px);width:'+w+'px;height:'+len+'px;background:linear-gradient(to bottom,rgba(255,200,80,.1),rgba(255,180,50,.03) 60%,transparent);transform-origin:top center;transform:rotate('+angle+'deg);animation:wx-ray-shimmer '+(4+r*0.7).toFixed(1)+'s ease-in-out infinite;animation-delay:'+(-r*0.6).toFixed(1)+'s;border-radius:0 0 50% 50%;"></div>';
     }
-    // Warm gradient base
-    h+='<div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,140,0,.08) 0%,rgba(255,200,50,.05) 40%,transparent 70%);"></div>';
+    // Warm ambient wash across bottom
+    h+='<div style="position:absolute;bottom:0;left:0;right:0;height:60%;background:linear-gradient(to top,rgba(255,140,40,.06),transparent);"></div>';
   } else if(cat==='partly'){
-    // Soft sun glow + drifting cloud wisps
-    h+='<div style="position:absolute;top:-20px;right:15%;width:100px;height:100px;background:radial-gradient(circle,rgba(255,180,50,.2) 0%,transparent 60%);border-radius:50%;animation:wx-sun-pulse 6s ease-in-out infinite;"></div>';
-    h+='<div class="wx-cloud" style="top:10%;left:20%;width:160px;height:50px;background:rgba(180,200,220,.15);animation:wx-cloud-drift 20s ease-in-out infinite;"></div>';
-    h+='<div class="wx-cloud" style="top:40%;left:55%;width:120px;height:40px;background:rgba(180,200,220,.1);animation:wx-cloud-drift2 25s ease-in-out infinite;"></div>';
+    // Sun partially visible + realistic cloud clusters drifting across
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(30,25,15,.15) 0%,rgba(20,22,28,.1) 60%,rgba(15,18,25,.05) 100%);"></div>';
+    // Dimmed sun behind clouds
+    h+='<div style="position:absolute;top:-30px;right:12%;width:120px;height:120px;background:radial-gradient(circle,rgba(255,190,60,.2) 0%,rgba(255,150,30,.08) 35%,transparent 60%);border-radius:50%;animation:wx-sun-breathe 7s ease-in-out infinite;"></div>';
+    // Cloud clusters at different depths
+    h+=cloud(15,-5,180,.12,22,'wx-cloud-slow',40,-8);
+    h+=cloud(50,15,220,.15,28,'wx-cloud-med',35,-15);
+    h+=cloud(75,5,140,.1,20,'wx-cloud-slow',50,-25);
+    // Subtle light filtering through
+    h+='<div style="position:absolute;top:0;right:10%;width:100px;height:100%;background:linear-gradient(to bottom,rgba(255,200,80,.04),transparent 50%);"></div>';
   } else if(cat==='overcast'){
-    // Heavy layered clouds
-    h+='<div class="wx-cloud" style="top:-10%;left:5%;width:200px;height:70px;background:rgba(150,160,175,.2);animation:wx-cloud-drift 18s ease-in-out infinite;"></div>';
-    h+='<div class="wx-cloud" style="top:20%;left:40%;width:250px;height:60px;background:rgba(140,150,165,.18);animation:wx-cloud-drift2 22s ease-in-out infinite;"></div>';
-    h+='<div class="wx-cloud" style="top:50%;left:15%;width:180px;height:50px;background:rgba(130,140,155,.15);animation:wx-cloud-drift 28s ease-in-out infinite;animation-delay:-5s;"></div>';
-    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(100,110,130,.08) 0%,rgba(80,90,105,.04) 100%);"></div>';
+    // Heavy layered cloud cover — multiple depth layers
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(55,60,70,.12) 0%,rgba(45,50,60,.08) 50%,rgba(40,45,55,.04) 100%);"></div>';
+    // Far layer (slowest, dimmest)
+    h+=cloud(-5,-10,280,.08,35,'wx-cloud-slow',55,0);
+    h+=cloud(40,-5,320,.1,38,'wx-cloud-med',48,-10);
+    h+=cloud(70,0,260,.07,32,'wx-cloud-slow',60,-20);
+    // Mid layer
+    h+=cloud(10,15,240,.12,28,'wx-cloud-med',38,-5);
+    h+=cloud(55,20,200,.1,25,'wx-cloud-fast',42,-18);
+    // Near layer (fastest, slightly more visible)
+    h+=cloud(20,40,300,.09,30,'wx-cloud-fast',30,-12);
+    h+=cloud(60,35,250,.08,26,'wx-cloud-slow',45,-22);
   } else if(cat==='fog'){
-    // Drifting fog bands
-    h+='<div class="wx-fog-band" style="top:10%;left:-10%;background:rgba(180,190,200,.3);animation-duration:12s;"></div>';
-    h+='<div class="wx-fog-band" style="top:40%;left:-5%;background:rgba(170,180,195,.25);animation-duration:16s;animation-delay:-4s;"></div>';
-    h+='<div class="wx-fog-band" style="top:65%;left:-8%;background:rgba(160,170,185,.2);animation-duration:20s;animation-delay:-8s;"></div>';
+    // Thick layered fog with depth — multiple translucent bands at different speeds
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(140,150,165,.08) 0%,rgba(130,140,155,.12) 50%,rgba(120,130,148,.06) 100%);"></div>';
+    // Fog layers — wide, blurred, overlapping
+    var fogLayers=[
+      {y:'-5%',op:.18,blur:40,dur:18,del:0,h:'55%'},
+      {y:'15%',op:.22,blur:45,dur:24,del:-6,h:'50%'},
+      {y:'35%',op:.15,blur:50,dur:20,del:-12,h:'45%'},
+      {y:'55%',op:.2,blur:35,dur:28,del:-4,h:'40%'},
+      {y:'70%',op:.12,blur:42,dur:22,del:-16,h:'35%'},
+    ];
+    fogLayers.forEach(function(f){
+      h+='<div class="wx-fog-layer" style="top:'+f.y+';left:-20%;height:'+f.h+';background:rgba(155,165,180,'+f.op+');filter:blur('+f.blur+'px);animation-duration:'+f.dur+'s;animation-delay:'+f.del+'s;"></div>';
+    });
+    // Subtle mist particles drifting
+    for(var m=0;m<6;m++){
+      var mx=Math.random()*100;var my=Math.random()*80;var ms=60+Math.random()*80;
+      h+='<div style="position:absolute;left:'+mx+'%;top:'+my+'%;width:'+ms+'px;height:'+Math.round(ms*0.4)+'px;background:rgba(165,175,190,.08);border-radius:50%;filter:blur(20px);animation:wx-mist-float '+(10+Math.random()*8).toFixed(1)+'s ease-in-out infinite;animation-delay:'+(-Math.random()*10).toFixed(1)+'s;"></div>';
+    }
   } else if(cat==='drizzle'){
-    // Gentle thin drops + cloud layer
-    h+='<div class="wx-cloud" style="top:-5%;left:10%;width:200px;height:50px;background:rgba(140,160,180,.15);animation:wx-cloud-drift 22s ease-in-out infinite;"></div>';
-    for(var d=0;d<25;d++){
-      var x=Math.random()*100;var dur=1.5+Math.random()*1;var delay=-Math.random()*3;var ht=15+Math.random()*10;
-      h+='<div class="wx-drop" style="left:'+x+'%;height:'+ht+'px;opacity:.3;animation-duration:'+dur+'s;animation-delay:'+delay+'s;"></div>';
-    }
+    // Light, thin drops — sparse, gentle angle, subtle clouds
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(50,60,75,.08) 0%,rgba(40,50,65,.04) 100%);"></div>';
+    h+=cloud(10,-5,200,.1,25,'wx-cloud-slow',42,-5);
+    h+=cloud(55,0,180,.08,22,'wx-cloud-med',38,-15);
+    h+=rainDrops(30,12,22,1.4,2.2,.15,.3,'wx-drop');
   } else if(cat==='rain'){
-    // Dense rain streaks + dark clouds
-    h+='<div class="wx-cloud" style="top:-15%;left:0%;width:300px;height:60px;background:rgba(80,100,130,.2);animation:wx-cloud-drift 15s ease-in-out infinite;"></div>';
-    h+='<div class="wx-cloud" style="top:5%;left:40%;width:250px;height:50px;background:rgba(70,90,120,.15);animation:wx-cloud-drift2 20s ease-in-out infinite;"></div>';
-    for(var d=0;d<50;d++){
-      var x=Math.random()*100;var dur=0.6+Math.random()*0.8;var delay=-Math.random()*2;var ht=20+Math.random()*15;var op=0.3+Math.random()*0.3;
-      h+='<div class="wx-drop" style="left:'+x+'%;height:'+ht+'px;opacity:'+op+';animation-duration:'+dur+'s;animation-delay:'+delay+'s;"></div>';
-    }
-    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(40,60,90,.1) 0%,rgba(30,50,80,.06) 100%);"></div>';
+    // Steady rain — moderate density, visible clouds, splash effects
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(35,45,65,.12) 0%,rgba(25,35,55,.06) 100%);"></div>';
+    h+=cloud(0,-10,260,.12,30,'wx-cloud-med',30,-3);
+    h+=cloud(40,-5,300,.15,35,'wx-cloud-slow',36,-12);
+    h+=cloud(70,0,220,.1,28,'wx-cloud-fast',28,-20);
+    h+=rainDrops(60,18,32,.7,1.4,.2,.45,'wx-drop');
+  } else if(cat==='heavyrain'){
+    // Heavy downpour — dense, thicker drops, more splash, darker atmosphere
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(25,35,55,.18) 0%,rgba(20,28,45,.1) 100%);"></div>';
+    h+=cloud(-5,-15,350,.18,35,'wx-cloud-fast',22,-2);
+    h+=cloud(35,-10,300,.2,38,'wx-cloud-med',28,-8);
+    h+=cloud(65,-5,280,.15,32,'wx-cloud-fast',20,-18);
+    h+=rainDrops(90,22,40,.5,1.0,.25,.55,'wx-drop-heavy');
+    // Extra mist/spray at bottom
+    h+='<div style="position:absolute;bottom:0;left:0;right:0;height:25%;background:linear-gradient(to top,rgba(120,150,180,.08),transparent);"></div>';
   } else if(cat==='snow'){
-    // Drifting snowflakes
-    for(var s=0;s<35;s++){
-      var x=Math.random()*100;var sz=2+Math.random()*4;var dur=4+Math.random()*6;var delay=-Math.random()*8;var op=0.4+Math.random()*0.4;
-      h+='<div class="wx-flake" style="left:'+x+'%;width:'+sz+'px;height:'+sz+'px;opacity:'+op+';animation-duration:'+dur+'s;animation-delay:'+delay+'s;"></div>';
+    // Realistic snowflakes — varied sizes, gentle sway, bokeh effect on larger flakes
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(180,190,210,.06) 0%,rgba(170,180,200,.03) 100%);"></div>';
+    // Far snowflakes (tiny, slow, dim)
+    for(var s=0;s<20;s++){
+      var x=Math.random()*110-5;var sz=1.5+Math.random()*2;var dur=6+Math.random()*4;var del=-Math.random()*dur*2;
+      h+='<div class="wx-flake" style="left:'+x.toFixed(1)+'%;width:'+sz.toFixed(1)+'px;height:'+sz.toFixed(1)+'px;background:rgba(220,225,235,.3);filter:blur(0.5px);animation-duration:'+dur.toFixed(1)+'s;animation-delay:'+del.toFixed(1)+'s;"></div>';
     }
-    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(200,210,230,.08) 0%,rgba(180,195,220,.04) 100%);"></div>';
+    // Mid snowflakes
+    for(var s=0;s<15;s++){
+      var x=Math.random()*110-5;var sz=2.5+Math.random()*3;var dur=5+Math.random()*3;var del=-Math.random()*dur*2;
+      h+='<div class="wx-flake" style="left:'+x.toFixed(1)+'%;width:'+sz.toFixed(1)+'px;height:'+sz.toFixed(1)+'px;background:rgba(230,235,245,.5);animation-duration:'+dur.toFixed(1)+'s;animation-delay:'+del.toFixed(1)+'s;"></div>';
+    }
+    // Near snowflakes (larger, brighter, slight bokeh blur)
+    for(var s=0;s<8;s++){
+      var x=Math.random()*110-5;var sz=4+Math.random()*3;var dur=3.5+Math.random()*2.5;var del=-Math.random()*dur*2;
+      h+='<div class="wx-flake" style="left:'+x.toFixed(1)+'%;width:'+sz.toFixed(1)+'px;height:'+sz.toFixed(1)+'px;background:rgba(240,242,250,.65);filter:blur(0.8px);box-shadow:0 0 '+(sz*1.5).toFixed(0)+'px rgba(200,210,230,.15);animation-duration:'+dur.toFixed(1)+'s;animation-delay:'+del.toFixed(1)+'s;"></div>';
+    }
+    // Subtle cool cloud cover
+    h+=cloud(10,-10,250,.06,30,'wx-cloud-slow',50,0);
+    h+=cloud(55,-5,200,.05,28,'wx-cloud-med',45,-15);
   } else if(cat==='storm'){
-    // Rain + lightning flashes + dark clouds
-    h+='<div class="wx-cloud" style="top:-15%;left:-5%;width:350px;height:80px;background:rgba(50,55,70,.25);animation:wx-cloud-drift 12s ease-in-out infinite;"></div>';
-    h+='<div class="wx-cloud" style="top:10%;left:35%;width:280px;height:60px;background:rgba(40,45,60,.2);animation:wx-cloud-drift2 16s ease-in-out infinite;"></div>';
-    for(var d=0;d<45;d++){
-      var x=Math.random()*100;var dur=0.5+Math.random()*0.6;var delay=-Math.random()*2;var ht=22+Math.random()*18;var op=0.3+Math.random()*0.35;
-      h+='<div class="wx-drop" style="left:'+x+'%;height:'+ht+'px;opacity:'+op+';animation-duration:'+dur+'s;animation-delay:'+delay+'s;"></div>';
-    }
-    h+='<div class="wx-lightning-flash" style="animation-delay:0s;"></div>';
-    h+='<div class="wx-lightning-flash" style="animation-delay:-3.5s;opacity:.7;"></div>';
-    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,30,50,.12) 0%,rgba(20,20,40,.08) 100%);"></div>';
+    // Dark turbulent atmosphere — heavy rain + lightning bolt + roiling clouds
+    h+='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,18,30,.22) 0%,rgba(10,12,22,.12) 100%);"></div>';
+    // Dark turbulent clouds
+    h+=cloud(-10,-15,380,.2,35,'wx-cloud-fast',18,-2);
+    h+=cloud(30,-12,320,.22,40,'wx-cloud-med',22,-6);
+    h+=cloud(60,-8,290,.18,32,'wx-cloud-fast',16,-14);
+    h+=cloud(85,-5,250,.15,28,'wx-cloud-med',25,-20);
+    // Heavy rain
+    h+=rainDrops(80,24,42,.4,.9,.25,.5,'wx-drop-heavy');
+    // Lightning bolt — SVG path for realistic forked bolt
+    var boltX=25+Math.random()*50;
+    h+='<div class="wx-bolt-path" style="left:'+boltX+'%;top:0;width:40px;height:100%;">';
+    h+='<svg width="40" height="100%" viewBox="0 0 40 120" preserveAspectRatio="none" style="overflow:visible;">';
+    h+='<path d="M20,0 L18,25 L26,28 L15,60 L22,63 L12,95 L19,97 L14,120" fill="none" stroke="rgba(180,200,255,.9)" stroke-width="1.5" stroke-linecap="round"/>';
+    h+='<path d="M20,0 L18,25 L26,28 L15,60 L22,63 L12,95 L19,97 L14,120" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="4" stroke-linecap="round" filter="blur(3px)"/>';
+    // Fork
+    h+='<path d="M15,60 L8,80" fill="none" stroke="rgba(180,200,255,.6)" stroke-width="1" stroke-linecap="round"/>';
+    h+='<path d="M12,95 L6,108" fill="none" stroke="rgba(180,200,255,.4)" stroke-width=".8" stroke-linecap="round"/>';
+    h+='</svg></div>';
+    // Second bolt offset
+    var bolt2X=boltX+(boltX>50?-30:30);
+    h+='<div class="wx-bolt-path" style="left:'+bolt2X+'%;top:0;width:30px;height:100%;animation-delay:-4.5s;opacity:.6;">';
+    h+='<svg width="30" height="100%" viewBox="0 0 30 120" preserveAspectRatio="none" style="overflow:visible;">';
+    h+='<path d="M15,5 L13,30 L19,33 L10,70 L16,72 L11,110" fill="none" stroke="rgba(180,200,255,.7)" stroke-width="1.2" stroke-linecap="round"/>';
+    h+='<path d="M15,5 L13,30 L19,33 L10,70 L16,72 L11,110" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="3.5" stroke-linecap="round" filter="blur(3px)"/>';
+    h+='</svg></div>';
+    // Ambient lightning glow that illuminates the clouds
+    h+='<div class="wx-bolt-glow-layer" style="background:radial-gradient(ellipse at '+boltX+'% 30%,rgba(180,200,255,.12),transparent 60%);"></div>';
+    h+='<div class="wx-bolt-glow-layer" style="background:radial-gradient(ellipse at '+bolt2X+'% 40%,rgba(180,200,255,.08),transparent 50%);animation-delay:-4.5s;"></div>';
+    // Mist spray at bottom
+    h+='<div style="position:absolute;bottom:0;left:0;right:0;height:30%;background:linear-gradient(to top,rgba(80,100,130,.1),transparent);"></div>';
   }
   h+='</div>';
   return h;
