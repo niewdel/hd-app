@@ -166,11 +166,18 @@ td{padding:6px 9px;border-bottom:1px solid var(--mgray);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:nth-child(even) td{background:#FAFAFA;}
 .badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;}
-.b-base{background:#E6F1FB;color:#0C447C;}
-.b-binder{background:#EEEDFE;color:#3C3489;}
-.b-surface{background:#EAF3DE;color:#27500A;}
-.b-millings{background:#FAEEDA;color:#633806;}
-.b-conc{background:#F0F0F0;color:#444;}
+.b-asphalt{background:#F0F0F0;color:#333;}
+.b-stone{background:#F3EDE5;color:#6B4F2E;}
+.b-concrete{background:#EEEDFE;color:#3C3489;}
+.b-grading{background:#F5F0E0;color:#5C4A1E;}
+.b-storm-drain{background:#E6F1FB;color:#0C447C;}
+.b-sewer{background:#E8F5E0;color:#3D6B1E;}
+.b-water{background:#E0F2F7;color:#0C5F7A;}
+.b-erosion{background:#FDF5E6;color:#7A5A14;}
+.b-striping{background:#FFF0E0;color:#994D00;}
+.b-clearing{background:#EAF3DE;color:#3D5B1E;}
+.b-landscape{background:#E0F5EA;color:#1E6B3D;}
+.b-general{background:#F0F0F0;color:#555;}
 .b-misc{background:#F5F0E8;color:#6B5B3E;}
 .gp{color:#27500A;font-weight:600;}
 .gn{color:#A32D2D;font-weight:600;}
@@ -1015,7 +1022,8 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <button class="stab on" id="stab-general" onclick="showSettingsTab('general')">General</button>
           <button class="stab" data-field-hidden id="stab-presets" onclick="showSettingsTab('presets')">Presets</button>
           <button class="stab" data-field-hidden id="stab-library" onclick="showSettingsTab('library')">Bid Library</button>
-          <button class="stab" data-field-hidden id="stab-badges" onclick="showSettingsTab('badges')">Layer Badges</button>
+          <button class="stab" data-field-hidden id="stab-materials" onclick="showSettingsTab('materials')">Materials</button>
+          <button class="stab" data-field-hidden id="stab-badges" onclick="showSettingsTab('badges')">Trade Badges</button>
           <button class="stab" data-field-hidden id="stab-crews" onclick="showSettingsTab('crews')">Crew Costs</button>
           <button class="stab" data-field-hidden id="stab-equipment" onclick="showSettingsTab('equipment')">Equipment</button>
         </div>
@@ -1035,13 +1043,16 @@ tr:nth-child(even) td{background:#FAFAFA;}
               <div id="pin-change-notice" style="display:none;margin-top:12px;padding:10px 14px;background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;font-size:12px;color:var(--dgray);">To change your PIN, contact a system administrator.</div>
             </div>
           </div>
-          <!-- Job Cost Defaults removed — values baked into code: asphalt 400t/day, stone 800t/day, 100 tons/truck, truck $100/hr, 8hr/day -->
+        </div>
+
+        <!-- Materials Tab -->
+        <div id="stab-content-materials" style="display:none;">
           <div class="card">
             <div class="card-hdr">
               <span class="card-title">Material Prices</span>
             </div>
             <div class="card-body">
-              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Raw material costs. Only the cost per unit is editable.</p>
+              <p style="font-size:12px;color:var(--dgray);margin-bottom:12px;">Raw material costs used for job costing and margin calculations. Each bid library item is linked to a material.</p>
               <div style="overflow-x:auto;">
                 <table style="width:100%;border-collapse:collapse;font-size:12px;" id="mat-table">
                   <thead>
@@ -1341,10 +1352,22 @@ tr:nth-child(even) td{background:#FAFAFA;}
 
 <script>
 // -- Constants -----------------------------------------------------------------
-var LTYPES = ['ABC','#57 Stone','S9.5B','S9.5C','I19.0C','B25.0C','Concrete'];
-var LBS    = {'ABC':150,'#57 Stone':150,'S9.5B':115,'S9.5C':115,'I19.0C':115,'B25.0C':115,'Concrete':150};
+var LTYPES = ['ABC','#57 Stone','S9.5B','S9.5C','I19.0C','B25.0C','Concrete',
+  'Tack Coat','Paving Fabric','Rip Rap','Gravel','Select Fill','Structural Fill','Topsoil',
+  'RCP Pipe','HDPE Pipe','Precast Structure','PVC Pipe','DIP Pipe','Fire Hydrant','Gate Valve',
+  'Silt Fence','Erosion Blanket','Seed Mix','Traffic Paint','Thermoplastic',
+  'Sign Post','Bollard','Wheel Stop','Sod','Mulch','Plant Material','Fence Material','Labor'];
+var LBS = {'ABC':150,'#57 Stone':150,'S9.5B':115,'S9.5C':115,'I19.0C':115,'B25.0C':115,'Concrete':150,'Rip Rap':150,'Gravel':150};
 // MAT is the raw material cost — editable in Settings, saved to Supabase
-var MAT    = {'ABC':30,'#57 Stone':35,'S9.5B':100,'S9.5C':90,'I19.0C':90,'B25.0C':90,'Concrete':200};
+var MAT = {
+  'ABC':30,'#57 Stone':35,'S9.5B':100,'S9.5C':90,'I19.0C':90,'B25.0C':90,'Concrete':200,
+  'Tack Coat':5,'Paving Fabric':2,'Rip Rap':50,'Gravel':28,
+  'Select Fill':12,'Structural Fill':15,'Topsoil':25,
+  'RCP Pipe':35,'HDPE Pipe':22,'Precast Structure':2500,'PVC Pipe':14,'DIP Pipe':30,'Fire Hydrant':3500,'Gate Valve':800,
+  'Silt Fence':1.50,'Erosion Blanket':1.50,'Seed Mix':1500,
+  'Traffic Paint':0.15,'Thermoplastic':0.80,'Sign Post':200,'Bollard':150,'Wheel Stop':50,
+  'Sod':2,'Mulch':35,'Plant Material':50,'Fence Material':15,'Labor':0
+};
 var JC_CREW_RATE_DEFAULT = 5000;
 var JC_PRODUCTIVITY_DEFAULT = 400; // tons/day
 var jcProductivity = JC_PRODUCTIVITY_DEFAULT;
@@ -1360,8 +1383,8 @@ var jcTonsPerTruck = TONS_PER_TRUCK_DEFAULT;
 
 // Crew list — simple name + daily rate, editable, stored in localStorage
 var CREWS_DEFAULT = [
-  {id:1, name:'Stone Crew', trade:'Stone', daily_rate:2500, productivity:800},
-  {id:2, name:'Asphalt Crew', trade:'Asphalt', daily_rate:5000, productivity:400}
+  {id:1, name:'Stone Crew', trade:'b-stone', daily_rate:2500, productivity:800},
+  {id:2, name:'Asphalt Crew', trade:'b-asphalt', daily_rate:5000, productivity:400}
 ];
 var CREWS = JSON.parse(localStorage.getItem('hd_crews')||'null') || JSON.parse(JSON.stringify(CREWS_DEFAULT));
 var _crewNextId = CREWS.reduce(function(mx,c){return Math.max(mx,c.id);},0)+1;
@@ -1387,189 +1410,221 @@ function getCrewParam(matType, param){
   if(param === 'truck_daily_rate') return jcTruckRate * jcTruckHours;
   return 0;
 }
-var MAT_DEFAULT = {'ABC':30,'#57 Stone':35,'S9.5B':100,'S9.5C':90,'I19.0C':90,'B25.0C':90,'Concrete':200};
-var MAT_UNIT = {'ABC':'TON','#57 Stone':'TON','S9.5B':'TON','S9.5C':'TON','I19.0C':'TON','B25.0C':'TON','Concrete':'CY'};
-var MAT_UNIT_DEFAULT = {'ABC':'TON','#57 Stone':'TON','S9.5B':'TON','S9.5C':'TON','I19.0C':'TON','B25.0C':'TON','Concrete':'CY'};
-var MAT_TRADE = {'ABC':'Stone','#57 Stone':'Stone','S9.5B':'Asphalt','S9.5C':'Asphalt','I19.0C':'Asphalt','B25.0C':'Asphalt','Concrete':'Concrete'};
-var MAT_TRADE_DEFAULT = {'ABC':'Stone','#57 Stone':'Stone','S9.5B':'Asphalt','S9.5C':'Asphalt','I19.0C':'Asphalt','B25.0C':'Asphalt','Concrete':'Concrete'};
-// Legacy aliases
+var MAT_DEFAULT = JSON.parse(JSON.stringify(MAT));
+var MAT_UNIT = {
+  'ABC':'TON','#57 Stone':'TON','S9.5B':'TON','S9.5C':'TON','I19.0C':'TON','B25.0C':'TON','Concrete':'CY',
+  'Tack Coat':'GAL','Paving Fabric':'SY','Rip Rap':'TON','Gravel':'TON',
+  'Select Fill':'CY','Structural Fill':'CY','Topsoil':'CY',
+  'RCP Pipe':'LF','HDPE Pipe':'LF','Precast Structure':'EA','PVC Pipe':'LF','DIP Pipe':'LF','Fire Hydrant':'EA','Gate Valve':'EA',
+  'Silt Fence':'LF','Erosion Blanket':'SY','Seed Mix':'AC',
+  'Traffic Paint':'LF','Thermoplastic':'LF','Sign Post':'EA','Bollard':'EA','Wheel Stop':'EA',
+  'Sod':'SY','Mulch':'CY','Plant Material':'EA','Fence Material':'LF','Labor':'HR'
+};
+var MAT_UNIT_DEFAULT = JSON.parse(JSON.stringify(MAT_UNIT));
+var MAT_TRADE = {
+  'ABC':'b-stone','#57 Stone':'b-stone','S9.5B':'b-asphalt','S9.5C':'b-asphalt','I19.0C':'b-asphalt','B25.0C':'b-asphalt',
+  'Concrete':'b-concrete','Tack Coat':'b-asphalt','Paving Fabric':'b-asphalt',
+  'Rip Rap':'b-stone','Gravel':'b-stone',
+  'Select Fill':'b-grading','Structural Fill':'b-grading','Topsoil':'b-landscape',
+  'RCP Pipe':'b-storm-drain','HDPE Pipe':'b-storm-drain','Precast Structure':'b-storm-drain',
+  'PVC Pipe':'b-sewer','DIP Pipe':'b-water','Fire Hydrant':'b-water','Gate Valve':'b-water',
+  'Silt Fence':'b-erosion','Erosion Blanket':'b-erosion','Seed Mix':'b-landscape',
+  'Traffic Paint':'b-striping','Thermoplastic':'b-striping','Sign Post':'b-striping','Bollard':'b-striping','Wheel Stop':'b-striping',
+  'Sod':'b-landscape','Mulch':'b-landscape','Plant Material':'b-landscape',
+  'Fence Material':'b-general','Labor':'b-general'
+};
+var MAT_TRADE_DEFAULT = JSON.parse(JSON.stringify(MAT_TRADE));
 var MAT_CATEGORY = MAT_TRADE;
 var MAT_CATEGORY_DEFAULT = MAT_TRADE_DEFAULT;
+// Map bid library categories to badge keys
+var TRADE_BADGE_MAP = {
+  'Asphalt':'b-asphalt','Stone / Aggregate':'b-stone','Concrete':'b-concrete',
+  'Grading / Earthwork':'b-grading','Storm Drain':'b-storm-drain','Sanitary Sewer':'b-sewer',
+  'Water':'b-water','Erosion Control':'b-erosion','Striping / Signage':'b-striping',
+  'Land Clearing':'b-clearing','Landscaping':'b-landscape','General / Misc':'b-general'
+};
 var DRATE_DEFAULT = {'ABC':50,'#57 Stone':50,'S9.5B':150,'S9.5C':150,'I19.0C':150,'B25.0C':150,'Concrete':0};
-var LBS_DEFAULT = {'ABC':150,'#57 Stone':150,'S9.5B':115,'S9.5C':115,'I19.0C':115,'B25.0C':115,'Concrete':150};
+var LBS_DEFAULT = {'ABC':150,'#57 Stone':150,'S9.5B':115,'S9.5C':115,'I19.0C':115,'B25.0C':115,'Concrete':150,'Rip Rap':150,'Gravel':150};
 var DDEPTH_DEFAULT = {'ABC':0,'#57 Stone':0,'S9.5B':0,'S9.5C':0,'I19.0C':0,'B25.0C':0,'Concrete':0};
-var LBADGE_DEFAULT = {'ABC':'b-base','#57 Stone':'b-base','S9.5B':'b-surface','S9.5C':'b-surface','I19.0C':'b-binder','B25.0C':'b-base','Concrete':'b-conc'};
-var BADGE_DEFS={'b-base':{label:'Base',color:'#8B5E3C'},'b-binder':{label:'Binder',color:'#2B5FA6'},'b-surface':{label:'Surface',color:'#27500A'},'b-conc':{label:'Concrete',color:'#6B4FA6'}};
+var LBADGE_DEFAULT = MAT_TRADE;
+var BADGE_DEFS={
+  'b-asphalt':{label:'Asphalt',color:'#333333'},'b-stone':{label:'Stone',color:'#8B5E3C'},
+  'b-concrete':{label:'Concrete',color:'#6B4FA6'},'b-grading':{label:'Grading',color:'#7A6332'},
+  'b-storm-drain':{label:'Storm Drain',color:'#2B5FA6'},'b-sewer':{label:'Sewer',color:'#5B7A3D'},
+  'b-water':{label:'Water',color:'#1A7FA0'},'b-erosion':{label:'Erosion Ctrl',color:'#8B6914'},
+  'b-striping':{label:'Striping',color:'#CC6600'},'b-clearing':{label:'Clearing',color:'#556B2F'},
+  'b-landscape':{label:'Landscape',color:'#2E8B57'},'b-general':{label:'General',color:'#666666'}
+};
 var LIB_CATEGORIES=['Asphalt','Stone / Aggregate','Concrete','Striping / Signage','Grading / Earthwork','Storm Drain','Sanitary Sewer','Water','Erosion Control','Land Clearing','Landscaping','General / Misc'];
 var DEFAULT_BID_LIBRARY=[
   // ── ASPHALT ──
-  {name:'Heavy Duty Aggregate Base Course',desc:'Install 8" Aggregate Base Course',unit:'TON',rate:0,category:'Asphalt'},
-  {name:'Heavy Duty Asphalt Binder',desc:'Install 2.5" I19.0C Intermediate Course',unit:'SY',rate:0,category:'Asphalt'},
-  {name:'Heavy Duty Asphalt Surface',desc:'Install 1.5" S9.5C Surface Course',unit:'SY',rate:0,category:'Asphalt'},
-  {name:'Light Duty Aggregate Base Course',desc:'Install 6" Aggregate Base Course',unit:'TON',rate:0,category:'Asphalt'},
-  {name:'Light Duty Asphalt Surface',desc:'Install 2" S9.5C Surface Course',unit:'SY',rate:0,category:'Asphalt'},
-  {name:'NCDOT Asphalt Base',desc:'Install 5" B25.0C Base Course',unit:'SY',rate:0,category:'Asphalt'},
-  {name:'NCDOT Asphalt Intermediate',desc:'Install 4" I19.0C Intermediate Course',unit:'SY',rate:0,category:'Asphalt'},
-  {name:'NCDOT Asphalt Surface',desc:'Install 3" S9.5C Surface Course',unit:'SY',rate:0,category:'Asphalt'},
-  {name:'Mill Existing Asphalt (1.5")',desc:'Mill 1.5" existing asphalt surface',unit:'SY',rate:0,category:'Asphalt'},
-  {name:'Mill Existing Asphalt (2")',desc:'Mill 2" existing asphalt surface',unit:'SY',rate:0,category:'Asphalt'},
-  {name:'Mill Existing Asphalt (3")',desc:'Mill 3" existing asphalt full depth',unit:'SY',rate:0,category:'Asphalt'},
-  {name:'Asphalt Patching',desc:'Full depth asphalt patch repair',unit:'SY',rate:0,category:'Asphalt'},
-  {name:'Tack Coat',desc:'Apply tack coat to existing surface',unit:'SY',rate:0,category:'Asphalt'},
-  {name:'Paving Fabric',desc:'Install paving fabric interlayer',unit:'SY',rate:0,category:'Asphalt'},
-  {name:'Sawcutting',desc:'Sawcut existing pavement',unit:'LF',rate:0,category:'Asphalt'},
-  {name:'Asphalt Speed Bump',desc:'Furnish & install asphalt speed bump',unit:'EA',rate:0,category:'Asphalt'},
-  {name:'Pavement Removal',desc:'Remove and dispose of existing pavement',unit:'SY',rate:0,category:'Asphalt'},
+  {name:'Heavy Duty Aggregate Base Course',desc:'Install 8" Aggregate Base Course',unit:'TON',rate:0,material:'ABC',mat_cost:30,category:'Asphalt'},
+  {name:'Heavy Duty Asphalt Binder',desc:'Install 2.5" I19.0C Intermediate Course',unit:'SY',rate:0,material:'I19.0C',mat_cost:10,category:'Asphalt'},
+  {name:'Heavy Duty Asphalt Surface',desc:'Install 1.5" S9.5C Surface Course',unit:'SY',rate:0,material:'S9.5C',mat_cost:6,category:'Asphalt'},
+  {name:'Light Duty Aggregate Base Course',desc:'Install 6" Aggregate Base Course',unit:'TON',rate:0,material:'ABC',mat_cost:30,category:'Asphalt'},
+  {name:'Light Duty Asphalt Surface',desc:'Install 2" S9.5C Surface Course',unit:'SY',rate:0,material:'S9.5C',mat_cost:8,category:'Asphalt'},
+  {name:'NCDOT Asphalt Base',desc:'Install 5" B25.0C Base Course',unit:'SY',rate:0,material:'B25.0C',mat_cost:16,category:'Asphalt'},
+  {name:'NCDOT Asphalt Intermediate',desc:'Install 4" I19.0C Intermediate Course',unit:'SY',rate:0,material:'I19.0C',mat_cost:13,category:'Asphalt'},
+  {name:'NCDOT Asphalt Surface',desc:'Install 3" S9.5C Surface Course',unit:'SY',rate:0,material:'S9.5C',mat_cost:10,category:'Asphalt'},
+  {name:'Mill Existing Asphalt (1.5")',desc:'Mill 1.5" existing asphalt surface',unit:'SY',rate:0,material:'Labor',mat_cost:0,category:'Asphalt'},
+  {name:'Mill Existing Asphalt (2")',desc:'Mill 2" existing asphalt surface',unit:'SY',rate:0,material:'Labor',mat_cost:0,category:'Asphalt'},
+  {name:'Mill Existing Asphalt (3")',desc:'Mill 3" existing asphalt full depth',unit:'SY',rate:0,material:'Labor',mat_cost:0,category:'Asphalt'},
+  {name:'Asphalt Patching',desc:'Full depth asphalt patch repair',unit:'SY',rate:0,material:'S9.5C',mat_cost:15,category:'Asphalt'},
+  {name:'Tack Coat',desc:'Apply tack coat to existing surface',unit:'SY',rate:0,material:'Tack Coat',mat_cost:0.30,category:'Asphalt'},
+  {name:'Paving Fabric',desc:'Install paving fabric interlayer',unit:'SY',rate:0,material:'Paving Fabric',mat_cost:2,category:'Asphalt'},
+  {name:'Sawcutting',desc:'Sawcut existing pavement',unit:'LF',rate:0,material:'Labor',mat_cost:0,category:'Asphalt'},
+  {name:'Asphalt Speed Bump',desc:'Furnish & install asphalt speed bump',unit:'EA',rate:0,material:'S9.5C',mat_cost:150,category:'Asphalt'},
+  {name:'Pavement Removal',desc:'Remove and dispose of existing pavement',unit:'SY',rate:0,material:'Labor',mat_cost:0,category:'Asphalt'},
   // ── STONE / AGGREGATE ──
-  {name:'ABC Stone Base (4")',desc:'Furnish & install 4" ABC aggregate base',unit:'TON',rate:0,category:'Stone / Aggregate'},
-  {name:'ABC Stone Base (6")',desc:'Furnish & install 6" ABC aggregate base',unit:'TON',rate:0,category:'Stone / Aggregate'},
-  {name:'ABC Stone Base (8")',desc:'Furnish & install 8" ABC aggregate base',unit:'TON',rate:0,category:'Stone / Aggregate'},
-  {name:'#57 Stone',desc:'Furnish & install #57 stone',unit:'TON',rate:0,category:'Stone / Aggregate'},
-  {name:'#67 Stone',desc:'Furnish & install #67 stone',unit:'TON',rate:0,category:'Stone / Aggregate'},
-  {name:'#4 Stone (Rip Rap)',desc:'Furnish & install #4 stone rip rap',unit:'TON',rate:0,category:'Stone / Aggregate'},
-  {name:'Stone Shoulder Repair',desc:'Stone shoulder grading and repair',unit:'LF',rate:0,category:'Stone / Aggregate'},
-  {name:'Gravel Driveway / Parking',desc:'Furnish & install gravel surface',unit:'SY',rate:0,category:'Stone / Aggregate'},
+  {name:'ABC Stone Base (4")',desc:'Furnish & install 4" ABC aggregate base',unit:'TON',rate:0,material:'ABC',mat_cost:30,category:'Stone / Aggregate'},
+  {name:'ABC Stone Base (6")',desc:'Furnish & install 6" ABC aggregate base',unit:'TON',rate:0,material:'ABC',mat_cost:30,category:'Stone / Aggregate'},
+  {name:'ABC Stone Base (8")',desc:'Furnish & install 8" ABC aggregate base',unit:'TON',rate:0,material:'ABC',mat_cost:30,category:'Stone / Aggregate'},
+  {name:'#57 Stone',desc:'Furnish & install #57 stone',unit:'TON',rate:0,material:'#57 Stone',mat_cost:35,category:'Stone / Aggregate'},
+  {name:'#67 Stone',desc:'Furnish & install #67 stone',unit:'TON',rate:0,material:'#57 Stone',mat_cost:35,category:'Stone / Aggregate'},
+  {name:'#4 Stone (Rip Rap)',desc:'Furnish & install #4 stone rip rap',unit:'TON',rate:0,material:'Rip Rap',mat_cost:50,category:'Stone / Aggregate'},
+  {name:'Stone Shoulder Repair',desc:'Stone shoulder grading and repair',unit:'LF',rate:0,material:'ABC',mat_cost:5,category:'Stone / Aggregate'},
+  {name:'Gravel Driveway / Parking',desc:'Furnish & install gravel surface',unit:'SY',rate:0,material:'Gravel',mat_cost:8,category:'Stone / Aggregate'},
   // ── CONCRETE ──
-  {name:'Concrete Curb & Gutter (18" Std)',desc:'Install 18" 3000PSI standard curb & gutter',unit:'LF',rate:0,category:'Concrete'},
-  {name:'Concrete Curb & Gutter (24")',desc:'Install 24" 3000PSI curb & gutter',unit:'LF',rate:0,category:'Concrete'},
-  {name:'Concrete Curb & Gutter (30")',desc:'Install 30" 3000PSI curb & gutter',unit:'LF',rate:0,category:'Concrete'},
-  {name:'6" Vertical Curb',desc:'Install 6" vertical concrete curb',unit:'LF',rate:0,category:'Concrete'},
-  {name:'6" Mountable Curb',desc:'Install 6" mountable concrete curb',unit:'LF',rate:0,category:'Concrete'},
-  {name:'Valley Gutter',desc:'Install concrete valley gutter',unit:'LF',rate:0,category:'Concrete'},
-  {name:'Ribbon Curb',desc:'Install concrete ribbon curb',unit:'LF',rate:0,category:'Concrete'},
-  {name:'Concrete Flume',desc:'Install concrete flume',unit:'LF',rate:0,category:'Concrete'},
-  {name:'Concrete Sidewalk (4")',desc:'Install 4" concrete sidewalk',unit:'SF',rate:0,category:'Concrete'},
-  {name:'Concrete Sidewalk (6")',desc:'Install 6" concrete sidewalk',unit:'SF',rate:0,category:'Concrete'},
-  {name:'Concrete Driveway Apron',desc:'Install concrete driveway apron',unit:'SY',rate:0,category:'Concrete'},
-  {name:'Concrete Pad',desc:'Install concrete equipment/dumpster pad',unit:'SF',rate:0,category:'Concrete'},
-  {name:'ADA Ramp',desc:'Install ADA-compliant concrete ramp with detectable warning',unit:'EA',rate:0,category:'Concrete'},
-  {name:'Concrete Median',desc:'Install concrete median per plans',unit:'LF',rate:0,category:'Concrete'},
-  {name:'Thickened Edge',desc:'Install concrete thickened edge',unit:'LF',rate:0,category:'Concrete'},
+  {name:'Concrete Curb & Gutter (18" Std)',desc:'Install 18" 3000PSI standard curb & gutter',unit:'LF',rate:0,material:'Concrete',mat_cost:5.60,category:'Concrete'},
+  {name:'Concrete Curb & Gutter (24")',desc:'Install 24" 3000PSI curb & gutter',unit:'LF',rate:0,material:'Concrete',mat_cost:7.40,category:'Concrete'},
+  {name:'Concrete Curb & Gutter (30")',desc:'Install 30" 3000PSI curb & gutter',unit:'LF',rate:0,material:'Concrete',mat_cost:9.20,category:'Concrete'},
+  {name:'6" Vertical Curb',desc:'Install 6" vertical concrete curb',unit:'LF',rate:0,material:'Concrete',mat_cost:2.40,category:'Concrete'},
+  {name:'6" Mountable Curb',desc:'Install 6" mountable concrete curb',unit:'LF',rate:0,material:'Concrete',mat_cost:2.40,category:'Concrete'},
+  {name:'Valley Gutter',desc:'Install concrete valley gutter',unit:'LF',rate:0,material:'Concrete',mat_cost:9.80,category:'Concrete'},
+  {name:'Ribbon Curb',desc:'Install concrete ribbon curb',unit:'LF',rate:0,material:'Concrete',mat_cost:3.80,category:'Concrete'},
+  {name:'Concrete Flume',desc:'Install concrete flume',unit:'LF',rate:0,material:'Concrete',mat_cost:3.80,category:'Concrete'},
+  {name:'Concrete Sidewalk (4")',desc:'Install 4" concrete sidewalk',unit:'SF',rate:0,material:'Concrete',mat_cost:2.50,category:'Concrete'},
+  {name:'Concrete Sidewalk (6")',desc:'Install 6" concrete sidewalk',unit:'SF',rate:0,material:'Concrete',mat_cost:3.75,category:'Concrete'},
+  {name:'Concrete Driveway Apron',desc:'Install concrete driveway apron',unit:'SY',rate:0,material:'Concrete',mat_cost:22,category:'Concrete'},
+  {name:'Concrete Pad',desc:'Install concrete equipment/dumpster pad',unit:'SF',rate:0,material:'Concrete',mat_cost:4,category:'Concrete'},
+  {name:'ADA Ramp',desc:'Install ADA-compliant concrete ramp with detectable warning',unit:'EA',rate:0,material:'Concrete',mat_cost:240,category:'Concrete'},
+  {name:'Concrete Median',desc:'Install concrete median per plans',unit:'LF',rate:0,material:'Concrete',mat_cost:10,category:'Concrete'},
+  {name:'Thickened Edge',desc:'Install concrete thickened edge',unit:'LF',rate:0,material:'Concrete',mat_cost:1.80,category:'Concrete'},
   // ── STRIPING / SIGNAGE ──
-  {name:'Pavement Markings (Latex Paint)',desc:'Install pavement markings per plans',unit:'LS',rate:0,category:'Striping / Signage'},
-  {name:'Pavement Markings (Thermoplastic)',desc:'Install thermoplastic pavement markings per plans',unit:'LS',rate:0,category:'Striping / Signage'},
-  {name:'4" White Line (Latex)',desc:'Install 4" white pavement stripe',unit:'LF',rate:0,category:'Striping / Signage'},
-  {name:'4" Yellow Line (Latex)',desc:'Install 4" yellow pavement stripe',unit:'LF',rate:0,category:'Striping / Signage'},
-  {name:'24" Stop Bar',desc:'Install 24" stop bar marking',unit:'EA',rate:0,category:'Striping / Signage'},
-  {name:'Handicap Stencil',desc:'Install handicap symbol stencil',unit:'EA',rate:0,category:'Striping / Signage'},
-  {name:'Arrow Stencil',desc:'Install directional arrow stencil',unit:'EA',rate:0,category:'Striping / Signage'},
-  {name:'Fire Lane Markings',desc:'Install fire lane curb markings and stencils',unit:'LF',rate:0,category:'Striping / Signage'},
-  {name:'Signage on U-Channel',desc:'Furnish & install U-Channel post & placard',unit:'EA',rate:400,category:'Striping / Signage'},
-  {name:'Signage on U-Channel in Bollard',desc:'Furnish & install U-Channel post & placard in 6" steel pipe bollard',unit:'EA',rate:1200,category:'Striping / Signage'},
-  {name:'Bollard (Steel Pipe)',desc:'Furnish & install 6" steel pipe bollard, painted yellow',unit:'EA',rate:0,category:'Striping / Signage'},
-  {name:'Wheel Stop',desc:'Furnish & install concrete wheel stop',unit:'EA',rate:0,category:'Striping / Signage'},
+  {name:'Pavement Markings (Latex Paint)',desc:'Install pavement markings per plans',unit:'LS',rate:0,material:'Traffic Paint',mat_cost:0,category:'Striping / Signage'},
+  {name:'Pavement Markings (Thermoplastic)',desc:'Install thermoplastic pavement markings per plans',unit:'LS',rate:0,material:'Thermoplastic',mat_cost:0,category:'Striping / Signage'},
+  {name:'4" White Line (Latex)',desc:'Install 4" white pavement stripe',unit:'LF',rate:0,material:'Traffic Paint',mat_cost:0.15,category:'Striping / Signage'},
+  {name:'4" Yellow Line (Latex)',desc:'Install 4" yellow pavement stripe',unit:'LF',rate:0,material:'Traffic Paint',mat_cost:0.15,category:'Striping / Signage'},
+  {name:'24" Stop Bar',desc:'Install 24" stop bar marking',unit:'EA',rate:0,material:'Traffic Paint',mat_cost:8,category:'Striping / Signage'},
+  {name:'Handicap Stencil',desc:'Install handicap symbol stencil',unit:'EA',rate:0,material:'Traffic Paint',mat_cost:10,category:'Striping / Signage'},
+  {name:'Arrow Stencil',desc:'Install directional arrow stencil',unit:'EA',rate:0,material:'Traffic Paint',mat_cost:8,category:'Striping / Signage'},
+  {name:'Fire Lane Markings',desc:'Install fire lane curb markings and stencils',unit:'LF',rate:0,material:'Traffic Paint',mat_cost:0.50,category:'Striping / Signage'},
+  {name:'Signage on U-Channel',desc:'Furnish & install U-Channel post & placard',unit:'EA',rate:400,material:'Sign Post',mat_cost:200,category:'Striping / Signage'},
+  {name:'Signage on U-Channel in Bollard',desc:'Furnish & install U-Channel post & placard in 6" steel pipe bollard',unit:'EA',rate:1200,material:'Bollard',mat_cost:350,category:'Striping / Signage'},
+  {name:'Bollard (Steel Pipe)',desc:'Furnish & install 6" steel pipe bollard, painted yellow',unit:'EA',rate:0,material:'Bollard',mat_cost:150,category:'Striping / Signage'},
+  {name:'Wheel Stop',desc:'Furnish & install concrete wheel stop',unit:'EA',rate:0,material:'Wheel Stop',mat_cost:50,category:'Striping / Signage'},
   // ── GRADING / EARTHWORK ──
-  {name:'Mass Grading (Cut)',desc:'Excavate and relocate on-site per grading plans',unit:'CY',rate:0,category:'Grading / Earthwork'},
-  {name:'Mass Grading (Fill)',desc:'Place and compact fill material on-site per grading plans',unit:'CY',rate:0,category:'Grading / Earthwork'},
-  {name:'Import Select Fill',desc:'Furnish, deliver, place, and compact select fill material',unit:'CY',rate:0,category:'Grading / Earthwork'},
-  {name:'Export Spoil Material',desc:'Load, haul, and dispose of excess material off-site',unit:'CY',rate:0,category:'Grading / Earthwork'},
-  {name:'Fine Grading / Subgrade Prep',desc:'Fine grade subgrade to plan elevation within ±0.1 ft tolerance',unit:'SY',rate:0,category:'Grading / Earthwork'},
-  {name:'Proof Rolling',desc:'Proof roll subgrade with loaded dump truck to identify soft spots',unit:'SY',rate:0,category:'Grading / Earthwork'},
-  {name:'Rock Excavation (Machine)',desc:'Machine excavate rock and dispose on-site',unit:'CY',rate:50,category:'Grading / Earthwork'},
-  {name:'Rock Blasting & Waste On-Site',desc:'Drill, blast, and waste rock material on-site',unit:'CY',rate:28,category:'Grading / Earthwork'},
-  {name:'Rock Blasting & Export',desc:'Drill, blast, load, haul, and dispose of rock off-site',unit:'CY',rate:56,category:'Grading / Earthwork'},
-  {name:'Undercut Unsuitable (On-Site Disposal)',desc:'Excavate unsuitable soil and dispose on-site',unit:'CY',rate:10,category:'Grading / Earthwork'},
-  {name:'Undercut Unsuitable (Off-Site Disposal)',desc:'Excavate unsuitable soil, load, haul, and dispose off-site',unit:'CY',rate:26,category:'Grading / Earthwork'},
-  {name:'Replacement / Borrow Fill (On-Site)',desc:'Borrow suitable material from on-site source, place and compact',unit:'CY',rate:10,category:'Grading / Earthwork'},
-  {name:'Topsoil Strip & Stockpile',desc:'Strip topsoil and stockpile on-site for reuse',unit:'CY',rate:0,category:'Grading / Earthwork'},
-  {name:'Pond Excavation',desc:'Excavate detention/retention pond per grading plans',unit:'CY',rate:0,category:'Grading / Earthwork'},
-  {name:'Structural Fill',desc:'Furnish, place, and compact structural fill material',unit:'CY',rate:0,category:'Grading / Earthwork'},
-  {name:'Backfill (Utility Trench)',desc:'Backfill and compact utility trenches',unit:'CY',rate:0,category:'Grading / Earthwork'},
-  {name:'Dewatering',desc:'Dewatering operations',unit:'DAY',rate:500,category:'Grading / Earthwork'},
-  {name:'Street Washing',desc:'Street washing and sweeping operations',unit:'DAY',rate:500,category:'Grading / Earthwork'},
-  {name:'Daily Site Watering',desc:'Water truck for dust control',unit:'WK',rate:2250,category:'Grading / Earthwork'},
+  {name:'Mass Grading (Cut)',desc:'Excavate and relocate on-site per grading plans',unit:'CY',rate:0,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Mass Grading (Fill)',desc:'Place and compact fill material on-site per grading plans',unit:'CY',rate:0,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Import Select Fill',desc:'Furnish, deliver, place, and compact select fill material',unit:'CY',rate:0,material:'Select Fill',mat_cost:12,category:'Grading / Earthwork'},
+  {name:'Export Spoil Material',desc:'Load, haul, and dispose of excess material off-site',unit:'CY',rate:0,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Fine Grading / Subgrade Prep',desc:'Fine grade subgrade to plan elevation within ±0.1 ft tolerance',unit:'SY',rate:0,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Proof Rolling',desc:'Proof roll subgrade with loaded dump truck to identify soft spots',unit:'SY',rate:0,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Rock Excavation (Machine)',desc:'Machine excavate rock and dispose on-site',unit:'CY',rate:50,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Rock Blasting & Waste On-Site',desc:'Drill, blast, and waste rock material on-site',unit:'CY',rate:28,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Rock Blasting & Export',desc:'Drill, blast, load, haul, and dispose of rock off-site',unit:'CY',rate:56,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Undercut Unsuitable (On-Site Disposal)',desc:'Excavate unsuitable soil and dispose on-site',unit:'CY',rate:10,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Undercut Unsuitable (Off-Site Disposal)',desc:'Excavate unsuitable soil, load, haul, and dispose off-site',unit:'CY',rate:26,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Replacement / Borrow Fill (On-Site)',desc:'Borrow suitable material from on-site source, place and compact',unit:'CY',rate:10,material:'Select Fill',mat_cost:10,category:'Grading / Earthwork'},
+  {name:'Topsoil Strip & Stockpile',desc:'Strip topsoil and stockpile on-site for reuse',unit:'CY',rate:0,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Pond Excavation',desc:'Excavate detention/retention pond per grading plans',unit:'CY',rate:0,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Structural Fill',desc:'Furnish, place, and compact structural fill material',unit:'CY',rate:0,material:'Structural Fill',mat_cost:15,category:'Grading / Earthwork'},
+  {name:'Backfill (Utility Trench)',desc:'Backfill and compact utility trenches',unit:'CY',rate:0,material:'Select Fill',mat_cost:12,category:'Grading / Earthwork'},
+  {name:'Dewatering',desc:'Dewatering operations',unit:'DAY',rate:500,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Street Washing',desc:'Street washing and sweeping operations',unit:'DAY',rate:500,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
+  {name:'Daily Site Watering',desc:'Water truck for dust control',unit:'WK',rate:2250,material:'Labor',mat_cost:0,category:'Grading / Earthwork'},
   // ── STORM DRAIN ──
-  {name:'15" RCP Storm Pipe',desc:'Furnish & install 15" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
-  {name:'18" RCP Storm Pipe',desc:'Furnish & install 18" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
-  {name:'24" RCP Storm Pipe',desc:'Furnish & install 24" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
-  {name:'30" RCP Storm Pipe',desc:'Furnish & install 30" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
-  {name:'36" RCP Storm Pipe',desc:'Furnish & install 36" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
-  {name:'42" RCP Storm Pipe',desc:'Furnish & install 42" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
-  {name:'48" RCP Storm Pipe',desc:'Furnish & install 48" reinforced concrete pipe',unit:'LF',rate:0,category:'Storm Drain'},
-  {name:'15" HDPE Storm Pipe',desc:'Furnish & install 15" HDPE storm drain pipe',unit:'LF',rate:0,category:'Storm Drain'},
-  {name:'18" HDPE Storm Pipe',desc:'Furnish & install 18" HDPE storm drain pipe',unit:'LF',rate:0,category:'Storm Drain'},
-  {name:'24" HDPE Storm Pipe',desc:'Furnish & install 24" HDPE storm drain pipe',unit:'LF',rate:0,category:'Storm Drain'},
-  {name:'Catch Basin / Drop Inlet',desc:'Furnish & install catch basin / drop inlet per plans',unit:'EA',rate:0,category:'Storm Drain'},
-  {name:'Junction Box',desc:'Furnish & install storm junction box per plans',unit:'EA',rate:0,category:'Storm Drain'},
-  {name:'Storm Manhole',desc:'Furnish & install storm drainage manhole per plans',unit:'EA',rate:0,category:'Storm Drain'},
-  {name:'Headwall',desc:'Furnish & install concrete headwall at pipe outfall',unit:'EA',rate:0,category:'Storm Drain'},
-  {name:'Flared End Section',desc:'Furnish & install flared end section at pipe outfall',unit:'EA',rate:0,category:'Storm Drain'},
-  {name:'Yard Inlet / Area Drain',desc:'Furnish & install yard inlet / area drain',unit:'EA',rate:0,category:'Storm Drain'},
-  {name:'Rip Rap (Class A)',desc:'Furnish & install Class A rip rap at outfall',unit:'TON',rate:0,category:'Storm Drain'},
-  {name:'Rip Rap (Class B)',desc:'Furnish & install Class B rip rap at outfall',unit:'TON',rate:0,category:'Storm Drain'},
-  {name:'Storm Pipe Depth Premium (>6\')',desc:'Additional cost per VF of depth over 6 feet',unit:'VF',rate:0,category:'Storm Drain'},
+  {name:'15" RCP Storm Pipe',desc:'Furnish & install 15" reinforced concrete pipe',unit:'LF',rate:0,material:'RCP Pipe',mat_cost:22,category:'Storm Drain'},
+  {name:'18" RCP Storm Pipe',desc:'Furnish & install 18" reinforced concrete pipe',unit:'LF',rate:0,material:'RCP Pipe',mat_cost:28,category:'Storm Drain'},
+  {name:'24" RCP Storm Pipe',desc:'Furnish & install 24" reinforced concrete pipe',unit:'LF',rate:0,material:'RCP Pipe',mat_cost:38,category:'Storm Drain'},
+  {name:'30" RCP Storm Pipe',desc:'Furnish & install 30" reinforced concrete pipe',unit:'LF',rate:0,material:'RCP Pipe',mat_cost:52,category:'Storm Drain'},
+  {name:'36" RCP Storm Pipe',desc:'Furnish & install 36" reinforced concrete pipe',unit:'LF',rate:0,material:'RCP Pipe',mat_cost:70,category:'Storm Drain'},
+  {name:'42" RCP Storm Pipe',desc:'Furnish & install 42" reinforced concrete pipe',unit:'LF',rate:0,material:'RCP Pipe',mat_cost:95,category:'Storm Drain'},
+  {name:'48" RCP Storm Pipe',desc:'Furnish & install 48" reinforced concrete pipe',unit:'LF',rate:0,material:'RCP Pipe',mat_cost:120,category:'Storm Drain'},
+  {name:'15" HDPE Storm Pipe',desc:'Furnish & install 15" HDPE storm drain pipe',unit:'LF',rate:0,material:'HDPE Pipe',mat_cost:15,category:'Storm Drain'},
+  {name:'18" HDPE Storm Pipe',desc:'Furnish & install 18" HDPE storm drain pipe',unit:'LF',rate:0,material:'HDPE Pipe',mat_cost:20,category:'Storm Drain'},
+  {name:'24" HDPE Storm Pipe',desc:'Furnish & install 24" HDPE storm drain pipe',unit:'LF',rate:0,material:'HDPE Pipe',mat_cost:30,category:'Storm Drain'},
+  {name:'Catch Basin / Drop Inlet',desc:'Furnish & install catch basin / drop inlet per plans',unit:'EA',rate:0,material:'Precast Structure',mat_cost:1800,category:'Storm Drain'},
+  {name:'Junction Box',desc:'Furnish & install storm junction box per plans',unit:'EA',rate:0,material:'Precast Structure',mat_cost:2200,category:'Storm Drain'},
+  {name:'Storm Manhole',desc:'Furnish & install storm drainage manhole per plans',unit:'EA',rate:0,material:'Precast Structure',mat_cost:3500,category:'Storm Drain'},
+  {name:'Headwall',desc:'Furnish & install concrete headwall at pipe outfall',unit:'EA',rate:0,material:'Concrete',mat_cost:800,category:'Storm Drain'},
+  {name:'Flared End Section',desc:'Furnish & install flared end section at pipe outfall',unit:'EA',rate:0,material:'Precast Structure',mat_cost:600,category:'Storm Drain'},
+  {name:'Yard Inlet / Area Drain',desc:'Furnish & install yard inlet / area drain',unit:'EA',rate:0,material:'Precast Structure',mat_cost:900,category:'Storm Drain'},
+  {name:'Rip Rap (Class A)',desc:'Furnish & install Class A rip rap at outfall',unit:'TON',rate:0,material:'Rip Rap',mat_cost:50,category:'Storm Drain'},
+  {name:'Rip Rap (Class B)',desc:'Furnish & install Class B rip rap at outfall',unit:'TON',rate:0,material:'Rip Rap',mat_cost:55,category:'Storm Drain'},
+  {name:'Storm Pipe Depth Premium (>6\')',desc:'Additional cost per VF of depth over 6 feet',unit:'VF',rate:0,material:'Labor',mat_cost:0,category:'Storm Drain'},
   // ── SANITARY SEWER ──
-  {name:'8" PVC Sanitary Sewer',desc:'Furnish & install 8" PVC SDR-26 sanitary sewer pipe',unit:'LF',rate:0,category:'Sanitary Sewer'},
-  {name:'10" PVC Sanitary Sewer',desc:'Furnish & install 10" PVC sanitary sewer pipe',unit:'LF',rate:0,category:'Sanitary Sewer'},
-  {name:'12" PVC Sanitary Sewer',desc:'Furnish & install 12" PVC sanitary sewer pipe',unit:'LF',rate:0,category:'Sanitary Sewer'},
-  {name:'Sanitary Manhole',desc:'Furnish & install sanitary sewer manhole per plans',unit:'EA',rate:0,category:'Sanitary Sewer'},
-  {name:'Cleanout',desc:'Furnish & install sanitary sewer cleanout',unit:'EA',rate:0,category:'Sanitary Sewer'},
-  {name:'Service Lateral / Stub',desc:'Install sanitary service lateral to building stub',unit:'EA',rate:0,category:'Sanitary Sewer'},
-  {name:'Connect to Existing Sanitary',desc:'Connect new sanitary main to existing system',unit:'EA',rate:0,category:'Sanitary Sewer'},
-  {name:'Sanitary Sewer Testing (Air/Mandrel)',desc:'Air test and mandrel sanitary sewer pipe',unit:'LF',rate:0,category:'Sanitary Sewer'},
-  {name:'CCTV Inspection',desc:'Closed-circuit television inspection of sewer line',unit:'LF',rate:0,category:'Sanitary Sewer'},
-  {name:'Sewer Depth Premium (>6\')',desc:'Additional cost per VF of depth over 6 feet',unit:'VF',rate:0,category:'Sanitary Sewer'},
+  {name:'8" PVC Sanitary Sewer',desc:'Furnish & install 8" PVC SDR-26 sanitary sewer pipe',unit:'LF',rate:0,material:'PVC Pipe',mat_cost:12,category:'Sanitary Sewer'},
+  {name:'10" PVC Sanitary Sewer',desc:'Furnish & install 10" PVC sanitary sewer pipe',unit:'LF',rate:0,material:'PVC Pipe',mat_cost:16,category:'Sanitary Sewer'},
+  {name:'12" PVC Sanitary Sewer',desc:'Furnish & install 12" PVC sanitary sewer pipe',unit:'LF',rate:0,material:'PVC Pipe',mat_cost:22,category:'Sanitary Sewer'},
+  {name:'Sanitary Manhole',desc:'Furnish & install sanitary sewer manhole per plans',unit:'EA',rate:0,material:'Precast Structure',mat_cost:3500,category:'Sanitary Sewer'},
+  {name:'Cleanout',desc:'Furnish & install sanitary sewer cleanout',unit:'EA',rate:0,material:'PVC Pipe',mat_cost:150,category:'Sanitary Sewer'},
+  {name:'Service Lateral / Stub',desc:'Install sanitary service lateral to building stub',unit:'EA',rate:0,material:'PVC Pipe',mat_cost:200,category:'Sanitary Sewer'},
+  {name:'Connect to Existing Sanitary',desc:'Connect new sanitary main to existing system',unit:'EA',rate:0,material:'PVC Pipe',mat_cost:100,category:'Sanitary Sewer'},
+  {name:'Sanitary Sewer Testing (Air/Mandrel)',desc:'Air test and mandrel sanitary sewer pipe',unit:'LF',rate:0,material:'Labor',mat_cost:0,category:'Sanitary Sewer'},
+  {name:'CCTV Inspection',desc:'Closed-circuit television inspection of sewer line',unit:'LF',rate:0,material:'Labor',mat_cost:0,category:'Sanitary Sewer'},
+  {name:'Sewer Depth Premium (>6\')',desc:'Additional cost per VF of depth over 6 feet',unit:'VF',rate:0,material:'Labor',mat_cost:0,category:'Sanitary Sewer'},
   // ── WATER ──
-  {name:'6" DIP Water Main',desc:'Furnish & install 6" ductile iron water main',unit:'LF',rate:0,category:'Water'},
-  {name:'8" DIP Water Main',desc:'Furnish & install 8" ductile iron water main',unit:'LF',rate:0,category:'Water'},
-  {name:'12" DIP Water Main',desc:'Furnish & install 12" ductile iron water main',unit:'LF',rate:0,category:'Water'},
-  {name:'16" DIP Water Main',desc:'Furnish & install 16" ductile iron water main',unit:'LF',rate:0,category:'Water'},
-  {name:'6" Gate Valve',desc:'Furnish & install 6" gate valve and valve box',unit:'EA',rate:0,category:'Water'},
-  {name:'8" Gate Valve',desc:'Furnish & install 8" gate valve and valve box',unit:'EA',rate:0,category:'Water'},
-  {name:'12" Gate Valve',desc:'Furnish & install 12" gate valve and valve box',unit:'EA',rate:0,category:'Water'},
-  {name:'Fire Hydrant Assembly',desc:'Furnish & install fire hydrant assembly complete',unit:'EA',rate:0,category:'Water'},
-  {name:'Tapping Sleeve & Valve',desc:'Furnish & install tapping sleeve and valve for connection',unit:'EA',rate:0,category:'Water'},
-  {name:'Water Service Connection (3/4" - 1")',desc:'Install domestic water service connection',unit:'EA',rate:0,category:'Water'},
-  {name:'Water Service Connection (2")',desc:'Install 2" water service connection',unit:'EA',rate:0,category:'Water'},
-  {name:'Thrust Blocking',desc:'Install concrete thrust blocks at fittings',unit:'EA',rate:0,category:'Water'},
-  {name:'Pressure Test',desc:'Hydrostatic pressure test of water main',unit:'LS',rate:0,category:'Water'},
-  {name:'Bacteriological Test',desc:'Bacteriological (bac-t) sampling and testing',unit:'EA',rate:0,category:'Water'},
-  {name:'Connect to Existing Water',desc:'Connect new water main to existing system',unit:'EA',rate:0,category:'Water'},
+  {name:'6" DIP Water Main',desc:'Furnish & install 6" ductile iron water main',unit:'LF',rate:0,material:'DIP Pipe',mat_cost:22,category:'Water'},
+  {name:'8" DIP Water Main',desc:'Furnish & install 8" ductile iron water main',unit:'LF',rate:0,material:'DIP Pipe',mat_cost:28,category:'Water'},
+  {name:'12" DIP Water Main',desc:'Furnish & install 12" ductile iron water main',unit:'LF',rate:0,material:'DIP Pipe',mat_cost:40,category:'Water'},
+  {name:'16" DIP Water Main',desc:'Furnish & install 16" ductile iron water main',unit:'LF',rate:0,material:'DIP Pipe',mat_cost:55,category:'Water'},
+  {name:'6" Gate Valve',desc:'Furnish & install 6" gate valve and valve box',unit:'EA',rate:0,material:'Gate Valve',mat_cost:650,category:'Water'},
+  {name:'8" Gate Valve',desc:'Furnish & install 8" gate valve and valve box',unit:'EA',rate:0,material:'Gate Valve',mat_cost:850,category:'Water'},
+  {name:'12" Gate Valve',desc:'Furnish & install 12" gate valve and valve box',unit:'EA',rate:0,material:'Gate Valve',mat_cost:1200,category:'Water'},
+  {name:'Fire Hydrant Assembly',desc:'Furnish & install fire hydrant assembly complete',unit:'EA',rate:0,material:'Fire Hydrant',mat_cost:3500,category:'Water'},
+  {name:'Tapping Sleeve & Valve',desc:'Furnish & install tapping sleeve and valve for connection',unit:'EA',rate:0,material:'Gate Valve',mat_cost:2000,category:'Water'},
+  {name:'Water Service Connection (3/4" - 1")',desc:'Install domestic water service connection',unit:'EA',rate:0,material:'DIP Pipe',mat_cost:150,category:'Water'},
+  {name:'Water Service Connection (2")',desc:'Install 2" water service connection',unit:'EA',rate:0,material:'DIP Pipe',mat_cost:250,category:'Water'},
+  {name:'Thrust Blocking',desc:'Install concrete thrust blocks at fittings',unit:'EA',rate:0,material:'Concrete',mat_cost:50,category:'Water'},
+  {name:'Pressure Test',desc:'Hydrostatic pressure test of water main',unit:'LS',rate:0,material:'Labor',mat_cost:0,category:'Water'},
+  {name:'Bacteriological Test',desc:'Bacteriological (bac-t) sampling and testing',unit:'EA',rate:0,material:'Labor',mat_cost:0,category:'Water'},
+  {name:'Connect to Existing Water',desc:'Connect new water main to existing system',unit:'EA',rate:0,material:'DIP Pipe',mat_cost:200,category:'Water'},
   // ── EROSION CONTROL ──
-  {name:'Silt Fence',desc:'Furnish & install silt fence per SWPPP',unit:'LF',rate:0,category:'Erosion Control'},
-  {name:'Silt Fence (Wire-Backed)',desc:'Furnish & install wire-backed silt fence',unit:'LF',rate:0,category:'Erosion Control'},
-  {name:'Construction Entrance',desc:'Furnish & install stabilized construction entrance',unit:'EA',rate:0,category:'Erosion Control'},
-  {name:'Inlet Protection',desc:'Furnish & install inlet protection per SWPPP',unit:'EA',rate:0,category:'Erosion Control'},
-  {name:'Sediment Basin',desc:'Construct temporary sediment basin per plans',unit:'EA',rate:0,category:'Erosion Control'},
-  {name:'Rock Check Dam',desc:'Install rock check dam in ditch line',unit:'EA',rate:0,category:'Erosion Control'},
-  {name:'Diversion Ditch',desc:'Excavate temporary diversion ditch',unit:'LF',rate:0,category:'Erosion Control'},
-  {name:'Temporary Seeding',desc:'Apply temporary seed and mulch',unit:'AC',rate:0,category:'Erosion Control'},
-  {name:'Erosion Control Blanket',desc:'Install erosion control blanket / matting',unit:'SY',rate:0,category:'Erosion Control'},
-  {name:'SWPPP Inspection',desc:'Routine SWPPP compliance inspection',unit:'EA',rate:0,category:'Erosion Control'},
-  {name:'Erosion Control Maintenance',desc:'Monthly erosion control BMP maintenance',unit:'MO',rate:7250,category:'Erosion Control'},
-  {name:'Wattle / Fiber Roll',desc:'Install sediment wattle / fiber roll',unit:'LF',rate:0,category:'Erosion Control'},
+  {name:'Silt Fence',desc:'Furnish & install silt fence per SWPPP',unit:'LF',rate:0,material:'Silt Fence',mat_cost:1.50,category:'Erosion Control'},
+  {name:'Silt Fence (Wire-Backed)',desc:'Furnish & install wire-backed silt fence',unit:'LF',rate:0,material:'Silt Fence',mat_cost:3,category:'Erosion Control'},
+  {name:'Construction Entrance',desc:'Furnish & install stabilized construction entrance',unit:'EA',rate:0,material:'#57 Stone',mat_cost:1500,category:'Erosion Control'},
+  {name:'Inlet Protection',desc:'Furnish & install inlet protection per SWPPP',unit:'EA',rate:0,material:'Silt Fence',mat_cost:75,category:'Erosion Control'},
+  {name:'Sediment Basin',desc:'Construct temporary sediment basin per plans',unit:'EA',rate:0,material:'Labor',mat_cost:0,category:'Erosion Control'},
+  {name:'Rock Check Dam',desc:'Install rock check dam in ditch line',unit:'EA',rate:0,material:'Rip Rap',mat_cost:200,category:'Erosion Control'},
+  {name:'Diversion Ditch',desc:'Excavate temporary diversion ditch',unit:'LF',rate:0,material:'Labor',mat_cost:0,category:'Erosion Control'},
+  {name:'Temporary Seeding',desc:'Apply temporary seed and mulch',unit:'AC',rate:0,material:'Seed Mix',mat_cost:800,category:'Erosion Control'},
+  {name:'Erosion Control Blanket',desc:'Install erosion control blanket / matting',unit:'SY',rate:0,material:'Erosion Blanket',mat_cost:1.50,category:'Erosion Control'},
+  {name:'SWPPP Inspection',desc:'Routine SWPPP compliance inspection',unit:'EA',rate:0,material:'Labor',mat_cost:0,category:'Erosion Control'},
+  {name:'Erosion Control Maintenance',desc:'Monthly erosion control BMP maintenance',unit:'MO',rate:7250,material:'Labor',mat_cost:0,category:'Erosion Control'},
+  {name:'Wattle / Fiber Roll',desc:'Install sediment wattle / fiber roll',unit:'LF',rate:0,material:'Silt Fence',mat_cost:4,category:'Erosion Control'},
   // ── LAND CLEARING ──
-  {name:'Clearing & Grubbing (Light)',desc:'Clear light brush and vegetation',unit:'AC',rate:0,category:'Land Clearing'},
-  {name:'Clearing & Grubbing (Heavy)',desc:'Clear heavy brush, trees, and vegetation',unit:'AC',rate:0,category:'Land Clearing'},
-  {name:'Tree Removal (6"-12" DBH)',desc:'Remove tree 6"-12" diameter at breast height',unit:'EA',rate:0,category:'Land Clearing'},
-  {name:'Tree Removal (12"-24" DBH)',desc:'Remove tree 12"-24" diameter at breast height',unit:'EA',rate:0,category:'Land Clearing'},
-  {name:'Tree Removal (24"+ DBH)',desc:'Remove tree 24"+ diameter at breast height',unit:'EA',rate:0,category:'Land Clearing'},
-  {name:'Stump Grinding',desc:'Grind stump 6" below grade',unit:'EA',rate:0,category:'Land Clearing'},
-  {name:'Structure Demolition',desc:'Demolish and remove existing structure',unit:'LS',rate:0,category:'Land Clearing'},
-  {name:'Concrete Demolition',desc:'Demolish and remove existing concrete',unit:'CY',rate:0,category:'Land Clearing'},
-  {name:'Debris Hauling',desc:'Load and haul debris to approved disposal site',unit:'LOAD',rate:0,category:'Land Clearing'},
-  {name:'Fence Removal',desc:'Remove and dispose of existing fence',unit:'LF',rate:0,category:'Land Clearing'},
+  {name:'Clearing & Grubbing (Light)',desc:'Clear light brush and vegetation',unit:'AC',rate:0,material:'Labor',mat_cost:0,category:'Land Clearing'},
+  {name:'Clearing & Grubbing (Heavy)',desc:'Clear heavy brush, trees, and vegetation',unit:'AC',rate:0,material:'Labor',mat_cost:0,category:'Land Clearing'},
+  {name:'Tree Removal (6"-12" DBH)',desc:'Remove tree 6"-12" diameter at breast height',unit:'EA',rate:0,material:'Labor',mat_cost:0,category:'Land Clearing'},
+  {name:'Tree Removal (12"-24" DBH)',desc:'Remove tree 12"-24" diameter at breast height',unit:'EA',rate:0,material:'Labor',mat_cost:0,category:'Land Clearing'},
+  {name:'Tree Removal (24"+ DBH)',desc:'Remove tree 24"+ diameter at breast height',unit:'EA',rate:0,material:'Labor',mat_cost:0,category:'Land Clearing'},
+  {name:'Stump Grinding',desc:'Grind stump 6" below grade',unit:'EA',rate:0,material:'Labor',mat_cost:0,category:'Land Clearing'},
+  {name:'Structure Demolition',desc:'Demolish and remove existing structure',unit:'LS',rate:0,material:'Labor',mat_cost:0,category:'Land Clearing'},
+  {name:'Concrete Demolition',desc:'Demolish and remove existing concrete',unit:'CY',rate:0,material:'Labor',mat_cost:0,category:'Land Clearing'},
+  {name:'Debris Hauling',desc:'Load and haul debris to approved disposal site',unit:'LOAD',rate:0,material:'Labor',mat_cost:0,category:'Land Clearing'},
+  {name:'Fence Removal',desc:'Remove and dispose of existing fence',unit:'LF',rate:0,material:'Labor',mat_cost:0,category:'Land Clearing'},
   // ── LANDSCAPING ──
-  {name:'Topsoil (4" Depth)',desc:'Furnish & spread 4" topsoil',unit:'SY',rate:0,category:'Landscaping'},
-  {name:'Topsoil (6" Depth)',desc:'Furnish & spread 6" topsoil',unit:'SY',rate:0,category:'Landscaping'},
-  {name:'Permanent Seeding',desc:'Furnish & apply permanent seed mix and fertilizer',unit:'AC',rate:0,category:'Landscaping'},
-  {name:'Sod',desc:'Furnish & install sod',unit:'SY',rate:0,category:'Landscaping'},
-  {name:'Mulch (3" Depth)',desc:'Furnish & install 3" mulch in landscape beds',unit:'SY',rate:0,category:'Landscaping'},
-  {name:'Shade Tree (2" Cal)',desc:'Furnish & plant 2" caliper shade tree',unit:'EA',rate:0,category:'Landscaping'},
-  {name:'Ornamental Tree',desc:'Furnish & plant ornamental tree per plans',unit:'EA',rate:0,category:'Landscaping'},
-  {name:'Shrub (3 Gallon)',desc:'Furnish & plant 3-gallon shrub per plans',unit:'EA',rate:0,category:'Landscaping'},
-  {name:'Ground Cover',desc:'Furnish & plant ground cover per plans',unit:'SF',rate:0,category:'Landscaping'},
+  {name:'Topsoil (4" Depth)',desc:'Furnish & spread 4" topsoil',unit:'SY',rate:0,material:'Topsoil',mat_cost:3,category:'Landscaping'},
+  {name:'Topsoil (6" Depth)',desc:'Furnish & spread 6" topsoil',unit:'SY',rate:0,material:'Topsoil',mat_cost:4.50,category:'Landscaping'},
+  {name:'Permanent Seeding',desc:'Furnish & apply permanent seed mix and fertilizer',unit:'AC',rate:0,material:'Seed Mix',mat_cost:1500,category:'Landscaping'},
+  {name:'Sod',desc:'Furnish & install sod',unit:'SY',rate:0,material:'Sod',mat_cost:2,category:'Landscaping'},
+  {name:'Mulch (3" Depth)',desc:'Furnish & install 3" mulch in landscape beds',unit:'SY',rate:0,material:'Mulch',mat_cost:3,category:'Landscaping'},
+  {name:'Shade Tree (2" Cal)',desc:'Furnish & plant 2" caliper shade tree',unit:'EA',rate:0,material:'Plant Material',mat_cost:350,category:'Landscaping'},
+  {name:'Ornamental Tree',desc:'Furnish & plant ornamental tree per plans',unit:'EA',rate:0,material:'Plant Material',mat_cost:250,category:'Landscaping'},
+  {name:'Shrub (3 Gallon)',desc:'Furnish & plant 3-gallon shrub per plans',unit:'EA',rate:0,material:'Plant Material',mat_cost:25,category:'Landscaping'},
+  {name:'Ground Cover',desc:'Furnish & plant ground cover per plans',unit:'SF',rate:0,material:'Plant Material',mat_cost:3,category:'Landscaping'},
   // ── GENERAL / MISC ──
-  {name:'Traffic Control',desc:'Lane closure / flagger setup',unit:'LS',rate:2500,category:'General / Misc'},
-  {name:'Mobilization',desc:'Project mobilization and equipment setup',unit:'LS',rate:0,category:'General / Misc'},
-  {name:'Surveying / Staking',desc:'Construction staking and layout per plans',unit:'LS',rate:0,category:'General / Misc'},
-  {name:'As-Built Survey',desc:'As-built survey and record drawings',unit:'LS',rate:0,category:'General / Misc'},
-  {name:'Material Testing',desc:'Compaction and material testing services',unit:'LS',rate:0,category:'General / Misc'},
-  {name:'Temporary Fencing',desc:'Furnish & install temporary construction fencing',unit:'LF',rate:0,category:'General / Misc'},
-  {name:'Dumpster Pad',desc:'Construct concrete dumpster pad with approach',unit:'EA',rate:0,category:'General / Misc'},
-  {name:'Retaining Wall (Block)',desc:'Furnish & install segmental retaining wall',unit:'SF',rate:0,category:'General / Misc'},
-  {name:'Chain Link Fence',desc:'Furnish & install chain link fence',unit:'LF',rate:0,category:'General / Misc'},
-  {name:'Privacy Fence (6\' Wood)',desc:'Furnish & install 6-foot wood privacy fence',unit:'LF',rate:0,category:'General / Misc'}
+  {name:'Traffic Control',desc:'Lane closure / flagger setup',unit:'LS',rate:2500,material:'Labor',mat_cost:0,category:'General / Misc'},
+  {name:'Mobilization',desc:'Project mobilization and equipment setup',unit:'LS',rate:0,material:'Labor',mat_cost:0,category:'General / Misc'},
+  {name:'Surveying / Staking',desc:'Construction staking and layout per plans',unit:'LS',rate:0,material:'Labor',mat_cost:0,category:'General / Misc'},
+  {name:'As-Built Survey',desc:'As-built survey and record drawings',unit:'LS',rate:0,material:'Labor',mat_cost:0,category:'General / Misc'},
+  {name:'Material Testing',desc:'Compaction and material testing services',unit:'LS',rate:0,material:'Labor',mat_cost:0,category:'General / Misc'},
+  {name:'Temporary Fencing',desc:'Furnish & install temporary construction fencing',unit:'LF',rate:0,material:'Fence Material',mat_cost:8,category:'General / Misc'},
+  {name:'Dumpster Pad',desc:'Construct concrete dumpster pad with approach',unit:'EA',rate:0,material:'Concrete',mat_cost:500,category:'General / Misc'},
+  {name:'Retaining Wall (Block)',desc:'Furnish & install segmental retaining wall',unit:'SF',rate:0,material:'Concrete',mat_cost:20,category:'General / Misc'},
+  {name:'Chain Link Fence',desc:'Furnish & install chain link fence',unit:'LF',rate:0,material:'Fence Material',mat_cost:15,category:'General / Misc'},
+  {name:'Privacy Fence (6\' Wood)',desc:'Furnish & install 6-foot wood privacy fence',unit:'LF',rate:0,material:'Fence Material',mat_cost:25,category:'General / Misc'}
 ];
 var BID_PRESETS=[
   {name:'Site Prep',icon:'\u2692',items:['Mobilization','Traffic Control','Surveying / Staking','Material Testing','Construction Entrance','Silt Fence','Temporary Fencing']},
@@ -1586,10 +1641,10 @@ var BID_PRESETS=[
 ];
 var BID_LIBRARY=JSON.parse(localStorage.getItem('hd_bid_library')||'[]');
 var _libId=BID_LIBRARY.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},0);
-var LTYPES_DEFAULT = ['ABC','#57 Stone','S9.5B','S9.5C','I19.0C','B25.0C','Concrete'];
+var LTYPES_DEFAULT = JSON.parse(JSON.stringify(LTYPES));
 var DDEPTH = {'ABC':0,'#57 Stone':0,'S9.5B':0,'S9.5C':0,'I19.0C':0,'B25.0C':0,'Concrete':0};
 var DRATE  = {'ABC':50,'#57 Stone':50,'S9.5B':150,'S9.5C':150,'I19.0C':150,'B25.0C':150,'Concrete':0};
-var LBADGE = {'ABC':'b-base','#57 Stone':'b-base','S9.5B':'b-surface','S9.5C':'b-surface','I19.0C':'b-binder','B25.0C':'b-base','Concrete':'b-conc'};
+var LBADGE = MAT_TRADE;
 
 var CTYPES = [
   {id:'18sg',name:'18" Standard C&G',desc:'18" 3000PSI Standard Curb & Gutter',unit:'LF',cy_per_lf:0.028},
@@ -1746,7 +1801,7 @@ function loadDefaultLibrary(){
   var added=0;
   DEFAULT_BID_LIBRARY.forEach(function(def){
     if(existingNames[def.name])return;
-    BID_LIBRARY.push({id:_libId++,name:def.name,desc:def.desc,unit:def.unit,rate:def.rate||0,badge:def.badge||'',material:def.material||'',category:def.category||'General / Misc'});
+    BID_LIBRARY.push({id:_libId++,name:def.name,desc:def.desc,unit:def.unit,rate:def.rate||0,badge:def.badge||'',material:def.material||'',mat_cost:def.mat_cost||0,category:def.category||'General / Misc'});
     added++;
   });
   saveLibrary();
@@ -1780,7 +1835,8 @@ function openLibraryPicker(){
       preset.items.forEach(function(itemName){
         var item=libMap[itemName];
         if(item){
-          extraItems.push({id:eid++,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:item.badge||"",mat_cost:0,labor_cost:0});
+          var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
+          extraItems.push({id:eid++,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:tradeBadge,material:item.material||'',mat_cost:item.mat_cost||0,labor_cost:0});
           added++;
         }
       });
@@ -1831,7 +1887,8 @@ function openLibraryPicker(){
         info.appendChild(nm);info.appendChild(desc);
         var ins=document.createElement("button");ins.className="btn btn-red btn-sm";ins.textContent="Insert";
         ins.addEventListener("click",function(){
-          extraItems.push({id:eid++,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:item.badge||"",mat_cost:0,labor_cost:0});
+          var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
+          extraItems.push({id:eid++,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:tradeBadge,material:item.material||'',mat_cost:item.mat_cost||0,labor_cost:0});
           renderExtra();recalc();toast("Item added","ok");
         });
         row.appendChild(info);row.appendChild(ins);listWrap.appendChild(row);
@@ -4378,7 +4435,6 @@ function renderMatTable(){
   var tbody = document.getElementById('mat-tbody');
   if(!tbody) return;
   tbody.innerHTML = '';
-  var tradeColors={'Stone':'#8B5E3C','Asphalt':'#333','Concrete':'#6B4FA6'};
   LTYPES.forEach(function(k,idx){
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid var(--bdr)';
@@ -4386,12 +4442,12 @@ function renderMatTable(){
     // Name (read-only)
     var td0 = document.createElement('td'); td0.style.cssText='padding:8px 10px;font-weight:600;font-size:13px;';
     td0.textContent=k; tr.appendChild(td0);
-    // Trade (read-only badge)
+    // Trade badge (from BADGE_DEFS)
     var td1=document.createElement('td');td1.style.cssText='padding:8px 10px;text-align:center;';
-    var trade=MAT_TRADE[k]||'Other';
+    var tradeCls=MAT_TRADE[k]||'b-general';
     var badge=document.createElement('span');
-    badge.style.cssText='font-size:10px;font-weight:700;color:#fff;padding:2px 8px;border-radius:3px;background:'+(tradeColors[trade]||'#888')+';';
-    badge.textContent=trade;
+    badge.className='badge '+tradeCls;
+    badge.textContent=BADGE_DEFS[tradeCls]?BADGE_DEFS[tradeCls].label:'Other';
     td1.appendChild(badge);tr.appendChild(td1);
     // Cost $/unit (editable)
     var td2=document.createElement('td');td2.style.cssText='padding:8px 10px;text-align:right;';
@@ -4995,7 +5051,7 @@ function saveCrews(){
   _saveSetting('hd_crews',CREWS);
 }
 function addCrew(){
-  CREWS.push({id:_crewNextId++, name:'', trade:'Other', daily_rate:0, productivity:0});
+  CREWS.push({id:_crewNextId++, name:'', trade:'other', daily_rate:0, productivity:0});
   saveCrews();
   renderCrewsList();
 }
@@ -5018,7 +5074,8 @@ function renderCrewsList(){
     wrap.innerHTML='<p style="color:var(--dgray);font-size:12px;">No crews defined. Click + Add Crew to get started.</p>';
     return;
   }
-  var trades=['Stone','Asphalt','Concrete','Other'];
+  var trades=Object.keys(BADGE_DEFS).map(function(k){return {val:k,lbl:BADGE_DEFS[k].label};});
+  trades.push({val:'other',lbl:'Other'});
   var tbl=document.createElement('table');
   tbl.style.cssText='width:100%;border-collapse:collapse;font-size:13px;';
   var thead=document.createElement('thead');
@@ -5039,7 +5096,7 @@ function renderCrewsList(){
     var tdTrade=document.createElement('td');tdTrade.style.cssText='padding:6px 12px;text-align:center;';
     var tradeSel=document.createElement('select');
     tradeSel.style.cssText='font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;';
-    trades.forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;if((c.trade||'')==t)o.selected=true;tradeSel.appendChild(o);});
+    trades.forEach(function(t){var o=document.createElement('option');o.value=t.val;o.textContent=t.lbl;if((c.trade||'')==t.val)o.selected=true;tradeSel.appendChild(o);});
     (function(id){tradeSel.addEventListener('change',function(){updateCrewField(id,'trade',this.value);});})(c.id);
     tdTrade.appendChild(tradeSel);tr.appendChild(tdTrade);
     // Daily Rate
@@ -5398,7 +5455,8 @@ function getLineItemsForPayload(){
     var qty=ov.qty!==undefined?ov.qty:item.qty;
     var unit=ov.unit!==undefined?ov.unit:item.unit;
     var price=ov.price!==undefined?ov.price:item.price;
-    return {name:nm,description:desc,qty:qty,unit:unit,price:price,subtotal:qty*price};
+    var divLabel=item.badgeCls&&BADGE_DEFS[item.badgeCls]?BADGE_DEFS[item.badgeCls].label:'';
+    return {name:nm,description:desc,qty:qty,unit:unit,price:price,subtotal:qty*price,division:divLabel};
   });
 }
 
@@ -5883,10 +5941,11 @@ function loadSenderUI(){
   document.getElementById('s-phone').value=sender.phone||'';
 }
 function showSettingsTab(tab){
-  ['general','badges','presets','library','crews','equipment'].forEach(function(t){
+  ['general','badges','presets','library','materials','crews','equipment'].forEach(function(t){
     var el=document.getElementById('stab-content-'+t);if(el)el.style.display=t===tab?'':'none';
     var btn=document.getElementById('stab-'+t);if(btn)btn.classList.toggle('on',t===tab);
   });
+  if(tab==='materials'){renderMatTable();}
   if(tab==='badges'){renderBadgeList();}
   if(tab==='presets'){renderPresetMgr();}
   if(tab==='library'){renderLibraryList();}
