@@ -53,8 +53,8 @@ body.dark .skeleton{background:linear-gradient(90deg,#27272A 25%,#3F3F46 50%,#27
 .empty-state-title{font-family:var(--font-display);font-size:14px;font-weight:600;margin-bottom:4px;}
 .empty-state-desc{font-size:12px;line-height:1.5;}
 
-/* Active indicator on sidebar — stronger glow */
-.nav-item.on::after{content:'';position:absolute;left:0;top:0;bottom:0;width:var(--rail-w);background:rgba(204,0,0,0.03);border-radius:var(--rad-s);pointer-events:none;}
+/* Sidebar separator */
+.nav-sep{height:1px;background:rgba(255,255,255,.06);margin:8px 12px;}
 
 /* Button hover refinements are defined after base button styles below */
 
@@ -501,18 +501,24 @@ body.dark .mc-notif-group{background:rgba(255,255,255,0.02);}
 
 /* Dashboard hero section */
 .dash-hero{
-  display:flex;align-items:flex-start;justify-content:space-between;
-  margin-bottom:28px;gap:20px;
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;gap:16px;
 }
 .dash-hero-text{flex:1;}
 .mc-greeting{
-  font-family:var(--font-display);font-size:28px;font-weight:800;
-  line-height:1.1;margin-bottom:4px;text-wrap:balance;
+  font-family:var(--font-display);font-size:24px;font-weight:800;
+  line-height:1.15;margin-bottom:2px;text-wrap:balance;
 }
 .mc-date-line{
-  font-size:13px;color:var(--dgray);font-weight:500;
+  font-size:12px;color:var(--dgray);font-weight:500;
   font-family:var(--font-display);
 }
+/* Today's ops card — visual emphasis */
+.dash-today-card{border-left:3px solid var(--red);}
+/* Pipeline snapshot row */
+.dash-pipeline-row .mc-card{padding:14px 18px;text-align:center;}
+.dash-pipeline-row .mc-card .mc-kpi-val{font-size:22px;}
+.dash-pipeline-row .mc-card .mc-kpi-lbl{font-size:10px;}
 /* Weather chip */
 .dash-weather-chip{
   display:flex;align-items:center;gap:10px;padding:10px 18px;
@@ -572,15 +578,14 @@ body.dark .mc-seg-btn:hover{color:#E4E4E7;}
 body.dark .mc-seg-btn.on{background:rgba(255,255,255,0.10);color:#F5F5F7;}
 
 /* Staggered panel animation */
-@keyframes mcFadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
-.mc-stagger>*{animation:mcFadeUp .35s ease-out both;}
+@keyframes mcFadeUp{from{opacity:0;transform:translateY(10px) scale(0.998);}to{opacity:1;transform:translateY(0) scale(1);}}
+.mc-stagger>*{animation:mcFadeUp .3s cubic-bezier(0.2,0.8,0.2,1) both;}
 .mc-stagger>*:nth-child(1){animation-delay:0s;}
-.mc-stagger>*:nth-child(2){animation-delay:.06s;}
-.mc-stagger>*:nth-child(3){animation-delay:.12s;}
-.mc-stagger>*:nth-child(4){animation-delay:.18s;}
-.mc-stagger>*:nth-child(5){animation-delay:.24s;}
-.mc-stagger>*:nth-child(6){animation-delay:.30s;}
-.mc-stagger>*:nth-child(7){animation-delay:.36s;}
+.mc-stagger>*:nth-child(2){animation-delay:.04s;}
+.mc-stagger>*:nth-child(3){animation-delay:.08s;}
+.mc-stagger>*:nth-child(4){animation-delay:.12s;}
+.mc-stagger>*:nth-child(5){animation-delay:.16s;}
+.mc-stagger>*:nth-child(6){animation-delay:.20s;}
 
 /* Bid calendar — refined */
 .mc-cal-cell{
@@ -653,12 +658,12 @@ body.dark .mc-queue-card:hover{border-color:rgba(204,0,0,0.3);}
 .sb nav{position:relative;z-index:1;flex:1;padding:8px 8px;overflow-y:auto;overflow-x:hidden;}
 .nav-grp{font-size:9px;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:1.2px;padding:16px 6px 6px;white-space:nowrap;overflow:hidden;opacity:0;height:0;transition:opacity .15s;}
 .sb:hover .nav-grp,.sb.pinned .nav-grp{opacity:1;height:auto;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;font-family:var(--font-display);font-size:13px;font-weight:500;color:rgba(255,255,255,.45);cursor:pointer;border-radius:var(--rad-s);transition:color .15s,background .15s;position:relative;white-space:nowrap;overflow:hidden;border-left:none;margin-bottom:1px;}
-.nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);}
-.nav-item.on{background:rgba(255,255,255,.08);color:#fff;}
-.nav-item.on::before{content:'';position:absolute;left:0;top:25%;height:50%;width:3px;background:var(--red);border-radius:0 3px 3px 0;}
-.nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.5;}
-.nav-item:hover svg{opacity:.8;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:7px 14px;font-family:var(--font-display);font-size:12.5px;font-weight:500;color:rgba(255,255,255,.4);cursor:pointer;border-radius:8px;transition:color .15s,background .15s;position:relative;white-space:nowrap;overflow:hidden;margin-bottom:1px;}
+.nav-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.85);}
+.nav-item.on{background:rgba(255,255,255,.07);color:#fff;}
+.nav-item.on::before{content:'';position:absolute;left:0;top:25%;height:50%;width:2.5px;background:var(--red);border-radius:0 2px 2px 0;box-shadow:2px 0 8px rgba(204,0,0,0.15);}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.45;}
+.nav-item:hover svg{opacity:.75;}
 .nav-item.on svg{opacity:1;}
 .nav-label{overflow:hidden;opacity:0;transition:opacity .15s;flex:1;min-width:0;}
 .sb:hover .nav-label,.sb.pinned .nav-label{opacity:1;}
@@ -671,7 +676,7 @@ body.dark .mc-queue-card:hover{border-color:rgba(204,0,0,0.3);}
 .sb:hover .sb-pin,.sb.pinned .sb-pin{opacity:1;}
 .sb.pinned .sb-pin{color:rgba(255,255,255,.6) !important;}
 .main{overflow-y:auto;background:transparent;}
-.topbar{background:rgba(232,231,236,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--bdr);padding:0 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;height:var(--topbar-h);min-height:var(--topbar-h);}
+.topbar{background:rgba(232,231,236,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:none;box-shadow:0 0.5px 0 rgba(0,0,0,0.06);padding:0 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;height:var(--topbar-h);min-height:var(--topbar-h);}
 .topbar-title{font-family:var(--font-display);font-size:14px;font-weight:700;min-width:0;white-space:nowrap;display:flex;align-items:center;gap:8px;}
 /* topbar-actions removed — replaced by 3-dot actions menu */
 .topbar-bell{position:relative;background:none;border:none;color:var(--dgray);cursor:pointer;padding:6px;border-radius:8px;transition:color .15s,background .15s;display:flex;align-items:center;}
@@ -699,8 +704,8 @@ body.dark .actions-menu-item:hover{background:rgba(255,255,255,0.06);}
 .content{padding:24px;max-width:1400px;width:100%;}
 
 /* Panels */
-.panel{display:none;}.panel.on{display:block;width:100%;box-sizing:border-box;animation:panelIn .25s cubic-bezier(.4,0,.2,1) both;}
-@keyframes panelIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.panel{display:none;}.panel.on{display:block;width:100%;box-sizing:border-box;animation:panelIn .3s cubic-bezier(0.2,0.8,0.2,1) both;}
+@keyframes panelIn{from{opacity:0;transform:translateY(8px) scale(0.998);}to{opacity:1;transform:translateY(0) scale(1);}}
 /* Breadcrumb */
 .bc{display:flex;align-items:center;gap:6px;font-size:13px;min-width:0;}
 .bc-item{color:var(--dgray);cursor:pointer;transition:color .12s;white-space:nowrap;font-weight:500;}
@@ -1025,12 +1030,13 @@ tr:nth-child(even) td{background:var(--lgray);}
   /* --- Job cost card --- */
   #jc-summary { padding: 10px 12px; }
 
-  /* --- Dashboard KPIs: 2 cols on mobile --- */
+  /* --- Dashboard mobile --- */
   #dash-stats { grid-template-columns: 1fr 1fr !important; }
   #dash-weather-mini { display: none !important; }
-  .dash-hero { margin-bottom: 20px; }
-  .mc-greeting { font-size: 22px; }
-  #panel-dashboard [style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+  .dash-hero { margin-bottom: 16px; }
+  .mc-greeting { font-size: 20px; }
+  .dash-split { grid-template-columns: 1fr !important; }
+  #dash-pipeline-snapshot { grid-template-columns: 1fr !important; }
 
   /* --- Schedule: stack queue and calendar vertically --- */
   #sched-split { grid-template-columns: 1fr !important; }
@@ -1157,17 +1163,12 @@ tr:nth-child(even) td{background:var(--lgray);}
       <div class="nav-item on" role="button" tabindex="0" onclick="showPanel('dashboard',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('dashboard',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg><span class="nav-label">Dashboard</span></div>
       <div class="nav-item" role="button" tabindex="0" onclick="showPanel('projects',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('projects',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg><span class="nav-label">Projects</span><span class="nav-badge" id="nav-badge-projects" style="display:none;"></span></div>
       <div class="nav-item" role="button" tabindex="0" onclick="showPanel('schedule',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('schedule',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg><span class="nav-label">Schedule</span><span class="nav-badge" id="nav-badge-schedule" style="display:none;"></span></div>
-      <div class="nav-grp" role="separator">Manage</div>
-      <div class="nav-item" data-field-hidden role="button" tabindex="0" onclick="showPanel('saved',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('saved',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h6V4H4zm0 4v1h8V8H4zm0 3v1h5v-1H4z"/></svg><span class="nav-label">Saved Documents</span></div>
-      <div class="nav-item" data-field-hidden role="button" tabindex="0" onclick="showPanel('clients',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('clients',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg><span class="nav-label">Clients</span></div>
-      <div class="nav-item" data-field-hidden role="button" tabindex="0" onclick="showPanel('subs',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('subs',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M7 7a3 3 0 100-6 3 3 0 000 6zm-4 7s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H3zm8-8a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm3 8h-1c0-1.5-.8-3-2.2-3.8.5-.1 1-.2 1.5-.2 2.8 0 4 2 4 3s-1 1-1 1h-1.3z"/></svg><span class="nav-label">Subcontractors</span></div>
+      <div class="nav-item" data-field-hidden role="button" tabindex="0" onclick="showPanel('contacts',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('contacts',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg><span class="nav-label">Contacts</span></div>
       <div class="nav-item" data-field-hidden role="button" tabindex="0" onclick="showPanel('reports',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('reports',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h3v12H2zm4.5 3h3v9h-3zM11 7h3v7h-3z"/></svg><span class="nav-label">Reports</span></div>
-      <div class="nav-grp" role="separator">Config</div>
+      <div class="nav-sep" role="separator"></div>
       <div class="nav-item" role="button" tabindex="0" onclick="showPanel('settings',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('settings',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><span class="nav-label">Settings</span></div>
-      <div class="nav-item" role="button" tabindex="0" onclick="showPanel('bugs',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('bugs',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1C5.8 1 4 2.8 4 5v1H2.5a.5.5 0 00-.5.5V8c0 3.6 2.5 6.6 6 7 3.5-.4 6-3.4 6-7V6.5a.5.5 0 00-.5-.5H12V5c0-2.2-1.8-4-4-4zM6 5a2 2 0 114 0v1H6V5zm-3 3h10c-.2 2.8-2.3 5.2-5 5.5C5.3 13.2 3.2 10.8 3 8z"/></svg><span class="nav-label">Bug Report</span></div>
-      <div class="nav-item admin-only" data-admin-hidden role="button" tabindex="0" onclick="showPanel('roadmap',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('roadmap',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v3a.5.5 0 01-.5.5h-3a.5.5 0 01-.5-.5v-3zm0 5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v3a.5.5 0 01-.5.5h-3a.5.5 0 01-.5-.5v-3zm0 5a.5.5 0 01.5-.5h3a.5.5 0 010 1h-3a.5.5 0 01-.5-.5zM7 3h7v1H7zm0 5h7v1H7zm0 5h7v1H7z"/></svg><span class="nav-label">Roadmap</span></div>
       <div class="nav-item admin-only" id="nav-admin" data-admin-hidden role="button" tabindex="0" onclick="showPanel('admin',this);loadUsers();showAdminTab('company');" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('admin',this);loadUsers();showAdminTab('company');}">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a3.5 3.5 0 100 7A3.5 3.5 0 008 1zM2 13c0-3 2.7-5 6-5s6 2 6 5H2z"/><circle cx="13" cy="5" r="2.5" fill="var(--red)"/></svg><span class="nav-label">Admin</span></div>
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a3 3 0 00-3 3v1H4a2 2 0 00-2 2v5a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-1V4a3 3 0 00-3-3zm-1 3a1 1 0 112 0v1H7V4zm1 5.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg><span class="nav-label">Admin</span></div>
     </nav>
     <div class="sb-foot">
       <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -1257,44 +1258,44 @@ tr:nth-child(even) td{background:var(--lgray);}
       <div class="panel on" id="panel-dashboard">
         <div class="mc-stagger" style="padding:4px 0;max-width:none;">
 
-          <!-- Greeting + Weather Row -->
+          <!-- Greeting Row (compact) -->
           <div class="dash-hero">
             <div class="dash-hero-text">
               <h2 id="dash-greeting" class="mc-greeting">Good morning</h2>
-              <p class="mc-date-line" id="dash-date-line">Here's what's happening today.</p>
+              <p class="mc-date-line" id="dash-date-line"></p>
             </div>
             <div id="dash-weather-mini" class="dash-weather-chip">
               <span style="color:var(--dgray);font-size:12px;">Loading weather&hellip;</span>
             </div>
           </div>
 
-          <!-- KPI Cards -->
-          <div id="dash-stats" data-field-hidden aria-busy="true" aria-label="Dashboard statistics" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;">
+          <!-- KPI Strip -->
+          <div id="dash-stats" data-field-hidden aria-busy="true" aria-label="Dashboard statistics" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
             <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:40%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
             <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:40%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
             <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:40%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
             <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:40%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
           </div>
 
-          <!-- Today's Schedule -->
-          <div class="mc-card" style="margin-bottom:24px;">
+          <!-- Today's Ops (primary card, full width) -->
+          <div class="mc-card dash-today-card" style="margin-bottom:20px;">
             <div class="mc-sec-hdr">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-              <span>Today's Schedule</span>
+              <span id="dash-today-label">Today</span>
               <span class="mc-sec-line"></span>
-              <button class="btn btn-sec btn-sm" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">View All</button>
+              <button class="btn btn-sec btn-sm" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Full Schedule</button>
             </div>
             <div id="dash-today-schedule" style="padding:0;">
               <div class="empty-state" style="padding:24px 18px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="empty-state-title">No work orders today</div><div class="empty-state-desc">Scheduled jobs will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Open Schedule</button></div>
             </div>
           </div>
 
-          <!-- Two-column: Upcoming WO + Recent Activity -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+          <!-- This Week (60%) + Activity (40%) -->
+          <div class="dash-split" style="display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:20px;">
             <div class="mc-card">
               <div class="mc-sec-hdr">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <span>Upcoming Work Orders</span>
+                <span>This Week</span>
                 <span class="mc-sec-line"></span>
               </div>
               <div id="dash-upcoming-wo" style="padding:0;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
@@ -1302,31 +1303,15 @@ tr:nth-child(even) td{background:var(--lgray);}
             <div class="mc-card">
               <div class="mc-sec-hdr">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                <span>Recent Activity</span>
+                <span>Activity</span>
                 <span class="mc-sec-line"></span>
               </div>
-              <div id="dash-recent-activity" style="padding:0;max-height:360px;overflow-y:auto;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
+              <div id="dash-recent-activity" style="padding:0;max-height:340px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
             </div>
           </div>
 
-          <!-- Bid Calendar (full width) -->
-          <div data-field-hidden class="mc-card">
-            <div class="mc-sec-hdr">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <span>Bid Calendar</span>
-              <span class="mc-sec-line"></span>
-              <div style="display:flex;gap:4px;align-items:center;">
-                <button class="btn btn-sec btn-sm" onclick="dashCalNav(-1)" style="padding:2px 10px;border-radius:6px;" aria-label="Previous month">&lsaquo;</button>
-                <span id="dash-cal-month" style="font-family:var(--font-display);font-weight:700;font-size:13px;min-width:120px;text-align:center;"></span>
-                <button class="btn btn-sec btn-sm" onclick="dashCalNav(1)" style="padding:2px 10px;border-radius:6px;" aria-label="Next month">&rsaquo;</button>
-              </div>
-            </div>
-            <div id="dash-cal-grid" style="padding:12px 16px;"></div>
-            <div style="padding:0 18px 14px;">
-              <div id="dash-cal-selected-label" style="font-family:var(--font-display);font-weight:700;font-size:13px;margin-bottom:6px;display:none;">Bids for <span id="dash-cal-selected-date"></span></div>
-              <div id="dash-day-entries"><div class="empty-state" style="padding:12px;"><div class="empty-state-desc">Click a date to view bid deadlines</div></div></div>
-            </div>
-          </div>
+          <!-- Pipeline Snapshot (admin/estimator only) -->
+          <div id="dash-pipeline-snapshot" data-field-hidden class="dash-pipeline-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;"></div>
 
         </div>
       </div>
@@ -1642,7 +1627,30 @@ tr:nth-child(even) td{background:var(--lgray);}
         </div>
       </div></div>
 
-      <!-- CLIENTS PANEL -->
+      <!-- CONTACTS PANEL (merged clients + subs) -->
+      <div class="panel" id="panel-contacts"><div class="content">
+        <div class="settings-tab-bar" style="margin-bottom:16px;">
+          <button class="stab on" id="contacts-tab-clients" onclick="showContactsTab('clients')">Clients</button>
+          <button class="stab" id="contacts-tab-subs" onclick="showContactsTab('subs')">Subcontractors</button>
+        </div>
+        <div id="contacts-pane-clients">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+            <div id="contacts-clients-count" style="font-size:13px;color:var(--dgray);"></div>
+            <input id="contacts-clients-search" type="text" placeholder="Search clients&hellip;" oninput="filterClients(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
+          </div>
+          <div id="contacts-clients-list"></div>
+        </div>
+        <div id="contacts-pane-subs" style="display:none;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+            <div id="contacts-subs-count" style="font-size:13px;color:var(--dgray);"></div>
+            <input id="contacts-subs-search" type="text" placeholder="Search subcontractors&hellip;" oninput="filterSubs(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
+            <button class="btn btn-red btn-sm" onclick="openSubModal()">+ Add Sub</button>
+          </div>
+          <div id="contacts-subs-list"></div>
+        </div>
+      </div></div>
+
+      <!-- CLIENTS PANEL (legacy, kept for direct links) -->
       <div class="panel" id="panel-clients"><div class="content">
                 <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
                   <div id="clients-count" style="font-size:13px;color:var(--dgray);"></div>
@@ -1815,6 +1823,7 @@ tr:nth-child(even) td{background:var(--lgray);}
           <button class="stab" data-field-hidden id="stab-badges" onclick="showSettingsTab('badges')">Trade Badges</button>
           <button class="stab" data-field-hidden id="stab-crews" onclick="showSettingsTab('crews')">Crew Costs</button>
           <button class="stab" data-field-hidden id="stab-equipment" onclick="showSettingsTab('equipment')">Equipment</button>
+          <button class="stab" id="stab-bugreport" onclick="showSettingsTab('bugreport')">Bug Report</button>
         </div>
 
         <!-- General Tab -->
@@ -2035,6 +2044,39 @@ tr:nth-child(even) td{background:var(--lgray);}
           </div>
         </div>
 
+        <!-- Bug Report tab (moved from standalone panel) -->
+        <div id="stab-content-bugreport" style="display:none;">
+          <div class="content" style="max-width:900px;">
+            <div class="card" style="margin-bottom:20px;">
+              <div class="card-hdr"><span class="card-title">Report a Bug</span></div>
+              <div class="card-body" style="padding:16px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                  <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Title</label><input type="text" id="settings-bug-title" class="inp" placeholder="Brief summary of the issue" style="width:100%;"/></div>
+                  <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Severity</label><select id="settings-bug-severity" class="inp" style="width:100%;"><option>Minor</option><option>Major</option><option>Critical</option><option>Cosmetic</option></select></div>
+                  <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Panel / Area</label><select id="settings-bug-panel" class="inp" style="width:100%;"><option value="">General</option><option>Dashboard</option><option>Projects</option><option>Build Proposal</option><option>Change Orders</option><option>Saved Documents</option><option>Clients</option><option>Subcontractors</option><option>Pipeline</option><option>Schedule</option><option>Settings</option><option>Reports</option><option>Admin</option><option>Other</option></select></div>
+                </div>
+                <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Description</label>
+                <textarea id="settings-bug-desc" rows="4" class="inp" placeholder="What happened? What did you expect? Steps to reproduce..." style="width:100%;margin-bottom:12px;"></textarea>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button class="btn btn-red btn-sm" onclick="submitSettingsBug()">Submit Bug Report</button>
+                  <span id="settings-bug-submit-msg" style="font-size:11px;color:var(--dgray);"></span>
+                </div>
+              </div>
+            </div>
+            <div data-admin-hidden>
+              <div class="card">
+                <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                  <span class="card-title">All Bug Reports</span>
+                  <select id="settings-bug-filter-status" onchange="renderSettingsBugList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Statuses</option><option>Open</option><option>Acknowledged</option><option>In Progress</option><option>Fixed</option><option>Closed</option></select>
+                  <select id="settings-bug-filter-severity" onchange="renderSettingsBugList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Severities</option><option>Critical</option><option>Major</option><option>Minor</option><option>Cosmetic</option></select>
+                  <button class="btn btn-sec btn-sm" onclick="loadSettingsBugList()" style="font-size:11px;">Refresh</button>
+                </div>
+                <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>#</th><th>Title</th><th>Severity</th><th>Panel</th><th>Status</th><th>By</th><th>Date</th><th></th></tr></thead><tbody id="settings-bugs-tbody"></tbody></table></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
       <!-- WORK ORDER DETAIL PANEL -->
       <div class="panel" id="panel-workorder"><div class="content" style="padding:20px;">
@@ -2183,6 +2225,7 @@ tr:nth-child(even) td{background:var(--lgray);}
     <button class="stab" id="admin-tab-users" onclick="showAdminTab('users')">Users</button>
     <button class="stab" id="admin-tab-activity" onclick="showAdminTab('activity')">Activity Log</button>
     <button class="stab" id="admin-tab-deleted" onclick="showAdminTab('deleted')">Recently Deleted</button>
+    <button class="stab" id="admin-tab-roadmap" onclick="showAdminTab('roadmap')">Roadmap</button>
   </div>
   <!-- Company tab -->
   <div id="admin-pane-company">
@@ -2248,6 +2291,21 @@ tr:nth-child(even) td{background:var(--lgray);}
         <button class="btn btn-sec btn-sm" onclick="clearRecentlyDeleted()">Clear All</button>
       </div>
       <div class="card-body" id="recently-deleted-list"><p style="color:var(--dgray);font-size:12px;">No recently deleted items.</p></div>
+    </div>
+  </div>
+  <!-- Roadmap tab (moved from standalone panel) -->
+  <div id="admin-pane-roadmap" style="display:none;">
+    <div class="content" style="max-width:1100px;">
+      <div class="card">
+        <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span class="card-title">Roadmap & Feature Requests</span>
+          <button class="btn btn-red btn-sm" onclick="openRoadmapModal()">+ Add Item</button>
+          <select id="admin-rm-filter-status" onchange="renderAdminRoadmapList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Statuses</option><option>Planned</option><option>In Progress</option><option>Done</option></select>
+          <select id="admin-rm-filter-priority" onchange="renderAdminRoadmapList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Priorities</option><option>High</option><option>Medium</option><option>Low</option><option>Wish List</option></select>
+          <select id="admin-rm-filter-cat" onchange="renderAdminRoadmapList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Categories</option><option>Feature</option><option>Enhancement</option><option>Fix</option><option>Cleanup</option></select>
+        </div>
+        <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Title</th><th>Category</th><th>Priority</th><th>Effort</th><th>Status</th><th>Version</th><th style="width:90px;"></th></tr></thead><tbody id="admin-roadmap-tbody"></tbody></table></div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -3966,14 +4024,17 @@ function renderDashboard(){
   loadDashBidDates();
   renderDashWeatherMini();
   renderDashStats();
-  renderDashCal();
   renderDashUpcomingWO();
   renderDashTodaySchedule();
   renderDashRecentActivity();
+  renderDashPipelineSnapshot();
   updateNavBadges();
   // Set date line
   var dl=document.getElementById('dash-date-line');
-  if(dl){var d=new Date();dl.textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})+'  \u2022  '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
+  if(dl){var d=new Date();dl.textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
+  // Set today label with day name
+  var tl=document.getElementById('dash-today-label');
+  if(tl){var d2=new Date();tl.textContent='Today \u2014 '+d2.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});}
 }
 
 function renderDashWeatherMini(){
@@ -4074,36 +4135,57 @@ function renderDashRecentActivity(){
 function renderDashUpcomingWO(){
   var c=document.getElementById('dash-upcoming-wo');if(!c)return;
   c.innerHTML='';
+  var today=new Date().toISOString().split('T')[0];
+  var weekEnd=new Date();weekEnd.setDate(weekEnd.getDate()+7);
+  var weekEndStr=weekEnd.toISOString().split('T')[0];
   var wos=[];
   (pipelineProposals||[]).forEach(function(p){
     var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
     if(!snap.is_project)return;
     (snap.work_orders||[]).forEach(function(wo){
       if(wo.status==='complete')return;
-      wos.push({name:wo.name||'Work Order',project:p.name||'',date:wo.scheduled_date||wo.date||'',status:wo.status||'pending',assigned:wo.assigned_to||'',projId:p.id,woId:wo.id});
+      var d=wo.scheduled_date||wo.date||'';
+      if(d&&d>today&&d<=weekEndStr){
+        wos.push({name:wo.name||'Work Order',project:p.name||'',date:d,status:wo.status||'pending',assigned:wo.assigned_to||'',projId:p.id,woId:wo.id});
+      }
     });
   });
   wos.sort(function(a,b){return (a.date||'9999')>(b.date||'9999')?1:-1;});
-  wos=wos.slice(0,5);
-  if(!wos.length){c.innerHTML='<div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel(\'projects\',document.querySelector(\'[onclick*=projects]\'))">View Projects</button></div>';return;}
+  if(!wos.length){c.innerHTML='<div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel(\'projects\',document.querySelector(\'[onclick*=projects]\'))">View Projects</button></div>';return;}
+  // Group by day
+  var grouped={};
   wos.forEach(function(wo){
-    var row=document.createElement('div');
-    row.className='mc-list-item';
-    row.setAttribute('tabindex','0');
-    row.setAttribute('role','button');
-    var statusColors={pending:'#EAB308',active:'#4A7FB5'};
-    var color=statusColors[wo.status]||'#999';
-    var dot=document.createElement('span');dot.className='mc-dot';dot.style.background=color;
-    row.appendChild(dot);
-    var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
-    var dateStr='';
-    if(wo.date){var dp=wo.date.split('-');dateStr=dp[1]+'/'+dp[2];}
-    info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(wo.name)+'</div>'
-      +'<div style="font-size:11px;color:var(--dgray);">'+esc(wo.project)+(wo.assigned?' &middot; '+esc(wo.assigned):'')+'</div>';
-    row.appendChild(info);
-    if(dateStr){var dt=document.createElement('span');dt.style.cssText='font-size:11px;font-weight:600;color:var(--dgray);flex-shrink:0;font-family:var(--font-display);';dt.textContent=dateStr;row.appendChild(dt);}
-    (function(pid,wid){row.addEventListener('click',function(){_currentProjectId=pid;openWorkOrderView(wid);});row.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();_currentProjectId=pid;openWorkOrderView(wid);}});})(wo.projId,wo.woId);
-    c.appendChild(row);
+    if(!grouped[wo.date])grouped[wo.date]=[];
+    grouped[wo.date].push(wo);
+  });
+  var statusColors={pending:'#EAB308',active:'#4A7FB5'};
+  Object.keys(grouped).sort().forEach(function(dateKey){
+    // Day sub-header
+    var dp=dateKey.split('-');
+    var dayDate=new Date(parseInt(dp[0]),parseInt(dp[1])-1,parseInt(dp[2]));
+    var dayLabel=dayDate.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    var hdr=document.createElement('div');
+    hdr.style.cssText='padding:8px 18px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);font-family:var(--font-display);background:var(--bg-sub);border-bottom:1px solid var(--bdr);';
+    hdr.textContent=dayLabel;
+    c.appendChild(hdr);
+    grouped[dateKey].forEach(function(wo){
+      var row=document.createElement('div');
+      row.className='mc-list-item';
+      row.setAttribute('tabindex','0');row.setAttribute('role','button');
+      var color=statusColors[wo.status]||'#999';
+      var dot=document.createElement('span');dot.className='mc-dot';dot.style.background=color;
+      row.appendChild(dot);
+      var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+      info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(wo.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--dgray);">'+esc(wo.project)+(wo.assigned?' &middot; '+esc(wo.assigned):'')+'</div>';
+      row.appendChild(info);
+      var badge=document.createElement('span');
+      badge.style.cssText='font-size:9px;font-weight:600;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:'+color+'18;color:'+color+';font-family:var(--font-display);';
+      badge.textContent=wo.status;
+      row.appendChild(badge);
+      (function(pid,wid){row.addEventListener('click',function(){_currentProjectId=pid;openWorkOrderView(wid);});row.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();_currentProjectId=pid;openWorkOrderView(wid);}});})(wo.projId,wo.woId);
+      c.appendChild(row);
+    });
   });
 }
 
@@ -4205,6 +4287,45 @@ function renderDashStats(){
       +'<div class="mc-kpi-val" style="color:'+valColor+'">'+s.val+'</div>'
       +(s.sub?'<div class="mc-kpi-sub">'+s.sub+'</div>':'');
     c.appendChild(div);
+  });
+}
+function renderDashPipelineSnapshot(){
+  var c=document.getElementById('dash-pipeline-snapshot');if(!c)return;
+  c.innerHTML='';
+  if(isFieldUser())return;
+  var pipelineVal=calcPipelineValue();
+  var today=new Date().toISOString().split('T')[0];
+  var weekEnd=new Date();weekEnd.setDate(weekEnd.getDate()+7);
+  var weekEndStr=weekEnd.toISOString().split('T')[0];
+  var bidsDue=0;
+  Object.keys(dashBidDueDates||{}).forEach(function(dk){
+    if(dk>=today&&dk<=weekEndStr)bidsDue+=(dashBidDueDates[dk]||[]).length;
+  });
+  var wonProjects=0,lostProjects=0;
+  var closedStages={};
+  if(_pipelineStages)_pipelineStages.forEach(function(s){
+    if(s.name==='Completed'||s.name==='Won')closedStages[s.id]='won';
+    if(s.name==='Lost')closedStages[s.id]='lost';
+  });
+  (pipelineProposals||[]).forEach(function(p){
+    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    if(!snap.is_project)return;
+    if(closedStages[p.stage_id]==='won')wonProjects++;
+    else if(closedStages[p.stage_id]==='lost')lostProjects++;
+  });
+  var decided=wonProjects+lostProjects;
+  var winRate=decided>0?Math.round(wonProjects/decided*100):0;
+  var items=[];
+  if(canSeePricing())items.push({lbl:'Pipeline',val:'$'+Math.round(pipelineVal).toLocaleString()});
+  if(decided>0)items.push({lbl:'Win Rate',val:winRate+'%'});
+  items.push({lbl:'Bids Due This Week',val:bidsDue});
+  if(!items.length)return;
+  c.style.gridTemplateColumns='repeat('+items.length+',1fr)';
+  items.forEach(function(s){
+    var card=document.createElement('div');card.className='mc-card';
+    card.style.cssText='padding:14px 18px;text-align:center;';
+    card.innerHTML='<div class="mc-kpi-lbl">'+s.lbl+'</div><div class="mc-kpi-val" style="font-size:22px;">'+s.val+'</div>';
+    c.appendChild(card);
   });
 }
 function calcPipelineValue(){
@@ -6539,6 +6660,9 @@ function renderTopbar(panelId){
 }
 
 function showPanel(id,el){
+  // Redirect removed nav items into their new parent panels
+  if(id==='bugs'){showPanel('settings',document.querySelector('[onclick*=settings]'));setTimeout(function(){showSettingsTab('bugreport');},60);return;}
+  if(id==='roadmap'){showPanel('admin',document.querySelector('[onclick*=admin]'));setTimeout(function(){showAdminTab('roadmap');},60);return;}
   // Proposals, COs, and work orders require a project context
   if(id==='build'&&!window._pendingProjectLink&&!lastSavedQuoteId){
     showPanel('projects',document.querySelector('[onclick*=projects]'));
@@ -6553,7 +6677,7 @@ function showPanel(id,el){
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
   renderTopbar(id);
-  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients',subs:'Subcontractors','client-summary':'Client Summary',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule',reports:'Reports',bugs:'Bug Report',roadmap:'Roadmap'}[id]||id;
+  var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients',contacts:'Contacts',subs:'Subcontractors','client-summary':'Client Summary',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule',reports:'Reports',bugs:'Bug Report',roadmap:'Roadmap'}[id]||id;
   // Breadcrumb navigation
   var titleEl=document.getElementById('topbar-title');
   var bc=_buildBreadcrumb(id,_panelTitle);
@@ -6576,6 +6700,7 @@ function showPanel(id,el){
   if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
   if(id==='pipeline')setTimeout(renderPipeline,50);
   if(id==='clients')setTimeout(renderClients,50);
+  if(id==='contacts'){setTimeout(renderClients,50);setTimeout(renderSubsList,80);showContactsTab('clients');}
   if(id==='subs')setTimeout(renderSubsList,50);
   if(id==='client-summary')renderClientSummary();
   if(id==='workorder')renderWorkOrderDetail();
@@ -8351,7 +8476,7 @@ function loadSenderUI(){
   document.getElementById('s-phone').value=sender.phone||'';
 }
 function showSettingsTab(tab){
-  ['general','badges','presets','library','materials','crews','equipment'].forEach(function(t){
+  ['general','badges','presets','library','materials','crews','equipment','bugreport'].forEach(function(t){
     var el=document.getElementById('stab-content-'+t);if(el)el.style.display=t===tab?'':'none';
     var btn=document.getElementById('stab-'+t);if(btn)btn.classList.toggle('on',t===tab);
   });
@@ -8361,6 +8486,7 @@ function showSettingsTab(tab){
   if(tab==='library'){_snapshotLibrary();renderLibraryList();}
   if(tab==='crews'){renderCrewsList();}
   if(tab==='equipment'){_snapshotEquipment();renderEquipmentList();}
+  if(tab==='bugreport'&&window._userRole==='admin')loadSettingsBugList();
 }
 
 function applyBadgeStyles(){
@@ -8956,6 +9082,19 @@ async function renderClients() {
     });
     clients = clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||'',address:c.address||'',city_state:c.city_state||''};});
   } catch(e){container.innerHTML='<p style="color:var(--red);font-size:13px;">Error: '+e.message+'</p>';}
+  // Mirror into contacts panel
+  var cc=document.getElementById('contacts-clients-list');
+  if(cc)cc.innerHTML=container.innerHTML;
+  var ccnt=document.getElementById('contacts-clients-count');
+  var ocnt=document.getElementById('clients-count');
+  if(ccnt&&ocnt)ccnt.innerHTML=ocnt.innerHTML;
+}
+
+function showContactsTab(tab){
+  ['clients','subs'].forEach(function(t){
+    var pane=document.getElementById('contacts-pane-'+t);if(pane)pane.style.display=t===tab?'':'none';
+    var btn=document.getElementById('contacts-tab-'+t);if(btn){if(t===tab)btn.classList.add('on');else btn.classList.remove('on');}
+  });
 }
 
 // Search filters
@@ -9051,6 +9190,11 @@ function renderSubsList(){
       +'<button class="btn-ico" onclick="deleteSub('+idx+')" style="color:var(--dgray);">x</button>';
     c.appendChild(card);
   });
+  // Mirror into contacts panel
+  var cc=document.getElementById('contacts-subs-list');
+  if(cc)cc.innerHTML=c.innerHTML;
+  var ccnt=document.getElementById('contacts-subs-count');
+  if(ccnt&&countEl)ccnt.innerHTML=countEl.innerHTML;
 }
 
 function filterSubs(q){
@@ -9337,13 +9481,14 @@ function initSidebarCanvas(){
 var _editingUserId=null;
 async function loadUsers(){var tbody=document.getElementById('users-tbody');if(!tbody)return;try{var r=await fetch('/admin/users');if(r.status===403){tbody.innerHTML='<tr><td colspan="6" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';window._adminUsers={};d.users.forEach(function(u){window._adminUsers[u.id]=u;var tr=document.createElement('tr');var created=u.created_at?new Date(u.created_at).toLocaleDateString():'-';tr.innerHTML='<td><b>'+esc(u.full_name||u.username)+'</b></td><td style="font-family:monospace;font-size:12px;">'+esc(u.username)+'</td><td><span class="role-badge role-'+u.role+'">'+u.role+'</span></td><td><span class="'+(u.active?'status-active':'status-inactive')+'">'+( u.active?'Active':'Inactive')+'</span></td><td style="font-size:12px;color:var(--dgray);">'+created+'</td><td style="white-space:nowrap;"><button class="btn btn-sec btn-sm" style="margin-right:4px;" onclick="openEditUserModal('+u.id+')">Edit</button>'+(u.username!==(window._userUsername||'')? '<button class="btn-ico" style="color:var(--red);" onclick="deactivateUser('+u.id+',\''+esc(u.username)+'\','+u.active+')">'+( u.active?'&#10005;':'&#10003;')+'</button>':'')+'</td>';tbody.appendChild(tr);});var sel=document.getElementById('log-user-filter');if(sel){sel.innerHTML='<option value="">All Users</option>';d.users.forEach(function(u){var o=document.createElement('option');o.value=u.username;o.textContent=u.full_name||u.username;sel.appendChild(o);});}}catch(e){tbody.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
 function showAdminTab(tab){
-  ['company','users','activity','deleted'].forEach(function(t){
+  ['company','users','activity','deleted','roadmap'].forEach(function(t){
     var pane=document.getElementById('admin-pane-'+t);if(pane)pane.style.display=t===tab?'':'none';
     var btn=document.getElementById('admin-tab-'+t);if(btn){if(t===tab){btn.classList.add('on');}else{btn.classList.remove('on');}}
   });
   if(tab==='company')loadCompanyInfo();
   if(tab==='activity')loadLogs();
   if(tab==='deleted')renderRecentlyDeleted();
+  if(tab==='roadmap')loadAdminRoadmapList();
 }
 // -- Company Info (Admin) -------------------------------------------------
 window._companyInfo={name:'',address:'',city:'',state:'',zip:'',phone:'',email:'',website:'',license:'',tagline:''};
@@ -12832,7 +12977,41 @@ function renderBugList(){
     });
     tbody.appendChild(tr);
   });
+  // Mirror into Settings > Bug Report tab
+  var sTbody=document.getElementById('settings-bugs-tbody');
+  if(sTbody)sTbody.innerHTML=tbody.innerHTML;
 }
+
+// Settings-embedded bug report wrappers
+function submitSettingsBug(){
+  var title=document.getElementById('settings-bug-title').value.trim();
+  var desc=document.getElementById('settings-bug-desc').value.trim();
+  var severity=document.getElementById('settings-bug-severity').value;
+  var panel=document.getElementById('settings-bug-panel').value;
+  var msg=document.getElementById('settings-bug-submit-msg');
+  if(!title){msg.textContent='Please enter a title.';msg.style.color='var(--red)';return;}
+  if(!desc){msg.textContent='Please enter a description.';msg.style.color='var(--red)';return;}
+  msg.textContent='Submitting...';msg.style.color='var(--dgray)';
+  fetch('/bugs/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    title:title,description:desc,severity:severity,panel:panel,
+    browser_info:navigator.userAgent,screen_info:screen.width+'x'+screen.height
+  })}).then(function(r){return r.json();}).then(function(d){
+    if(d.ok){
+      msg.textContent='Bug report submitted. Thank you!';msg.style.color='#2E7D32';
+      document.getElementById('settings-bug-title').value='';
+      document.getElementById('settings-bug-desc').value='';
+      document.getElementById('settings-bug-severity').value='Minor';
+      document.getElementById('settings-bug-panel').value='';
+      if(typeof toast==='function')toast('Bug report submitted','ok');
+      setTimeout(function(){msg.textContent='';},4000);
+      if(window._userRole==='admin')loadSettingsBugList();
+    } else {
+      msg.textContent=d.error||'Failed to submit.';msg.style.color='var(--red)';
+    }
+  }).catch(function(){msg.textContent='Network error.';msg.style.color='var(--red)';});
+}
+function loadSettingsBugList(){loadBugList();}
+function renderSettingsBugList(){renderBugList();}
 
 function openBugDetail(id){
   var b=_bugReports.find(function(x){return x.id===id;});if(!b)return;
@@ -12951,7 +13130,14 @@ function renderRoadmapList(){
     tdAct.appendChild(editBtn);tdAct.appendChild(delBtn);tr.appendChild(tdAct);
     tbody.appendChild(tr);
   });
+  // Mirror into Admin > Roadmap tab
+  var aTbody=document.getElementById('admin-roadmap-tbody');
+  if(aTbody)aTbody.innerHTML=tbody.innerHTML;
 }
+
+// Admin-embedded roadmap wrappers
+function loadAdminRoadmapList(){loadRoadmapList();}
+function renderAdminRoadmapList(){renderRoadmapList();}
 
 function openRoadmapModal(id){
   _editingRoadmapId=id||null;
