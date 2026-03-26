@@ -4316,7 +4316,11 @@ function renderProjectNotesFeed(snap){
       var when=document.createElement('span');
       if(n.date){
         var d=n.date.length>10?new Date(n.date):new Date(n.date+'T12:00:00');
-        when.textContent=isNaN(d)?n.date:d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        if(!isNaN(d)){
+          var datePart=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+          var timePart=d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+          when.textContent=n.date.length>10?datePart+' at '+timePart:datePart;
+        } else { when.textContent=n.date; }
       }
       meta.appendChild(when);
       bubble.appendChild(meta);
@@ -4373,7 +4377,7 @@ function sendInlineNote(snap){
   if(!text){toast('Enter a note','err');return;}
   if(!snap.work_notes)snap.work_notes=[];
   var today=new Date();
-  snap.work_notes.push({text:text,date:today.toISOString().split('T')[0],user:window._userName||window._userUsername||''});
+  snap.work_notes.push({text:text,date:today.toISOString(),user:window._userName||window._userUsername||''});
   addProjectActivity(snap,'note','Note added');
   var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
   var projName=proj?proj.name:'';
@@ -4409,7 +4413,7 @@ function addProjectNote(){
     var text=document.getElementById('pn-text').value.trim();
     if(!text){toast('Enter a note','err');return;}
     if(!snap.work_notes)snap.work_notes=[];
-    snap.work_notes.push({text:text,date:new Date().toISOString().split('T')[0],user:window._userUsername||''});
+    snap.work_notes.push({text:text,date:new Date().toISOString(),user:window._userUsername||''});
     addProjectActivity(snap,'note','Note added');
     fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
       .then(function(r){return r.json();}).then(function(d){
