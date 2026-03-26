@@ -5049,19 +5049,27 @@ function loadDefaultEquipment(){
 
 // -- Unit Price Schedule -------------------------------------------------------
 var DEFAULT_UNIT_PRICES=[
-  {id:1,name:'Undercut / Unsuitable Soil Disposed On-Site',unit:'CY',rate:10},
-  {id:2,name:'Replacement / Borrow From On-Site',unit:'CY',rate:10},
-  {id:3,name:'Undercut / Unsuitable Soil Disposed Off-Site',unit:'CY',rate:26},
-  {id:4,name:'Machine Excavated Rock Disposed On-Site',unit:'CY',rate:50},
-  {id:5,name:'Mass Rock Blasting and Waste On-Site',unit:'CY',rate:28},
-  {id:6,name:'Mass Rock Blasting and Export',unit:'CY',rate:56},
-  {id:7,name:'Dewatering',unit:'DAY',rate:500},
-  {id:8,name:'Street Washing',unit:'DAY',rate:500},
-  {id:9,name:'Daily Site Watering',unit:'WK',rate:2250},
-  {id:10,name:'Erosion Control Maintenance',unit:'MO',rate:7250}
+  // Paving & stone overages
+  {id:1,name:'ABC Stone',unit:'TON',rate:65},
+  {id:2,name:'Additional Asphalt Tonnage (prevailing market rate)',unit:'TON',rate:155},
+  {id:3,name:'Cold Patch / Temporary Repair',unit:'TON',rate:225},
+  {id:4,name:'Milling Overage',unit:'SY',rate:5},
+  {id:5,name:'Additional Traffic Control',unit:'DAY',rate:2500},
+  {id:6,name:'Additional Mobilization',unit:'EA',rate:1500},
+  // Grading & earthwork overages
+  {id:7,name:'Undercut / Unsuitable Soil Disposed On-Site',unit:'CY',rate:18},
+  {id:8,name:'Replacement / Borrow From On-Site',unit:'CY',rate:15},
+  {id:9,name:'Undercut / Unsuitable Soil Disposed Off-Site',unit:'CY',rate:35},
+  {id:10,name:'Machine Excavated Rock Disposed On-Site',unit:'CY',rate:55},
+  {id:11,name:'Mass Rock Blasting and Waste On-Site',unit:'CY',rate:45},
+  {id:12,name:'Mass Rock Blasting and Export Off-Site',unit:'CY',rate:75},
+  {id:13,name:'Dewatering',unit:'DAY',rate:1500},
+  {id:14,name:'Street Washing',unit:'DAY',rate:750},
+  {id:15,name:'Daily Site Watering',unit:'WK',rate:2500},
+  {id:16,name:'Erosion Control Maintenance',unit:'MO',rate:7500}
 ];
 var UNIT_PRICES=JSON.parse(localStorage.getItem('hd_unit_prices')||'[]');
-var _upId=UNIT_PRICES.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},11);
+var _upId=UNIT_PRICES.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},17);
 function renderUnitPrices(){
   var wrap=document.getElementById('unitprice-list');if(!wrap)return;
   wrap.innerHTML='';
