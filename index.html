@@ -794,13 +794,6 @@ tr:nth-child(even) td{background:#FAFAFA;}
           <!-- Right column -->
           <div>
             <div class="card" style="margin-bottom:14px;">
-              <div class="card-hdr"><span class="card-title">Notes</span></div>
-              <div class="card-body" id="ps-work-orders">
-                <div id="ps-wo-list"></div>
-                <button class="btn btn-sec btn-sm" style="margin-top:8px;" onclick="addProjectNote()">+ Add Note</button>
-              </div>
-            </div>
-            <div class="card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Site Plan</span></div>
               <div class="card-body" id="ps-site-plan">
                 <p style="color:var(--dgray);font-size:12px;">No site plan uploaded.</p>
@@ -3110,8 +3103,11 @@ function _renderProjectSummaryInner(proj){
       +(proj.client?esc(proj.client):'No client assigned')
       +(snap.address?' &middot; '+esc(snap.address):'')
       +'</div>'
-      +(snap.notes?'<div style="font-size:12px;color:#555;margin-top:8px;padding:10px 14px;background:#F8F8F8;border-radius:6px;border-left:3px solid var(--red);line-height:1.5;">'+esc(snap.notes)+'</div>':'');
+      +'<div id="ps-notes-feed" style="margin-top:10px;"></div>'
+      +'<div id="ps-notes-input" style="margin-top:8px;display:flex;gap:8px;align-items:flex-end;"></div>';
   }
+  // Render notes feed
+  renderProjectNotesFeed(snap);
 
   // ── Financial Strip (hidden for field users) ──
   var fin=document.getElementById('ps-financials');
@@ -3430,31 +3426,6 @@ function _renderProjectSummaryInner(proj){
     }
   }
 
-  // ── Notes ──
-  var psWO=document.getElementById('ps-wo-list');
-  if(psWO){
-    var notes=snap.work_notes||[];
-    psWO.innerHTML='';
-    if(notes.length){
-      notes.slice().reverse().forEach(function(n,idx){
-        var realIdx=notes.length-1-idx;
-        var row=document.createElement('div');
-        row.style.cssText='padding:8px 0;border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;gap:8px;';
-        var info=document.createElement('div');info.style.flex='1';
-        info.innerHTML='<div style="font-size:11px;color:var(--dgray);">'+esc(n.date||'')+(n.user?' &middot; '+esc(n.user):'')+'</div>'
-          +'<div style="font-size:13px;margin-top:2px;">'+esc(n.text||'')+'</div>';
-        row.appendChild(info);
-        var del=document.createElement('button');del.className='btn-ico';del.style.color='var(--red)';del.textContent='×';
-        (function(i){del.addEventListener('click',function(){
-          snap.work_notes.splice(i,1);
-          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
-            .then(function(){renderProjectSummary();});
-        });})(realIdx);
-        row.appendChild(del);
-        psWO.appendChild(row);
-      });
-    }
-  }
 }
 
 function openInvoiceModal(proj,snap,totals){
@@ -3757,6 +3728,100 @@ function renderMaterialTracking(proj,snap){
     body.appendChild(form);
   });
   body.appendChild(addBtn);
+}
+
+function renderProjectNotesFeed(snap){
+  var feed=document.getElementById('ps-notes-feed');
+  var inputArea=document.getElementById('ps-notes-input');
+  if(!feed||!inputArea)return;
+  feed.innerHTML='';inputArea.innerHTML='';
+
+  // Build combined notes list: initial project note + work_notes
+  var allNotes=[];
+  if(snap.notes){
+    allNotes.push({text:snap.notes,date:snap.created_at||'',user:'Project Created',isInitial:true});
+  }
+  (snap.work_notes||[]).forEach(function(n,idx){
+    allNotes.push({text:n.text,date:n.date||'',user:n.user||'',idx:idx});
+  });
+
+  if(allNotes.length){
+    var list=document.createElement('div');
+    list.style.cssText='max-height:220px;overflow-y:auto;padding-right:4px;';
+    allNotes.forEach(function(n){
+      var bubble=document.createElement('div');
+      bubble.style.cssText='padding:8px 12px;background:#F8F8F8;border-radius:8px;border-left:3px solid var(--red);margin-bottom:6px;position:relative;';
+      var meta=document.createElement('div');
+      meta.style.cssText='font-size:10px;color:var(--dgray);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;';
+      var who=document.createElement('span');
+      who.style.fontWeight='600';
+      who.textContent=n.user||'Unknown';
+      meta.appendChild(who);
+      var when=document.createElement('span');
+      if(n.date){
+        var d=n.date.length>10?new Date(n.date):new Date(n.date+'T12:00:00');
+        when.textContent=isNaN(d)?n.date:d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      }
+      meta.appendChild(when);
+      bubble.appendChild(meta);
+      var txt=document.createElement('div');
+      txt.style.cssText='font-size:12px;color:#333;line-height:1.5;white-space:pre-wrap;';
+      txt.textContent=n.text;
+      bubble.appendChild(txt);
+      // Delete button (not for initial note)
+      if(!n.isInitial){
+        var del=document.createElement('button');
+        del.style.cssText='position:absolute;top:6px;right:6px;background:none;border:none;color:#bbb;cursor:pointer;font-size:13px;padding:0 3px;line-height:1;';
+        del.textContent='\u00D7';
+        del.title='Delete note';
+        del.addEventListener('mouseenter',function(){this.style.color='#CC0000';});
+        del.addEventListener('mouseleave',function(){this.style.color='#bbb';});
+        (function(i){del.addEventListener('click',function(){
+          if(!confirm('Delete this note?'))return;
+          snap.work_notes.splice(i,1);
+          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+            .then(function(){renderProjectSummary();});
+        });})(n.idx);
+        bubble.appendChild(del);
+      }
+      list.appendChild(bubble);
+    });
+    feed.appendChild(list);
+    // Auto-scroll to bottom
+    list.scrollTop=list.scrollHeight;
+  }
+
+  // Inline input — text field + send button
+  var inp=document.createElement('input');
+  inp.type='text';inp.id='ps-note-input';
+  inp.placeholder='Add a note...';
+  inp.style.cssText='flex:1;font-size:12px;padding:7px 12px;border:1px solid var(--bdr);border-radius:6px;';
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter')sendInlineNote(snap);});
+  inputArea.appendChild(inp);
+  var sendBtn=document.createElement('button');
+  sendBtn.className='btn btn-red btn-sm';
+  sendBtn.textContent='Send';
+  sendBtn.style.flexShrink='0';
+  sendBtn.addEventListener('click',function(){sendInlineNote(snap);});
+  inputArea.appendChild(sendBtn);
+}
+
+function sendInlineNote(snap){
+  var inp=document.getElementById('ps-note-input');
+  if(!inp)return;
+  var text=inp.value.trim();
+  if(!text){toast('Enter a note','err');return;}
+  if(!snap.work_notes)snap.work_notes=[];
+  var today=new Date();
+  snap.work_notes.push({text:text,date:today.toISOString().split('T')[0],user:window._userName||window._userUsername||''});
+  addProjectActivity(snap,'note','Note added');
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.ok&&proj)proj.snap=snap;
+      renderProjectNotesFeed(snap);
+      toast('Note added','ok');
+    });
 }
 
 function addProjectNote(){
