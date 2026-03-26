@@ -211,7 +211,7 @@ body.dark [style*="border:1px solid #EBEBEB"]{border-color:rgba(255,255,255,0.08
 body.dark [style*="border:1px solid var(--bdr)"]{border-color:rgba(255,255,255,0.06) !important;}
 body.dark [style*="border:2px solid var(--red)"]{border-color:#FF453A !important;}
 /* Sidebar stays dark in both modes */
-body.dark .sb{background:#0F0F11;}
+body.dark .sb{background:#000;}
 /* Dashboard bid calendar cells */
 body.dark .dk-cal-cell{background:#2C2C2E !important;color:#F5F5F7;}
 body.dark .dk-cal-today{background:#2C1B1D !important;border-color:#CC0000 !important;}
@@ -326,7 +326,7 @@ body.dark .mention-dropdown{background:#1C1C1E;border-color:#48484A;}
 #app{display:none;}
 #app.on{display:grid;grid-template-columns:var(--rail-w) 1fr;min-height:100vh;transition:grid-template-columns var(--transition);}
 #app.on.sb-expanded{grid-template-columns:var(--sidebar-w) 1fr;}
-.sb{background:#111;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;width:var(--rail-w);transition:width var(--transition);z-index:20;min-width:var(--rail-w);}
+.sb{background:#000;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;width:var(--rail-w);transition:width var(--transition);z-index:20;min-width:var(--rail-w);}
 .sb:hover:not(.pinned){position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);box-shadow:4px 0 24px rgba(0,0,0,.3);}
 .sb.pinned{width:var(--sidebar-w);}
 .sb-canvas{position:absolute;inset:0;z-index:0;pointer-events:none;}
@@ -8671,7 +8671,7 @@ function initLoginCanvas(){var cv=document.getElementById('login-canvas');if(!cv
 
 function initSidebarCanvas(){
   var cv=document.getElementById('sb-canvas');if(!cv)return;
-  var ctx=cv.getContext('2d');var W,H,pts;var N=12;
+  var ctx=cv.getContext('2d');var W,H,pts;var N=30;
   // Always size to the full expanded width so animation looks correct in both states
   function resize(){
     var sb=cv.parentElement;
@@ -8679,16 +8679,23 @@ function initSidebarCanvas(){
     H=cv.height=sb.offsetHeight||window.innerHeight;
   }
   function rr(a,b){return a+Math.random()*(b-a);}
-  function init(){resize();pts=[];for(var i=0;i<N;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:rr(-0.06,0.06),vy:rr(-0.06,0.06),r:rr(0.6,1.2)});}
+  function init(){resize();pts=[];for(var i=0;i<N;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:rr(-0.12,0.12),vy:rr(-0.12,0.12),r:rr(1,2.2)});}
   function draw(){
     ctx.clearRect(0,0,W,H);
     for(var i=0;i<N;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;}
+    // White network lines
     for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){
       var dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,dist=Math.sqrt(dx*dx+dy*dy);
-      if(dist<100){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(255,255,255,'+(1-dist/100)*0.03+')';ctx.lineWidth=0.5;ctx.stroke();}
-      if(dist<50){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(204,0,0,'+(1-dist/50)*0.06+')';ctx.lineWidth=0.5;ctx.stroke();}
+      if(dist<160){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(255,255,255,'+(1-dist/160)*0.12+')';ctx.lineWidth=0.6;ctx.stroke();}
+      // Red accent lines for close nodes
+      if(dist<80){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(204,0,0,'+(1-dist/80)*0.25+')';ctx.lineWidth=0.8;ctx.stroke();}
     }
-    for(var i=0;i<N;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,6.28);ctx.fillStyle='rgba(255,255,255,0.06)';ctx.fill();}
+    // Dots — mix of white and red
+    for(var i=0;i<N;i++){
+      ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,6.28);
+      ctx.fillStyle=i%4===0?'rgba(204,0,0,0.35)':'rgba(255,255,255,0.18)';
+      ctx.fill();
+    }
     requestAnimationFrame(draw);
   }
   window.addEventListener('resize',function(){resize();});init();draw();
