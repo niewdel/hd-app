@@ -9173,6 +9173,164 @@ function renderRptExecutive(){
 
 // ==================== REPORT PDF EXPORT ====================
 
+function _extractReportSections(output){
+  var sections=[];
+  function getColor(el){
+    if(!el)return'#111111';
+    var c=el.style.color||'';
+    if(c.startsWith('#'))return c;
+    if(c.startsWith('rgb')){var m=c.match(/\d+/g);if(m&&m.length>=3)return'#'+m.slice(0,3).map(function(v){return('0'+parseInt(v).toString(16)).slice(-2);}).join('');};
+    if(c==='var(--red)')return'#CC0000';
+    return'#111111';
+  }
+  function extractStats(container){
+    var statEls=container.querySelectorAll('.rpt-stat');
+    if(!statEls.length)return false;
+    var items=[];
+    statEls.forEach(function(st){
+      var val=st.querySelector('.rpt-stat-val');
+      var lbl=st.querySelector('.rpt-stat-lbl');
+      var sub=st.querySelector('.rpt-stat-sub');
+      items.push({value:val?val.textContent.trim():'',label:lbl?lbl.textContent.trim():'',sub:sub?sub.textContent.trim():'',color:getColor(val)});
+    });
+    sections.push({type:'stats',items:items});
+    return true;
+  }
+  function extractTable(container,title){
+    var tbl=container.querySelector('.rpt-tbl');
+    if(!tbl)return false;
+    var headers=[];var rows=[];
+    tbl.querySelectorAll('thead th').forEach(function(th){headers.push(th.textContent.trim());});
+    tbl.querySelectorAll('tbody tr').forEach(function(tr){
+      var row=[];tr.querySelectorAll('td').forEach(function(td){row.push(td.textContent.trim());});
+      if(row.length)rows.push(row);
+    });
+    sections.push({type:'table',title:title||'',headers:headers,rows:rows});
+    return true;
+  }
+  function extractVerticalBars(container,title){
+    // Vertical bar charts have a flex container with align-items:flex-end
+    var flexEnd=null;
+    container.querySelectorAll('div').forEach(function(d){
+      var s=d.getAttribute('style')||'';
+      if(s.indexOf('flex-end')>=0&&d.querySelectorAll('.rpt-bar').length>0)flexEnd=d;
+    });
+    if(!flexEnd)return false;
+    var items=[];
+    for(var j=0;j<flexEnd.children.length;j++){
+      var col=flexEnd.children[j];
+      var bar=col.querySelector('.rpt-bar');if(!bar)continue;
+      var texts=[];
+      for(var k=0;k<col.children.length;k++){if(!col.children[k].classList.contains('rpt-bar'))texts.push(col.children[k].textContent.trim());}
+      var valueText=texts.length>0?texts[0]:'';
+      var labelText=texts.length>1?texts[texts.length-1]:'';
+      var numVal=parseFloat(valueText.replace(/[^0-9.-]/g,''))||0;
+      items.push({label:labelText,value:numVal,display:valueText});
+    }
+    if(items.length)sections.push({type:'bar_chart',title:title||'',items:items});
+    return items.length>0;
+  }
+  function extractHorizontalBars(container,title){
+    var bars=container.querySelectorAll('.rpt-bar');
+    if(!bars.length)return false;
+    // Walk rows: each row has a label, a bar, and possibly a value
+    var items=[];
+    // Pattern 1: structured rows (funnel, lost work) - parent divs with label+bar+value
+    var rowDivs=container.querySelectorAll('.card-body > div, .card-body > div > div');
+    // Try to find bar parents
+    bars.forEach(function(bar){
+      var row=bar.closest('[style*="margin-bottom"]')||bar.parentElement.parentElement;
+      if(!row)return;
+      // Get all text nodes that aren't the bar
+      var label='';var value='';
+      var allText=[];
+      row.querySelectorAll('div,span').forEach(function(t){
+        if(t.querySelector('.rpt-bar'))return;
+        if(t.classList.contains('rpt-bar'))return;
+        var txt=t.textContent.trim();
+        if(txt&&t.children.length===0)allText.push(txt);
+      });
+      if(allText.length>=2){label=allText[0];value=allText[allText.length-1];}
+      else if(allText.length===1){label=allText[0];}
+      var numVal=parseFloat((value||label).replace(/[^0-9.-]/g,''))||0;
+      if(label)items.push({label:label,value:numVal,display:value||String(numVal)});
+    });
+    // Deduplicate by label
+    var seen={};var unique=[];
+    items.forEach(function(it){if(!seen[it.label]){seen[it.label]=true;unique.push(it);}});
+    if(unique.length)sections.push({type:'bar_chart',title:title||'',items:unique});
+    return unique.length>0;
+  }
+  function extractSimpleList(container,title){
+    // For executive summary top clients/regions lists
+    var listDivs=container.querySelectorAll('div[style*="border-bottom"]');
+    if(listDivs.length<2)return false;
+    var rows=[];
+    listDivs.forEach(function(d){
+      var spans=d.querySelectorAll('span');
+      if(spans.length>=2)rows.push([spans[0].textContent.trim(),spans[1].textContent.trim()]);
+      else if(d.textContent.trim())rows.push([d.textContent.trim()]);
+    });
+    if(rows.length)sections.push({type:'table',title:title||'',headers:[],rows:rows});
+    return rows.length>0;
+  }
+  function processElement(el){
+    // Skip text nodes and invisible elements
+    if(el.nodeType!==1)return;
+    // Stats grid (not inside a card)
+    if(!el.classList.contains('card')&&el.querySelector('.rpt-stat')&&!el.querySelector('.rpt-tbl')){
+      extractStats(el);
+      return;
+    }
+    // Card element
+    if(el.classList.contains('card')){
+      var titleEl=el.querySelector('.card-title');
+      var title=titleEl?titleEl.textContent.trim():'';
+      // Table inside card
+      if(el.querySelector('.rpt-tbl')){extractTable(el,title);return;}
+      // Bar chart inside card
+      var hasBars=el.querySelectorAll('.rpt-bar').length>0;
+      if(hasBars){
+        if(!extractVerticalBars(el,title))extractHorizontalBars(el,title);
+        return;
+      }
+      // Simple list (executive summary)
+      if(el.querySelectorAll('div[style*="border-bottom"]').length>0){extractSimpleList(el,title);return;}
+      return;
+    }
+    // Wrapper div (executive summary outer border, etc) - recurse into children
+    if(el.children.length>0){
+      for(var i=0;i<el.children.length;i++){
+        var ch=el.children[i];
+        if(ch.nodeType!==1)continue;
+        // Stat grid child
+        if(ch.querySelector('.rpt-stat')&&!ch.classList.contains('card')){extractStats(ch);continue;}
+        // Card child
+        if(ch.classList.contains('card')){processElement(ch);continue;}
+        // Grid with list columns (executive summary Top Clients / Top Regions)
+        var gs=ch.getAttribute('style')||'';
+        if(gs.indexOf('grid-template-columns')>=0&&ch.querySelectorAll('div[style*="border-bottom"]').length>0){
+          for(var g=0;g<ch.children.length;g++){
+            var col=ch.children[g];var colTitle='';
+            for(var q=0;q<col.children.length;q++){
+              var qs=col.children[q].getAttribute('style')||'';
+              if(qs.indexOf('uppercase')>=0){colTitle=col.children[q].textContent.trim();break;}
+            }
+            if(colTitle&&col.querySelectorAll('div[style*="border-bottom"]').length>0){
+              extractSimpleList(col,colTitle);
+            }
+          }
+          continue;
+        }
+        // Nested wrapper or card container
+        if(ch.querySelector('.card')||ch.querySelector('.rpt-stat')){processElement(ch);}
+      }
+    }
+  }
+  for(var i=0;i<output.children.length;i++){processElement(output.children[i]);}
+  return sections;
+}
+
 async function exportReportPDF(){
   var output=document.getElementById('rpt-output');
   if(!output||!output.innerHTML){toast('No report to export','err');return;}
@@ -9188,9 +9346,10 @@ async function exportReportPDF(){
     'executive':'Executive Summary'
   };
   var reportName=reportNames[_currentReport]||'Report';
+  var sections=_extractReportSections(output);
   try{
     var r=await fetch('/generate-report-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      report_name:reportName,date_range:rangeLabel,html:output.innerHTML,
+      report_name:reportName,date_range:rangeLabel,sections:sections,
       generated_date:new Date().toLocaleDateString()
     })});
     if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
