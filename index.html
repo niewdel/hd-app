@@ -9018,8 +9018,7 @@ function updateNavBadges(){
       if(!wo.scheduled_date&&wo.status!=='complete')unschedCount++;
     });
   });
-  if(activeCount>0){projBadge.textContent=activeCount;projBadge.style.display='';}
-  else{projBadge.style.display='none';}
+  projBadge.style.display='none';
   if(unschedCount>0){schedBadge.textContent=unschedCount;schedBadge.style.display='';}
   else{schedBadge.style.display='none';}
 }
