@@ -436,6 +436,16 @@ def update_user(uid):
     if 'pin' in data and data['pin']: update['pin_hash'] = hash_pin(data['pin'])
     if not update: return jsonify({'ok':False,'error':'Nothing to update'}), 400
     try:
+        # If username is changing, look up the old one first
+        old_username = None
+        if 'username' in update:
+            try:
+                r0 = http.get(sb_url('hd_users', f'?id=eq.{uid}&select=username'), headers=sb_headers(), timeout=5)
+                if r0.status_code == 200 and r0.json():
+                    old_username = r0.json()[0]['username']
+            except Exception:
+                pass
+
         headers = {**sb_headers(), 'Prefer': 'return=representation'}
         r = http.patch(sb_url('hd_users', f'?id=eq.{uid}'), headers=headers, json=update, timeout=5)
         if r.status_code not in (200, 204):
@@ -443,9 +453,38 @@ def update_user(uid):
         rows = r.json() if r.status_code == 200 else []
         if isinstance(rows, list) and len(rows) == 0:
             return jsonify({'ok': False, 'error': 'User not found'}), 404
+
+        # Cascade username change to notifications and other tables
+        if old_username and 'username' in update and update['username'] != old_username:
+            new_username = update['username']
+            _cascade_username(old_username, new_username)
+
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok':False,'error':str(e)}), 500
+
+
+def _cascade_username(old, new):
+    """Update username references across tables when a user is renamed."""
+    h = sb_headers()
+    try:
+        # hd_notifications: recipient
+        http.patch(sb_url('hd_notifications', f'?recipient=eq.{old}'), headers=h,
+                   json={'recipient': new}, timeout=5)
+        # hd_notifications: created_by
+        http.patch(sb_url('hd_notifications', f'?created_by=eq.{old}'), headers=h,
+                   json={'created_by': new}, timeout=5)
+        # hd_access_log: username
+        http.patch(sb_url('hd_access_log', f'?username=eq.{old}'), headers=h,
+                   json={'username': new}, timeout=5)
+        # proposals: created_by
+        http.patch(sb_url('proposals', f'?created_by=eq.{old}'), headers=h,
+                   json={'created_by': new}, timeout=5)
+        # projects: created_by
+        http.patch(sb_url('projects', f'?created_by=eq.{old}'), headers=h,
+                   json={'created_by': new}, timeout=5)
+    except Exception:
+        pass  # Best-effort — don't fail the user update
 
 @app.route('/admin/logs', methods=['GET'])
 @require_admin
