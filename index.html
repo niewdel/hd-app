@@ -6654,7 +6654,7 @@ async function exportCOPDF(){
   var p=buildCOPayload();
   if(!p.project_name){alert('Please enter a project name.');return;}
   if(!p.line_items.length){alert('Please add at least one line item.');return;}
-  btn.textContent='Generating...';btn.disabled=true;
+  if(btn){btn.textContent='Generating...';btn.disabled=true;}
   try{
     var r=await fetch('/generate-co-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
     if(!r.ok){var e=await r.json().catch(function(){return {};});throw new Error(e.error||r.status);}
@@ -6663,8 +6663,9 @@ async function exportCOPDF(){
     var a=document.createElement('a');
     a.href=url;a.download='HD_CO_'+p.co_number+'_'+p.project_name.replace(/\s+/g,'_')+'.pdf';
     a.click();URL.revokeObjectURL(url);
+    toast('CO PDF downloaded','ok');
   }catch(e){alert('Error: '+e.message);}
-  btn.textContent='Export CO PDF';btn.disabled=false;
+  if(btn){btn.textContent='Export CO PDF';btn.disabled=false;}
 }
 
 
@@ -8387,8 +8388,8 @@ function getLineItemsForPayload(){
 
 // -- PDF export ----------------------------------------------------------------
 async function exportPDF(){
-  var btn=document.getElementById('pdf-btn');
-  btn.disabled=true;btn.textContent='Generating...';
+  var btn=document.getElementById('pdf-btn')||document.getElementById('mob-pdf-btn');
+  if(btn){btn.disabled=true;btn.textContent='Generating...';}
   try{
     var p=buildPayload();
     if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
@@ -8409,8 +8410,7 @@ async function exportPDF(){
     if(lastSavedQuoteId) autoMoveToStage(lastSavedQuoteId,'Estimate Sent');
   }catch(e){toast('PDF error: '+e.message,'err');}
   finally{
-    btn.disabled=false;
-    btn.innerHTML='<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8l3 3v10a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1z"/></svg>Export PDF';
+    if(btn){btn.disabled=false;btn.textContent='Export PDF';}
   }
 }
 
