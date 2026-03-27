@@ -198,7 +198,8 @@ body.dark .rpt-tbl tr:hover{background:#2C2C2E;}
 body.dark .rpt-nav-item{color:#F5F5F7;}
 body.dark .rpt-nav-item:hover{background:#2C2C2E;}
 body.dark .rpt-nav-active{background:rgba(204,0,0,.15);color:#FF453A;}
-body.dark #rpt-sidebar{background:#1C1C1E;border-color:#3A3A3C;}
+body.dark #rpt-sidebar{background:rgba(24,24,27,0.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(255,255,255,0.06);}
+body.dark .rpt-section-hdr{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.06);}
 /* Schedule views */
 body.dark .sched-view-btn{background:#2C2C2E;color:#A1A1A6;border-color:#48484A;}
 body.dark .sched-view-btn:hover{background:#3A3A3C;}
@@ -352,7 +353,11 @@ body.dark .mention-dropdown{background:#1C1C1E;border-color:#48484A;}
   transition:box-shadow .2s,border-color .2s;
 }
 .mc-card:hover{box-shadow:var(--shadow-m);border-color:rgba(204,0,0,0.12);}
-body.dark .mc-card{background:rgba(24,24,27,0.65);border-color:rgba(255,255,255,0.06);}
+body.dark .mc-card,
+body.dark #panel-settings .card,
+body.dark #panel-admin .card,
+body.dark #panel-jobcost .card,
+body.dark #panel-bugs .card{background:rgba(24,24,27,0.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(255,255,255,0.06);}
 body.dark .mc-card:hover{border-color:rgba(204,0,0,0.25);box-shadow:0 4px 20px rgba(0,0,0,.4);}
 
 /* KPI Stat Tile */
@@ -880,6 +885,9 @@ body.dark .profile-meta-chip{background:rgba(255,255,255,.03);border-color:rgba(
 .rpt-nav-item{padding:8px 14px;font-size:12px;color:var(--blk);cursor:pointer;border-left:2px solid transparent;transition:all .12s;}
 .rpt-nav-item:hover{background:var(--lgray);}
 .rpt-nav-active{background:rgba(204,0,0,.06);border-left-color:var(--red);font-weight:600;color:var(--red);}
+.rpt-section-hdr{padding:10px 14px;background:var(--bg-sub);border-bottom:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);}
+.rpt-section-hdr:not(:first-child){border-top:1px solid var(--bdr);}
+.email-how-to-banner{background:var(--bg-sub);border:1px solid var(--bdr);border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--dgray);}
 .rpt-stat{display:flex;flex-direction:column;align-items:center;padding:14px 10px;background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);text-align:center;box-shadow:var(--shadow-s);}
 .rpt-stat-val{font-size:22px;font-weight:700;color:var(--blk);line-height:1.2;}
 .rpt-stat-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);margin-top:2px;}
@@ -1276,7 +1284,7 @@ tr:nth-child(even) td{background:var(--lgray);}
 .role-price-hidden .role-price{display:none !important;}
 .settings-tab-bar{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--bdr);padding-bottom:0;}
 .stab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--dgray);cursor:pointer;transition:color .12s,border-color .12s;}
-.stab:hover{color:var(--dark);}
+.stab:hover{color:var(--blk);}
 .stab.on{color:var(--red);border-bottom-color:var(--red);font-weight:600;}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important;}
@@ -1587,9 +1595,19 @@ tr:nth-child(even) td{background:var(--lgray);}
 
       <!-- BUILD PANEL -->
       <div class="panel" id="panel-build" data-field-hidden>
+        <div class="content" style="max-width:1200px;">
+        <div class="ops-page-head">
+          <div class="ops-page-copy">
+            <div class="ops-page-eyebrow">Proposal Builder</div>
+            <div class="ops-page-title">Scope, price, and generate client-ready proposals.</div>
+          </div>
+          <div class="ops-head-actions">
+            <span id="proposal-doc-badge" style="display:none;background:var(--red-soft);color:var(--red);padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700;font-family:monospace;letter-spacing:.5px;"></span>
+          </div>
+        </div>
 
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Project Information</span><span id="proposal-doc-badge" style="display:none;background:#fef3f2;color:var(--red);padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700;font-family:monospace;margin-left:12px;letter-spacing:.5px;"></span></div>
+        <div class="mc-card">
+          <div class="card-hdr"><span class="card-title">Project Information</span></div>
           <div class="card-body">
             <div class="fg fg2" style="margin-bottom:11px;">
               <div><label>Project Name</label><input id="proj-name" type="text" placeholder="e.g. Smith Commercial Lot"/></div>
@@ -1701,6 +1719,7 @@ tr:nth-child(even) td{background:var(--lgray);}
           </div>
         </div>
 
+      </div><!-- /content -->
       </div><!-- /panel-build -->
 
       <!-- LINE ITEMS PANEL -->
@@ -1711,13 +1730,22 @@ tr:nth-child(even) td{background:var(--lgray);}
 
       <!-- JOB COST / ESTIMATES VS ACTUALS PANEL -->
       <div class="panel" id="panel-jobcost" data-field-hidden>
-        <div class="card">
-          <div class="card-hdr">
-            <span class="card-title">Estimate Summary <span style="font-size:10px;font-weight:400;color:var(--dgray);margin-left:6px;">Auto-calculated from proposal</span></span>
+        <div class="content" style="max-width:1200px;">
+        <div class="ops-page-head">
+          <div class="ops-page-copy">
+            <div class="ops-page-eyebrow">Job Costing</div>
+            <div class="ops-page-title">Estimate breakdown, margins, and earned value analysis.</div>
+          </div>
+          <div class="ops-head-actions">
             <span id="jc-margin-badge" style="font-size:12px;font-weight:600;"></span>
           </div>
+        </div>
+        <div class="mc-card">
+          <div class="card-hdr">
+            <span class="card-title">Estimate Summary <span style="font-size:10px;font-weight:400;color:var(--dgray);margin-left:6px;">Auto-calculated from proposal</span></span>
+          </div>
           <div class="card-body">
-            <div id="jc-summary" style="background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;padding:12px 15px;">
+            <div id="jc-summary" style="background:var(--bg-sub);border:1px solid var(--bdr);border-radius:6px;padding:12px 15px;">
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Materials Cost</span><span id="jcs-mat">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Labor Cost</span><span id="jcs-labor">-</span></div>
               <div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--dgray);">Trucking Cost</span><span id="jcs-trucking">-</span></div>
@@ -1776,22 +1804,44 @@ tr:nth-child(even) td{background:var(--lgray);}
             </div>
           </div>
         </div>
-      </div>
+      </div><!-- /content -->
+      </div><!-- /panel-jobcost -->
 
       <!-- SAVED DOCUMENTS PANEL -->
       <div class="panel" id="panel-saved">
-        <div class="content">
-          <div class="card">
+        <div class="content" style="max-width:1200px;">
+          <div class="ops-page-head">
+            <div class="ops-page-copy">
+              <div class="ops-page-eyebrow">Document Hub</div>
+              <div class="ops-page-title">Saved proposals, change orders, and work orders in one place.</div>
+            </div>
+          </div>
+          <div class="mc-card" style="margin-bottom:14px;">
             <div class="card-hdr"><span class="card-title">Proposals</span></div>
-            <div class="card-body" id="saved-list"><p style="color:var(--dgray);font-size:13px;">No saved proposals yet.</p></div>
+            <div class="card-body" id="saved-list">
+              <div class="empty-state">
+                <div class="empty-state-title">No saved proposals yet</div>
+                <div class="empty-state-desc">Build a proposal and save it to see it here.</div>
+              </div>
+            </div>
           </div>
-          <div class="card" style="margin-top:16px;">
+          <div class="mc-card" style="margin-bottom:14px;">
             <div class="card-hdr"><span class="card-title">Change Orders</span></div>
-            <div class="card-body" id="co-saved-list"><p style="color:var(--dgray);font-size:12px;">No saved change orders yet.</p></div>
+            <div class="card-body" id="co-saved-list">
+              <div class="empty-state">
+                <div class="empty-state-title">No saved change orders yet</div>
+                <div class="empty-state-desc">Create a change order from an existing proposal.</div>
+              </div>
+            </div>
           </div>
-          <div class="card" style="margin-top:16px;">
+          <div class="mc-card">
             <div class="card-hdr"><span class="card-title">Work Orders</span></div>
-            <div class="card-body" id="wo-saved-list"><p style="color:var(--dgray);font-size:12px;">No work orders yet.</p></div>
+            <div class="card-body" id="wo-saved-list">
+              <div class="empty-state">
+                <div class="empty-state-title">No work orders yet</div>
+                <div class="empty-state-desc">Schedule a project to generate work orders.</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1907,81 +1957,78 @@ tr:nth-child(even) td{background:var(--lgray);}
       </div></div>
 
       <!-- CONTACTS PANEL (merged clients + subs) -->
-      <div class="panel" id="panel-contacts"><div class="content">
+      <div class="panel" id="panel-contacts"><div class="content" style="max-width:1200px;">
         <div class="ops-page-head">
           <div class="ops-page-copy">
             <div class="ops-page-eyebrow">Contacts Workspace</div>
-            <div class="ops-page-title">Clients and subcontractors, cleaned up into one relationship hub.</div>
+            <div class="ops-page-title">Clients and subcontractors in one relationship hub.</div>
           </div>
           <div class="ops-head-actions">
             <button class="btn btn-sec btn-sm" onclick="openClientModal()">Add Client</button>
             <button class="btn btn-primary btn-sm" onclick="openSubModal()">Add Subcontractor</button>
           </div>
         </div>
-        <div class="ops-project-layout">
-          <div class="ops-project-main">
-            <div class="mc-card">
-              <div class="settings-tab-bar" style="margin-bottom:16px;">
-                <button class="stab on" id="contacts-tab-clients" onclick="showContactsTab('clients')">Clients</button>
-                <button class="stab" id="contacts-tab-subs" onclick="showContactsTab('subs')">Subcontractors</button>
+        <div class="mc-card">
+          <div class="settings-tab-bar" style="margin:0 16px;">
+            <button class="stab on" id="contacts-tab-clients" onclick="showContactsTab('clients')">Clients</button>
+            <button class="stab" id="contacts-tab-subs" onclick="showContactsTab('subs')">Subcontractors</button>
+          </div>
+          <div class="card-body">
+            <div id="contacts-pane-clients">
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+                <div id="contacts-clients-count" style="font-size:13px;color:var(--dgray);"></div>
+                <input id="contacts-clients-search" type="text" placeholder="Search clients&hellip;" oninput="filterClients(this.value)" style="flex:1;max-width:400px;"/>
               </div>
-              <div id="contacts-pane-clients">
-                <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
-                  <div id="contacts-clients-count" style="font-size:13px;color:var(--dgray);"></div>
-                  <input id="contacts-clients-search" type="text" placeholder="Search clients&hellip;" oninput="filterClients(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
+              <div id="contacts-clients-list">
+                <div class="empty-state">
+                  <div class="empty-state-title">No clients yet</div>
+                  <div class="empty-state-desc">Add a client to get started.</div>
                 </div>
-                <div id="contacts-clients-list"></div>
               </div>
-              <div id="contacts-pane-subs" style="display:none;">
-                <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
-                  <div id="contacts-subs-count" style="font-size:13px;color:var(--dgray);"></div>
-                  <input id="contacts-subs-search" type="text" placeholder="Search subcontractors&hellip;" oninput="filterSubs(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
-                  <button class="btn btn-red btn-sm" onclick="openSubModal()">+ Add Sub</button>
+            </div>
+            <div id="contacts-pane-subs" style="display:none;">
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+                <div id="contacts-subs-count" style="font-size:13px;color:var(--dgray);"></div>
+                <input id="contacts-subs-search" type="text" placeholder="Search subcontractors&hellip;" oninput="filterSubs(this.value)" style="flex:1;max-width:400px;"/>
+                <button class="btn btn-red btn-sm" onclick="openSubModal()">+ Add Sub</button>
+              </div>
+              <div id="contacts-subs-list">
+                <div class="empty-state">
+                  <div class="empty-state-title">No subcontractors yet</div>
+                  <div class="empty-state-desc">Add a subcontractor to track relationships.</div>
                 </div>
-                <div id="contacts-subs-list"></div>
               </div>
             </div>
           </div>
         </div>
       </div></div>
 
-      <!-- CLIENTS PANEL (legacy, kept for direct links) -->
-      <div class="panel" id="panel-clients"><div class="content">
-                <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
-                  <div id="clients-count" style="font-size:13px;color:var(--dgray);"></div>
-                  <input id="clients-search" type="text" placeholder="Search clients..." oninput="filterClients(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
-                </div>
-                <div id="clients-list"></div>
-        </div>
-      </div>
-
-      <div class="panel" id="panel-subs"><div class="content">
-                <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
-                  <div id="subs-count" style="font-size:13px;color:var(--dgray);"></div>
-                  <input id="subs-search" type="text" placeholder="Search subcontractors..." oninput="filterSubs(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
-                  <button class="btn btn-red btn-sm" onclick="openSubModal()">+ Add Sub</button>
-                </div>
-                <div id="subs-list"><p style="color:var(--dgray);font-size:13px;">Loading subcontractors...</p></div>
-        </div>
-      </div>
+      <!-- Legacy panel-clients/panel-subs removed — contacts panel is authoritative -->
 
       <!-- CLIENT SUMMARY PANEL -->
-      <div class="panel" id="panel-client-summary"><div class="content" style="padding:20px;">
-        <div style="font-size:11px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Client Summary</div>
-        <div id="client-summary-header" style="margin-bottom:20px;"></div>
+      <div class="panel" id="panel-client-summary"><div class="content" style="padding:20px;max-width:1200px;">
+        <div class="ops-page-head">
+          <div class="ops-page-copy">
+            <div class="ops-page-eyebrow">Client Summary</div>
+            <div class="ops-page-title" id="client-summary-header"></div>
+          </div>
+          <div class="ops-head-actions">
+            <button class="btn btn-sec btn-sm" onclick="editClientFromSummary()">Edit Client</button>
+          </div>
+        </div>
         <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;">
           <div>
-            <div class="card" style="margin-bottom:14px;">
-              <div class="card-hdr"><span class="card-title">Client Details</span><button class="btn btn-sec btn-sm" onclick="editClientFromSummary()">Edit</button></div>
-              <div class="card-body" id="cs-details"><p style="color:var(--dgray);font-size:12px;">Loading...</p></div>
+            <div class="mc-card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Client Details</span></div>
+              <div class="card-body" id="cs-details"><div class="empty-state"><div class="empty-state-desc">Loading...</div></div></div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Linked Projects</span></div>
-              <div class="card-body" id="cs-projects"><p style="color:var(--dgray);font-size:12px;">No projects found.</p></div>
+              <div class="card-body" id="cs-projects"><div class="empty-state"><div class="empty-state-desc">No projects found.</div></div></div>
             </div>
           </div>
           <div>
-            <div class="card">
+            <div class="mc-card">
               <div class="card-hdr"><span class="card-title">Notes</span></div>
               <div class="card-body" id="cs-notes">
                 <div id="cs-notes-list"></div>
@@ -1996,9 +2043,18 @@ tr:nth-child(even) td{background:var(--lgray);}
       </div></div>
 
       <!-- CHANGE ORDERS PANEL -->
-      <div class="panel" id="panel-co" data-field-hidden><div class="content">
-                <div class="card">
-                  <div class="card-hdr"><span class="card-title">Change Order Info</span><span id="co-doc-badge" style="display:none;background:#fef3f2;color:var(--red);padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700;font-family:monospace;margin-left:12px;letter-spacing:.5px;"></span></div>
+      <div class="panel" id="panel-co" data-field-hidden><div class="content" style="max-width:1200px;">
+        <div class="ops-page-head">
+          <div class="ops-page-copy">
+            <div class="ops-page-eyebrow">Change Order</div>
+            <div class="ops-page-title">Modify scope and pricing for an existing proposal.</div>
+          </div>
+          <div class="ops-head-actions">
+            <span id="co-doc-badge" style="display:none;background:var(--red-soft);color:var(--red);padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700;font-family:monospace;letter-spacing:.5px;"></span>
+          </div>
+        </div>
+                <div class="mc-card">
+                  <div class="card-hdr"><span class="card-title">Change Order Info</span></div>
                   <div class="card-body">
                     <div style="margin-bottom:10px;">
                       <label>Link to Proposal</label>
@@ -2070,42 +2126,54 @@ tr:nth-child(even) td{background:var(--lgray);}
 
 
       <!-- ANALYTICS PANEL -->
-      <div class="panel" id="panel-analytics" data-field-hidden><div class="content">
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px;" id="analytics-summary"></div>
-                <div class="card">
-<div class="card-body" style="padding:0;">
-                    <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                      <thead>
-                        <tr style="background:#FAFAFA;border-bottom:1px solid var(--bdr);">
-                          <th style="padding:8px 12px;text-align:left;font-weight:600;">Project</th>
-                          <th style="padding:8px 12px;text-align:left;font-weight:600;">Client</th>
-                          <th style="padding:8px 12px;text-align:left;font-weight:600;">Date</th>
-                          <th style="padding:8px 12px;text-align:right;font-weight:600;">Bid Price</th>
-                                        <th style="padding:8px 12px;text-align:right;font-weight:600;">Margin $</th>
-                          <th style="padding:8px 12px;text-align:right;font-weight:600;">Margin %</th>
-                        </tr>
-                      </thead>
-                      <tbody id="analytics-tbody"></tbody>
-                    </table>
-                    <div id="analytics-empty" style="padding:24px;text-align:center;color:var(--dgray);font-size:13px;display:none;">No saved quotes yet. Save proposals from Build Proposal to see analytics here.</div>
-                  </div>
-                </div>
-                <div style="font-size:11px;color:var(--dgray);margin-top:8px;text-align:center;">
-                  <span style="color:#27500A;">Green = 30%+</span> &nbsp;
-                  <span style="color:#B25000;">Yellow = 15-30%</span> &nbsp;
-                  <span style="color:#A32D2D;">Red = under 15%</span>
-                </div>
-                <div class="card" style="margin-top:14px;">
-                  <div class="card-hdr">
-                    <span class="card-title">Proposal Line Items</span>
-                  </div>
-                  <div id="li-table-wrap" style="overflow-x:auto;"></div>
-                  <div style="margin-top:12px;display:flex;gap:8px;">
-                    <button class="btn btn-sec btn-sm" onclick="refreshLineItems()">Refresh from Build</button>
-                  </div>
-                </div>
-              </div>
+      <div class="panel" id="panel-analytics" data-field-hidden><div class="content" style="max-width:1200px;">
+        <div class="ops-page-head">
+          <div class="ops-page-copy">
+            <div class="ops-page-eyebrow">Analytics</div>
+            <div class="ops-page-title">Revenue, margins, and proposal performance at a glance.</div>
+          </div>
+          <div class="ops-head-actions">
+            <button class="btn btn-sec btn-sm" onclick="refreshLineItems()">Refresh Line Items</button>
+          </div>
+        </div>
+        <div id="analytics-summary" class="metrics" style="margin-bottom:20px;"></div>
+        <div class="mc-card" style="margin-bottom:14px;">
+          <div class="card-body" style="padding:0;">
+            <div style="overflow-x:auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Project</th>
+                    <th>Client</th>
+                    <th>Date</th>
+                    <th style="text-align:right;">Bid Price</th>
+                    <th style="text-align:right;">Margin $</th>
+                    <th style="text-align:right;">Margin %</th>
+                  </tr>
+                </thead>
+                <tbody id="analytics-tbody"></tbody>
+              </table>
             </div>
+            <div id="analytics-empty" class="empty-state" style="display:none;">
+              <div class="empty-state-title">No saved quotes yet</div>
+              <div class="empty-state-desc">Save proposals from Build Proposal to see analytics here.</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px;">
+          <span class="badge" style="background:#E8F0E8;color:#27500A;">30%+ margin</span>
+          <span class="badge" style="background:#FFF3E0;color:#B25000;">15-30% margin</span>
+          <span class="badge" style="background:#FFF0F0;color:#A32D2D;">Under 15%</span>
+        </div>
+        <div class="mc-card">
+          <div class="card-hdr">
+            <span class="card-title">Proposal Line Items</span>
+          </div>
+          <div class="card-body">
+            <div id="li-table-wrap" style="overflow-x:auto;"></div>
+          </div>
+        </div>
+      </div></div>
 
       <!-- SETTINGS PANEL -->
       <div class="panel" id="panel-settings">
@@ -2175,7 +2243,7 @@ tr:nth-child(even) td{background:var(--lgray);}
                 <button class="btn btn-primary btn-sm" onclick="saveSender()">Save Sender Defaults</button>
                 <button class="btn btn-sec btn-sm" onclick="resetSenderToProfile()">Use My Profile</button>
               </div>
-              <div id="pin-change-notice" style="display:none;margin-top:12px;padding:10px 14px;background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;font-size:12px;color:var(--dgray);">To change your password, use the security section below or contact a system administrator if you are a field user.</div>
+              <div id="pin-change-notice" style="display:none;margin-top:12px;padding:10px 14px;background:var(--bg-sub);border:1px solid var(--bdr);border-radius:6px;font-size:12px;color:var(--dgray);">To change your password, use the security section below or contact a system administrator if you are a field user.</div>
             </div>
           </div>
           <div class="card">
@@ -2406,47 +2474,51 @@ tr:nth-child(even) td{background:var(--lgray);}
 
       </div>
       <!-- WORK ORDER DETAIL PANEL -->
-      <div class="panel" id="panel-workorder"><div class="content" style="padding:20px;">
-        <div style="font-size:11px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Work Order Summary</div>
-        <div id="wo-detail-header" style="margin-bottom:16px;"></div>
+      <div class="panel" id="panel-workorder"><div class="content" style="padding:20px;max-width:1200px;">
+        <div class="ops-page-head">
+          <div class="ops-page-copy">
+            <div class="ops-page-eyebrow">Work Order</div>
+            <div class="ops-page-title" id="wo-detail-header"></div>
+          </div>
+        </div>
         <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;">
           <div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Scope of Work</span></div>
-              <div class="card-body" id="wo-scope"><p style="color:var(--dgray);font-size:12px;">No scope details.</p></div>
+              <div class="card-body" id="wo-scope"><div class="empty-state"><div class="empty-state-desc">No scope details.</div></div></div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Materials</span></div>
-              <div class="card-body" id="wo-materials"><p style="color:var(--dgray);font-size:12px;">No materials data.</p></div>
+              <div class="card-body" id="wo-materials"><div class="empty-state"><div class="empty-state-desc">No materials data.</div></div></div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Equipment</span></div>
-              <div class="card-body" id="wo-equipment"><p style="color:var(--dgray);font-size:12px;">No equipment logged.</p></div>
+              <div class="card-body" id="wo-equipment"><div class="empty-state"><div class="empty-state-desc">No equipment logged.</div></div></div>
             </div>
           </div>
           <div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Site Plan</span></div>
-              <div class="card-body" id="wo-site-plan"><p style="color:var(--dgray);font-size:12px;">No site plan.</p></div>
+              <div class="card-body" id="wo-site-plan"><div class="empty-state"><div class="empty-state-desc">No site plan.</div></div></div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Details</span></div>
-              <div class="card-body" id="wo-details"><p style="color:var(--dgray);font-size:12px;">Loading...</p></div>
+              <div class="card-body" id="wo-details"><div class="empty-state"><div class="empty-state-desc">Loading...</div></div></div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Crew Notes</span></div>
-              <div class="card-body" id="wo-notes"><p style="color:var(--dgray);font-size:12px;">No notes.</p></div>
+              <div class="card-body" id="wo-notes"><div class="empty-state"><div class="empty-state-desc">No notes.</div></div></div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Photos</span></div>
               <div class="card-body" id="wo-photos">
                 <div id="wo-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;"></div>
                 <label class="btn btn-sec btn-sm" style="cursor:pointer;"><input type="file" accept="image/*" multiple style="display:none;" onchange="uploadWOPhotos(this.files)"/>+ Add Photos</label>
               </div>
             </div>
-            <div class="card" style="margin-bottom:14px;">
+            <div class="mc-card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Material Suppliers</span></div>
-              <div class="card-body" id="wo-suppliers"><p style="color:var(--dgray);font-size:12px;">No suppliers listed.</p></div>
+              <div class="card-body" id="wo-suppliers"><div class="empty-state"><div class="empty-state-desc">No suppliers listed.</div></div></div>
             </div>
           </div>
         </div>
@@ -2548,13 +2620,13 @@ tr:nth-child(even) td{background:var(--lgray);}
           <div class="ops-project-main">
             <div style="display:flex;gap:18px;align-items:flex-start;">
               <!-- Report Sidebar -->
-              <div id="rpt-sidebar" style="width:220px;flex-shrink:0;background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad-s);overflow:hidden;">
-                <div style="padding:10px 14px;background:#FAFAFA;border-bottom:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Estimate Reports</div>
+              <div id="rpt-sidebar" class="mc-card" style="width:220px;flex-shrink:0;overflow:hidden;margin-bottom:0;">
+                <div class="rpt-section-hdr">Estimate Reports</div>
                 <div class="rpt-nav-item rpt-nav-active" onclick="selectReport('monthly-summary',this)">Monthly Estimate Summary</div>
                 <div class="rpt-nav-item" onclick="selectReport('geographic',this)">Geographic Analysis</div>
                 <div class="rpt-nav-item" onclick="selectReport('client-perf',this)">Client Performance</div>
                 <div class="rpt-nav-item" onclick="selectReport('salesperson',this)">Salesperson Performance</div>
-                <div style="padding:10px 14px;background:#FAFAFA;border-bottom:1px solid var(--bdr);border-top:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Job Reports</div>
+                <div class="rpt-section-hdr">Job Reports</div>
                 <div class="rpt-nav-item" onclick="selectReport('backlog',this)">Backlog Report</div>
                 <div class="rpt-nav-item" onclick="selectReport('completion',this)">Completion &amp; Schedule</div>
                 <div class="rpt-nav-item" onclick="selectReport('volume',this)">Jobs Per Month</div>
@@ -2563,7 +2635,7 @@ tr:nth-child(even) td{background:var(--lgray);}
                 <div class="rpt-nav-item" onclick="selectReport('material-usage',this)">Material Usage</div>
                 <div class="rpt-nav-item" onclick="selectReport('est-vs-actual',this)">Estimated vs Actual</div>
                 <div class="rpt-nav-item" onclick="selectReport('trucking',this)">Trucking Costs</div>
-                <div style="padding:10px 14px;background:#FAFAFA;border-top:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Executive</div>
+                <div class="rpt-section-hdr">Executive</div>
                 <div class="rpt-nav-item" onclick="selectReport('executive',this)">Executive Summary</div>
               </div>
               <div style="flex:1;min-width:0;">
@@ -2788,7 +2860,35 @@ tr:nth-child(even) td{background:var(--lgray);}
   </div><!-- /main -->
 
 <!-- Email Modal -->
-<div class="modal-overlay hidden" id="email-modal"><div class="modal" style="max-width:560px;"><div class="modal-hdr"><h3>Email Proposal</h3><button class="btn-ico" onclick="closeEmailModal()" style="font-size:18px;">&#10005;</button></div><div class="modal-body"><div style="background:#f0f7ff;border:1px solid #c0d8f0;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1a4a7a;"><b>How to send:</b> Copy subject &amp; body, open Gmail, paste, attach PDF, send.</div><label style="display:flex;align-items:center;justify-content:space-between;">Subject <button class="btn btn-sec btn-sm" onclick="copyEmailField('email-subject')" style="font-size:10px;padding:2px 8px;">Copy</button></label><input type="text" id="email-subject" style="margin-bottom:10px;"/><label style="display:flex;align-items:center;justify-content:space-between;">Email Body <button class="btn btn-sec btn-sm" onclick="copyEmailField('email-body')" style="font-size:10px;padding:2px 8px;">Copy</button></label><textarea id="email-body" style="min-height:200px;font-size:12px;line-height:1.5;"></textarea><div id="email-status" style="font-size:12px;margin-top:6px;min-height:16px;color:#27500A;"></div></div><div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeEmailModal()">Close</button><button class="btn btn-sec btn-sm" onclick="copyEmailAll()">Copy All</button><button class="btn btn-red btn-sm" onclick="exportPDF();closeEmailModal();">Export PDF</button></div></div></div>
+<div class="modal-overlay hidden" id="email-modal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-hdr">
+      <h3>Email Proposal</h3>
+      <button class="btn-ico" onclick="closeEmailModal()" style="font-size:18px;">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div class="email-how-to-banner">
+        <b>How to send:</b> Copy subject &amp; body, open Gmail, paste, attach PDF, send.
+      </div>
+      <label style="display:flex;align-items:center;justify-content:space-between;">
+        Subject
+        <button class="btn btn-sec btn-sm" onclick="copyEmailField('email-subject')" style="font-size:10px;padding:2px 8px;">Copy</button>
+      </label>
+      <input type="text" id="email-subject" style="margin-bottom:10px;"/>
+      <label style="display:flex;align-items:center;justify-content:space-between;">
+        Email Body
+        <button class="btn btn-sec btn-sm" onclick="copyEmailField('email-body')" style="font-size:10px;padding:2px 8px;">Copy</button>
+      </label>
+      <textarea id="email-body" style="min-height:200px;font-size:12px;line-height:1.5;"></textarea>
+      <div id="email-status" style="font-size:12px;margin-top:6px;min-height:16px;color:#27500A;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-sec btn-sm" onclick="closeEmailModal()">Close</button>
+      <button class="btn btn-sec btn-sm" onclick="copyEmailAll()">Copy All</button>
+      <button class="btn btn-red btn-sm" onclick="exportPDF();closeEmailModal();">Export PDF</button>
+    </div>
+  </div>
+</div>
 
 </div><!-- /app -->
 
@@ -3580,8 +3680,7 @@ function _buildCmdKIndex(){
     {label:'Projects',panel:'projects',icon:'grid'},
     {label:'Build Proposal',panel:'build',icon:'file'},
     {label:'Saved Documents',panel:'saved',icon:'folder'},
-    {label:'Clients',panel:'clients',icon:'users'},
-    {label:'Subcontractors',panel:'subs',icon:'users'},
+    {label:'Contacts',panel:'contacts',icon:'users'},
     {label:'Schedule',panel:'schedule',icon:'calendar'},
     {label:'Change Orders',panel:'co',icon:'file'},
     {label:'Reports',panel:'reports',icon:'chart'},
@@ -3594,7 +3693,7 @@ function _buildCmdKIndex(){
   });
   // Actions
   _cmdkItems.push({type:'action',label:'New Proposal',action:function(){showPanel('build');closeCmdK();}});
-  _cmdkItems.push({type:'action',label:'Add Client',action:function(){showPanel('clients');closeCmdK();setTimeout(function(){var b=document.querySelector('#panel-clients .btn-red');if(b)b.click();},200);}});
+  _cmdkItems.push({type:'action',label:'Add Client',action:function(){showPanel('contacts');closeCmdK();setTimeout(function(){openClientModal();},200);}});
   _cmdkItems.push({type:'action',label:'Export PDF',action:function(){exportPDF();closeCmdK();}});
   _cmdkItems.push({type:'action',label:'Toggle Dark Mode',action:function(){var t=document.getElementById('dark-toggle');if(t)t.click();closeCmdK();}});
 }
@@ -3613,7 +3712,7 @@ function openCmdK(){
   try{
     fetch('/clients/list').then(function(r){return r.json();}).then(function(d){
       if(d.clients){d.clients.slice(0,20).forEach(function(c){
-        _cmdkItems.push({type:'client',label:c.name||'Unknown',hint:c.company||'',action:function(){showPanel('clients');closeCmdK();}});
+        _cmdkItems.push({type:'client',label:c.name||'Unknown',hint:c.company||'',action:function(){showPanel('contacts');closeCmdK();}});
       });}
     });
   }catch(e){}
@@ -7096,9 +7195,9 @@ function showPanel(id,el){
   if(id==='jobcost'){aggregateWOActualsIntoEVA();renderJobCost();renderEVA();}
   if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
   if(id==='pipeline')setTimeout(renderPipeline,50);
-  if(id==='clients')setTimeout(renderClients,50);
+  if(id==='clients'){showPanel('contacts',document.querySelector('[onclick*=contacts]'));return;}
+  if(id==='subs'){showPanel('contacts',document.querySelector('[onclick*=contacts]'));setTimeout(function(){showContactsTab('subs');},100);return;}
   if(id==='contacts'){setTimeout(renderClients,50);setTimeout(renderSubsList,80);showContactsTab('clients');}
-  if(id==='subs')setTimeout(renderSubsList,50);
   if(id==='client-summary')renderClientSummary();
   if(id==='workorder')renderWorkOrderDetail();
   if(id==='schedule')renderSchedule();
@@ -7131,7 +7230,7 @@ function _buildBreadcrumb(panelId,title){
     crumbs.push({label:'Project',fn:'openProjectSummary('+window._pendingCOProjectLink+')'});
     crumbs.push({label:title,current:true});
   } else if(panelId==='client-summary'){
-    crumbs.push({label:'Clients',fn:"showPanel('clients',document.querySelector('[onclick*=clients]'))"});
+    crumbs.push({label:'Contacts',fn:"showPanel('contacts',document.querySelector('[onclick*=contacts]'))"});
     crumbs.push({label:title,current:true});
   } else if(panelId==='analytics'&&window._currentProjectId){
     crumbs.push({label:'Projects',fn:"showPanel('projects',document.querySelector('[onclick*=projects]'))"});
@@ -9480,7 +9579,7 @@ async function loadClientsForAutocomplete(){
 }
 
 async function renderClients() {
-  var container = document.getElementById('clients-list');
+  var container = document.getElementById('contacts-clients-list') || document.getElementById('clients-list');
   if (!container) return;
   container.innerHTML = '<p style="color:var(--dgray);font-size:13px;">Loading...</p>';
   try {
@@ -9488,7 +9587,7 @@ async function renderClients() {
     var d = await r.json();
     if (!d.ok) throw new Error(d.error);
     clientsList = d.clients;
-    var countEl=document.getElementById('clients-count');
+    var countEl=document.getElementById('contacts-clients-count') || document.getElementById('clients-count');
     if(countEl)countEl.innerHTML='<b>'+clientsList.length+'</b> total client'+(clientsList.length!==1?'s':'');
     container.innerHTML = '';
     if (!clientsList.length) {
@@ -9496,7 +9595,7 @@ async function renderClients() {
       if(countEl)countEl.innerHTML='';
       return;
     }
-    var clientBulkBar=createBulkDeleteToolbar('clients-list',{label:'clients',onDelete:async function(ids){
+    var clientBulkBar=createBulkDeleteToolbar('contacts-clients-list',{label:'clients',onDelete:async function(ids){
       for(var i=0;i<ids.length;i++){try{await fetch('/clients/delete/'+ids[i],{method:'DELETE'});}catch(e){}}
       toast(ids.length+' clients deleted','ok');renderClients();
     }});
@@ -9524,12 +9623,7 @@ async function renderClients() {
     });
     clients = clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||'',address:c.address||'',city_state:c.city_state||''};});
   } catch(e){container.innerHTML='<p style="color:var(--red);font-size:13px;">Error: '+e.message+'</p>';}
-  // Mirror into contacts panel
-  var cc=document.getElementById('contacts-clients-list');
-  if(cc)cc.innerHTML=container.innerHTML;
-  var ccnt=document.getElementById('contacts-clients-count');
-  var ocnt=document.getElementById('clients-count');
-  if(ccnt&&ocnt)ccnt.innerHTML=ocnt.innerHTML;
+  // Legacy mirroring removed — contacts panel is now primary
 }
 
 function showContactsTab(tab){
@@ -9596,7 +9690,7 @@ function filterClients(q){
 // -- Subcontractors Management --
 var subsList=[];
 function renderSubsList(){
-  var c=document.getElementById('subs-list');if(!c)return;
+  var c=document.getElementById('contacts-subs-list') || document.getElementById('subs-list');if(!c)return;
   // Gather all subs from all projects
   var allSubs=[];
   (pipelineProposals||[]).forEach(function(proj){
@@ -9609,7 +9703,7 @@ function renderSubsList(){
   var standalone=JSON.parse(localStorage.getItem('hd_subcontractors')||'[]');
   standalone.forEach(function(sub){allSubs.push({sub:sub,projId:null,projName:''});});
   subsList=allSubs;
-  var countEl=document.getElementById('subs-count');
+  var countEl=document.getElementById('contacts-subs-count') || document.getElementById('subs-count');
   if(countEl)countEl.innerHTML='<b>'+allSubs.length+'</b> subcontractor'+(allSubs.length!==1?'s':'');
   c.innerHTML='';
   if(!allSubs.length){c.innerHTML='<p style="color:var(--dgray);font-size:13px;">No subcontractors yet. Click + Add Sub to get started.</p>';return;}
