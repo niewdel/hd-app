@@ -792,8 +792,8 @@ body.dark .mc-queue-card:hover{border-color:rgba(204,0,0,0.3);}
 #app{display:none;}
 #app.on{display:grid;grid-template-columns:var(--rail-w) 1fr;min-height:100vh;transition:grid-template-columns var(--transition);}
 #app.on.sb-expanded{grid-template-columns:var(--sidebar-w) 1fr;}
-.sb{background:#000;display:flex;flex-direction:column;position:sticky;top:0;height:100dvh;overflow:hidden;width:var(--rail-w);transition:width var(--transition);z-index:20;min-width:var(--rail-w);}
-.sb:hover:not(.pinned){position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);box-shadow:4px 0 24px rgba(0,0,0,.3);}
+.sb{background:#000;display:flex;flex-direction:column;position:sticky;top:0;height:100dvh;overflow:hidden;width:var(--rail-w);min-width:var(--rail-w);z-index:20;}
+.sb:hover:not(.pinned){position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);box-shadow:4px 0 24px rgba(0,0,0,.3);z-index:50;}
 .sb.pinned{width:var(--sidebar-w);}
 /* Background animation canvas — covers full viewport behind everything */
 .bg-canvas{position:fixed;inset:0;z-index:-1;pointer-events:none;width:100vw;height:100dvh;}
@@ -2354,8 +2354,7 @@ tr:hover td{background:var(--tbl-alt);}
               <div style="overflow-x:auto;">
                 <table style="width:100%;border-collapse:collapse;font-size:12px;" id="mat-table">
                   <thead>
-                    <tr style="background:var(--lgray);">
-                      <th style="padding:7px 4px;width:28px;"><input type="checkbox" id="mat-tbody-sel-all" style="width:16px;height:16px;cursor:pointer;accent-color:var(--red);" onchange="document.querySelectorAll('#mat-tbody input[data-bulk-id]').forEach(function(cb){cb.checked=document.getElementById('mat-tbody-sel-all').checked;});_updateBulkCount('mat-tbody','materials');"/></th>
+                    <tr style="background:var(--tbl-alt);">
                       <th style="padding:7px 10px;text-align:left;font-weight:600;">Material</th>
                       <th style="padding:7px 10px;text-align:center;font-weight:600;">Trade</th>
                       <th style="padding:7px 10px;text-align:right;font-weight:600;">Cost $/unit</th>
@@ -3988,58 +3987,10 @@ function fi(n){return Math.round(n).toLocaleString();}
 function f2(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 // -- Bulk Delete Helper -------------------------------------------------------
-function createBulkDeleteToolbar(containerId,opts){
-  // opts: {onDelete:fn(selectedIds), label:'items'}
-  var toolbarId=containerId+'-bulk-toolbar';
-  var ex=document.getElementById(toolbarId);if(ex)ex.remove();
-  var bar=document.createElement('div');
-  bar.id=toolbarId;
-  bar.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:8px;';
-  var selAllCb=document.createElement('input');selAllCb.type='checkbox';
-  selAllCb.id=containerId+'-sel-all';
-  selAllCb.style.cssText='width:16px;height:16px;cursor:pointer;accent-color:var(--red);';
-  bar.appendChild(selAllCb);
-  var lbl=document.createElement('label');lbl.style.cssText='font-size:12px;color:var(--dgray);cursor:pointer;user-select:none;';
-  lbl.textContent='Select All';lbl.setAttribute('for',selAllCb.id);
-  bar.appendChild(lbl);
-  var delBtn=document.createElement('button');delBtn.className='btn btn-sec btn-sm';
-  delBtn.id=containerId+'-bulk-del';
-  delBtn.style.cssText='color:var(--red);display:none;margin-left:auto;';
-  delBtn.textContent='Delete Selected (0)';
-  bar.appendChild(delBtn);
-  selAllCb.addEventListener('change',function(){
-    var cbs=document.querySelectorAll('#'+containerId+' input[data-bulk-id]');
-    var checked=this.checked;
-    cbs.forEach(function(cb){cb.checked=checked;});
-    _updateBulkCount(containerId,opts.label||'items');
-  });
-  delBtn.addEventListener('click',function(){
-    var cbs=document.querySelectorAll('#'+containerId+' input[data-bulk-id]:checked');
-    var ids=[];cbs.forEach(function(cb){ids.push(cb.getAttribute('data-bulk-id'));});
-    if(!ids.length)return;
-    if(!confirm('Delete '+ids.length+' selected '+(opts.label||'items')+'?'))return;
-    opts.onDelete(ids);
-  });
-  return bar;
-}
-function _updateBulkCount(containerId,label){
-  var cbs=document.querySelectorAll('#'+containerId+' input[data-bulk-id]');
-  var checked=document.querySelectorAll('#'+containerId+' input[data-bulk-id]:checked');
-  var delBtn=document.getElementById(containerId+'-bulk-del');
-  var selAll=document.getElementById(containerId+'-sel-all');
-  if(delBtn){
-    delBtn.style.display=checked.length?'':'none';
-    delBtn.textContent='Delete Selected ('+checked.length+')';
-  }
-  if(selAll)selAll.checked=cbs.length>0&&cbs.length===checked.length;
-}
-function _makeBulkCheckbox(containerId,id){
-  var cb=document.createElement('input');cb.type='checkbox';
-  cb.setAttribute('data-bulk-id',id);
-  cb.style.cssText='width:16px;height:16px;cursor:pointer;accent-color:var(--red);flex-shrink:0;';
-  cb.addEventListener('change',function(){_updateBulkCount(containerId);});
-  return cb;
-}
+// Bulk delete/select removed per user request — functions return hidden no-op elements
+function createBulkDeleteToolbar(){var d=document.createElement('div');d.style.display='none';return d;}
+function _updateBulkCount(){}
+function _makeBulkCheckbox(){var d=document.createElement('span');d.style.display='none';return d;}
 function fmt12(t){if(!t)return '';var p=t.split(':'),h=parseInt(p[0],10),m=p[1],ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+m+' '+ap;}
 function fmtD(d){if(!d)return '';if(d.indexOf('/')>-1)return d;var p=d.split('-');if(p.length===3)return p[1]+'/'+p[2]+'/'+p[0];return d;}
 function toast(msg,type){
@@ -4802,19 +4753,8 @@ function renderDashStats(){
   var pipelineVal=calcPipelineValue();
   var decided=wonProjects+lostProjects;
   var winRate=decided>0?Math.round(wonProjects/decided*100):0;
-  // 2 stats: Active Projects, Bids Due
-  var stats=[
-    {lbl:'Active Projects',val:activeProjects,sub:'in progress'},
-    {lbl:'Bids Due',val:bidsDueWeek,sub:'next 7 days',warn:bidsDueWeek>0},
-  ];
-  c.innerHTML='';
-  stats.forEach(function(s){
-    var div=document.createElement('div');div.className='dash-stat-cell';
-    div.innerHTML='<div class="dash-stat-val'+(s.warn?' warn':'')+'">'+s.val+'</div>'
-      +'<div class="dash-stat-lbl">'+s.lbl+'</div>'
-      +(s.sub?'<div class="dash-stat-sub">'+s.sub+'</div>':'');
-    c.appendChild(div);
-  });
+  // Stats bar removed per user request (Active Projects removed, Bids Due moved to pipeline snapshot)
+  c.innerHTML='';c.style.display='none';
 }
 function renderDashPipelineSnapshot(){
   var c=document.getElementById('dash-pipeline-snapshot');if(!c)return;
@@ -4844,14 +4784,14 @@ function renderDashPipelineSnapshot(){
   var winRate=decided>0?Math.round(wonProjects/decided*100):0;
   var items=[];
   if(canSeePricing())items.push({lbl:'Pipeline',val:'$'+Math.round(pipelineVal).toLocaleString()});
+  items.push({lbl:'Bids Due',val:bidsDue,warn:bidsDue>0});
   if(decided>0)items.push({lbl:'Win Rate',val:winRate+'%'});
-  // Bids Due removed — shown in top stats bar
   if(!items.length)return;
   c.style.gridTemplateColumns='repeat('+items.length+',1fr)';
   items.forEach(function(s){
     var card=document.createElement('div');card.className='mc-card';
     card.style.cssText='padding:14px 18px;text-align:center;';
-    card.innerHTML='<div class="mc-kpi-lbl">'+s.lbl+'</div><div class="mc-kpi-val" style="font-size:22px;">'+s.val+'</div>';
+    card.innerHTML='<div class="mc-kpi-lbl">'+s.lbl+'</div><div class="mc-kpi-val" style="font-size:22px;'+(s.warn?'color:var(--red);':'')+'">'+s.val+'</div>';
     c.appendChild(card);
   });
 }
@@ -7310,35 +7250,12 @@ function renderMatTable(){
   if(!tbody) return;
   tbody.innerHTML = '';
   // Add/update bulk delete button for materials
-  var matBulkDel=document.getElementById('mat-tbody-bulk-del');
-  if(!matBulkDel){
-    var matTable=document.getElementById('mat-table');
-    if(matTable){
-      matBulkDel=document.createElement('button');matBulkDel.id='mat-tbody-bulk-del';
-      matBulkDel.className='btn btn-sec btn-sm';
-      matBulkDel.style.cssText='color:var(--red);display:none;margin-bottom:8px;';
-      matBulkDel.textContent='Delete Selected (0)';
-      matTable.parentNode.insertBefore(matBulkDel,matTable);
-      matBulkDel.addEventListener('click',function(){
-        var cbs=document.querySelectorAll('#mat-tbody input[data-bulk-id]:checked');
-        var names=[];cbs.forEach(function(cb){names.push(cb.getAttribute('data-bulk-id'));});
-        if(!names.length)return;
-        if(!confirm('Delete '+names.length+' selected materials?'))return;
-        names.forEach(function(n){var idx=LTYPES.indexOf(n);if(idx>-1)LTYPES.splice(idx,1);delete MAT[n];delete MAT_UNIT[n];delete MAT_TRADE[n];delete LBS[n];});
-        renderMatTable();toast(names.length+' materials removed','ok');
-      });
-    }
-  }
-  if(matBulkDel)matBulkDel.style.display='none';
+  // Bulk delete removed per user request
   var sorted=LTYPES.slice().sort(function(a,b){var ta=MAT_TRADE[a]||'z';var tb=MAT_TRADE[b]||'z';return ta<tb?-1:ta>tb?1:0;});
   sorted.forEach(function(k,idx){
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid var(--bdr)';
     if(idx%2)tr.style.background='var(--lgray)';
-    // Bulk checkbox
-    var tdCb=document.createElement('td');tdCb.style.cssText='padding:8px 4px;text-align:center;';
-    tdCb.appendChild(_makeBulkCheckbox('mat-tbody',k));
-    tr.appendChild(tdCb);
     // Name (read-only)
     var td0 = document.createElement('td'); td0.style.cssText='padding:8px 10px;font-weight:600;font-size:13px;';
     td0.textContent=k; tr.appendChild(td0);
