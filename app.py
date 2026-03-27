@@ -37,6 +37,28 @@ def hash_pin(pin):
 def hash_password(pw):
     return hashlib.sha256(str(pw).encode()).hexdigest()
 
+MAX_AVATAR_DATA_LEN = 2_500_000
+
+def sanitize_avatar_data(value):
+    avatar = str(value or '').strip()
+    if not avatar:
+        return ''
+    if not avatar.startswith('data:image/'):
+        raise ValueError('Profile photo must be an image.')
+    if len(avatar) > MAX_AVATAR_DATA_LEN:
+        raise ValueError('Profile photo is too large. Please upload a smaller image.')
+    return avatar
+
+def apply_user_session(user):
+    session['authenticated'] = True
+    session['username'] = user.get('username', '')
+    session['full_name'] = user.get('full_name', user.get('username', ''))
+    session['role'] = user.get('role', 'user')
+    session['email'] = user.get('email', '')
+    session['phone'] = user.get('phone', '')
+    session['avatar_data'] = user.get('avatar_data', '')
+    session.permanent = True
+
 def log_access(username, full_name, action='login', success=True):
     try:
         ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
@@ -88,13 +110,7 @@ def login():
                 pw_hash = hash_password(password)
                 pin_hash = hash_pin(password)
                 if user.get('password_hash') == pw_hash or user.get('pin_hash') == pin_hash:
-                    session['authenticated'] = True
-                    session['username'] = user['username']
-                    session['full_name'] = user.get('full_name', username)
-                    session['role'] = user.get('role', 'user')
-                    session['email'] = user.get('email', '')
-                    session['phone'] = user.get('phone', '')
-                    session.permanent = True
+                    apply_user_session(user)
                     log_access(user['username'], user.get('full_name',''), 'login', True)
                     # Get last login from access log
                     last_login = None
@@ -106,8 +122,10 @@ def login():
                             if len(logs) > 1: last_login = logs[1].get('logged_at')
                     except Exception:
                         pass
-                    return jsonify({'ok': True, 'role': session['role'], 'full_name': session['full_name'],
+                    return jsonify({'ok': True, 'role': session['role'], 'username': session['username'],
+                                    'full_name': session['full_name'],
                                     'email': session['email'], 'phone': session['phone'],
+                                    'avatar_data': session.get('avatar_data', ''),
                                     'password_hint': user.get('password_hint', ''),
                                     'last_login': last_login})
                 else:
@@ -122,8 +140,12 @@ def login():
         session['username'] = 'admin'
         session['full_name'] = 'Admin'
         session['role'] = 'admin'
+        session['email'] = ''
+        session['phone'] = ''
+        session['avatar_data'] = ''
         session.permanent = True
-        return jsonify({'ok': True, 'role': 'admin', 'full_name': 'Admin'})
+        return jsonify({'ok': True, 'role': 'admin', 'username': 'admin', 'full_name': 'Admin',
+                        'email': '', 'phone': '', 'avatar_data': ''})
     return jsonify({'error': 'Incorrect username or password'}), 401
 
 @app.route('/auth/logout', methods=['POST'])
@@ -162,7 +184,49 @@ def change_password():
 
 @app.route('/auth/check')
 def auth_check():
-    return jsonify({'authenticated': bool(session.get('authenticated')), 'role': session.get('role','user'), 'username': session.get('username',''), 'full_name': session.get('full_name',''), 'email': session.get('email',''), 'phone': session.get('phone','')})
+    return jsonify({'authenticated': bool(session.get('authenticated')), 'role': session.get('role','user'),
+                    'username': session.get('username',''), 'full_name': session.get('full_name',''),
+                    'email': session.get('email',''), 'phone': session.get('phone',''),
+                    'avatar_data': session.get('avatar_data', '')})
+
+@app.route('/auth/profile', methods=['PATCH'])
+@require_auth
+def auth_update_profile():
+    data = request.get_json() or {}
+    username = session.get('username', '')
+    full_name = str(data.get('full_name', session.get('full_name', ''))).strip()
+    email = str(data.get('email', session.get('email', ''))).strip()
+    phone = str(data.get('phone', session.get('phone', ''))).strip()
+    if not full_name:
+        return jsonify({'ok': False, 'error': 'Full name is required.'}), 400
+    try:
+        avatar_data = sanitize_avatar_data(data.get('avatar_data', session.get('avatar_data', '')))
+        update = {'full_name': full_name, 'email': email, 'phone': phone, 'avatar_data': avatar_data}
+        r = http.patch(
+            sb_url('hd_users', f'?username=eq.{username}'),
+            headers={**sb_headers(), 'Prefer': 'return=representation'},
+            json=update,
+            timeout=5
+        )
+        if r.status_code not in (200, 201):
+            return jsonify({'ok': False, 'error': r.text or 'Failed to update profile.'}), 400
+        rows = r.json() if r.text else []
+        user = rows[0] if isinstance(rows, list) and rows else update
+        user['username'] = user.get('username', username)
+        user['role'] = user.get('role', session.get('role', 'user'))
+        apply_user_session(user)
+        return jsonify({'ok': True, 'profile': {
+            'username': session.get('username', ''),
+            'full_name': session.get('full_name', ''),
+            'email': session.get('email', ''),
+            'phone': session.get('phone', ''),
+            'role': session.get('role', 'user'),
+            'avatar_data': session.get('avatar_data', '')
+        }})
+    except ValueError as e:
+        return jsonify({'ok': False, 'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 # ââ Proposals âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
@@ -1059,10 +1123,11 @@ def setup_settings_table():
 @app.route('/setup/user-fields', methods=['POST'])
 @require_admin
 def setup_user_fields():
-    """Add email/phone columns and update role constraint to include 'field'."""
+    """Add profile fields and update role constraint to include 'field'."""
     sql = """
     ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS email TEXT DEFAULT '';
     ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT '';
+    ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS avatar_data TEXT DEFAULT '';
     ALTER TABLE hd_users DROP CONSTRAINT IF EXISTS hd_users_role_check;
     ALTER TABLE hd_users ADD CONSTRAINT hd_users_role_check CHECK (role IN ('admin', 'user', 'field'));
     """
@@ -1081,7 +1146,7 @@ def setup_user_fields():
             )
             if r2.status_code == 200:
                 return jsonify({'ok': True, 'method': 'pg/query'})
-            return jsonify({'ok': False, 'error': 'Run this SQL manually in Supabase: ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS email TEXT DEFAULT \'\'; ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT \'\';'})
+            return jsonify({'ok': False, 'error': 'Run this SQL manually in Supabase: ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS email TEXT DEFAULT \'\'; ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT \'\'; ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS avatar_data TEXT DEFAULT \'\';'})
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)})

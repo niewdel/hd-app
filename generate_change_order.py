@@ -23,6 +23,9 @@ TBLBORD = colors.HexColor('#CCCCCC')
 ROWALT  = colors.HexColor('#EEEEEE')
 GREEN   = colors.HexColor('#27500A')
 DRED    = colors.HexColor('#A32D2D')
+INK     = colors.HexColor('#16181C')
+MUTED   = colors.HexColor('#6E6662')
+RULE    = colors.HexColor('#D9CFCA')
 
 # ── Page geometry ────────────────────────────────────────────────────────────
 W, H = letter
@@ -82,22 +85,25 @@ class HDCanvas(pdfcanvas.Canvas):
 
     def _draw_header(self):
         self.saveState()
+        self.setFillColor(RED)
+        self.rect(LM, H - 0.30*inch, W - LM - RM, 0.045*inch, stroke=0, fill=1)
         # Logo top-left
         if os.path.exists(LOGO):
             self.drawImage(LOGO, LM, H - 0.82 * inch,
                            width=1.25 * inch, height=0.52 * inch,
                            preserveAspectRatio=True, mask='auto')
-        # "CHANGE ORDER #X" top-right
-        self.setFont('Helvetica-Bold', 19)
-        self.setFillColor(BLACK)
-        self.drawRightString(W - RM, H - 0.52 * inch,
-                             f'CHANGE ORDER #{self._co_number}')
+        self.setFont('Helvetica-Bold', 7.5)
+        self.setFillColor(RED)
+        self.drawRightString(W - RM, H - 0.38 * inch, 'HD HAULING & GRADING')
+        self.setFont('Helvetica-Bold', 18)
+        self.setFillColor(INK)
+        self.drawRightString(W - RM, H - 0.56 * inch, f'CHANGE ORDER #{self._co_number}')
         # Date below that
         self.setFont('Helvetica', 9)
-        self.setFillColor(DGRAY)
+        self.setFillColor(MUTED)
         self.drawRightString(W - RM, H - 0.70 * inch, self._date_str)
         # Horizontal rule
-        self.setStrokeColor(BLACK)
+        self.setStrokeColor(RULE)
         self.setLineWidth(1.0)
         self.line(LM, H - 0.88 * inch, W - RM, H - 0.88 * inch)
         self.restoreState()

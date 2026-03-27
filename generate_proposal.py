@@ -19,6 +19,10 @@ SECHDR  = colors.HexColor('#222222')
 DGRAY   = colors.HexColor('#555555')
 TBLBORD = colors.HexColor('#CCCCCC')
 ROWALT  = colors.HexColor('#EEEEEE')
+INK     = colors.HexColor('#16181C')
+MUTED   = colors.HexColor('#6E6662')
+PANEL   = colors.HexColor('#F7F2F0')
+RULE    = colors.HexColor('#D9CFCA')
 
 W, H    = letter
 # Resolve logo path relative to this file so it works both locally and on Railway
@@ -71,24 +75,29 @@ class HDCanvas(pdfcanvas.Canvas):
         pdfcanvas.Canvas.save(self)
     def _draw_header(self):
         self.saveState()
+        self.setFillColor(RED)
+        self.rect(LM, H - 0.30*inch, W - LM - RM, 0.045*inch, stroke=0, fill=1)
         if os.path.exists(LOGO):
             self.drawImage(LOGO, LM, H - 0.82*inch, width=1.25*inch, height=0.52*inch,
                            preserveAspectRatio=True, mask='auto')
-        self.setFont('Helvetica-Bold', 19)
-        self.setFillColor(BLACK)
-        self.drawRightString(W - RM, H - 0.52*inch, 'PROPOSAL & CONTRACT')
+        self.setFont('Helvetica-Bold', 7.5)
+        self.setFillColor(RED)
+        self.drawRightString(W - RM, H - 0.38*inch, 'HD HAULING & GRADING')
+        self.setFont('Helvetica-Bold', 18)
+        self.setFillColor(INK)
+        self.drawRightString(W - RM, H - 0.56*inch, 'PROPOSAL PACKAGE')
         self.setFont('Helvetica', 9)
-        self.setFillColor(DGRAY)
-        right_y = H - 0.70*inch
+        self.setFillColor(MUTED)
+        right_y = H - 0.72*inch
         if self._doc_number:
             self.setFont('Helvetica-Bold', 9)
             self.setFillColor(RED)
             self.drawRightString(W - RM, right_y, self._doc_number)
             right_y -= 0.14*inch
             self.setFont('Helvetica', 9)
-            self.setFillColor(DGRAY)
+            self.setFillColor(MUTED)
         self.drawRightString(W - RM, right_y, self._date)
-        self.setStrokeColor(BLACK)
+        self.setStrokeColor(RULE)
         self.setLineWidth(1.0)
         self.line(LM, H - 0.88*inch, W - RM, H - 0.88*inch)
         # Page number bottom center
@@ -124,6 +133,14 @@ class CoverPage(Flowable):
         ah = self._ah
         mid = aw / 2
 
+        c.saveState()
+        c.setFillColor(INK)
+        c.rect(0, ah - 1.00*inch, aw, 0.18*inch, stroke=0, fill=1)
+        c.setFillColor(WHITE)
+        c.setFont('Helvetica-Bold', 8)
+        c.drawCentredString(mid, ah - 0.90*inch, 'HD HAULING & GRADING')
+        c.restoreState()
+
         # Use cropped logo (hd_logo.png has 44% right-side white padding, shifts center)
         _cover_logo = os.path.join(_DIR, 'hd_logo_cropped.png')
         if not os.path.exists(_cover_logo):
@@ -137,60 +154,68 @@ class CoverPage(Flowable):
             scale = min(max_w / _iw, max_h / _ih)
             lw = _iw * scale
             lh = _ih * scale
-            c.drawImage(_cover_logo, mid - lw/2, ah * 0.50, width=lw, height=lh,
+            c.drawImage(_cover_logo, mid - lw/2, ah * 0.56, width=lw, height=lh,
                         mask='auto')
 
+        c.setFont('Helvetica-Bold', 9)
+        c.setFillColor(RED)
+        c.drawCentredString(mid, ah * 0.505, 'PROJECT PROPOSAL')
         c.setFont('Helvetica-Bold', 26)
-        c.setFillColor(BLACK)
-        c.drawCentredString(mid, ah * 0.454, d.get('project_name', 'Proposal'))
+        c.setFillColor(INK)
+        c.drawCentredString(mid, ah * 0.468, d.get('project_name', 'Proposal'))
 
-        c.setStrokeColor(MGRAY)
+        c.setStrokeColor(RULE)
         c.setLineWidth(0.75)
-        c.line(mid - 2.6*inch, ah * 0.437, mid + 2.6*inch, ah * 0.437)
+        c.line(mid - 2.7*inch, ah * 0.447, mid + 2.7*inch, ah * 0.447)
 
-        # Subtitle with more spacing below divider
-        c.setFont('Helvetica', 18)
-        c.setFillColor(DGRAY)
-        c.drawCentredString(mid, ah * 0.400, 'Proposal & Contract')
+        c.setFont('Helvetica', 16)
+        c.setFillColor(MUTED)
+        c.drawCentredString(mid, ah * 0.413, 'Proposal, scope, and contract package')
 
         doc_num = d.get('document_number', '')
-        if doc_num:
-            c.setFont('Helvetica-Bold', 12)
-            c.setFillColor(RED)
-            c.drawCentredString(mid, ah * 0.370, doc_num)
-
         date_str = d.get('date', '')
-        if date_str:
-            c.setFont('Helvetica', 13)
-            c.setFillColor(colors.HexColor('#999999'))
-            c.drawCentredString(mid, ah * (0.342 if doc_num else 0.370), date_str)
+        meta_parts = [part for part in [doc_num, date_str] if part]
+        if meta_parts:
+            chip_w = 3.35 * inch
+            chip_h = 0.34 * inch
+            chip_y = ah * 0.355
+            c.setFillColor(PANEL)
+            c.roundRect(mid - chip_w/2, chip_y, chip_w, chip_h, 0.10*inch, stroke=0, fill=1)
+            c.setStrokeColor(RULE)
+            c.setLineWidth(0.8)
+            c.roundRect(mid - chip_w/2, chip_y, chip_w, chip_h, 0.10*inch, stroke=1, fill=0)
+            c.setFont('Helvetica-Bold', 10 if doc_num else 9)
+            c.setFillColor(RED if doc_num else MUTED)
+            c.drawCentredString(mid, chip_y + 0.22*inch, '  |  '.join(meta_parts))
 
-        fy = 0.55 * inch
+        fy = 0.62 * inch
         lx = aw * 0.18
         rx = aw * 0.62
         line_h = 0.17 * inch  # line spacing
+        card_w = aw * 0.25
+        card_h = 0.92 * inch
 
-        c.setFont('Helvetica-Bold', 10)
-        c.setFillColor(BLACK)
-        c.drawString(lx, fy + 0.75*inch, 'Prepared by:')
-        y = fy + 0.53*inch
-        c.setFont('Helvetica', 10)
-        c.setFillColor(DGRAY)
-        c.drawString(lx, y, d.get('sender_name', '')); y -= line_h
-        c.setFont('Helvetica', 9)
-        if d.get('company'):
-            c.drawString(lx, y, d.get('company', 'HD Hauling & Grading'))
+        for x, label, name, company in [
+            (lx - 0.10*inch, 'Prepared by', d.get('sender_name', ''), d.get('company', '')),
+            (rx - 0.10*inch, 'Prepared for', d.get('client_name', ''), d.get('client_company', '')),
+        ]:
+            c.setFillColor(PANEL)
+            c.roundRect(x, fy, card_w, card_h, 0.08*inch, stroke=0, fill=1)
+            c.setFillColor(RED)
+            c.rect(x, fy + card_h - 0.08*inch, card_w, 0.04*inch, stroke=0, fill=1)
+            c.setFillColor(INK)
+            c.setFont('Helvetica-Bold', 10)
+            c.drawString(x + 0.14*inch, fy + 0.63*inch, label)
+            c.setFont('Helvetica-Bold', 10)
+            c.drawString(x + 0.14*inch, fy + 0.42*inch, name)
+            if company:
+                c.setFont('Helvetica', 8.5)
+                c.setFillColor(MUTED)
+                c.drawString(x + 0.14*inch, fy + 0.24*inch, company[:42])
 
-        c.setFont('Helvetica-Bold', 10)
-        c.setFillColor(BLACK)
-        c.drawString(rx, fy + 0.75*inch, 'Prepared for:')
-        y = fy + 0.53*inch
-        c.setFont('Helvetica', 10)
-        c.setFillColor(DGRAY)
-        c.drawString(rx, y, d.get('client_name', '')); y -= line_h
-        c.setFont('Helvetica', 9)
-        if d.get('client_company'):
-            c.drawString(rx, y, d['client_company'])
+        c.setFont('Helvetica', 8)
+        c.setFillColor(MUTED)
+        c.drawCentredString(mid, 0.34*inch, 'Built for field-ready estimating, review, and approval.')
 
 def info_block(data, st):
     """Option C — single horizontal band, no boxes, subtle top/bottom lines,

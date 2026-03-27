@@ -23,6 +23,8 @@ DGRAY    = RGBColor(0x55, 0x55, 0x55)
 COLHDR   = RGBColor(0x4A, 0x4A, 0x4A)
 ROWALT   = RGBColor(0xEE, 0xEE, 0xEE)
 TBLBORD  = RGBColor(0xCC, 0xCC, 0xCC)
+MUTED    = RGBColor(0x6E, 0x66, 0x62)
+PANEL    = RGBColor(0xF7, 0xF2, 0xF0)
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 LOGO_COVER = os.path.join(_DIR, 'hd_logo_cropped.png')
@@ -266,13 +268,20 @@ def _add_header_to_section(section, date_str):
     cell_right.vertical_alignment = WD_ALIGN_VERTICAL.BOTTOM
     p_title = cell_right.paragraphs[0]
     p_title.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    _add_run(p_title, 'PROPOSAL & CONTRACT', bold=True, size=16, color=BLACK)
+    _add_run(p_title, 'HD HAULING & GRADING', bold=True, size=7, color=RED)
+    p_title.paragraph_format.space_after = Pt(0)
+
+    p_subtitle = cell_right.add_paragraph()
+    p_subtitle.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    p_subtitle.paragraph_format.space_before = Pt(0)
+    p_subtitle.paragraph_format.space_after = Pt(0)
+    _add_run(p_subtitle, 'PROPOSAL PACKAGE', bold=True, size=16, color=BLACK)
 
     p_date = cell_right.add_paragraph()
     p_date.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     p_date.paragraph_format.space_before = Pt(2)
     p_date.paragraph_format.space_after = Pt(4)
-    _add_run(p_date, date_str, size=9, color=DGRAY)
+    _add_run(p_date, date_str, size=9, color=MUTED)
 
     # Black horizontal rule below header
     p_rule = header.add_paragraph()
@@ -296,10 +305,15 @@ def _build_cover_page(doc, data):
     then prepared-by/prepared-for at the bottom."""
 
     # Big vertical spacer to push logo to upper-middle area
-    for _ in range(4):
+    for _ in range(3):
         p = doc.add_paragraph()
         p.paragraph_format.space_before = Pt(0)
         p.paragraph_format.space_after = Pt(0)
+
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_para_spacing(p, before=0, after=2)
+    _add_run(p, 'HD HAULING & GRADING', bold=True, size=9, color=RED)
 
     # Centred logo
     if os.path.exists(LOGO_COVER):
@@ -312,7 +326,7 @@ def _build_cover_page(doc, data):
     # Project name — large bold centred
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _set_para_spacing(p, before=12, after=4)
+    _set_para_spacing(p, before=10, after=2)
     _add_run(p, data.get('project_name', 'Proposal'), bold=True, size=26, color=BLACK)
 
     # Thin grey divider line
@@ -338,15 +352,22 @@ def _build_cover_page(doc, data):
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     _set_para_spacing(p, before=10, after=4)
-    _add_run(p, 'Proposal & Contract', size=18, color=DGRAY)
+    _add_run(p, 'Proposal, scope, and contract package', size=16, color=MUTED)
+
+    doc_num = data.get('document_number', '')
+    if doc_num:
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        _set_para_spacing(p, before=4, after=0)
+        _add_run(p, doc_num, bold=True, size=10, color=RED)
 
     # Date
     date_str = data.get('date', '')
     if date_str:
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        _set_para_spacing(p, before=6, after=0)
-        _add_run(p, date_str, size=13, color=RGBColor(0x99, 0x99, 0x99))
+        _set_para_spacing(p, before=4, after=0)
+        _add_run(p, date_str, size=12, color=MUTED)
 
     # Push prepared by / prepared for to bottom of page
     for _ in range(8):
@@ -365,9 +386,11 @@ def _build_cover_page(doc, data):
 
     # Row 0 — labels
     p = tbl.rows[0].cells[0].paragraphs[0]
-    _add_run(p, 'Prepared by:', bold=True, size=10, color=BLACK)
+    _add_run(p, 'Prepared by', bold=True, size=10, color=BLACK)
     p = tbl.rows[0].cells[1].paragraphs[0]
-    _add_run(p, 'Prepared for:', bold=True, size=10, color=BLACK)
+    _add_run(p, 'Prepared for', bold=True, size=10, color=BLACK)
+    for col in range(2):
+        _set_cell_bg(tbl.rows[0].cells[col], 'F7F2F0')
 
     # Row 1 — names (bold)
     p = tbl.rows[1].cells[0].paragraphs[0]

@@ -615,6 +615,44 @@ body.dark .dash-section{background:rgba(24,24,27,0.65);border-color:rgba(255,255
   text-transform:uppercase;color:var(--dgray);
 }
 body.dark .dash-section-title{color:#A1A1AA;}
+.ops-page-head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:18px;
+  margin-bottom:18px;flex-wrap:wrap;
+}
+.ops-page-copy{display:flex;flex-direction:column;gap:6px;max-width:760px;}
+.ops-page-eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--dgray);}
+.ops-page-title{font-family:var(--font-display);font-size:28px;font-weight:800;line-height:1.05;color:var(--blk);}
+.ops-page-sub{font-size:13px;color:var(--dgray);max-width:68ch;line-height:1.55;}
+.ops-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ops-grid-dashboard-top{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(320px,1fr);gap:18px;margin-bottom:18px;}
+.ops-grid-dashboard-bottom{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(280px,.85fr);gap:18px;}
+.ops-stack{display:flex;flex-direction:column;gap:18px;min-width:0;}
+.ops-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:16px;}
+.ops-mini-grid .mc-card{margin:0;padding:14px 16px;}
+.ops-cal-shell{display:flex;flex-direction:column;gap:14px;padding:16px;}
+.ops-cal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.ops-cal-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--blk);}
+body.dark .ops-cal-title{color:#E4E4E7;}
+.ops-cal-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ops-cal-selected{
+  font-size:11px;color:var(--dgray);padding:8px 10px;border:1px solid var(--bdr);
+  border-radius:10px;background:var(--bg-sub);display:none;
+}
+.ops-utility-card{background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad-l);padding:16px;}
+body.dark .ops-utility-card{background:rgba(24,24,27,0.65);border-color:rgba(255,255,255,0.06);}
+.ops-utility-title{font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:6px;color:var(--blk);}
+body.dark .ops-utility-title{color:#E4E4E7;}
+.ops-utility-copy{font-size:12px;color:var(--dgray);line-height:1.55;}
+.ops-note-list{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+.ops-note-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--bdr);}
+.ops-note-row:first-child{border-top:none;padding-top:0;}
+.ops-note-kicker{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--red);min-width:72px;}
+.ops-note-body{font-size:12px;color:var(--dgray);line-height:1.5;}
+.ops-project-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,.8fr);gap:18px;align-items:start;}
+.ops-project-main{display:flex;flex-direction:column;gap:16px;min-width:0;}
+.ops-schedule-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,.8fr);gap:18px;align-items:start;}
+.ops-schedule-main{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.ops-schedule-sidebar{display:flex;flex-direction:column;gap:14px;}
 
 /* Project card redesign */
 .mc-proj-card{
@@ -773,6 +811,25 @@ body.dark .topbar-bell .notif-dot{border-color:#09090B;}
 .topbar-more{position:relative;background:none;border:none;color:var(--dgray);cursor:pointer;padding:6px;border-radius:8px;transition:color .15s,background .15s;display:flex;align-items:center;}
 .topbar-more:hover{background:var(--bg-sub);color:var(--blk);}
 body.dark .topbar-more{color:#71717A;}body.dark .topbar-more:hover{background:rgba(255,255,255,0.06);color:#E4E4E7;}
+.topbar-cluster{display:flex;align-items:center;gap:4px;}
+.topbar-account-wrap{position:relative;}
+.topbar-account-btn{display:flex;align-items:center;gap:10px;min-width:0;max-width:260px;padding:5px 8px 5px 5px;border:1px solid transparent;border-radius:14px;background:none;color:var(--blk);cursor:pointer;transition:background .15s,border-color .15s,color .15s;font-family:var(--font);}
+.topbar-account-btn:hover{background:var(--bg-sub);border-color:var(--bdr);}
+body.dark .topbar-account-btn{color:#E4E4E7;}
+body.dark .topbar-account-btn:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.08);}
+.topbar-account-meta{display:flex;flex-direction:column;align-items:flex-start;min-width:0;}
+.topbar-account-name{font-size:12px;font-weight:700;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.topbar-account-role{font-size:10px;color:var(--dgray);text-transform:uppercase;letter-spacing:.08em;font-weight:700;}
+.topbar-account-caret{color:var(--dgray);flex-shrink:0;}
+.avatar-shell{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;background:linear-gradient(145deg,rgba(204,0,0,.18),rgba(26,26,26,.08));border:1px solid rgba(204,0,0,.15);box-shadow:inset 0 1px 0 rgba(255,255,255,.18);}
+.avatar-shell img{width:100%;height:100%;object-fit:cover;display:block;}
+.avatar-shell span{font-size:12px;font-weight:800;color:var(--red);font-family:var(--font-display);letter-spacing:.02em;}
+body.dark .avatar-shell{background:linear-gradient(145deg,rgba(226,33,26,.22),rgba(255,255,255,.04));border-color:rgba(226,33,26,.18);}
+body.dark .avatar-shell span{color:#F8C1BD;}
+.avatar-shell.lg{width:58px;height:58px;}
+.avatar-shell.lg span{font-size:20px;}
+.avatar-shell.sm{width:30px;height:30px;}
+.avatar-shell.sm span{font-size:11px;}
 .actions-menu{position:absolute;top:100%;right:0;margin-top:4px;background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad);min-width:200px;box-shadow:var(--shadow-l);z-index:50;overflow:hidden;display:none;animation:menuFadeIn .12s ease;}
 .actions-menu.open{display:block;}
 .actions-menu-item{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;color:var(--blk);cursor:pointer;transition:background .1s;border:none;background:none;width:100%;text-align:left;font-family:var(--font);}
@@ -784,6 +841,27 @@ body.dark .topbar-more{color:#71717A;}body.dark .topbar-more:hover{background:rg
 body.dark .actions-menu{background:rgba(28,28,30,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-color:rgba(255,255,255,0.08);}
 body.dark .actions-menu-item{color:#E4E4E7;}
 body.dark .actions-menu-item:hover{background:rgba(255,255,255,0.06);}
+.profile-menu{position:fixed;top:calc(var(--topbar-h) + 10px);right:18px;width:min(320px,calc(100vw - 24px));background:var(--bg-el);border:1px solid var(--bdr);border-radius:18px;box-shadow:var(--shadow-l);display:none;z-index:90;overflow:hidden;}
+.profile-menu.open{display:block;animation:menuFadeIn .12s ease;}
+body.dark .profile-menu{background:rgba(18,18,20,0.96);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-color:rgba(255,255,255,0.08);}
+.profile-menu-card{padding:10px;}
+.profile-menu-head{display:flex;align-items:center;gap:12px;padding:8px;}
+.profile-menu-copy{min-width:0;flex:1;}
+.profile-menu-name{font-size:14px;font-weight:700;line-height:1.2;}
+.profile-menu-sub{font-size:11px;color:var(--dgray);margin-top:2px;word-break:break-word;}
+.profile-photo-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px;border:1px solid var(--bdr);border-radius:14px;background:rgba(255,255,255,.4);margin-bottom:14px;}
+body.dark .profile-photo-row{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.06);}
+.profile-photo-copy{flex:1;min-width:180px;}
+.profile-photo-title{font-size:13px;font-weight:700;}
+.profile-photo-sub{font-size:11px;color:var(--dgray);margin-top:4px;line-height:1.5;}
+.profile-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;}
+.profile-meta-chip{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border:1px solid var(--bdr);border-radius:12px;background:rgba(255,255,255,.4);}
+body.dark .profile-meta-chip{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.06);}
+.profile-meta-label{font-size:10px;font-weight:700;color:var(--dgray);text-transform:uppercase;letter-spacing:.08em;}
+.profile-meta-value{font-size:13px;font-weight:600;}
+.mob-action-group{display:flex;align-items:center;gap:8px;}
+.mob-account-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:none;background:none;color:inherit;border-radius:12px;cursor:pointer;padding:0;}
+.mob-account-btn:hover{background:rgba(255,255,255,.06);}
 @keyframes menuFadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
 .content{padding:24px;max-width:1400px;width:100%;}
 
@@ -1033,6 +1111,10 @@ tr:nth-child(even) td{background:var(--lgray);}
 /* ===== MOBILE / iPhone (max 768px) ===== */
 @media (max-width: 768px) {
 
+  .topbar-account-meta { display: none; }
+  .profile-menu { top: 64px; right: 12px; width: min(320px, calc(100vw - 24px)); }
+  .profile-form-grid { grid-template-columns: 1fr; }
+
   /* --- App layout: single column --- */
   #app.on { grid-template-columns: 1fr; }
 
@@ -1119,6 +1201,12 @@ tr:nth-child(even) td{background:var(--lgray);}
   .dash-stat-cell { flex: 1 1 45%; min-width: 120px; }
   .dash-hero { margin-bottom: 12px; padding: 14px 0 10px; }
   .mc-greeting { font-size: 18px; }
+  .ops-page-title { font-size: 24px; }
+  .ops-grid-dashboard-top,
+  .ops-grid-dashboard-bottom,
+  .ops-project-layout,
+  .ops-schedule-grid { grid-template-columns: 1fr; }
+  .ops-mini-grid { grid-template-columns: 1fr; }
   .dash-wx-card { padding: 10px 14px; gap: 10px; }
   .dash-wx-temp { font-size: 22px; }
   .dash-wx-details { gap: 8px; }
@@ -1230,7 +1318,12 @@ tr:nth-child(even) td{background:var(--lgray);}
     </svg>
   </button>
   <span class="mob-title" id="mob-title">Build Proposal</span>
-  <button class="mob-action-btn" id="mob-pdf-btn" onclick="exportPDF()">Export PDF</button>
+  <div class="mob-action-group">
+    <button class="mob-action-btn" id="mob-pdf-btn" onclick="exportPDF()">Export PDF</button>
+    <button class="mob-account-btn" onclick="toggleProfileMenu()" aria-label="Open account menu">
+      <span class="avatar-shell sm" id="mobile-account-avatar"><span>HD</span></span>
+    </button>
+  </div>
 </div>
 <div class="sb-backdrop" id="sb-backdrop" onclick="closeMobileNav()"></div>
 
@@ -1325,11 +1418,51 @@ tr:nth-child(even) td{background:var(--lgray);}
           <kbd>⌘K</kbd>
         </button>
       </div>
-      <div style="display:flex;align-items:center;gap:2px;">
+      <div class="topbar-cluster">
         <button class="topbar-bell" onclick="toggleNotifPanel()" title="Notifications" aria-label="Notifications">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span class="notif-dot" id="notif-dot-topbar"></span>
         </button>
+        <div class="topbar-account-wrap" id="topbar-account-wrap">
+          <button class="topbar-account-btn" onclick="toggleProfileMenu()" aria-label="Open account menu">
+            <span class="avatar-shell" id="topbar-account-avatar"><span>HD</span></span>
+            <span class="topbar-account-meta">
+              <span class="topbar-account-name" id="topbar-account-name">HD Platform</span>
+              <span class="topbar-account-role" id="topbar-account-role">Account</span>
+            </span>
+            <svg class="topbar-account-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="profile-menu" id="profile-menu">
+            <div class="profile-menu-card">
+              <div class="profile-menu-head">
+                <span class="avatar-shell lg" id="profile-menu-avatar"><span>HD</span></span>
+                <div class="profile-menu-copy">
+                  <div class="profile-menu-name" id="profile-menu-name">HD Platform</div>
+                  <div class="profile-menu-sub" id="profile-menu-role">Signed in</div>
+                  <div class="profile-menu-sub" id="profile-menu-email"></div>
+                </div>
+              </div>
+              <div class="actions-menu-sep"></div>
+              <button class="actions-menu-item" onclick="openAccountSettings()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 12a4 4 0 100-8 4 4 0 000 8z"/><path d="M6 21v-1a6 6 0 0112 0v1"/></svg>
+                <span>Account settings</span>
+              </button>
+              <button class="actions-menu-item" onclick="triggerProfilePhotoInput()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M17 3h4v4"/><path d="M10 14l2-2 4 4"/><path d="M8 12h.01"/></svg>
+                <span>Upload contact photo</span>
+              </button>
+              <button class="actions-menu-item" onclick="toggleThemeFromMenu()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                <span>Toggle theme</span>
+              </button>
+              <div class="actions-menu-sep"></div>
+              <button class="actions-menu-item danger" onclick="closeProfileMenu();doLogout();">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Sign out</span>
+              </button>
+            </div>
+          </div>
+        </div>
         <div style="position:relative;" id="topbar-more-wrap">
           <button class="topbar-more" onclick="toggleActionsMenu()" title="Actions" aria-label="Actions menu">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
@@ -1338,6 +1471,7 @@ tr:nth-child(even) td{background:var(--lgray);}
         </div>
       </div>
       <input type="file" id="site-plan-input" accept="image/*" style="display:none" onchange="setSitePlan(this)"/>
+      <input type="file" id="profile-photo-input" accept="image/*" style="display:none" onchange="handleProfilePhotoSelected(this)"/>
     </div>
 
     <div class="content" id="main-content" role="main">
@@ -1345,62 +1479,110 @@ tr:nth-child(even) td{background:var(--lgray);}
       <!-- DASHBOARD PANEL -->
       <div class="panel on" id="panel-dashboard">
         <div style="padding:4px 0;max-width:none;">
-
-          <!-- Greeting -->
-          <div class="dash-hero">
-            <div class="dash-hero-text">
-              <h2 id="dash-greeting" class="mc-greeting">Good morning</h2>
-              <p class="mc-date-line" id="dash-date-line"></p>
+          <div class="ops-page-head">
+            <div class="ops-page-copy">
+              <div class="ops-page-eyebrow">Operations Command Center</div>
+              <div class="dash-hero" style="padding:0;border-bottom:none;margin:0;">
+                <div class="dash-hero-text">
+                  <h2 id="dash-greeting" class="mc-greeting">Good morning</h2>
+                  <p class="mc-date-line" id="dash-date-line"></p>
+                </div>
+              </div>
+              <div class="ops-page-sub">Start with field risk, active work, and bid pressure. This view is the daily control room for crews, jobs, and near-term pipeline movement.</div>
+            </div>
+            <div class="ops-head-actions">
+              <button class="btn btn-sec btn-sm" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">Open Projects</button>
+              <button class="btn btn-primary btn-sm" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Open Schedule</button>
             </div>
           </div>
 
-          <!-- Daily Weather Forecast Banner -->
-          <div id="dash-weather-strip" style="margin-bottom:16px;border:1px solid var(--bdr);border-radius:var(--rad-l);overflow:hidden;background:var(--bg-el);">
-            <div class="wx-current-bar" style="border-radius:var(--rad-l) var(--rad-l) 0 0;" id="dash-wx-current">
-              <span style="color:var(--dgray);font-size:12px;">Loading weather...</span>
+          <div class="ops-grid-dashboard-top">
+            <div class="ops-stack">
+              <div id="dash-weather-strip" style="border:1px solid var(--bdr);border-radius:var(--rad-l);overflow:hidden;background:var(--bg-el);">
+                <div class="wx-current-bar" style="border-radius:var(--rad-l) var(--rad-l) 0 0;" id="dash-wx-current">
+                  <span style="color:var(--dgray);font-size:12px;">Loading weather...</span>
+                </div>
+              </div>
+
+              <div id="dash-rain-alert" class="dash-rain-alert" style="display:none;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span class="dash-rain-alert-text" id="dash-rain-alert-text"></span>
+              </div>
+
+              <div id="dash-stats" class="dash-stats-bar" aria-busy="true" aria-label="Dashboard statistics">
+                <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+                <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+              </div>
+
+              <div class="dash-section dash-today-card">
+                <div class="dash-section-hdr">
+                  <span class="dash-section-title" id="dash-today-label">Today</span>
+                  <button class="btn btn-sec btn-sm" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Full Schedule</button>
+                </div>
+                <div id="dash-today-schedule">
+                  <div class="empty-state" style="padding:24px 18px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="empty-state-title">No work orders today</div><div class="empty-state-desc">Scheduled jobs will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Open Schedule</button></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ops-stack">
+              <div class="dash-section">
+                <div class="dash-section-hdr">
+                  <span class="dash-section-title">Pipeline Snapshot</span>
+                  <button class="btn btn-sec btn-sm" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Pipeline</button>
+                </div>
+                <div id="dash-pipeline-snapshot" class="ops-mini-grid">
+                  <div class="mc-card"><div class="skeleton skeleton-text" style="width:45%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
+                  <div class="mc-card"><div class="skeleton skeleton-text" style="width:45%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
+                </div>
+              </div>
+
+              <div class="dash-section">
+                <div class="dash-section-hdr">
+                  <span class="dash-section-title">Bid Calendar</span>
+                  <div class="ops-cal-controls">
+                    <button class="sched-nav-btn" onclick="dashCalNav(-1)" aria-label="Previous month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+                    <div class="ops-cal-title" id="dash-cal-month">This Month</div>
+                    <button class="sched-nav-btn" onclick="dashCalNav(1)" aria-label="Next month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+                  </div>
+                </div>
+                <div class="ops-cal-shell">
+                  <div class="ops-cal-selected" id="dash-cal-selected-label">Selected: <span id="dash-cal-selected-date"></span></div>
+                  <div id="dash-cal-grid"></div>
+                  <div id="dash-day-entries">
+                    <div class="empty-state" style="padding:20px 12px;"><div class="empty-state-desc">Pick a date to see bids due.</div></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Rain Alert (hidden by default, shown when >50% chance) -->
-          <div id="dash-rain-alert" class="dash-rain-alert" style="display:none;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span class="dash-rain-alert-text" id="dash-rain-alert-text"></span>
-          </div>
-
-          <!-- Stats Bar: Active Projects | Bids Due -->
-          <div id="dash-stats" class="dash-stats-bar" aria-busy="true" aria-label="Dashboard statistics">
-            <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
-            <div class="dash-stat-cell"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
-          </div>
-
-          <!-- Today's Schedule — most prominent card -->
-          <div class="dash-section dash-today-card" style="margin-bottom:20px;">
-            <div class="dash-section-hdr">
-              <span class="dash-section-title" id="dash-today-label">Today</span>
-              <button class="btn btn-sec btn-sm" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Full Schedule</button>
-            </div>
-            <div id="dash-today-schedule">
-              <div class="empty-state" style="padding:24px 18px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div class="empty-state-title">No work orders today</div><div class="empty-state-desc">Scheduled jobs will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Open Schedule</button></div>
-            </div>
-          </div>
-
-          <!-- This Week + Activity — side by side -->
-          <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:20px;">
+          <div class="ops-grid-dashboard-bottom">
             <div class="dash-section">
               <div class="dash-section-hdr">
                 <span class="dash-section-title">This Week</span>
               </div>
               <div id="dash-upcoming-wo"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
             </div>
+
             <div class="dash-section">
               <div class="dash-section-hdr">
                 <span class="dash-section-title">Recent Activity</span>
               </div>
               <div id="dash-recent-activity" style="max-height:360px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
             </div>
+
+            <div class="ops-utility-card">
+              <div class="ops-utility-title">Recent Projects</div>
+              <div class="ops-utility-copy">Use this rail to jump back into jobs that recently moved, changed, or need follow-up.</div>
+              <div id="dash-recent-projects" class="ops-note-list">
+                <div class="ops-note-row">
+                  <div class="ops-note-kicker">Recent</div>
+                  <div class="ops-note-body">Projects with new activity will appear here.</div>
+                </div>
+              </div>
+            </div>
           </div>
-
-
         </div>
       </div>
 
@@ -1675,64 +1857,126 @@ tr:nth-child(even) td{background:var(--lgray);}
 
       <!-- PROJECTS LIST PANEL -->
       <div class="panel" id="panel-projects"><div class="content mc-stagger" style="padding:16px;max-width:none;">
-        <!-- Project stats row -->
-        <div id="proj-stats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;">
-          <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
-          <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
-          <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
-          <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
-          <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+        <div class="ops-page-head">
+          <div class="ops-page-copy">
+            <div class="ops-page-eyebrow">Projects Workspace</div>
+            <div class="ops-page-title">Pipeline, list, and map in one place.</div>
+            <div class="ops-page-sub">Track active jobs, move projects through stages, and switch between planning views without leaving the operational workspace.</div>
+          </div>
+          <div class="ops-head-actions">
+            <button class="btn btn-sec btn-sm" onclick="showPanel('saved',null)">Saved Documents</button>
+            <button class="btn btn-primary btn-sm" onclick="openProjectModal()">New Project</button>
+          </div>
         </div>
-        <!-- Toolbar: search + view toggle + filters -->
-        <div class="mc-card" style="margin-bottom:16px;">
-          <div class="mc-toolbar">
-            <input id="projects-search" type="text" placeholder="Search projects..." oninput="filterProjects(this.value)"/>
-            <div class="mc-seg" id="proj-view-toggle">
-              <button class="mc-seg-btn on" data-view="pipeline" onclick="setProjView('pipeline')">Pipeline</button>
-              <button class="mc-seg-btn" data-view="list" onclick="setProjView('list')">List</button>
-              <button class="mc-seg-btn" data-view="map" onclick="setProjView('map')">Map</button>
+
+        <div class="ops-project-layout">
+          <div class="ops-project-main">
+            <div id="proj-stats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;">
+              <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+              <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+              <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+              <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+              <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
             </div>
-            <select id="proj-stage-filter" onchange="filterProjects(document.getElementById('projects-search').value)" style="padding:7px 12px;border:1px solid var(--bdr);border-radius:8px;font-size:12px;background:var(--bg-sub);font-family:var(--font);">
-              <option value="">All Stages</option>
-            </select>
+
+            <div class="mc-card">
+              <div class="mc-toolbar">
+                <input id="projects-search" type="text" placeholder="Search projects, clients, or addresses..." oninput="filterProjects(this.value)"/>
+                <div class="mc-seg" id="proj-view-toggle">
+                  <button class="mc-seg-btn on" data-view="pipeline" onclick="setProjView('pipeline')">Pipeline</button>
+                  <button class="mc-seg-btn" data-view="list" onclick="setProjView('list')">List</button>
+                  <button class="mc-seg-btn" data-view="map" onclick="setProjView('map')">Map</button>
+                </div>
+                <select id="proj-stage-filter" onchange="filterProjects(document.getElementById('projects-search').value)" style="padding:7px 12px;border:1px solid var(--bdr);border-radius:8px;font-size:12px;background:var(--bg-sub);font-family:var(--font);">
+                  <option value="">All Stages</option>
+                </select>
+              </div>
+              <div id="proj-pipeline-view" style="overflow-x:auto;">
+                <div id="pipeline-board">
+                  <div style="color:var(--dgray);font-size:13px;padding:20px;">Loading pipeline...</div>
+                </div>
+              </div>
+              <div id="proj-list-view" style="display:none;">
+                <div id="projects-list"><p style="color:var(--dgray);font-size:13px;padding:20px;">Loading projects...</p></div>
+              </div>
+              <div id="proj-map-view" style="display:none;padding:16px;">
+                <div id="proj-map" style="width:100%;height:500px;border-radius:14px;border:1px solid var(--bdr);overflow:hidden;"></div>
+              </div>
+            </div>
           </div>
-        </div>
-        <!-- Pipeline View -->
-        <div id="proj-pipeline-view" style="overflow-x:auto;">
-          <div id="pipeline-board">
-            <div style="color:var(--dgray);font-size:13px;padding:20px;">Loading pipeline...</div>
+
+          <div class="ops-utility-card">
+            <div class="ops-utility-title">How To Use This View</div>
+            <div class="ops-utility-copy">Use pipeline for stage movement, list for fast scanning, and map for regional planning. Filters stay at the top so you can narrow the workspace before switching modes.</div>
+            <div class="ops-note-list">
+              <div class="ops-note-row">
+                <div class="ops-note-kicker">Pipeline</div>
+                <div class="ops-note-body">Best for moving deals and spotting bottlenecks by stage.</div>
+              </div>
+              <div class="ops-note-row">
+                <div class="ops-note-kicker">List</div>
+                <div class="ops-note-body">Best for scanning totals, clients, due dates, and linked docs quickly.</div>
+              </div>
+              <div class="ops-note-row">
+                <div class="ops-note-kicker">Map</div>
+                <div class="ops-note-body">Best for route planning, regional workload, and geographic clustering.</div>
+              </div>
+            </div>
           </div>
-        </div>
-        <!-- List View (hidden by default) -->
-        <div id="proj-list-view" style="display:none;">
-          <div id="projects-list"><p style="color:var(--dgray);font-size:13px;">Loading projects...</p></div>
-        </div>
-        <!-- Map View (hidden by default) -->
-        <div id="proj-map-view" style="display:none;">
-          <div id="proj-map" style="width:100%;height:500px;border-radius:14px;border:1px solid var(--bdr);overflow:hidden;"></div>
         </div>
       </div></div>
 
       <!-- CONTACTS PANEL (merged clients + subs) -->
       <div class="panel" id="panel-contacts"><div class="content">
-        <div class="settings-tab-bar" style="margin-bottom:16px;">
-          <button class="stab on" id="contacts-tab-clients" onclick="showContactsTab('clients')">Clients</button>
-          <button class="stab" id="contacts-tab-subs" onclick="showContactsTab('subs')">Subcontractors</button>
-        </div>
-        <div id="contacts-pane-clients">
-          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
-            <div id="contacts-clients-count" style="font-size:13px;color:var(--dgray);"></div>
-            <input id="contacts-clients-search" type="text" placeholder="Search clients&hellip;" oninput="filterClients(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
+        <div class="ops-page-head">
+          <div class="ops-page-copy">
+            <div class="ops-page-eyebrow">Contacts Workspace</div>
+            <div class="ops-page-title">Clients and subcontractors, cleaned up into one relationship hub.</div>
+            <div class="ops-page-sub">Use this page to manage the people and companies tied to work, without bouncing between duplicate client and subcontractor entry points.</div>
           </div>
-          <div id="contacts-clients-list"></div>
-        </div>
-        <div id="contacts-pane-subs" style="display:none;">
-          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
-            <div id="contacts-subs-count" style="font-size:13px;color:var(--dgray);"></div>
-            <input id="contacts-subs-search" type="text" placeholder="Search subcontractors&hellip;" oninput="filterSubs(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
-            <button class="btn btn-red btn-sm" onclick="openSubModal()">+ Add Sub</button>
+          <div class="ops-head-actions">
+            <button class="btn btn-sec btn-sm" onclick="openClientModal()">Add Client</button>
+            <button class="btn btn-primary btn-sm" onclick="openSubModal()">Add Subcontractor</button>
           </div>
-          <div id="contacts-subs-list"></div>
+        </div>
+        <div class="ops-project-layout">
+          <div class="ops-project-main">
+            <div class="mc-card">
+              <div class="settings-tab-bar" style="margin-bottom:16px;">
+                <button class="stab on" id="contacts-tab-clients" onclick="showContactsTab('clients')">Clients</button>
+                <button class="stab" id="contacts-tab-subs" onclick="showContactsTab('subs')">Subcontractors</button>
+              </div>
+              <div id="contacts-pane-clients">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+                  <div id="contacts-clients-count" style="font-size:13px;color:var(--dgray);"></div>
+                  <input id="contacts-clients-search" type="text" placeholder="Search clients&hellip;" oninput="filterClients(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
+                </div>
+                <div id="contacts-clients-list"></div>
+              </div>
+              <div id="contacts-pane-subs" style="display:none;">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+                  <div id="contacts-subs-count" style="font-size:13px;color:var(--dgray);"></div>
+                  <input id="contacts-subs-search" type="text" placeholder="Search subcontractors&hellip;" oninput="filterSubs(this.value)" style="flex:1;max-width:400px;padding:8px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;"/>
+                  <button class="btn btn-red btn-sm" onclick="openSubModal()">+ Add Sub</button>
+                </div>
+                <div id="contacts-subs-list"></div>
+              </div>
+            </div>
+          </div>
+          <div class="ops-utility-card">
+            <div class="ops-utility-title">What Lives Here</div>
+            <div class="ops-utility-copy">Clients are your customer records and project relationships. Subcontractors are delivery partners, specialty trades, and outside crews tied to project execution.</div>
+            <div class="ops-note-list">
+              <div class="ops-note-row">
+                <div class="ops-note-kicker">Clients</div>
+                <div class="ops-note-body">Use for customer details, linked projects, and follow-up context.</div>
+              </div>
+              <div class="ops-note-row">
+                <div class="ops-note-kicker">Subs</div>
+                <div class="ops-note-body">Use for outside vendors, trade partners, and quote or status tracking.</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div></div>
 
@@ -1901,6 +2145,13 @@ tr:nth-child(even) td{background:var(--lgray);}
 
       <!-- SETTINGS PANEL -->
       <div class="panel" id="panel-settings">
+        <div class="ops-page-head" style="padding:16px 16px 0;">
+          <div class="ops-page-copy">
+            <div class="ops-page-eyebrow">Settings</div>
+            <div class="ops-page-title">Profile preferences, estimating defaults, and operational configuration.</div>
+            <div class="ops-page-sub">User-level preferences and company configuration live together here, but the redesigned header makes account and system settings easier to scan.</div>
+          </div>
+        </div>
         <div class="settings-tab-bar">
           <button class="stab on" id="stab-general" onclick="showSettingsTab('general')">General</button>
           <button class="stab" data-field-hidden id="stab-presets" onclick="showSettingsTab('presets')">Presets</button>
@@ -1915,16 +2166,56 @@ tr:nth-child(even) td{background:var(--lgray);}
         <!-- General Tab -->
         <div id="stab-content-general">
           <div class="card">
-            <div class="card-hdr"><span class="card-title">Account Information</span></div>
+            <div class="card-hdr"><span class="card-title">My Profile</span></div>
             <div class="card-body">
-              <p style="font-size:11px;color:var(--dgray);margin-bottom:10px;">Auto-populated from your account. Changes here update proposals you create.</p>
-              <div class="fg fg3">
-                <div><label>Your Name</label><input id="s-name" type="text" placeholder="Full name"/></div>
-                <div><label>Your Email</label><input id="s-email" type="text" placeholder="email@hdgrading.com"/></div>
-                <div><label>Your Phone</label><input id="s-phone" type="text" placeholder="(555) 000-0000"/></div>
+              <p style="font-size:11px;color:var(--dgray);margin-bottom:12px;">These details power your account menu and identity across the app.</p>
+              <div class="profile-photo-row">
+                <span class="avatar-shell lg" id="profile-avatar-preview"><span>HD</span></span>
+                <div class="profile-photo-copy">
+                  <div class="profile-photo-title">Contact Photo</div>
+                  <div class="profile-photo-sub">Upload a square-friendly image for your top-right account menu and profile identity.</div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button class="btn btn-sec btn-sm" onclick="triggerProfilePhotoInput()">Upload Photo</button>
+                  <button class="btn btn-sec btn-sm" onclick="clearProfilePhoto()">Remove</button>
+                </div>
               </div>
-              <div style="margin-top:11px;"><button class="btn btn-primary btn-sm" onclick="saveSender()">Save</button></div>
-              <div id="pin-change-notice" style="display:none;margin-top:12px;padding:10px 14px;background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;font-size:12px;color:var(--dgray);">To change your PIN, contact a system administrator.</div>
+              <input id="profile-avatar-data" type="hidden"/>
+              <div class="fg fg3">
+                <div><label>Your Name</label><input id="profile-name" type="text" placeholder="Full name"/></div>
+                <div><label>Your Email</label><input id="profile-email" type="text" placeholder="email@hdgrading.com"/></div>
+                <div><label>Your Phone</label><input id="profile-phone" type="text" placeholder="(555) 000-0000"/></div>
+              </div>
+              <div class="profile-form-grid">
+                <div class="profile-meta-chip">
+                  <span class="profile-meta-label">Username</span>
+                  <span class="profile-meta-value" id="profile-username">—</span>
+                </div>
+                <div class="profile-meta-chip">
+                  <span class="profile-meta-label">Role</span>
+                  <span class="profile-meta-value" id="profile-role">—</span>
+                </div>
+              </div>
+              <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm" onclick="saveOwnProfile()">Save Profile</button>
+                <span id="profile-save-status" style="font-size:12px;color:var(--dgray);"></span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Proposal Sender Defaults</span></div>
+            <div class="card-body">
+              <p style="font-size:11px;color:var(--dgray);margin-bottom:10px;">These values prefill new proposals and exports. Keep them synced to your profile or customize them for estimating.</p>
+              <div class="fg fg3">
+                <div><label>Name on Proposals</label><input id="sender-name" type="text" placeholder="Full name"/></div>
+                <div><label>Email on Proposals</label><input id="sender-email" type="text" placeholder="email@hdgrading.com"/></div>
+                <div><label>Phone on Proposals</label><input id="sender-phone" type="text" placeholder="(555) 000-0000"/></div>
+              </div>
+              <div style="margin-top:11px;display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm" onclick="saveSender()">Save Sender Defaults</button>
+                <button class="btn btn-sec btn-sm" onclick="resetSenderToProfile()">Use My Profile</button>
+              </div>
+              <div id="pin-change-notice" style="display:none;margin-top:12px;padding:10px 14px;background:#F8F8F8;border:1px solid var(--bdr);border-radius:6px;font-size:12px;color:var(--dgray);">To change your password, use the security section below or contact a system administrator if you are a field user.</div>
             </div>
           </div>
           <div class="card">
@@ -2213,70 +2504,101 @@ tr:nth-child(even) td{background:var(--lgray);}
 
       <!-- SCHEDULE PANEL -->
       <div class="panel" id="panel-schedule"><div class="content mc-stagger" style="padding:16px;max-width:none;">
-        <!-- Weather: current conditions + 7-day forecast -->
-        <div id="sched-weather-strip">
-          <div class="wx-current-bar" id="sched-wx-current">
-            <span style="color:var(--dgray);font-size:12px;">Loading weather...</span>
+        <div class="ops-page-head">
+          <div class="ops-page-copy">
+            <div class="ops-page-eyebrow">Dispatch Board</div>
+            <div class="ops-page-title">Weather, queue, and crew timing in one view.</div>
+            <div class="ops-page-sub">Use this workspace to schedule unslotted work, read weather risk early, and keep the week moving without jumping between modules.</div>
           </div>
-          <div class="wx-forecast-strip" id="sched-wx-forecast">
-            <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
-            <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
-            <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
-            <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
-            <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
-            <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
-            <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
+          <div class="ops-head-actions">
+            <button class="btn btn-sec btn-sm" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">Open Projects</button>
+            <button class="btn btn-primary btn-sm" onclick="schedCalNav(0)">Jump To Today</button>
           </div>
-          <!-- Hidden full widget for data source -->
-          <div id="sched-weather" style="display:none;"></div>
         </div>
-        <!-- KPI Stats Row -->
-        <div class="dash-stats-bar" id="sched-kpi-bar" style="margin-bottom:14px;">
-          <div class="dash-stat-cell"><div class="dash-stat-val" id="sched-kpi-active">0</div><div class="dash-stat-lbl">Active</div></div>
-          <div class="dash-stat-cell"><div class="dash-stat-val" id="sched-kpi-week">0</div><div class="dash-stat-lbl">This Week</div></div>
-          <div class="dash-stat-cell"><div class="dash-stat-val warn" id="sched-kpi-overdue">0</div><div class="dash-stat-lbl">Overdue</div></div>
-          <div class="dash-stat-cell"><div class="dash-stat-val" id="sched-kpi-tons">0</div><div class="dash-stat-lbl">Total Tons</div></div>
-        </div>
-        <!-- Unified schedule block: Queue LEFT + Calendar RIGHT -->
-        <div class="mc-card">
-          <!-- Toolbar row -->
-          <div class="mc-toolbar">
-            <button class="sched-nav-btn" onclick="schedCalNav(-1)" title="Previous"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
-            <span style="font-family:var(--font-display);font-weight:700;font-size:15px;min-width:160px;text-align:center;" id="sched-cal-title"></span>
-            <button class="sched-nav-btn" onclick="schedCalNav(1)" title="Next"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
-            <button class="btn btn-sec btn-sm" onclick="schedCalNav(0)" title="Today" style="font-size:11px;font-weight:600;padding:4px 12px;">Today</button>
-            <div style="flex:1;"></div>
-            <div class="mc-seg">
-              <button class="mc-seg-btn" data-view="day" onclick="setSchedView('day')">Day</button>
-              <button class="mc-seg-btn" data-view="3day" onclick="setSchedView('3day')">3-Day</button>
-              <button class="mc-seg-btn on" data-view="week" onclick="setSchedView('week')">Week</button>
-              <button class="mc-seg-btn" data-view="month" onclick="setSchedView('month')">Month</button>
+
+        <div class="ops-schedule-grid">
+          <div class="ops-schedule-main">
+            <div id="sched-weather-strip">
+              <div class="wx-current-bar" id="sched-wx-current">
+                <span style="color:var(--dgray);font-size:12px;">Loading weather...</span>
+              </div>
+              <div class="wx-forecast-strip" id="sched-wx-forecast">
+                <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
+                <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
+                <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
+                <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
+                <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
+                <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
+                <div class="wx-forecast-day"><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>
+              </div>
+              <div id="sched-weather" style="display:none;"></div>
+            </div>
+
+            <div class="dash-stats-bar" id="sched-kpi-bar" style="margin-bottom:0;">
+              <div class="dash-stat-cell"><div class="dash-stat-val" id="sched-kpi-active">0</div><div class="dash-stat-lbl">Active</div></div>
+              <div class="dash-stat-cell"><div class="dash-stat-val" id="sched-kpi-week">0</div><div class="dash-stat-lbl">This Week</div></div>
+              <div class="dash-stat-cell"><div class="dash-stat-val warn" id="sched-kpi-overdue">0</div><div class="dash-stat-lbl">Overdue</div></div>
+              <div class="dash-stat-cell"><div class="dash-stat-val" id="sched-kpi-tons">0</div><div class="dash-stat-lbl">Total Tons</div></div>
+            </div>
+
+            <div class="mc-card">
+              <div class="mc-toolbar">
+                <button class="sched-nav-btn" onclick="schedCalNav(-1)" title="Previous"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+                <span style="font-family:var(--font-display);font-weight:700;font-size:15px;min-width:160px;text-align:center;" id="sched-cal-title"></span>
+                <button class="sched-nav-btn" onclick="schedCalNav(1)" title="Next"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+                <button class="btn btn-sec btn-sm" onclick="schedCalNav(0)" title="Today" style="font-size:11px;font-weight:600;padding:4px 12px;">Today</button>
+                <div style="flex:1;"></div>
+                <div class="mc-seg">
+                  <button class="mc-seg-btn" data-view="day" onclick="setSchedView('day')">Day</button>
+                  <button class="mc-seg-btn" data-view="3day" onclick="setSchedView('3day')">3-Day</button>
+                  <button class="mc-seg-btn on" data-view="week" onclick="setSchedView('week')">Week</button>
+                  <button class="mc-seg-btn" data-view="month" onclick="setSchedView('month')">Month</button>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:280px 1fr;min-height:560px;" id="sched-split">
+                <div style="border-right:1px solid var(--bdr);display:flex;flex-direction:column;">
+                  <div class="mc-sec-hdr" style="padding:10px 14px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                    <span>Unscheduled</span>
+                    <span id="sched-queue-count" style="font-size:10px;font-weight:700;background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;margin-left:auto;"></span>
+                  </div>
+                  <div style="padding:8px 10px;border-bottom:1px solid var(--bdr);display:flex;gap:6px;">
+                    <input type="text" id="sched-queue-search" placeholder="Search..." style="flex:1;padding:5px 10px;font-size:12px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg-sub);" oninput="filterSchedQueue()"/>
+                    <select id="sched-queue-sort" style="padding:5px 8px;font-size:11px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg-sub);cursor:pointer;" onchange="renderSchedule()">
+                      <option value="name">Name</option>
+                      <option value="date">Date Added</option>
+                      <option value="tons">Tonnage</option>
+                    </select>
+                  </div>
+                  <div id="sched-queue" style="padding:6px;flex:1;overflow-y:auto;max-height:calc(100vh - 320px);">
+                    <p style="font-size:12px;color:var(--dgray);padding:12px 6px;">No jobs waiting.</p>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;">
+                  <div id="sched-cal-grid" style="flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:0;"></div>
+                </div>
+              </div>
             </div>
           </div>
-          <!-- Content: queue + calendar side by side -->
-          <div style="display:grid;grid-template-columns:280px 1fr;min-height:560px;" id="sched-split">
-            <!-- Queue (left) -->
-            <div style="border-right:1px solid var(--bdr);display:flex;flex-direction:column;">
-              <div class="mc-sec-hdr" style="padding:10px 14px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-                <span>Unscheduled</span>
-                <span id="sched-queue-count" style="font-size:10px;font-weight:700;background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;margin-left:auto;"></span>
+
+          <div class="ops-schedule-sidebar">
+            <div class="ops-utility-card">
+              <div class="ops-utility-title">Planning Priorities</div>
+              <div class="ops-utility-copy">Work from the queue first, then confirm the week view. Overdue work should be pulled forward before new low-priority jobs are slotted.</div>
+              <div class="ops-note-list">
+                <div class="ops-note-row">
+                  <div class="ops-note-kicker">Queue</div>
+                  <div class="ops-note-body">Drag unscheduled work onto the calendar once the crew and date are clear.</div>
+                </div>
+                <div class="ops-note-row">
+                  <div class="ops-note-kicker">Weather</div>
+                  <div class="ops-note-body">Use the top forecast strip before locking in outdoor-heavy scopes.</div>
+                </div>
+                <div class="ops-note-row">
+                  <div class="ops-note-kicker">Overdue</div>
+                  <div class="ops-note-body">The overdue KPI is the first warning sign that dispatch attention is needed.</div>
+                </div>
               </div>
-              <div style="padding:8px 10px;border-bottom:1px solid var(--bdr);display:flex;gap:6px;">
-                <input type="text" id="sched-queue-search" placeholder="Search..." style="flex:1;padding:5px 10px;font-size:12px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg-sub);" oninput="filterSchedQueue()"/>
-                <select id="sched-queue-sort" style="padding:5px 8px;font-size:11px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg-sub);cursor:pointer;" onchange="renderSchedule()">
-                  <option value="name">Name</option>
-                  <option value="date">Date Added</option>
-                  <option value="tons">Tonnage</option>
-                </select>
-              </div>
-              <div id="sched-queue" style="padding:6px;flex:1;overflow-y:auto;max-height:calc(100vh - 320px);">
-                <p style="font-size:12px;color:var(--dgray);padding:12px 6px;">No jobs waiting.</p>
-              </div>
-            </div>
-            <!-- Calendar (right) -->
-            <div style="display:flex;flex-direction:column;">
-              <div id="sched-cal-grid" style="flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:0;"></div>
             </div>
           </div>
         </div>
@@ -2284,52 +2606,93 @@ tr:nth-child(even) td{background:var(--lgray);}
 
       <!-- REPORTS PANEL -->
       <div class="panel" id="panel-reports" data-field-hidden><div class="content" style="max-width:1200px;">
-        <div style="display:flex;gap:18px;align-items:flex-start;">
-          <!-- Report Sidebar -->
-          <div id="rpt-sidebar" style="width:220px;flex-shrink:0;background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad-s);overflow:hidden;">
-            <div style="padding:10px 14px;background:#FAFAFA;border-bottom:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Estimate Reports</div>
-            <div class="rpt-nav-item rpt-nav-active" onclick="selectReport('monthly-summary',this)">Monthly Estimate Summary</div>
-            <div class="rpt-nav-item" onclick="selectReport('geographic',this)">Geographic Analysis</div>
-            <div class="rpt-nav-item" onclick="selectReport('client-perf',this)">Client Performance</div>
-            <div class="rpt-nav-item" onclick="selectReport('salesperson',this)">Salesperson Performance</div>
-            <div style="padding:10px 14px;background:#FAFAFA;border-bottom:1px solid var(--bdr);border-top:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Job Reports</div>
-            <div class="rpt-nav-item" onclick="selectReport('backlog',this)">Backlog Report</div>
-            <div class="rpt-nav-item" onclick="selectReport('completion',this)">Completion &amp; Schedule</div>
-            <div class="rpt-nav-item" onclick="selectReport('volume',this)">Jobs Per Month</div>
-            <div class="rpt-nav-item" onclick="selectReport('concurrent',this)">Concurrent Jobs</div>
-            <div class="rpt-nav-item" onclick="selectReport('mobilization',this)">Mobilization by Region</div>
-            <div class="rpt-nav-item" onclick="selectReport('material-usage',this)">Material Usage</div>
-            <div class="rpt-nav-item" onclick="selectReport('est-vs-actual',this)">Estimated vs Actual</div>
-            <div class="rpt-nav-item" onclick="selectReport('trucking',this)">Trucking Costs</div>
-            <div style="padding:10px 14px;background:#FAFAFA;border-top:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Executive</div>
-            <div class="rpt-nav-item" onclick="selectReport('executive',this)">Executive Summary</div>
+        <div class="ops-page-head">
+          <div class="ops-page-copy">
+            <div class="ops-page-eyebrow">Reporting Center</div>
+            <div class="ops-page-title">Operational reporting, executive rollups, and export-ready views.</div>
+            <div class="ops-page-sub">Choose a report type, narrow the dataset, and generate decision-ready summaries without leaving the app.</div>
           </div>
-          <!-- Report Content -->
-          <div style="flex:1;min-width:0;">
-            <!-- Filters Bar -->
-            <div class="card" style="margin-bottom:14px;">
-              <div class="card-body" style="padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Date Range</label>
-                <select id="rpt-range" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;">
-                  <option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="this-quarter">This Quarter</option><option value="ytd">Year to Date</option><option value="last-year">Last Year</option><option value="all">All Time</option><option value="custom">Custom Range</option>
-                </select></div>
-                <div id="rpt-custom-dates" style="display:none;"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">From / To</label><div style="display:flex;gap:4px;"><input type="date" id="rpt-from" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/><input type="date" id="rpt-to" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/></div></div>
-                <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Client</label>
-                <select id="rpt-client" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All Clients</option></select></div>
-                <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Salesperson</label>
-                <select id="rpt-salesperson" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All</option></select></div>
-                <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Region</label>
-                <select id="rpt-region" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All Regions</option></select></div>
-                <div style="margin-left:auto;"><button class="btn btn-red btn-sm" onclick="exportReportPDF()">Export PDF</button></div>
+          <div class="ops-head-actions">
+            <button class="btn btn-primary btn-sm" onclick="exportReportPDF()">Export Current Report</button>
+          </div>
+        </div>
+        <div class="ops-project-layout">
+          <div class="ops-project-main">
+            <div style="display:flex;gap:18px;align-items:flex-start;">
+              <!-- Report Sidebar -->
+              <div id="rpt-sidebar" style="width:220px;flex-shrink:0;background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad-s);overflow:hidden;">
+                <div style="padding:10px 14px;background:#FAFAFA;border-bottom:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Estimate Reports</div>
+                <div class="rpt-nav-item rpt-nav-active" onclick="selectReport('monthly-summary',this)">Monthly Estimate Summary</div>
+                <div class="rpt-nav-item" onclick="selectReport('geographic',this)">Geographic Analysis</div>
+                <div class="rpt-nav-item" onclick="selectReport('client-perf',this)">Client Performance</div>
+                <div class="rpt-nav-item" onclick="selectReport('salesperson',this)">Salesperson Performance</div>
+                <div style="padding:10px 14px;background:#FAFAFA;border-bottom:1px solid var(--bdr);border-top:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Job Reports</div>
+                <div class="rpt-nav-item" onclick="selectReport('backlog',this)">Backlog Report</div>
+                <div class="rpt-nav-item" onclick="selectReport('completion',this)">Completion &amp; Schedule</div>
+                <div class="rpt-nav-item" onclick="selectReport('volume',this)">Jobs Per Month</div>
+                <div class="rpt-nav-item" onclick="selectReport('concurrent',this)">Concurrent Jobs</div>
+                <div class="rpt-nav-item" onclick="selectReport('mobilization',this)">Mobilization by Region</div>
+                <div class="rpt-nav-item" onclick="selectReport('material-usage',this)">Material Usage</div>
+                <div class="rpt-nav-item" onclick="selectReport('est-vs-actual',this)">Estimated vs Actual</div>
+                <div class="rpt-nav-item" onclick="selectReport('trucking',this)">Trucking Costs</div>
+                <div style="padding:10px 14px;background:#FAFAFA;border-top:1px solid var(--bdr);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dgray);">Executive</div>
+                <div class="rpt-nav-item" onclick="selectReport('executive',this)">Executive Summary</div>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <!-- Filters Bar -->
+                <div class="card" style="margin-bottom:14px;">
+                  <div class="card-body" style="padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Date Range</label>
+                    <select id="rpt-range" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;">
+                      <option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="this-quarter">This Quarter</option><option value="ytd">Year to Date</option><option value="last-year">Last Year</option><option value="all">All Time</option><option value="custom">Custom Range</option>
+                    </select></div>
+                    <div id="rpt-custom-dates" style="display:none;"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">From / To</label><div style="display:flex;gap:4px;"><input type="date" id="rpt-from" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/><input type="date" id="rpt-to" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/></div></div>
+                    <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Client</label>
+                    <select id="rpt-client" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All Clients</option></select></div>
+                    <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Salesperson</label>
+                    <select id="rpt-salesperson" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All</option></select></div>
+                    <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Region</label>
+                    <select id="rpt-region" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All Regions</option></select></div>
+                    <div style="margin-left:auto;"><button class="btn btn-red btn-sm" onclick="exportReportPDF()">Export PDF</button></div>
+                  </div>
+                </div>
+                <!-- Report Output -->
+                <div id="rpt-output"></div>
               </div>
             </div>
-            <!-- Report Output -->
-            <div id="rpt-output"></div>
+          </div>
+          <div class="ops-utility-card">
+            <div class="ops-utility-title">Reporting Notes</div>
+            <div class="ops-utility-copy">The left rail is the report library. The filters above the output change the current report, not the navigation itself.</div>
+            <div class="ops-note-list">
+              <div class="ops-note-row">
+                <div class="ops-note-kicker">Estimate</div>
+                <div class="ops-note-body">Use for pipeline health, client mix, and win/loss performance.</div>
+              </div>
+              <div class="ops-note-row">
+                <div class="ops-note-kicker">Job</div>
+                <div class="ops-note-body">Use for backlog, schedule pressure, material load, and trucking trends.</div>
+              </div>
+              <div class="ops-note-row">
+                <div class="ops-note-kicker">Executive</div>
+                <div class="ops-note-body">Use for faster owner-level rollups and export-ready summaries.</div>
+              </div>
+            </div>
           </div>
         </div>
       </div></div>
 
       <div class="panel" id="panel-admin">
+  <div class="ops-page-head" style="padding:16px 16px 0;">
+    <div class="ops-page-copy">
+      <div class="ops-page-eyebrow">Admin Control Center</div>
+      <div class="ops-page-title">Company settings, users, audit activity, and archived records.</div>
+      <div class="ops-page-sub">This area handles company-wide controls and should feel separate from everyday operations work.</div>
+    </div>
+    <div class="ops-head-actions">
+      <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">Add User</button>
+    </div>
+  </div>
   <!-- Admin tabs -->
   <div class="settings-tab-bar">
     <button class="stab on" id="admin-tab-company" onclick="showAdminTab('company')">Company</button>
@@ -2883,6 +3246,116 @@ var sender={name:'',email:'',phone:''};
 var selectedClient={name:'',company:'',phone:'',email:''};
 var sitePlanDataUrl=null;
 var gM=0;
+window._userAvatar='';
+window._draftUserAvatar='';
+
+function getUserInitials(name){
+  var parts=String(name||window._userName||window._userUsername||'HD').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length)return 'HD';
+  if(parts.length===1)return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+}
+
+function hydrateSenderFromAccount(force){
+  var profileSender={name:window._userName||'',email:window._userEmail||'',phone:window._userPhone||''};
+  if(force||(!sender.name&&!sender.email&&!sender.phone))sender=profileSender;
+}
+
+function getActiveAvatarData(){
+  return window._draftUserAvatar||window._userAvatar||'';
+}
+
+function renderAvatarShell(elId,sizeCls){
+  var el=document.getElementById(elId);
+  if(!el)return;
+  var cls='avatar-shell'+(sizeCls?' '+sizeCls:'');
+  var avatar=getActiveAvatarData();
+  if(avatar){
+    el.className=cls;
+    el.innerHTML='<img src="'+avatar+'" alt="Profile photo"/>';
+  }else{
+    el.className=cls;
+    el.innerHTML='<span>'+getUserInitials()+'</span>';
+  }
+}
+
+function roleLabel(role){
+  if(role==='admin')return 'Administrator';
+  if(role==='field')return 'Field';
+  return 'User';
+}
+
+function renderUserChrome(){
+  renderAvatarShell('topbar-account-avatar','');
+  renderAvatarShell('mobile-account-avatar','sm');
+  renderAvatarShell('profile-menu-avatar','lg');
+  renderAvatarShell('profile-avatar-preview','lg');
+  var name=window._userName||window._userUsername||'HD Platform';
+  var role=roleLabel(window._userRole||'user');
+  var email=window._userEmail||'';
+  var topName=document.getElementById('topbar-account-name'); if(topName)topName.textContent=name;
+  var topRole=document.getElementById('topbar-account-role'); if(topRole)topRole.textContent=role;
+  var menuName=document.getElementById('profile-menu-name'); if(menuName)menuName.textContent=name;
+  var menuRole=document.getElementById('profile-menu-role'); if(menuRole)menuRole.textContent=role+' · @'+(window._userUsername||'');
+  var menuEmail=document.getElementById('profile-menu-email'); if(menuEmail)menuEmail.textContent=email||window._userPhone||'';
+  var profileUser=document.getElementById('profile-username'); if(profileUser)profileUser.textContent='@'+(window._userUsername||'');
+  var profileRole=document.getElementById('profile-role'); if(profileRole)profileRole.textContent=role;
+}
+
+function closeProfileMenu(){
+  var m=document.getElementById('profile-menu');
+  if(m)m.classList.remove('open');
+}
+
+function toggleProfileMenu(){
+  var m=document.getElementById('profile-menu');
+  if(!m)return;
+  var actionMenu=document.getElementById('topbar-actions-menu');
+  if(actionMenu)actionMenu.classList.remove('open');
+  m.classList.toggle('open');
+}
+
+function openAccountSettings(){
+  closeProfileMenu();
+  showPanel('settings',document.querySelector('[onclick*=settings]'));
+  showSettingsTab('general');
+}
+
+function toggleThemeFromMenu(){
+  closeProfileMenu();
+  toggleDarkMode();
+}
+
+function triggerProfilePhotoInput(){
+  closeProfileMenu();
+  var input=document.getElementById('profile-photo-input');
+  if(input)input.click();
+}
+
+function clearProfilePhoto(){
+  window._draftUserAvatar='';
+  var hidden=document.getElementById('profile-avatar-data');
+  if(hidden)hidden.value='';
+  renderUserChrome();
+}
+
+function handleProfilePhotoSelected(input){
+  if(!input||!input.files||!input.files[0])return;
+  var file=input.files[0];
+  if((file.type||'').indexOf('image/')!==0){toast('Choose an image file','err');input.value='';return;}
+  compressImage(file,512,0.85,function(blob){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      window._draftUserAvatar=e.target.result||'';
+      var hidden=document.getElementById('profile-avatar-data');
+      if(hidden)hidden.value=window._draftUserAvatar;
+      renderUserChrome();
+      toast('Photo ready to save','ok');
+    };
+    reader.readAsDataURL(blob);
+  });
+  input.value='';
+}
 
 // -- Auth ----------------------------------------------------------------------
 async function doLogin(){
@@ -2900,17 +3373,19 @@ async function doLogin(){
       window._userName=d.full_name||username;
       window._userUsername=d.username||username;
       window._lastLogin=d.last_login||null;
-      // Set sender info from user account
-      window._userEmail=d.email||'';window._userPhone=d.phone||'';
-      sender={name:d.full_name||'',email:d.email||'',phone:d.phone||''};
+      window._userEmail=d.email||'';
+      window._userPhone=d.phone||'';
+      window._userAvatar=d.avatar_data||'';
+      window._draftUserAvatar=window._userAvatar||'';
+      hydrateSenderFromAccount(false);
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
       stopLoginCanvas();
       try{boot();}catch(e){console.warn('boot error:',e.message);}
-      // Re-apply user account sender after boot (boot may load stale settings)
-      sender={name:window._userName||'',email:window._userEmail||'',phone:window._userPhone||''};
+      hydrateSenderFromAccount(false);
       initSidebarCanvas();
       showAdminElements();
+      renderUserChrome();
       loadLastLogin();
       initAutoLogout();
       _showFab();
@@ -4053,6 +4528,13 @@ function renderDashboard(){
   renderDashUpcomingWO();
   renderDashTodaySchedule();
   renderDashRecentActivity();
+  renderDashPipelineSnapshot();
+  renderDashRecentProjects();
+  if(!dashSelectedDate){
+    var today=new Date();
+    dashSelectedDate=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  }
+  renderDashCal();
   updateNavBadges();
   // Set date line
   var dl=document.getElementById('dash-date-line');
@@ -6635,6 +7117,10 @@ document.addEventListener('click',function(e){
   var wrap=document.getElementById('topbar-more-wrap');
   var menu=document.getElementById('topbar-actions-menu');
   if(menu&&menu.classList.contains('open')&&wrap&&!wrap.contains(e.target)){menu.classList.remove('open');}
+  var profileWrap=document.getElementById('topbar-account-wrap');
+  var profileMenu=document.getElementById('profile-menu');
+  var mobileAccountBtn=document.querySelector('.mob-account-btn');
+  if(profileMenu&&profileMenu.classList.contains('open')&&profileWrap&&!profileWrap.contains(e.target)&&!(mobileAccountBtn&&mobileAccountBtn.contains(e.target))){profileMenu.classList.remove('open');}
 });
 function renderTopbar(panelId){
   var menu=document.getElementById('topbar-actions-menu');
@@ -6677,6 +7163,7 @@ function showPanel(id,el){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
   document.getElementById('panel-'+id).classList.add('on');
   if(el)el.classList.add('on');
+  closeProfileMenu();
   renderTopbar(id);
   var _panelTitle={dashboard:'Dashboard',build:'Create Proposal',lineitems:'Line Items',crewcosts:'Crew Costs',jobcost:'Job Costing',saved:'Saved Documents',settings:'Settings',co:'Create CO',analytics:'Analytics',pipeline:'Project Pipeline',projects:'Projects',project:'Project Summary',clients:'Clients',contacts:'Contacts',subs:'Subcontractors','client-summary':'Client Summary',admin:'Admin Panel',workorder:'Work Order',schedule:'Schedule',reports:'Reports',bugs:'Bug Report',roadmap:'Roadmap'}[id]||id;
   // Breadcrumb navigation
@@ -6696,7 +7183,7 @@ function showPanel(id,el){
   if(id==='project')renderProjectSummary();
   if(id==='build')updateProposalDocBadge();
   if(id==='co'){populateCOProposalDropdown();updateCODocBadge();}
-  if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');var pn=document.getElementById('pin-change-notice');if(pn&&isFieldUser())pn.style.display='block';}
+  if(id==='settings'){loadOwnProfileUI();loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');var pn=document.getElementById('pin-change-notice');if(pn&&isFieldUser())pn.style.display='block';}
   if(id==='jobcost'){aggregateWOActualsIntoEVA();renderJobCost();renderEVA();}
   if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
   if(id==='pipeline')setTimeout(renderPipeline,50);
@@ -8468,15 +8955,62 @@ function resetAll(){
 }
 
 // -- Settings ------------------------------------------------------------------
+function loadOwnProfileUI(){
+  var name=document.getElementById('profile-name'); if(name)name.value=window._userName||'';
+  var email=document.getElementById('profile-email'); if(email)email.value=window._userEmail||'';
+  var phone=document.getElementById('profile-phone'); if(phone)phone.value=window._userPhone||'';
+  var avatar=document.getElementById('profile-avatar-data'); if(avatar)avatar.value=window._draftUserAvatar||window._userAvatar||'';
+  renderUserChrome();
+}
+
+async function saveOwnProfile(){
+  var status=document.getElementById('profile-save-status');
+  if(status){status.textContent='';status.style.color='';}
+  var fullName=(document.getElementById('profile-name')||{}).value||'';
+  var email=(document.getElementById('profile-email')||{}).value||'';
+  var phone=(document.getElementById('profile-phone')||{}).value||'';
+  var avatarData=(document.getElementById('profile-avatar-data')||{}).value||'';
+  if(!fullName.trim()){
+    if(status){status.textContent='Full name is required.';status.style.color='var(--red)';}
+    return;
+  }
+  try{
+    var r=await fetch('/auth/profile',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({full_name:fullName,email:email,phone:phone,avatar_data:avatarData})});
+    var d=await r.json();
+    if(!d.ok)throw new Error(d.error||'Failed to update profile.');
+    var p=d.profile||{};
+    window._userName=p.full_name||fullName;
+    window._userEmail=p.email||email;
+    window._userPhone=p.phone||phone;
+    window._userAvatar=p.avatar_data||'';
+    window._draftUserAvatar=window._userAvatar||'';
+    renderUserChrome();
+    if(status){status.textContent='Profile saved.';status.style.color='#27500A';}
+    toast('Profile updated','ok');
+  }catch(e){
+    if(status){status.textContent=e.message||'Failed to update profile.';status.style.color='var(--red)';}
+  }
+}
+
 function saveSender(){
-  sender={name:document.getElementById('s-name').value,email:document.getElementById('s-email').value,phone:document.getElementById('s-phone').value};
+  sender={
+    name:(document.getElementById('sender-name')||{}).value||'',
+    email:(document.getElementById('sender-email')||{}).value||'',
+    phone:(document.getElementById('sender-phone')||{}).value||''
+  };
   _saveSetting('hd_sender',sender);
-  toast('Sender settings saved','ok');
+  toast('Sender defaults saved','ok');
+}
+function resetSenderToProfile(){
+  sender={name:window._userName||'',email:window._userEmail||'',phone:window._userPhone||''};
+  loadSenderUI();
+  _saveSetting('hd_sender',sender);
+  toast('Sender defaults synced to your profile','ok');
 }
 function loadSenderUI(){
-  document.getElementById('s-name').value=sender.name||'';
-  document.getElementById('s-email').value=sender.email||'';
-  document.getElementById('s-phone').value=sender.phone||'';
+  var name=document.getElementById('sender-name'); if(name)name.value=sender.name||'';
+  var email=document.getElementById('sender-email'); if(email)email.value=sender.email||'';
+  var phone=document.getElementById('sender-phone'); if(phone)phone.value=sender.phone||'';
 }
 function showSettingsTab(tab){
   ['general','badges','presets','library','materials','crews','equipment','bugreport'].forEach(function(t){
@@ -9143,8 +9677,8 @@ function filterProjects(q){
   });
 }
 function filterClients(q){
-  q=q.toLowerCase();
-  document.querySelectorAll('#clients-list .client-card').forEach(function(card){
+  q=(q||'').toLowerCase();
+  document.querySelectorAll('#clients-list .client-card, #contacts-clients-list .client-card').forEach(function(card){
     var text=(card.dataset.name||'')+(card.dataset.company||'')+(card.dataset.email||'')+(card.textContent||'').toLowerCase();
     card.style.display=(!q||text.indexOf(q)>-1)?'':'none';
   });
@@ -9198,8 +9732,8 @@ function renderSubsList(){
 }
 
 function filterSubs(q){
-  q=q.toLowerCase();
-  document.querySelectorAll('#subs-list .sub-card').forEach(function(card){
+  q=(q||'').toLowerCase();
+  document.querySelectorAll('#subs-list .sub-card, #contacts-subs-list .sub-card').forEach(function(card){
     var text=(card.dataset.name||'')+(card.dataset.trade||'')+(card.textContent||'').toLowerCase();
     card.style.display=(!q||text.indexOf(q)>-1)?'':'none';
   });
@@ -11963,17 +12497,19 @@ function copyCalFeedUrl(){
       window._userRole=d.role||'user';
       window._userName=d.full_name||'';
       window._userUsername=d.username||'';
-      // Set sender info from user account
-      window._userEmail=d.email||'';window._userPhone=d.phone||'';
-      sender={name:d.full_name||'',email:d.email||'',phone:d.phone||''};
+      window._userEmail=d.email||'';
+      window._userPhone=d.phone||'';
+      window._userAvatar=d.avatar_data||'';
+      window._draftUserAvatar=window._userAvatar||'';
+      hydrateSenderFromAccount(false);
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
       stopLoginCanvas();
       try{boot();}catch(e){console.warn('boot error:',e.message);}
-      // Re-apply user account sender after boot (boot may load stale settings)
-      sender={name:window._userName||'',email:window._userEmail||'',phone:window._userPhone||''};
+      hydrateSenderFromAccount(false);
       initSidebarCanvas();
       showAdminElements();
+      renderUserChrome();
       initAutoLogout();
     }
   }catch(e){}
