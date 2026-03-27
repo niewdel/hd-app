@@ -215,7 +215,7 @@ def quotes_update(qid):
 @require_auth
 def quotes_list():
     try:
-        r = http.get(sb_url('proposals', '?select=*&order=created_at.desc'), headers=sb_headers(), timeout=10)
+        r = http.get(sb_url('proposals', '?select=*&archived=neq.true&order=created_at.desc'), headers=sb_headers(), timeout=10)
         r.raise_for_status()
         return jsonify({'ok': True, 'quotes': r.json()})
     except Exception as e:
@@ -233,9 +233,13 @@ def quotes_delete(qid):
                 name = gr.json()[0].get('name', '')
         except Exception:
             pass
-        r = http.delete(sb_url('proposals', f'?id=eq.{qid}'), headers=sb_headers(), timeout=10)
+        r = http.patch(
+            sb_url('proposals', f'?id=eq.{qid}'),
+            json={'archived': True, 'archived_at': datetime.utcnow().isoformat()},
+            headers=sb_headers(), timeout=10
+        )
         r.raise_for_status()
-        log_access(session.get('username',''), session.get('full_name',''), f'deleted proposal "{name}"')
+        log_access(session.get('username',''), session.get('full_name',''), f'archived proposal "{name}"')
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
@@ -257,7 +261,7 @@ def pipeline_stages():
 def pipeline_list():
     try:
         r = http.get(
-            sb_url('proposals', '?select=id,name,client,total,stage_id,snap,created_at,pipeline_stages!left(name,color,counts_in_ratio,is_closed)&order=created_at.desc'),
+            sb_url('proposals', '?select=id,name,client,total,stage_id,snap,created_at,pipeline_stages!left(name,color,counts_in_ratio,is_closed)&archived=neq.true&order=created_at.desc'),
             headers=sb_headers(), timeout=10
         )
         r.raise_for_status()
@@ -555,6 +559,34 @@ def get_logs():
         return jsonify({'ok':True,'logs':r.json() if r.status_code==200 else []})
     except Exception as e:
         return jsonify({'ok':False,'error':str(e)}), 500
+
+@app.route('/admin/archived')
+@require_admin
+def admin_archived():
+    try:
+        r = http.get(
+            sb_url('proposals', '?archived=is.true&select=id,name,client,total,archived_at,snap&order=archived_at.desc&limit=50'),
+            headers=sb_headers(), timeout=10
+        )
+        r.raise_for_status()
+        return jsonify({'ok': True, 'items': r.json()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/admin/restore/<int:qid>', methods=['POST'])
+@require_admin
+def admin_restore(qid):
+    try:
+        r = http.patch(
+            sb_url('proposals', f'?id=eq.{qid}'),
+            json={'archived': False, 'archived_at': None},
+            headers=sb_headers(), timeout=10
+        )
+        r.raise_for_status()
+        log_access(session.get('username',''), session.get('full_name',''), f'restored archived proposal id={qid}')
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/generate-pdf', methods=['POST'])
 @require_auth
