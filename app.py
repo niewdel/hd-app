@@ -28,6 +28,15 @@ def sb_headers():
         'Prefer': 'return=representation'
     }
 
+def sb_admin_headers(prefer='return=representation'):
+    key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+    return {
+        'apikey': key,
+        'Authorization': f'Bearer {key}',
+        'Content-Type': 'application/json',
+        'Prefer': prefer
+    }
+
 def sb_url(table, params=''):
     return f'{SUPABASE_URL}/rest/v1/{table}{params}'
 
@@ -1523,8 +1532,10 @@ def submit_bug():
         }
         if not row['title']:
             return jsonify({'ok': False, 'error': 'Title is required'}), 400
-        r = http.post(f"{SUPABASE_URL}/rest/v1/hd_bug_reports", json=row, headers=sb_headers(), timeout=10)
-        return jsonify({'ok': r.status_code < 300})
+        r = http.post(f"{SUPABASE_URL}/rest/v1/hd_bug_reports", json=row, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': 'Failed to save bug report', 'details': r.text[:500]}), 400
+        return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
@@ -1532,10 +1543,12 @@ def submit_bug():
 @require_admin
 def list_bugs():
     try:
-        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_bug_reports?select=*&order=submitted_at.desc", headers=sb_headers(), timeout=10)
-        return jsonify(r.json())
+        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_bug_reports?select=*&order=submitted_at.desc", headers=sb_admin_headers(), timeout=10)
+        if r.status_code != 200:
+            return jsonify({'ok': False, 'error': 'Failed to load bug reports', 'details': r.text[:500]}), r.status_code
+        return jsonify({'ok': True, 'items': r.json()})
     except Exception as e:
-        return jsonify([])
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/bugs/<int:bug_id>', methods=['PATCH'])
 @require_admin
@@ -1549,8 +1562,10 @@ def update_bug(bug_id):
                 updates['resolved_at'] = datetime.utcnow().isoformat()
         if 'admin_notes' in d:
             updates['admin_notes'] = d['admin_notes']
-        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_bug_reports?id=eq.{bug_id}", json=updates, headers=sb_headers(), timeout=10)
-        return jsonify({'ok': r.status_code < 300})
+        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_bug_reports?id=eq.{bug_id}", json=updates, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': 'Failed to update bug report', 'details': r.text[:500]}), 400
+        return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
@@ -1559,10 +1574,12 @@ def update_bug(bug_id):
 @require_admin
 def list_roadmap():
     try:
-        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_roadmap?select=*&order=sort_order.asc,created_at.desc", headers=sb_headers(), timeout=10)
-        return jsonify(r.json())
+        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_roadmap?select=*&order=sort_order.asc,created_at.desc", headers=sb_admin_headers(), timeout=10)
+        if r.status_code != 200:
+            return jsonify({'ok': False, 'error': 'Failed to load roadmap items', 'details': r.text[:500]}), r.status_code
+        return jsonify({'ok': True, 'items': r.json()})
     except Exception as e:
-        return jsonify([])
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/roadmap/save', methods=['POST'])
 @require_admin
@@ -1581,8 +1598,10 @@ def save_roadmap():
         }
         if not row['title']:
             return jsonify({'ok': False, 'error': 'Title is required'}), 400
-        r = http.post(f"{SUPABASE_URL}/rest/v1/hd_roadmap", json=row, headers=sb_headers(), timeout=10)
-        return jsonify({'ok': r.status_code < 300})
+        r = http.post(f"{SUPABASE_URL}/rest/v1/hd_roadmap", json=row, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': 'Failed to save roadmap item', 'details': r.text[:500]}), 400
+        return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
@@ -1596,8 +1615,10 @@ def update_roadmap(item_id):
             if k in d:
                 updates[k] = d[k]
         updates['updated_at'] = datetime.utcnow().isoformat()
-        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_roadmap?id=eq.{item_id}", json=updates, headers=sb_headers(), timeout=10)
-        return jsonify({'ok': r.status_code < 300})
+        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_roadmap?id=eq.{item_id}", json=updates, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': 'Failed to update roadmap item', 'details': r.text[:500]}), 400
+        return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
@@ -1605,8 +1626,10 @@ def update_roadmap(item_id):
 @require_admin
 def delete_roadmap(item_id):
     try:
-        r = http.delete(f"{SUPABASE_URL}/rest/v1/hd_roadmap?id=eq.{item_id}", headers=sb_headers(), timeout=10)
-        return jsonify({'ok': r.status_code < 300})
+        r = http.delete(f"{SUPABASE_URL}/rest/v1/hd_roadmap?id=eq.{item_id}", headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': 'Failed to delete roadmap item', 'details': r.text[:500]}), 400
+        return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 

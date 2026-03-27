@@ -13445,16 +13445,36 @@ function submitBug(){
   }).catch(function(){msg.textContent='Network error.';msg.style.color='var(--red)';});
 }
 
+var _bugReportsError='';
 function loadBugList(){
   fetch('/bugs/list').then(function(r){return r.json();}).then(function(data){
-    _bugReports=Array.isArray(data)?data:[];
+    _bugReportsError='';
+    if(data&&data.ok===false){
+      _bugReports=[];
+      _bugReportsError=data.error||'Failed to load bug reports.';
+    } else if(Array.isArray(data)){
+      _bugReports=data;
+    } else if(data&&Array.isArray(data.items)){
+      _bugReports=data.items;
+    } else {
+      _bugReports=[];
+      _bugReportsError='Unexpected bug report response.';
+    }
     renderBugList();
-  }).catch(function(){_bugReports=[];renderBugList();});
+  }).catch(function(err){_bugReports=[];_bugReportsError=err&&err.message?err.message:'Network error.';renderBugList();});
 }
 
 function renderBugList(){
   var tbody=document.getElementById('bugs-tbody');if(!tbody)return;
   tbody.innerHTML='';
+  if(_bugReportsError){
+    var errTr=document.createElement('tr');
+    var errTd=document.createElement('td');errTd.colSpan=8;errTd.style.cssText='text-align:center;padding:20px;color:var(--red);font-size:12px;';
+    errTd.textContent='Error loading bug reports: '+_bugReportsError;errTr.appendChild(errTd);tbody.appendChild(errTr);
+    var sErrTbody=document.getElementById('settings-bugs-tbody');
+    if(sErrTbody)sErrTbody.innerHTML=tbody.innerHTML;
+    return;
+  }
   var fs=document.getElementById('bug-filter-status');
   var fv=document.getElementById('bug-filter-severity');
   var statusF=fs?fs.value:'';
@@ -13588,17 +13608,37 @@ function saveBugUpdate(){
 // ── Roadmap ────────────────────────────────────────────
 var _roadmapItems=[];
 var _editingRoadmapId=null;
+var _roadmapItemsError='';
 
 function loadRoadmapList(){
   fetch('/roadmap/list').then(function(r){return r.json();}).then(function(data){
-    _roadmapItems=Array.isArray(data)?data:[];
+    _roadmapItemsError='';
+    if(data&&data.ok===false){
+      _roadmapItems=[];
+      _roadmapItemsError=data.error||'Failed to load roadmap items.';
+    } else if(Array.isArray(data)){
+      _roadmapItems=data;
+    } else if(data&&Array.isArray(data.items)){
+      _roadmapItems=data.items;
+    } else {
+      _roadmapItems=[];
+      _roadmapItemsError='Unexpected roadmap response.';
+    }
     renderRoadmapList();
-  }).catch(function(){_roadmapItems=[];renderRoadmapList();});
+  }).catch(function(err){_roadmapItems=[];_roadmapItemsError=err&&err.message?err.message:'Network error.';renderRoadmapList();});
 }
 
 function renderRoadmapList(){
   var tbody=document.getElementById('roadmap-tbody');if(!tbody)return;
   tbody.innerHTML='';
+  if(_roadmapItemsError){
+    var errTr=document.createElement('tr');
+    var errTd=document.createElement('td');errTd.colSpan=7;errTd.style.cssText='text-align:center;padding:20px;color:var(--red);font-size:12px;';
+    errTd.textContent='Error loading roadmap items: '+_roadmapItemsError;errTr.appendChild(errTd);tbody.appendChild(errTr);
+    var aErrTbody=document.getElementById('admin-roadmap-tbody');
+    if(aErrTbody)aErrTbody.innerHTML=tbody.innerHTML;
+    return;
+  }
   var fs=document.getElementById('rm-filter-status');
   var fp=document.getElementById('rm-filter-priority');
   var fc=document.getElementById('rm-filter-cat');
