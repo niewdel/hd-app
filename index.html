@@ -1248,9 +1248,9 @@ tr:hover td{background:var(--tbl-alt);}
 
   /* --- Reports: full stack on mobile --- */
   #panel-reports .content > div { display: block !important; }
-  #rpt-sidebar { width: 100% !important; display: flex !important; flex-shrink: 1 !important; flex-wrap: nowrap; gap: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 12px; }
-  #rpt-sidebar .rpt-nav-item { flex: 0 0 auto; text-align: center; padding: 10px 12px; font-size: 12px; border-bottom: 2px solid transparent; border-left: none; white-space: nowrap; }
-  #rpt-sidebar .rpt-nav-active { border-bottom-color: var(--red); border-left: none; }
+  #rpt-sidebar { width: 100% !important; display: flex !important; flex-shrink: 1 !important; flex-wrap: wrap; gap: 0; margin-bottom: 12px; border-radius: 12px !important; }
+  #rpt-sidebar .rpt-nav-item { flex: 1 1 auto; text-align: center; padding: 10px 8px; font-size: 11px; border-bottom: 2px solid transparent; border-left: none; }
+  #rpt-sidebar .rpt-nav-active { border-bottom-color: var(--red); border-left: none; background: var(--red-soft); }
   #rpt-output { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   #rpt-output .mc-card { overflow-x: auto; }
   #rpt-output .rpt-tbl { min-width: 500px; }
