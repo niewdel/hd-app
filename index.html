@@ -1365,6 +1365,7 @@ tr:hover td{background:var(--tbl-alt);}
       <div class="nav-item" role="button" tabindex="0" onclick="showPanel('settings',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('settings',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="2.5"/><path d="M8 1a7 7 0 100 14A7 7 0 008 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><span class="nav-label">Settings</span></div>
       <div class="nav-item admin-only" id="nav-admin" data-admin-hidden role="button" tabindex="0" onclick="showPanel('admin',this);loadUsers();showAdminTab('company');" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('admin',this);loadUsers();showAdminTab('company');}">
         <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a3 3 0 00-3 3v1H4a2 2 0 00-2 2v5a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-1V4a3 3 0 00-3-3zm-1 3a1 1 0 112 0v1H7V4zm1 5.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg><span class="nav-label">Admin</span></div>
+      <div class="nav-item" role="button" tabindex="0" onclick="showPanel('bugs',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('bugs',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a1 1 0 011 1v1.07a5 5 0 013.61 2.64L14 5l1 1-1.68 1.68A5 5 0 0113 10h2v1.5h-2a5 5 0 01-.68 1.82L14 15l-1 1-1.39-1.39A5 5 0 018 16a5 5 0 01-3.61-1.39L3 16l-1-1 1.68-1.68A5 5 0 013 11.5H1V10h2a5 5 0 01.32-2.32L1.64 6 3 5l1.39 1.71A5 5 0 017 3.07V2a1 1 0 011-1zm0 4a3 3 0 100 6 3 3 0 000-6z"/></svg><span class="nav-label">Bug Report</span></div>
     </nav>
     <div class="sb-foot">
       <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -2187,7 +2188,6 @@ tr:hover td{background:var(--tbl-alt);}
           <button class="stab on" data-field-hidden id="stab-estimating" onclick="showSettingsTab('estimating')">Estimating</button>
           <button class="stab" data-field-hidden id="stab-library" onclick="showSettingsTab('library')">Bid Library</button>
           <button class="stab" data-field-hidden id="stab-crewequip" onclick="showSettingsTab('crewequip')">Crew &amp; Equipment</button>
-          <button class="stab" id="stab-bugreport" onclick="showSettingsTab('bugreport')">Bug Report</button>
         </div>
 
         <!-- General Tab (hidden — moved to account modal, kept for DOM refs) -->
@@ -7181,7 +7181,7 @@ function renderTopbar(panelId){
 
 function showPanel(id,el){
   // Redirect removed nav items into their new parent panels
-  if(id==='bugs'){showPanel('settings',document.querySelector('[onclick*=settings]'));setTimeout(function(){showSettingsTab('bugreport');},60);return;}
+  // bugs panel is now standalone — no redirect needed
   if(id==='roadmap'){showPanel('admin',document.querySelector('[onclick*=admin]'));setTimeout(function(){showAdminTab('roadmap');},60);return;}
   // Proposals, COs, and work orders require a project context
   if(id==='build'&&!window._pendingProjectLink&&!lastSavedQuoteId){
@@ -7227,7 +7227,7 @@ function showPanel(id,el){
   if(id==='workorder')renderWorkOrderDetail();
   if(id==='schedule')renderSchedule();
   if(id==='reports')initReports();
-  if(id==='bugs'&&window._userRole==='admin')loadBugList();
+  if(id==='bugs'){loadBugList();}
   if(id==='roadmap')loadRoadmapList();
   if(typeof isMobile!=='undefined'&&isMobile)closeMobileNav();
 }
