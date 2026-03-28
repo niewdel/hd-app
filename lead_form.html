@@ -44,30 +44,30 @@
     </div>
     <div class="card-body">
       <label>Your Name <span class="req">*</span></label>
-      <input type="text" id="lead-name" placeholder="John Smith"/>
+      <input type="text" id="lead-name" placeholder="John Smith" required/>
 
       <div class="row2">
         <div>
-          <label>Company</label>
-          <input type="text" id="lead-company" placeholder="ABC Properties"/>
+          <label>Company <span class="req">*</span></label>
+          <input type="text" id="lead-company" placeholder="ABC Properties" required/>
         </div>
         <div>
-          <label>Phone</label>
-          <input type="tel" id="lead-phone" placeholder="(555) 000-0000"/>
+          <label>Phone <span class="req">*</span></label>
+          <input type="tel" id="lead-phone" placeholder="(555) 000-0000" required/>
         </div>
       </div>
 
-      <label>Email</label>
-      <input type="email" id="lead-email" placeholder="john@example.com"/>
+      <label>Email <span class="req">*</span></label>
+      <input type="email" id="lead-email" placeholder="john@example.com" required/>
 
-      <label>Project Address</label>
-      <input type="text" id="lead-address" placeholder="123 Main St, Charlotte, NC"/>
+      <label>Project Address <span class="req">*</span></label>
+      <input type="text" id="lead-address" placeholder="123 Main St, Charlotte, NC" required/>
 
-      <label>Tell us about your project</label>
-      <textarea id="lead-desc" placeholder="Brief description of the work needed — parking lot repair, new driveway, grading, etc."></textarea>
+      <label>Tell us about your project <span class="req">*</span></label>
+      <textarea id="lead-desc" placeholder="Brief description of the work needed — parking lot repair, new driveway, grading, etc." required></textarea>
 
-      <label>How did you hear about us?</label>
-      <select id="lead-source">
+      <label>How did you hear about us? <span class="req">*</span></label>
+      <select id="lead-source" required>
         <option value="">— Select —</option>
         <option value="Google">Google Search</option>
         <option value="Referral">Referral</option>
@@ -89,7 +89,13 @@ function submitLead(){
   var btn=document.getElementById('btn-lead-submit');
   err.textContent='';
   var name=document.getElementById('lead-name').value.trim();
-  if(!name){err.textContent='Please enter your name.';return;}
+  var company=document.getElementById('lead-company').value.trim();
+  var phone=document.getElementById('lead-phone').value.trim();
+  var email=document.getElementById('lead-email').value.trim();
+  var address=document.getElementById('lead-address').value.trim();
+  var desc=document.getElementById('lead-desc').value.trim();
+  var source=document.getElementById('lead-source').value;
+  if(!name||!company||!phone||!email||!address||!desc||!source){err.textContent='All fields are required.';return;}
   btn.disabled=true;btn.textContent='Submitting...';
   fetch('/leads/submit',{
     method:'POST',
