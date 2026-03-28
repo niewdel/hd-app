@@ -1740,6 +1740,144 @@ def public_proposal_page(token):
     """Serve the public proposal viewer page."""
     return send_file('proposal_view.html')
 
+# ── Lead Intake ───────────────────────────────────────────
+@app.route('/lead-form')
+def lead_form_page():
+    """Serve the public lead intake form."""
+    return send_file('lead_form.html')
+
+@app.route('/leads/submit', methods=['POST'])
+def submit_lead():
+    """Public route — no auth. Accept lead from public form."""
+    try:
+        d = request.json or {}
+        name = str(d.get('name', '')).strip()
+        email = str(d.get('email', '')).strip()
+        phone = str(d.get('phone', '')).strip()
+        if not name:
+            return jsonify({'ok': False, 'error': 'Name is required'}), 400
+        # Try to match existing client by email or phone
+        matched_client_id = None
+        if email:
+            cr = http.get(sb_url('clients', f'?email=eq.{email}&select=id,name&limit=1'), headers=sb_admin_headers(), timeout=5)
+            if cr.status_code == 200 and cr.json():
+                matched_client_id = cr.json()[0]['id']
+        if not matched_client_id and phone:
+            cr = http.get(sb_url('clients', f'?phone=eq.{phone}&select=id,name&limit=1'), headers=sb_admin_headers(), timeout=5)
+            if cr.status_code == 200 and cr.json():
+                matched_client_id = cr.json()[0]['id']
+        row = {
+            'name': name,
+            'company': str(d.get('company', '')).strip(),
+            'email': email,
+            'phone': phone,
+            'address': str(d.get('address', '')).strip(),
+            'description': str(d.get('description', '')).strip(),
+            'source': str(d.get('source', '')).strip(),
+            'status': 'new',
+            'matched_client_id': matched_client_id
+        }
+        r = http.post(f"{SUPABASE_URL}/rest/v1/hd_leads", json=row, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': 'Failed to save lead'}), 400
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/leads/list')
+@require_auth
+def list_leads():
+    try:
+        status = request.args.get('status', 'new')
+        q = f"{SUPABASE_URL}/rest/v1/hd_leads?select=*&order=submitted_at.desc"
+        if status != 'all':
+            q += f"&status=eq.{status}"
+        r = http.get(q, headers=sb_admin_headers(), timeout=10)
+        if r.status_code != 200:
+            return jsonify({'ok': False, 'error': r.text[:500]}), r.status_code
+        return jsonify({'ok': True, 'items': r.json()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/leads/<int:lid>', methods=['PATCH'])
+@require_auth
+def update_lead(lid):
+    try:
+        d = request.json or {}
+        updates = {}
+        if 'status' in d: updates['status'] = d['status']
+        if not updates:
+            return jsonify({'ok': False, 'error': 'Nothing to update'}), 400
+        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_leads?id=eq.{lid}", json=updates, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/leads/<int:lid>/convert', methods=['POST'])
+@require_auth
+def convert_lead(lid):
+    """Convert a lead into a pipeline project and optionally a client."""
+    try:
+        # Get the lead
+        lr = http.get(f"{SUPABASE_URL}/rest/v1/hd_leads?id=eq.{lid}&select=*", headers=sb_admin_headers(), timeout=10)
+        if lr.status_code != 200 or not lr.json():
+            return jsonify({'ok': False, 'error': 'Lead not found'}), 404
+        lead = lr.json()[0]
+        # Create client if no match
+        client_id = lead.get('matched_client_id')
+        if not client_id:
+            client_row = {
+                'name': lead['name'],
+                'company': lead.get('company', ''),
+                'email': lead.get('email', ''),
+                'phone': lead.get('phone', ''),
+                'address': lead.get('address', ''),
+                'notes': 'Converted from lead intake form'
+            }
+            cr = http.post(sb_url('clients'), json=client_row, headers=sb_admin_headers(), timeout=10)
+            if cr.status_code in (200, 201) and cr.json():
+                client_id = cr.json()[0]['id'] if isinstance(cr.json(), list) else cr.json().get('id')
+        # Find "New Lead" stage
+        sr = http.get(sb_url('pipeline_stages', '?select=id&order=position.asc&limit=1'), headers=sb_headers(), timeout=5)
+        stage_id = sr.json()[0]['id'] if sr.status_code == 200 and sr.json() else None
+        # Generate project number
+        proj_num = _next_project_number()
+        # Create proposal/project
+        snap = {
+            'project_name': lead.get('company') or lead['name'],
+            'client': lead['name'],
+            'address': lead.get('address', ''),
+            'project_number': proj_num,
+            'notes': lead.get('description', ''),
+            'date': datetime.utcnow().strftime('%Y-%m-%d'),
+            'sections': [], 'concItems': [], 'extraItems': [],
+            'lead_source': lead.get('source', ''),
+            'activity_log': [{'type': 'created', 'text': 'Converted from lead form', 'date': datetime.utcnow().isoformat(), 'user': session.get('username', '')}]
+        }
+        prop_row = {
+            'name': lead.get('company') or lead['name'],
+            'client': lead['name'],
+            'total': 0,
+            'stage_id': stage_id,
+            'snap': json.dumps(snap),
+            'created_by': session.get('username', 'system'),
+            'project_number': proj_num
+        }
+        pr = http.post(sb_url('proposals'), json=prop_row, headers=sb_headers(), timeout=10)
+        proposal_id = None
+        if pr.status_code in (200, 201) and pr.json():
+            pdata = pr.json()[0] if isinstance(pr.json(), list) else pr.json()
+            proposal_id = pdata.get('id')
+        # Mark lead as accepted
+        http.patch(f"{SUPABASE_URL}/rest/v1/hd_leads?id=eq.{lid}",
+                   json={'status': 'accepted', 'created_proposal_id': proposal_id},
+                   headers=sb_admin_headers(), timeout=10)
+        return jsonify({'ok': True, 'proposal_id': proposal_id, 'client_id': client_id})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 # ── Reminders ─────────────────────────────────────────────
 @app.route('/reminders/list')
 @require_auth

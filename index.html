@@ -1667,6 +1667,13 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             </div>
             <div class="dash-section">
               <div class="dash-section-hdr">
+                <span class="dash-section-title">New Leads</span>
+                <button class="btn btn-sec btn-sm" onclick="window.open('/lead-form','_blank')">View Form</button>
+              </div>
+              <div id="dash-leads" style="max-height:280px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><div class="empty-state-title">No new leads</div><div class="empty-state-desc">Share your lead form to capture inbound requests</div></div></div>
+            </div>
+            <div class="dash-section">
+              <div class="dash-section-hdr">
                 <span class="dash-section-title">Recent Activity</span>
               </div>
               <div id="dash-recent-activity" style="max-height:360px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div></div></div>
@@ -4860,6 +4867,7 @@ function renderDashboard(){
   renderDashTodaySchedule();
   renderDashRecentActivity();
   loadDashReminders();
+  loadDashLeads();
   renderDashPipelineSnapshot();
   renderDashRecentProjects();
   if(!dashSelectedDate){
@@ -14221,6 +14229,62 @@ function shareProjectLink(){
           prompt('Share this link with your client:',url);
         }
       } else {toast(d.error||'Failed to generate link','err');}
+    });
+}
+
+// ── Leads ────────────────────────────────────────────────
+function loadDashLeads(){
+  var c=document.getElementById('dash-leads');if(!c)return;
+  fetch('/leads/list?status=new').then(function(r){return r.json();}).then(function(d){
+    if(!d.ok||!d.items||d.items.length===0){
+      c.innerHTML='<div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><div class="empty-state-title">No new leads</div><div class="empty-state-desc">Share your lead form to capture inbound requests</div></div>';
+      return;
+    }
+    var html='';
+    d.items.forEach(function(l){
+      var ago=l.submitted_at?timeSince(new Date(l.submitted_at)):'';
+      html+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);">';
+      html+='<div style="flex:1;min-width:0;">';
+      html+='<div style="font-size:13px;font-weight:500;">'+esc(l.name)+(l.company?' <span style="color:var(--dgray);font-weight:400;">— '+esc(l.company)+'</span>':'')+'</div>';
+      html+='<div style="font-size:11px;color:var(--dgray);margin-top:2px;">';
+      if(l.email)html+=esc(l.email)+' ';
+      if(l.phone)html+=esc(l.phone)+' ';
+      html+='</div>';
+      if(l.description)html+='<div style="font-size:12px;color:var(--dgray);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(l.description)+'</div>';
+      if(ago)html+='<div style="font-size:10px;color:var(--dgray);margin-top:2px;">'+ago+'</div>';
+      html+='</div>';
+      html+='<div style="display:flex;gap:4px;flex-shrink:0;">';
+      html+='<button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="convertLead('+l.id+')">Accept</button>';
+      html+='<button class="btn-ico" onclick="dismissLead('+l.id+')" title="Dismiss" style="color:var(--dgray);font-size:14px;">&#10005;</button>';
+      html+='</div></div>';
+    });
+    c.innerHTML=html;
+  }).catch(function(){});
+}
+
+function timeSince(date){
+  var s=Math.floor((new Date()-date)/1000);
+  if(s<60)return 'just now';
+  var m=Math.floor(s/60);if(m<60)return m+'m ago';
+  var h=Math.floor(m/60);if(h<24)return h+'h ago';
+  var d=Math.floor(h/24);return d+'d ago';
+}
+
+function convertLead(id){
+  if(!confirm('Convert this lead into a new project?'))return;
+  fetch('/leads/'+id+'/convert',{method:'POST',headers:{'Content-Type':'application/json'}})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.ok){toast('Lead converted to project','ok');loadDashLeads();renderPipeline();}
+      else toast(d.error||'Failed to convert','err');
+    });
+}
+
+function dismissLead(id){
+  fetch('/leads/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'rejected'})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.ok){loadDashLeads();toast('Lead dismissed','ok');}
     });
 }
 

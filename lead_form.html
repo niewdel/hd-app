@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request a Quote — HD Hauling & Grading</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--red:#CC0000;--blk:#111;--gray:#666;--lgray:#f5f5f5;--bdr:#e0e0e0;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+  body{font-family:var(--font);background:#f8f8f8;color:var(--blk);line-height:1.5;}
+  .header{background:var(--blk);padding:16px 24px;display:flex;align-items:center;gap:12px;}
+  .header img{height:36px;}
+  .header span{color:#fff;font-size:14px;font-weight:600;letter-spacing:1px;}
+  .container{max-width:560px;margin:32px auto;padding:0 16px;}
+  .card{background:#fff;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;}
+  .card-hdr{padding:20px 24px;border-bottom:1px solid var(--bdr);}
+  .card-hdr h2{font-size:20px;font-weight:700;}
+  .card-hdr p{font-size:13px;color:var(--gray);margin-top:4px;}
+  .card-body{padding:24px;}
+  label{display:block;font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;margin-top:16px;}
+  label:first-child{margin-top:0;}
+  input,textarea,select{width:100%;padding:10px 12px;border:1px solid var(--bdr);border-radius:8px;font-size:14px;font-family:var(--font);transition:border-color .15s;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--red);}
+  textarea{min-height:80px;resize:vertical;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .btn-submit{display:block;width:100%;margin-top:24px;padding:14px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);transition:opacity .15s;}
+  .btn-submit:hover{opacity:.9;}
+  .btn-submit:disabled{opacity:.5;cursor:not-allowed;}
+  .err{color:var(--red);font-size:12px;margin-top:8px;}
+  .success{text-align:center;padding:48px 24px;}
+  .success svg{color:#2e7d32;margin-bottom:12px;}
+  .success h3{font-size:20px;margin-bottom:8px;}
+  .success p{font-size:14px;color:var(--gray);}
+  .req{color:var(--red);}
+  @media(max-width:500px){.row2{grid-template-columns:1fr;}.container{margin:16px auto;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <img src="/hd_logo_cropped.png" alt="HD" onerror="this.style.display='none'"/>
+  <span>HD HAULING &amp; GRADING</span>
+</div>
+<div class="container">
+  <div class="card" id="form-card">
+    <div class="card-hdr">
+      <h2>Request a Quote</h2>
+      <p>Fill out the form below and our team will get back to you shortly.</p>
+    </div>
+    <div class="card-body">
+      <label>Your Name <span class="req">*</span></label>
+      <input type="text" id="lead-name" placeholder="John Smith"/>
+
+      <div class="row2">
+        <div>
+          <label>Company</label>
+          <input type="text" id="lead-company" placeholder="ABC Properties"/>
+        </div>
+        <div>
+          <label>Phone</label>
+          <input type="tel" id="lead-phone" placeholder="(555) 000-0000"/>
+        </div>
+      </div>
+
+      <label>Email</label>
+      <input type="email" id="lead-email" placeholder="john@example.com"/>
+
+      <label>Project Address</label>
+      <input type="text" id="lead-address" placeholder="123 Main St, Charlotte, NC"/>
+
+      <label>Tell us about your project</label>
+      <textarea id="lead-desc" placeholder="Brief description of the work needed — parking lot repair, new driveway, grading, etc."></textarea>
+
+      <label>How did you hear about us?</label>
+      <select id="lead-source">
+        <option value="">— Select —</option>
+        <option value="Google">Google Search</option>
+        <option value="Referral">Referral</option>
+        <option value="Drive-by">Drove Past a Job Site</option>
+        <option value="Social Media">Social Media</option>
+        <option value="Repeat Customer">Repeat Customer</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <div id="lead-err" class="err"></div>
+      <button class="btn-submit" id="btn-lead-submit" onclick="submitLead()">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function submitLead(){
+  var err=document.getElementById('lead-err');
+  var btn=document.getElementById('btn-lead-submit');
+  err.textContent='';
+  var name=document.getElementById('lead-name').value.trim();
+  if(!name){err.textContent='Please enter your name.';return;}
+  btn.disabled=true;btn.textContent='Submitting...';
+  fetch('/leads/submit',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      name:name,
+      company:document.getElementById('lead-company').value.trim(),
+      phone:document.getElementById('lead-phone').value.trim(),
+      email:document.getElementById('lead-email').value.trim(),
+      address:document.getElementById('lead-address').value.trim(),
+      description:document.getElementById('lead-desc').value.trim(),
+      source:document.getElementById('lead-source').value
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      document.getElementById('form-card').innerHTML='<div class="success"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h3>Request Submitted!</h3><p>Thank you, '+name.split(' ')[0]+'. Our team will review your request and get back to you soon.</p></div>';
+    } else {
+      err.textContent=d.error||'Something went wrong. Please try again.';
+      btn.disabled=false;btn.textContent='Submit Request';
+    }
+  })
+  .catch(function(){
+    err.textContent='Network error. Please try again.';
+    btn.disabled=false;btn.textContent='Submit Request';
+  });
+}
+</script>
+</body>
+</html>
