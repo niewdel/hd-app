@@ -4875,15 +4875,12 @@ function loadDashBidDates(){
 }
 
 function renderDashboard(){
+  // Critical path — render immediately with cached data
   _setDashGreeting();
   loadDashBidDates();
   renderDashStats();
-  renderDashWeatherMini();
-  renderDashUpcomingWO();
   renderDashTodaySchedule();
-  renderDashRecentActivity();
-  loadDashReminders();
-  loadDashLeads();
+  renderDashUpcomingWO();
   renderDashPipelineSnapshot();
   renderDashRecentProjects();
   if(!dashSelectedDate){
@@ -4892,12 +4889,17 @@ function renderDashboard(){
   }
   renderDashCal();
   updateNavBadges();
-  // Set date line
   var dl=document.getElementById('dash-date-line');
   if(dl){var d=new Date();dl.textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
-  // Set today label with day name
   var tl=document.getElementById('dash-today-label');
   if(tl){var d2=new Date();tl.textContent='Today \u2014 '+d2.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});}
+  // Deferred — load async widgets after main render
+  setTimeout(function(){
+    renderDashWeatherMini();
+    renderDashRecentActivity();
+    loadDashReminders();
+    loadDashLeads();
+  },50);
 }
 
 function renderDashWeatherMini(){
@@ -7478,7 +7480,14 @@ function showPanel(id,el){
   if(id==='projects'){renderPipeline().then(function(){renderProjectStats();}).catch(function(){renderProjectStats();});renderProjectsList();}
   if(id==='lineitems')renderLineItems();
   if(id==='crewcosts')renderCrewCosts();
-  if(id==='dashboard'){renderPipeline().then(function(){renderDashboard();}).catch(function(){renderDashboard();});}
+  if(id==='dashboard'){
+    // Skip pipeline re-fetch if loaded within last 30s
+    if(pipelineProposals&&pipelineProposals.length&&window._pipelineLoadedAt&&Date.now()-window._pipelineLoadedAt<30000){
+      renderDashboard();
+    } else {
+      renderPipeline().then(function(){renderDashboard();}).catch(function(){renderDashboard();});
+    }
+  }
   if(id==='project')renderProjectSummary();
   if(id==='build')updateProposalDocBadge();
   if(id==='co'){populateCOProposalDropdown();updateCODocBadge();}
@@ -9650,6 +9659,7 @@ async function renderPipeline() {
     pipelineStages = ds.stages;
     _pipelineStages = ds.stages;
     pipelineProposals = dp.proposals;
+    window._pipelineLoadedAt = Date.now();
     populateStageFilter();
 
     // Only show projects in pipeline (proposals stay attached to their projects)
