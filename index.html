@@ -1117,7 +1117,7 @@ tr:hover td{background:var(--tbl-alt);}
 @media (max-width: 768px) {
 
   .topbar-account-meta { display: none; }
-  .profile-menu { top: 64px; right: 12px; width: min(320px, calc(100vw - 24px)); }
+  .profile-menu { top: 56px; right: 8px; width: min(320px, calc(100vw - 16px)); z-index: 300; }
   .profile-form-grid { grid-template-columns: 1fr; }
 
   /* --- App layout: single column, no sidebar margin --- */
@@ -1224,10 +1224,14 @@ tr:hover td{background:var(--tbl-alt);}
   .wx-current-bar { flex-wrap: wrap; gap: 8px; }
 
   /* --- Schedule: stack queue and calendar vertically --- */
-  #sched-split { grid-template-columns: 1fr !important; }
-  #sched-split > div:first-child { border-right: none !important; border-bottom: 1px solid var(--bdr); max-height: 220px; }
+  #sched-split { grid-template-columns: 1fr !important; min-height: auto !important; }
+  #sched-split > div:first-child { border-right: none !important; border-bottom: 1px solid var(--bdr); max-height: 200px; }
+  #sched-split > div:last-child { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #sched-cal-grid { min-width: 500px; }
   #sched-kpi-bar { flex-wrap: wrap; }
   #sched-kpi-bar .dash-stat-cell { flex: 1 1 45%; min-width: 100px; }
+  .mc-toolbar { flex-wrap: wrap; gap: 8px; padding: 10px !important; }
+  .mc-seg { flex-wrap: nowrap; overflow-x: auto; }
 
   /* --- Collapse all 2-column detail layouts --- */
   #panel-project [style*="grid-template-columns:3fr 2fr"],
@@ -1237,15 +1241,21 @@ tr:hover td{background:var(--tbl-alt);}
     grid-template-columns: 1fr !important;
   }
   #ps-financials { grid-template-columns: 1fr 1fr !important; }
+  #proj-stats { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  #proj-stats .mc-kpi { padding: 12px 14px !important; }
+  #proj-stats .mc-kpi-val { font-size: 20px !important; }
   #wo-photos-grid { grid-template-columns: repeat(2, 1fr) !important; }
 
   /* --- Reports: stack sidebar above content --- */
   #panel-reports [style*="display:flex;gap:14px"] {
     flex-direction: column !important;
   }
-  #rpt-sidebar { width: 100% !important; display: flex !important; flex-wrap: wrap; gap: 0; }
-  #rpt-sidebar .rpt-nav-item { flex: 1; text-align: center; padding: 10px 8px; font-size: 11px; border-bottom: 2px solid transparent; border-left: none; }
+  #rpt-sidebar { width: 100% !important; display: flex !important; flex-wrap: nowrap; gap: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #rpt-sidebar .rpt-nav-item { flex: 0 0 auto; text-align: center; padding: 10px 12px; font-size: 12px; border-bottom: 2px solid transparent; border-left: none; white-space: nowrap; }
   #rpt-sidebar .rpt-nav-active { border-bottom-color: var(--red); border-left: none; }
+  #rpt-output { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #rpt-output .rpt-stat { min-width: 100px; }
+  #rpt-output [style*="grid-template-columns:repeat(auto-fit"] { grid-template-columns: repeat(2, 1fr) !important; }
 
   /* --- Touch targets --- */
   .mob-menu-btn { padding: 12px !important; min-width: 44px; min-height: 44px; }
@@ -1367,6 +1377,9 @@ tr:hover td{background:var(--tbl-alt);}
   </button>
   <span class="mob-title" id="mob-title">Build Proposal</span>
   <div class="mob-action-group">
+    <button class="mob-account-btn" onclick="openCmdK()" aria-label="Search" style="width:32px;height:32px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
     <button class="mob-account-btn" onclick="toggleProfileMenu()" aria-label="Open account menu">
       <span class="avatar-shell sm" id="mobile-account-avatar"><span>HD</span></span>
     </button>
@@ -2018,7 +2031,6 @@ tr:hover td{background:var(--tbl-alt);}
               <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
                 <div id="contacts-subs-count" style="font-size:13px;color:var(--dgray);"></div>
                 <input id="contacts-subs-search" type="text" placeholder="Search subcontractors&hellip;" oninput="filterSubs(this.value)" style="flex:1;max-width:400px;"/>
-                <button class="btn btn-red btn-sm" onclick="openSubModal()">+ Add Sub</button>
               </div>
               <div id="contacts-subs-list">
                 <div class="empty-state">
@@ -2213,7 +2225,7 @@ tr:hover td{background:var(--tbl-alt);}
         </div>
         <div class="settings-tab-bar">
           <button class="stab on" data-admin-hidden id="stab-estimating" onclick="showSettingsTab('estimating')">Estimating</button>
-          <button class="stab" data-admin-hidden id="stab-library" onclick="showSettingsTab('library')">Bid Library</button>
+          <button class="stab" data-admin-hidden id="stab-library" onclick="showSettingsTab('library')">Item Library</button>
           <button class="stab" data-admin-hidden id="stab-crewequip" onclick="showSettingsTab('crewequip')">Crew &amp; Equipment</button>
         </div>
 
@@ -2401,7 +2413,7 @@ tr:hover td{background:var(--tbl-alt);}
           </div>
         </div>
 
-        <!-- Bid Library Tab -->
+        <!-- Item Library Tab -->
         <div id="stab-content-library" style="display:none;">
           <div class="card">
             <div class="card-hdr">
@@ -3700,7 +3712,7 @@ function _snapshotLibrary(){
   });
 }
 function openLibraryPicker(){
-  if(!BID_LIBRARY.length){toast("Library empty — go to Settings > Bid Library and click Load Defaults","err");return;}
+  if(!BID_LIBRARY.length){toast("Library empty — go to Settings > Item Library and click Load Defaults","err");return;}
   var ex=document.getElementById("lib-picker-modal");if(ex)ex.remove();
   var modal=document.createElement("div");modal.id="lib-picker-modal";
   modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;";
@@ -5192,6 +5204,7 @@ async function renderProjectsList(){
       var card=document.createElement('div');
       card.className='mc-card mc-proj-card';
       card.style.cssText='margin-bottom:8px;border-radius:14px;';
+      card.dataset.stage=stage.name||'';
       card.addEventListener('click',function(){openProjectSummary(p.id);});
       // Left: name + client + address
       var left=document.createElement('div');left.style.cssText='flex:1;min-width:0;';
@@ -9754,8 +9767,9 @@ function filterProjects(q){
   var stageFilter=(document.getElementById('proj-stage-filter')||{}).value||'';
   document.querySelectorAll('#projects-list > div').forEach(function(card){
     var text=(card.textContent||'').toLowerCase();
+    var cardStage=card.dataset.stage||'';
     var matchText=!q||text.indexOf(q)>-1;
-    var matchStage=!stageFilter||text.indexOf(stageFilter.toLowerCase())>-1;
+    var matchStage=!stageFilter||cardStage===stageFilter;
     card.style.display=(matchText&&matchStage)?'':'none';
   });
 }
