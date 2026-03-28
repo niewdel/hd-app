@@ -1807,6 +1807,18 @@ def submit_lead():
         r = http.post(f"{SUPABASE_URL}/rest/v1/hd_leads", json=row, headers=sb_admin_headers(), timeout=10)
         if r.status_code >= 300:
             return jsonify({'ok': False, 'error': 'Failed to save lead'}), 400
+        # Notify all admins and standard users
+        try:
+            ur = http.get(sb_url('hd_users', '?active=eq.true&role=neq.field&select=username'), headers=sb_admin_headers(), timeout=5)
+            if ur.status_code == 200 and ur.json():
+                company = str(d.get('company', '')).strip()
+                notif_title = f'New lead: {name}' + (f' ({company})' if company else '')
+                notif_body = str(d.get('description', '')).strip()[:200] or 'New quote request from the website'
+                notif_rows = [{'recipient': u['username'], 'type': 'info', 'title': notif_title, 'body': notif_body, 'created_by': 'system'} for u in ur.json()]
+                if notif_rows:
+                    http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=notif_rows, timeout=5)
+        except Exception:
+            pass  # Don't fail the lead submission if notification fails
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
