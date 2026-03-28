@@ -1463,9 +1463,9 @@ tr:hover td{background:var(--tbl-alt);}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 12a4 4 0 100-8 4 4 0 000 8z"/><path d="M6 21v-1a6 6 0 0112 0v1"/></svg>
                 <span>Account settings</span>
               </button>
-              <button class="actions-menu-item" onclick="triggerProfilePhotoInput()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M17 3h4v4"/><path d="M10 14l2-2 4 4"/><path d="M8 12h.01"/></svg>
-                <span>Upload contact photo</span>
+              <button class="actions-menu-item" onclick="closeProfileMenu();showPanel('settings',document.querySelector('[onclick*=settings]'));">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                <span>App settings</span>
               </button>
               <button class="actions-menu-item" onclick="toggleThemeFromMenu()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
@@ -1501,14 +1501,11 @@ tr:hover td{background:var(--tbl-alt);}
               <div class="dash-hero" style="padding:0;border-bottom:none;margin:0;">
                 <div class="dash-hero-text">
                   <h2 id="dash-greeting" class="mc-greeting">Good morning</h2>
-                  <p class="mc-date-line" id="dash-date-line"></p>
+                  <p class="mc-date-line" id="dash-date-line" style="display:none;"></p>
                 </div>
               </div>
             </div>
-            <div class="ops-head-actions">
-              <button class="btn btn-sec btn-sm" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">Open Projects</button>
-              <button class="btn btn-primary btn-sm" onclick="showPanel('schedule',document.querySelector('[onclick*=schedule]'))">Open Schedule</button>
-            </div>
+            <div class="ops-head-actions"></div>
           </div>
 
           <div class="ops-grid-dashboard-top">
@@ -1572,28 +1569,28 @@ tr:hover td{background:var(--tbl-alt);}
             </div>
           </div>
 
-          <div class="ops-grid-dashboard-bottom">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
             <div class="dash-section">
               <div class="dash-section-hdr">
                 <span class="dash-section-title">This Week</span>
               </div>
-              <div id="dash-upcoming-wo"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
+              <div id="dash-upcoming-wo"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div></div></div>
             </div>
-
             <div class="dash-section">
               <div class="dash-section-hdr">
                 <span class="dash-section-title">Recent Activity</span>
               </div>
-              <div id="dash-recent-activity" style="max-height:360px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div><button class="btn btn-sec btn-sm" style="margin-top:10px;" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Projects</button></div></div>
+              <div id="dash-recent-activity" style="max-height:360px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div></div></div>
             </div>
-
-            <div class="ops-utility-card">
-              <div class="ops-utility-title">Recent Projects</div>
-              <div id="dash-recent-projects" class="ops-note-list">
-                <div class="ops-note-row">
-                  <div class="ops-note-kicker">Recent</div>
-                  <div class="ops-note-body">Projects with new activity will appear here.</div>
-                </div>
+          </div>
+          <div class="dash-section">
+            <div class="dash-section-hdr">
+              <span class="dash-section-title">Recent Projects</span>
+            </div>
+            <div id="dash-recent-projects" style="max-height:400px;overflow-y:auto;">
+              <div class="empty-state" style="padding:24px 18px;">
+                <div class="empty-state-title">No recent projects</div>
+                <div class="empty-state-desc">Projects with activity will appear here.</div>
               </div>
             </div>
           </div>
@@ -2234,21 +2231,9 @@ tr:hover td{background:var(--tbl-alt);}
               </div>
             </div>
           </div>
-          <div class="card">
-            <div class="card-hdr"><span class="card-title">Proposal Sender Defaults</span></div>
-            <div class="card-body">
-              <div class="fg fg3">
-                <div><label>Name on Proposals</label><input id="sender-name" type="text" placeholder="Full name"/></div>
-                <div><label>Email on Proposals</label><input id="sender-email" type="text" placeholder="email@hdgrading.com"/></div>
-                <div><label>Phone on Proposals</label><input id="sender-phone" type="text" placeholder="(555) 000-0000"/></div>
-              </div>
-              <div style="margin-top:11px;display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn btn-primary btn-sm" onclick="saveSender()">Save Sender Defaults</button>
-                <button class="btn btn-sec btn-sm" onclick="resetSenderToProfile()">Use My Profile</button>
-              </div>
-              <div id="pin-change-notice" style="display:none;margin-top:12px;padding:10px 14px;background:var(--bg-sub);border:1px solid var(--bdr);border-radius:6px;font-size:12px;color:var(--dgray);">To change your password, use the security section below or contact a system administrator if you are a field user.</div>
-            </div>
-          </div>
+          <!-- Proposal Sender Defaults removed — profile is used as sender info -->
+          <!-- Hidden inputs to keep saveSender/loadSenderUI from crashing -->
+          <input type="hidden" id="sender-name"/><input type="hidden" id="sender-email"/><input type="hidden" id="sender-phone"/>
           <div class="card">
             <div class="card-hdr"><span class="card-title">Appearance</span></div>
             <div class="card-body dark-mode-card">
@@ -4646,26 +4631,37 @@ function renderDashRecentProjects(){
   (pipelineProposals||[]).forEach(function(p){
     var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
     if(!snap.is_project)return;
-    var lastActivity='';
+    var lastActivityText='';var lastActivityDate='';
     var activities=snap.activity||[];
-    if(activities.length)lastActivity=activities[activities.length-1].date||activities[activities.length-1].ts||'';
-    projects.push({id:p.id,name:p.name||'',client:p.client||'',stage:p.stage||'',updated:p.updated_at||lastActivity||p.created_at||'',total:p.total||0});
+    if(activities.length){
+      var last=activities[activities.length-1];
+      lastActivityDate=last.date||last.ts||'';
+      lastActivityText=last.text||last.type||'';
+    }
+    projects.push({id:p.id,name:p.name||'',client:p.client||'',stage:p.pipeline_stages?p.pipeline_stages.name:'',
+      stageColor:p.pipeline_stages?p.pipeline_stages.color:'#999',
+      updated:p.updated_at||lastActivityDate||p.created_at||'',total:p.total||0,lastActivity:lastActivityText});
   });
   projects.sort(function(a,b){return (b.updated||'')>(a.updated||'')?1:-1;});
-  projects=projects.slice(0,6);
+  projects=projects.slice(0,10);
   if(!projects.length){c.innerHTML='<div class="empty-state" style="padding:20px;"><div class="empty-state-desc">No recent projects</div></div>';return;}
   projects.forEach(function(p){
     var row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);cursor:pointer;';
+    row.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .12s;';
+    row.addEventListener('mouseenter',function(){this.style.background='var(--tbl-alt)';});
+    row.addEventListener('mouseleave',function(){this.style.background='';});
     var ago='';
     if(p.updated){
       var diff=Date.now()-new Date(p.updated).getTime();
       var mins=Math.floor(diff/60000),hrs=Math.floor(diff/3600000),days=Math.floor(diff/86400000);
       ago=days>0?days+'d ago':hrs>0?hrs+'h ago':mins>0?mins+'m ago':'just now';
     }
-    row.innerHTML='<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">'+esc(p.name)+'</div>'
-      +'<div style="font-size:11px;color:var(--dgray);">'+esc(p.client)+(p.stage?' &middot; '+esc(p.stage):'')+'</div></div>'
-      +'<div style="text-align:right;flex-shrink:0;">'+(canSeePricing()?'<div style="font-size:12px;font-weight:600;">$'+Math.round(p.total).toLocaleString()+'</div>':'')+'<div>'
+    row.innerHTML='<div style="flex:1;min-width:0;">'
+      +'<div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:600;font-size:13px;">'+esc(p.name)+'</span>'
+      +'<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:'+p.stageColor+';color:#fff;font-weight:600;">'+esc(p.stage)+'</span></div>'
+      +'<div style="font-size:11px;color:var(--dgray);margin-top:2px;">'+esc(p.client)
+      +(p.lastActivity?' &middot; <span style="color:var(--blk);font-weight:500;">'+esc(p.lastActivity)+'</span>':'')+'</div></div>'
+      +'<div style="text-align:right;flex-shrink:0;">'+(canSeePricing()?'<div style="font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;">$'+Math.round(p.total).toLocaleString()+'</div>':'')
       +(ago?'<div style="font-size:10px;color:var(--dgray);">'+ago+'</div>':'')+'</div>';
     (function(id){row.addEventListener('click',function(){openProjectSummary(id);});})(p.id);
     c.appendChild(row);
@@ -7031,7 +7027,7 @@ function showPanel(id,el){
   if(id==='project')renderProjectSummary();
   if(id==='build')updateProposalDocBadge();
   if(id==='co'){populateCOProposalDropdown();updateCODocBadge();}
-  if(id==='settings'){loadOwnProfileUI();loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');var pn=document.getElementById('pin-change-notice');if(pn&&isFieldUser())pn.style.display='block';}
+  if(id==='settings'){loadOwnProfileUI();loadSenderUI();loadLastLogin();renderMatPriceInputs();renderJCDefaults();showSettingsTab('general');}
   if(id==='jobcost'){aggregateWOActualsIntoEVA();renderJobCost();renderEVA();}
   if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
   if(id==='pipeline')setTimeout(renderPipeline,50);
@@ -8809,7 +8805,10 @@ async function saveOwnProfile(){
     window._userAvatar=p.avatar_data||'';
     window._draftUserAvatar=window._userAvatar||'';
     renderUserChrome();
-    if(status){status.textContent='Profile saved.';status.style.color='#27500A';}
+    // Sync sender defaults to profile
+    sender={name:window._userName||'',email:window._userEmail||'',phone:window._userPhone||''};
+    _saveSetting('hd_sender',sender);loadSenderUI();
+    if(status){status.textContent='Profile saved.';status.style.color='var(--badge-ok)';}
     toast('Profile updated','ok');
   }catch(e){
     if(status){status.textContent=e.message||'Failed to update profile.';status.style.color='var(--red)';}
