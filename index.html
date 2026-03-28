@@ -1879,10 +1879,7 @@ tr:hover td{background:var(--tbl-alt);}
               <div class="card-hdr"><span class="card-title">Work Orders</span></div>
               <div class="card-body" id="ps-work-orders-list"><div class="empty-state"><div class="empty-state-desc">No work orders yet.</div></div></div>
             </div>
-            <div class="mc-card" data-field-hidden style="margin-bottom:var(--card-gap);">
-              <div class="card-hdr"><span class="card-title">Invoices</span></div>
-              <div class="card-body" id="ps-invoices"><div class="empty-state"><div class="empty-state-desc">No invoices yet.</div></div></div>
-            </div>
+            <!-- Invoices removed — using QuickBooks -->
           </div>
           <div>
             <div class="mc-card" style="margin-bottom:var(--card-gap);">
@@ -2618,53 +2615,33 @@ tr:hover td{background:var(--tbl-alt);}
             <div class="ops-page-title"></div>
           </div>
           <div class="ops-head-actions">
-            <button class="btn btn-primary btn-sm" onclick="exportReportPDF()">Export Current Report</button>
+            <button class="btn btn-primary btn-sm" onclick="exportReportPDF()">Export PDF</button>
           </div>
         </div>
-        <div class="ops-project-layout">
-          <div class="ops-project-main">
-            <div style="display:flex;gap:18px;align-items:flex-start;">
-              <!-- Report Sidebar -->
-              <div id="rpt-sidebar" class="mc-card" style="width:220px;flex-shrink:0;overflow:hidden;margin-bottom:0;">
-                <div class="rpt-section-hdr">Estimate Reports</div>
-                <div class="rpt-nav-item rpt-nav-active" onclick="selectReport('monthly-summary',this)">Monthly Estimate Summary</div>
-                <div class="rpt-nav-item" onclick="selectReport('geographic',this)">Geographic Analysis</div>
-                <div class="rpt-nav-item" onclick="selectReport('client-perf',this)">Client Performance</div>
-                <div class="rpt-nav-item" onclick="selectReport('salesperson',this)">Salesperson Performance</div>
-                <div class="rpt-section-hdr">Job Reports</div>
-                <div class="rpt-nav-item" onclick="selectReport('backlog',this)">Backlog Report</div>
-                <div class="rpt-nav-item" onclick="selectReport('completion',this)">Completion &amp; Schedule</div>
-                <div class="rpt-nav-item" onclick="selectReport('volume',this)">Jobs Per Month</div>
-                <div class="rpt-nav-item" onclick="selectReport('concurrent',this)">Concurrent Jobs</div>
-                <div class="rpt-nav-item" onclick="selectReport('mobilization',this)">Mobilization by Region</div>
-                <div class="rpt-nav-item" onclick="selectReport('material-usage',this)">Material Usage</div>
-                <div class="rpt-nav-item" onclick="selectReport('est-vs-actual',this)">Estimated vs Actual</div>
-                <div class="rpt-nav-item" onclick="selectReport('trucking',this)">Trucking Costs</div>
-                <div class="rpt-section-hdr">Executive</div>
-                <div class="rpt-nav-item" onclick="selectReport('executive',this)">Executive Summary</div>
-              </div>
-              <div style="flex:1;min-width:0;">
-                <!-- Filters Bar -->
-                <div class="card" style="margin-bottom:14px;">
-                  <div class="card-body" style="padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                    <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Date Range</label>
-                    <select id="rpt-range" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;">
-                      <option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="this-quarter">This Quarter</option><option value="ytd">Year to Date</option><option value="last-year">Last Year</option><option value="all">All Time</option><option value="custom">Custom Range</option>
-                    </select></div>
-                    <div id="rpt-custom-dates" style="display:none;"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">From / To</label><div style="display:flex;gap:4px;"><input type="date" id="rpt-from" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/><input type="date" id="rpt-to" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/></div></div>
-                    <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Client</label>
-                    <select id="rpt-client" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All Clients</option></select></div>
-                    <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Salesperson</label>
-                    <select id="rpt-salesperson" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All</option></select></div>
-                    <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);display:block;margin-bottom:2px;">Region</label>
-                    <select id="rpt-region" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All Regions</option></select></div>
-                    <div style="margin-left:auto;"><button class="btn btn-red btn-sm" onclick="exportReportPDF()">Export PDF</button></div>
-                  </div>
-                </div>
-                <!-- Report Output -->
-                <div id="rpt-output"></div>
+        <div style="display:flex;gap:14px;align-items:flex-start;">
+          <div id="rpt-sidebar" class="mc-card" style="width:200px;flex-shrink:0;overflow:hidden;">
+            <div class="rpt-section-hdr">Estimating</div>
+            <div class="rpt-nav-item rpt-nav-active" onclick="selectReport('estimate-perf',this)">Estimate Performance</div>
+            <div class="rpt-section-hdr">Jobs</div>
+            <div class="rpt-nav-item" onclick="selectReport('job-perf',this)">Job Performance</div>
+            <div class="rpt-nav-item" onclick="selectReport('materials-costs',this)">Materials &amp; Costs</div>
+            <div class="rpt-section-hdr">Executive</div>
+            <div class="rpt-nav-item" onclick="selectReport('executive',this)">Executive Summary</div>
+            <div class="rpt-nav-item" onclick="selectReport('pipeline-health',this)">Pipeline Health</div>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div class="mc-card" style="margin-bottom:14px;">
+              <div class="card-body" style="padding:8px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <div><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--dgray);display:block;margin-bottom:2px;">Date Range</label>
+                <select id="rpt-range" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;">
+                  <option value="ytd">Year to Date</option><option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="this-quarter">This Quarter</option><option value="last-year">Last Year</option><option value="all">All Time</option><option value="custom">Custom Range</option>
+                </select></div>
+                <div id="rpt-custom-dates" style="display:none;"><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--dgray);display:block;margin-bottom:2px;">From / To</label><div style="display:flex;gap:4px;"><input type="date" id="rpt-from" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/><input type="date" id="rpt-to" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/></div></div>
+                <div><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--dgray);display:block;margin-bottom:2px;">Client</label>
+                <select id="rpt-client" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All Clients</option></select></div>
               </div>
             </div>
+            <div id="rpt-output"></div>
           </div>
         </div>
       </div></div>
@@ -5400,51 +5377,7 @@ function _renderProjectSummaryInner(proj){
   }
 
   // ── Invoices Card ──
-  var psInv=document.getElementById('ps-invoices');
-  if(psInv&&canSeePricing()){
-    var invList=snap.invoices||[];
-    psInv.innerHTML='';
-    if(invList.length){
-      invList.forEach(function(inv,idx){
-        var row=document.createElement('div');
-        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);';
-        var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
-        info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(inv.number||'Invoice')+'</div>'
-          +'<div style="font-size:11px;color:var(--dgray);">$'+Math.round(inv.amount||0).toLocaleString()+(inv.date?' &middot; '+esc(inv.date):'')+(inv.notes?' &middot; '+esc(inv.notes):'')+'</div>';
-        row.appendChild(info);
-        var statusColors={draft:'#999',sent:'#2B5FA6',paid:'#27500A'};
-        var sel=document.createElement('select');
-        sel.style.cssText='font-size:11px;padding:3px 8px;border:1px solid var(--bdr);border-radius:4px;background:'+(statusColors[inv.status]||'#999')+';color:#fff;cursor:pointer;font-weight:700;';
-        ['draft','sent','paid'].forEach(function(s){
-          var opt=document.createElement('option');opt.value=s;opt.textContent=s.charAt(0).toUpperCase()+s.slice(1);
-          if(inv.status===s)opt.selected=true;
-          sel.appendChild(opt);
-        });
-        (function(i){sel.addEventListener('change',function(){
-          snap.invoices[i].status=this.value;
-          this.style.background=statusColors[this.value]||'#999';
-          addProjectActivity(snap,'note','Invoice "'+snap.invoices[i].number+'" marked '+this.value);
-          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
-            .then(function(){renderProjectSummary();});
-        });})(idx);
-        row.appendChild(sel);
-        var del=document.createElement('button');del.className='btn-ico';del.style.cssText='color:var(--dgray);font-size:14px;';del.textContent='\u00d7';del.title='Remove';
-        (function(i){del.addEventListener('click',function(){
-          if(!confirm('Remove this invoice?'))return;
-          snap.invoices.splice(i,1);
-          addProjectActivity(snap,'note','Invoice removed');
-          fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
-            .then(function(){renderProjectSummary();});
-        });})(idx);
-        row.appendChild(del);
-        psInv.appendChild(row);
-      });
-    }
-    var invBtn=document.createElement('button');invBtn.className='btn btn-red btn-sm';invBtn.style.marginTop='10px';
-    invBtn.textContent='+ Create Invoice';
-    invBtn.addEventListener('click',function(){openInvoiceModal(proj,snap,totals);});
-    psInv.appendChild(invBtn);
-  }
+  // Invoices removed — using QuickBooks
 
   // ── Equipment Card ──
   var psEquip=document.getElementById('ps-equipment');
@@ -5511,47 +5444,8 @@ function _renderProjectSummaryInner(proj){
 
 }
 
-function openInvoiceModal(proj,snap,totals){
-  var ex=document.getElementById('invoice-modal');if(ex)ex.remove();
-  if(!snap.invoices)snap.invoices=[];
-  var projNum=snap.project_number||proj.name||'PROJ';
-  var nextNum=projNum+'-INV'+(snap.invoices.length+1);
-  var today=new Date().toISOString().split('T')[0];
-  var modal=document.createElement('div');modal.id='invoice-modal';
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
-  var box=document.createElement('div');
-  box.style.cssText='background:var(--wht);border-radius:var(--rad);padding:24px;width:420px;max-width:92vw;';
-  box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">Create Invoice</h3>'
-    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Invoice Number</label>'
-    +'<input class="inp" id="inv-number" value="'+esc(nextNum)+'" style="margin-bottom:10px;width:100%;"/>'
-    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Date</label>'
-    +'<input class="inp" id="inv-date" type="date" value="'+today+'" style="margin-bottom:10px;width:100%;"/>'
-    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Amount ($)</label>'
-    +'<input class="inp" id="inv-amount" type="number" step="0.01" value="'+Math.round(totals.grandTotal)+'" style="margin-bottom:10px;width:100%;"/>'
-    +'<label style="font-size:11px;font-weight:600;color:var(--dgray);display:block;margin-bottom:4px;">Notes</label>'
-    +'<input class="inp" id="inv-notes" placeholder="Optional notes" style="margin-bottom:16px;width:100%;"/>'
-    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
-    +'<button class="btn btn-sec btn-sm" id="inv-cancel">Cancel</button>'
-    +'<button class="btn btn-red btn-sm" id="inv-save">Create Invoice</button></div>';
-  modal.appendChild(box);
-  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
-  document.body.appendChild(modal);
-  document.getElementById('inv-cancel').addEventListener('click',function(){modal.remove();});
-  document.getElementById('inv-save').addEventListener('click',function(){
-    var num=document.getElementById('inv-number').value.trim();
-    var date=document.getElementById('inv-date').value;
-    var amount=parseFloat(document.getElementById('inv-amount').value)||0;
-    var notes=document.getElementById('inv-notes').value.trim();
-    if(!num){toast('Enter an invoice number','err');return;}
-    snap.invoices.push({id:Date.now(),number:num,date:date,amount:amount,status:'draft',notes:notes});
-    addProjectActivity(snap,'note','Invoice "'+num+'" created — $'+Math.round(amount).toLocaleString());
-    fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
-      .then(function(r){return r.json();}).then(function(d){
-        if(d.ok){proj.snap=snap;toast('Invoice created','ok');modal.remove();renderProjectSummary();}
-        else toast(d.error||'Failed','err');
-      }).catch(function(e){toast('Error: '+e.message,'err');});
-  });
-}
+// openInvoiceModal removed — using QuickBooks for invoicing
+function openInvoiceModal(){}
 
 function openSubcontractorForm(snap){
   var ex=document.getElementById('sub-modal');if(ex)ex.remove();
@@ -12473,7 +12367,7 @@ function toggleDarkMode(){
 })();
 
 /* --- Reports --- */
-var _currentReport='monthly-summary';
+var _currentReport='estimate-perf';
 
 function selectReport(reportId,el){
   _currentReport=reportId;
@@ -12484,6 +12378,7 @@ function selectReport(reportId,el){
 
 function initReports(){
   populateReportFilters();
+  if(!_currentReport)_currentReport='estimate-perf';
   renderCurrentReport();
 }
 
@@ -12545,9 +12440,9 @@ function getReportDateRange(){
 
 function getFilteredData(){
   var range=getReportDateRange();
-  var clientF=document.getElementById('rpt-client').value;
-  var spF=document.getElementById('rpt-salesperson').value;
-  var regionF=document.getElementById('rpt-region').value;
+  var clientF=(document.getElementById('rpt-client')||{}).value||'';
+  var spEl=document.getElementById('rpt-salesperson');var spF=spEl?spEl.value:'';
+  var regionEl=document.getElementById('rpt-region');var regionF=regionEl?regionEl.value:'';
   var all=(pipelineProposals||[]).map(function(p){
     var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
     return{id:p.id,name:p.name||snap.name||'',client:p.client||snap.client||'',total:parseFloat(p.total)||0,
@@ -12577,638 +12472,417 @@ function getFilteredData(){
 
 function renderCurrentReport(){
   var map={
-    'monthly-summary':renderRptMonthlySummary,
-    'geographic':renderRptGeographic,
-    'client-perf':renderRptClientPerf,
-    'salesperson':renderRptSalesperson,
-    'backlog':renderRptBacklog,
-    'completion':renderRptCompletion,
-    'volume':renderRptVolume,
-    'concurrent':renderRptConcurrent,
-    'mobilization':renderRptMobilization,
-    'material-usage':renderRptMaterialUsage,
-    'est-vs-actual':renderRptEstVsActual,
-    'trucking':renderRptTrucking,
-    'executive':renderRptExecutive
+    'estimate-perf':renderRptEstimatePerf,
+    'job-perf':renderRptJobPerf,
+    'materials-costs':renderRptMaterialsCosts,
+    'executive':renderRptExecutive,
+    'pipeline-health':renderRptPipelineHealth
   };
   var fn=map[_currentReport];
   if(fn)fn();
+  else{var o=document.getElementById('rpt-output');if(o)o.innerHTML='<div class="empty-state"><div class="empty-state-title">Select a report</div></div>';}
 }
 
 function fmtMoney(v){return '$'+Math.round(v).toLocaleString();}
 function fmtPct(v){return v.toFixed(1)+'%';}
 function rptDateLabel(d){var dt=new Date(d);return isNaN(dt)?'-':((dt.getMonth()+1)+'/'+dt.getDate()+'/'+dt.getFullYear());}
 
-// ==================== ESTIMATE REPORTS ====================
+// ==================== CONSOLIDATED REPORT RENDERERS ====================
 
-function renderRptMonthlySummary(){
-  var data=getFilteredData();var items=data.filtered;
-  var out=document.getElementById('rpt-output');
-  var estimates=items.filter(function(p){return !p.is_project||p.linked_proposals.length===0;});
-  var projects=items.filter(function(p){return p.is_project;});
-  var won=projects.filter(function(p){return p.stage==='Completed'||p.stage==='Approved'||p.stage==='Scheduled'||p.stage==='In Progress';});
-  var lost=projects.filter(function(p){return p.stage==='Lost';});
-  var totalVal=items.reduce(function(s,p){return s+p.total;},0);
-  var wonVal=won.reduce(function(s,p){return s+p.total;},0);
-  var lostVal=lost.reduce(function(s,p){return s+p.total;},0);
-  var winRate=won.length+lost.length>0?(won.length/(won.length+lost.length)*100):0;
-  var avgSize=items.length?totalVal/items.length:0;
-  // Time to close
-  var closeTimes=[];
-  won.concat(lost).forEach(function(p){
-    if(p.date&&p.created_at){
-      var d1=new Date(p.created_at);var d2=new Date(p.date);
-      var diff=Math.abs(d2-d1)/(1000*60*60*24);
-      if(diff>0&&diff<365)closeTimes.push(diff);
-    }
+function _rptStatHTML(stats){
+  var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;">';
+  stats.forEach(function(s){
+    h+='<div class="rpt-stat"><div class="rpt-stat-val"'+(s.color?' style="color:'+s.color+'"':'')+'>'+(s.val||0)+'</div>'
+      +'<div class="rpt-stat-lbl">'+s.lbl+'</div>'
+      +(s.sub?'<div class="rpt-stat-sub">'+s.sub+'</div>':'')+'</div>';
   });
-  var avgClose=closeTimes.length?(closeTimes.reduce(function(a,b){return a+b;},0)/closeTimes.length):0;
-  // Pending/stale
-  var pending=items.filter(function(p){return p.stage==='Estimate Sent'||p.stage==='Follow Up'||p.stage==='Under Review';});
-  pending.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
-  // Top 5
-  var top5=items.slice().sort(function(a,b){return b.total-a.total;}).slice(0,5);
-  // Month over month (last 12 months)
-  var monthData={};
-  data.all.forEach(function(p){
-    var d=new Date(p.date||p.created_at);if(isNaN(d))return;
-    var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    if(!monthData[key])monthData[key]={count:0,value:0};
-    monthData[key].count++;monthData[key].value+=p.total;
-  });
-  var months=Object.keys(monthData).sort().slice(-12);
-  var maxMonthVal=Math.max.apply(null,months.map(function(k){return monthData[k].value;}).concat([1]));
-
-  var h='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+items.length+'</div><div class="rpt-stat-lbl">Estimates Sent</div><div class="rpt-stat-sub">'+fmtMoney(totalVal)+' total</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:#27500A;">'+won.length+'</div><div class="rpt-stat-lbl">Won</div><div class="rpt-stat-sub">'+fmtMoney(wonVal)+'</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:#A32D2D;">'+lost.length+'</div><div class="rpt-stat-lbl">Lost</div><div class="rpt-stat-sub">'+fmtMoney(lostVal)+'</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+fmtPct(winRate)+'</div><div class="rpt-stat-lbl">Win Rate</div><div class="rpt-stat-sub">Avg close: '+Math.round(avgClose)+' days</div></div>';
-  h+='</div>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+fmtMoney(avgSize)+'</div><div class="rpt-stat-lbl">Average Estimate Size</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+pending.length+'</div><div class="rpt-stat-lbl">Pending / Stale</div><div class="rpt-stat-sub">Awaiting decision</div></div>';
-  h+='</div>';
-  // Month over month chart
-  if(months.length>1){
-    h+='<div class="card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">Month Over Month</span></div><div class="card-body" style="padding:14px;">';
-    h+='<div style="display:flex;align-items:flex-end;gap:6px;height:120px;">';
-    months.forEach(function(k){
-      var pct=Math.max(5,monthData[k].value/maxMonthVal*100);
-      var lbl=k.split('-');var mName=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(lbl[1])-1];
-      h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;">';
-      h+='<div style="font-size:10px;font-weight:600;margin-bottom:2px;">'+fmtMoney(monthData[k].value)+'</div>';
-      h+='<div class="rpt-bar" style="width:100%;height:'+pct+'%;background:var(--red);"></div>';
-      h+='<div style="font-size:9px;color:var(--dgray);margin-top:4px;">'+mName+'</div>';
-      h+='</div>';
-    });
-    h+='</div></div></div>';
-  }
-  // Conversion funnel
-  var funnelStages=['New Lead','Estimate Sent','Under Review','Approved','Scheduled','In Progress','Completed'];
-  var funnelCounts={};
-  data.all.forEach(function(p){if(p.stage)funnelCounts[p.stage]=(funnelCounts[p.stage]||0)+1;});
-  var maxFunnel=Math.max.apply(null,funnelStages.map(function(s){return funnelCounts[s]||0;}).concat([1]));
-  h+='<div class="card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">Pipeline Funnel</span></div><div class="card-body" style="padding:14px;">';
-  funnelStages.forEach(function(s){
-    var c=funnelCounts[s]||0;var pct=Math.max(2,c/maxFunnel*100);
-    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
-    h+='<div style="width:110px;font-size:11px;font-weight:600;text-align:right;">'+s+'</div>';
-    h+='<div style="flex:1;background:#eee;border-radius:3px;height:22px;overflow:hidden;"><div class="rpt-bar" style="height:100%;width:'+pct+'%;background:var(--red);"></div></div>';
-    h+='<div style="width:40px;font-size:12px;font-weight:600;">'+c+'</div>';
-    h+='</div>';
-  });
-  h+='</div></div>';
-  // Top 5
-  if(top5.length){
-    h+='<div class="card"><div class="card-hdr"><span class="card-title">Top 5 Estimates</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Name</th><th>Client</th><th>Date</th><th style="text-align:right;">Value</th><th>Stage</th></tr></thead><tbody>';
-    top5.forEach(function(p){
-      h+='<tr><td>'+esc(p.name)+'</td><td>'+esc(p.client)+'</td><td>'+rptDateLabel(p.date)+'</td><td style="text-align:right;font-weight:600;">'+fmtMoney(p.total)+'</td><td><span style="background:'+p.stageColor+';color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;">'+esc(p.stage)+'</span></td></tr>';
-    });
-    h+='</tbody></table></div></div>';
-  }
-  // Pending/stale list
-  if(pending.length){
-    h+='<div class="card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title">Pending &amp; Stale Estimates</span><span style="font-size:11px;color:var(--dgray);margin-left:8px;">Estimates awaiting decision</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Name</th><th>Client</th><th>Sent</th><th style="text-align:right;">Value</th><th>Stage</th><th style="text-align:right;">Days Aging</th></tr></thead><tbody>';
-    pending.forEach(function(p){
-      var aging=Math.round((Date.now()-new Date(p.date||p.created_at).getTime())/(1000*60*60*24));
-      var agingColor=aging>30?'#A32D2D':aging>14?'#B25000':'var(--dgray)';
-      h+='<tr><td>'+esc(p.name)+'</td><td>'+esc(p.client)+'</td><td>'+rptDateLabel(p.date)+'</td><td style="text-align:right;font-weight:600;">'+fmtMoney(p.total)+'</td><td><span style="background:'+p.stageColor+';color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;">'+esc(p.stage)+'</span></td><td style="text-align:right;font-weight:600;color:'+agingColor+';">'+aging+'d</td></tr>';
-    });
-    h+='</tbody></table></div></div>';
-  }
-  out.innerHTML=h;
+  return h+'</div>';
 }
 
-function renderRptGeographic(){
+function _rptTableHTML(headers,rows,opts){
+  opts=opts||{};
+  var h='<table class="rpt-tbl"><thead><tr>';
+  headers.forEach(function(th){h+='<th'+(th.align?' style="text-align:'+th.align+'"':'')+'>'+th.label+'</th>';});
+  h+='</tr></thead><tbody>';
+  if(!rows.length)h+='<tr><td colspan="'+headers.length+'" style="text-align:center;padding:20px;color:var(--dgray);">'+(opts.empty||'No data')+'</td></tr>';
+  else rows.forEach(function(r){
+    h+='<tr'+(r._style?' style="'+r._style+'"':'')+'>';
+    headers.forEach(function(th,i){h+='<td'+(th.align?' style="text-align:'+th.align+'"':'')+'>'+((r.cells||r)[i]||'')+'</td>';});
+    h+='</tr>';
+  });
+  return h+'</tbody></table>';
+}
+
+function _rptBarChart(items,label){
+  if(!items.length)return'<div style="padding:16px;text-align:center;color:var(--dgray);font-size:12px;">No data</div>';
+  var max=Math.max.apply(null,items.map(function(i){return i.val||0;}));
+  var h='';
+  if(label)h+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);margin-bottom:8px;">'+label+'</div>';
+  items.forEach(function(i){
+    var pct=max>0?Math.round((i.val/max)*100):0;
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+      +'<div style="width:100px;font-size:12px;font-weight:500;text-align:right;flex-shrink:0;">'+i.label+'</div>'
+      +'<div style="flex:1;height:22px;background:var(--bg-sub);border-radius:4px;overflow:hidden;">'
+      +'<div class="rpt-bar" style="height:100%;width:'+pct+'%;background:'+(i.color||'var(--red)')+';border-radius:4px;transition:width .4s;"></div></div>'
+      +'<div style="width:80px;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;">'+i.display+'</div></div>';
+  });
+  return h;
+}
+
+// ── 1. ESTIMATE PERFORMANCE ──
+function renderRptEstimatePerf(){
   var data=getFilteredData();var items=data.filtered;
-  var out=document.getElementById('rpt-output');
-  // Group by city_state
-  var regions={};
-  items.forEach(function(p){
-    var key=p.city_state||'Unknown';
-    if(!regions[key])regions[key]={count:0,value:0,won:0,lost:0,wonVal:0};
-    regions[key].count++;regions[key].value+=p.total;
-    if(p.stage==='Completed'||p.stage==='Approved'||p.stage==='Scheduled'||p.stage==='In Progress'){regions[key].won++;regions[key].wonVal+=p.total;}
-    if(p.stage==='Lost')regions[key].lost++;
-  });
-  var sorted=Object.keys(regions).sort(function(a,b){return regions[b].value-regions[a].value;});
-  var maxVal=sorted.length?regions[sorted[0]].value:1;
-  var h='<div class="card"><div class="card-hdr"><span class="card-title">Revenue by Region</span><span style="font-size:11px;color:var(--dgray);margin-left:8px;">'+sorted.length+' regions</span></div><div class="card-body" style="padding:14px;">';
-  sorted.forEach(function(r){
-    var d=regions[r];var pct=Math.max(3,d.value/maxVal*100);
-    var wr=d.won+d.lost>0?(d.won/(d.won+d.lost)*100):0;
-    h+='<div style="margin-bottom:10px;">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;">';
-    h+='<span style="font-size:13px;font-weight:600;">'+esc(r)+'</span>';
-    h+='<span style="font-size:12px;color:var(--dgray);">'+d.count+' jobs &middot; '+fmtMoney(d.value)+' &middot; Win: '+fmtPct(wr)+'</span>';
-    h+='</div>';
-    h+='<div style="background:#eee;border-radius:3px;height:18px;overflow:hidden;"><div class="rpt-bar" style="height:100%;width:'+pct+'%;background:var(--red);"></div></div>';
-    h+='</div>';
-  });
-  h+='</div></div>';
-  // Table
-  h+='<div class="card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title">Region Detail</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Region</th><th style="text-align:right;">Jobs</th><th style="text-align:right;">Total Value</th><th style="text-align:right;">Won</th><th style="text-align:right;">Lost</th><th style="text-align:right;">Win Rate</th><th style="text-align:right;">Won Revenue</th></tr></thead><tbody>';
-  sorted.forEach(function(r){
-    var d=regions[r];var wr=d.won+d.lost>0?(d.won/(d.won+d.lost)*100):0;
-    h+='<tr><td style="font-weight:600;">'+esc(r)+'</td><td style="text-align:right;">'+d.count+'</td><td style="text-align:right;">'+fmtMoney(d.value)+'</td><td style="text-align:right;color:#27500A;">'+d.won+'</td><td style="text-align:right;color:#A32D2D;">'+d.lost+'</td><td style="text-align:right;">'+fmtPct(wr)+'</td><td style="text-align:right;font-weight:600;">'+fmtMoney(d.wonVal)+'</td></tr>';
-  });
-  h+='</tbody></table></div></div>';
-  // Lost work by region
-  var lostRegions=sorted.filter(function(r){return regions[r].lost>0;});
-  if(lostRegions.length){
-    h+='<div class="card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title">Lost Work by Region</span></div><div class="card-body" style="padding:14px;">';
-    lostRegions.forEach(function(r){
-      var d=regions[r];var lostPct=d.count>0?(d.lost/d.count*100):0;
-      h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
-      h+='<div style="width:140px;font-size:12px;font-weight:600;text-align:right;">'+esc(r)+'</div>';
-      h+='<div style="flex:1;background:#eee;border-radius:3px;height:16px;overflow:hidden;"><div class="rpt-bar" style="height:100%;width:'+Math.max(3,lostPct)+'%;background:#A32D2D;"></div></div>';
-      h+='<div style="width:60px;font-size:11px;">'+d.lost+' lost</div>';
-      h+='</div>';
+  var out=document.getElementById('rpt-output');if(!out)return;
+  var wonStages=['Completed','Approved','Scheduled','In Progress'];
+  var won=items.filter(function(p){return wonStages.indexOf(p.stage)>-1;});
+  var lost=items.filter(function(p){return p.stage==='Lost';});
+  var totalVal=items.reduce(function(s,p){return s+p.total;},0);
+  var wonVal=won.reduce(function(s,p){return s+p.total;},0);
+  var decided=won.length+lost.length;var winRate=decided>0?Math.round(won.length/decided*100):0;
+  var avgSize=items.length>0?Math.round(totalVal/items.length):0;
+
+  var h=_rptStatHTML([
+    {lbl:'Estimates Sent',val:items.length,sub:fmtMoney(totalVal)},
+    {lbl:'Won',val:won.length,sub:fmtMoney(wonVal),color:'var(--badge-ok)'},
+    {lbl:'Lost',val:lost.length,sub:fmtMoney(lost.reduce(function(s,p){return s+p.total;},0)),color:'var(--badge-err)'},
+    {lbl:'Win Rate',val:winRate+'%',sub:decided+' decided'},
+    {lbl:'Avg Estimate',val:fmtMoney(avgSize)}
+  ]);
+
+  // Monthly trend (last 12 months)
+  var months=[];var now=new Date();
+  for(var m=11;m>=0;m--){var d=new Date(now.getFullYear(),now.getMonth()-m,1);months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getFullYear()});}
+  var monthData={};months.forEach(function(m){monthData[m.key]={sent:0,won:0,sentVal:0,wonVal:0};});
+  items.forEach(function(p){var dt=new Date(p.date||p.created_at);var k=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');if(monthData[k]){monthData[k].sent++;monthData[k].sentVal+=p.total;if(wonStages.indexOf(p.stage)>-1){monthData[k].won++;monthData[k].wonVal+=p.total;}}});
+
+  h+='<div class="mc-card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">Monthly Trend</span></div><div class="card-body">';
+  var maxSent=Math.max.apply(null,months.map(function(m){return monthData[m.key].sentVal;}));
+  if(maxSent===0)h+='<div style="padding:16px;text-align:center;color:var(--dgray);font-size:12px;">No data for this period</div>';
+  else{
+    h+='<div style="display:flex;align-items:flex-end;gap:6px;height:120px;">';
+    months.forEach(function(m){
+      var d=monthData[m.key];var hPct=maxSent>0?Math.max(4,Math.round(d.sentVal/maxSent*100)):4;
+      var wPct=d.sentVal>0?Math.round(d.wonVal/d.sentVal*100):0;
+      h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">'
+        +'<div style="font-size:9px;color:var(--dgray);font-variant-numeric:tabular-nums;">'+d.sent+'</div>'
+        +'<div style="width:100%;height:'+hPct+'px;background:var(--bg-sub);border-radius:3px;overflow:hidden;position:relative;">'
+        +'<div style="position:absolute;bottom:0;width:100%;height:'+wPct+'%;background:var(--red);border-radius:3px;"></div></div>'
+        +'<div style="font-size:9px;color:var(--dgray);">'+m.label.split(' ')[0].slice(0,3)+'</div></div>';
     });
+    h+='</div>';
+    h+='<div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--dgray);"><span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;background:var(--bg-sub);border-radius:2px;"></span>Sent</span><span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;background:var(--red);border-radius:2px;"></span>Won</span></div>';
+  }
+  h+='</div></div>';
+
+  // Pipeline funnel
+  var stages=['New Lead','Estimate Sent','Follow Up','Under Review','Approved','Scheduled','In Progress','Completed','Lost'];
+  var stageCounts={};stages.forEach(function(s){stageCounts[s]={count:0,val:0};});
+  items.forEach(function(p){if(stageCounts[p.stage]){stageCounts[p.stage].count++;stageCounts[p.stage].val+=p.total;}});
+  var funnelItems=stages.filter(function(s){return stageCounts[s].count>0;}).map(function(s){return{label:s,val:stageCounts[s].count,display:stageCounts[s].count+' ('+fmtMoney(stageCounts[s].val)+')',color:s==='Completed'?'var(--badge-ok)':s==='Lost'?'var(--badge-err)':'var(--red)'};});
+  h+='<div class="mc-card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">Pipeline Funnel</span></div><div class="card-body">'+_rptBarChart(funnelItems)+'</div></div>';
+
+  // Top Clients
+  var clientMap={};items.forEach(function(p){var c=p.client||'Unknown';if(!clientMap[c])clientMap[c]={jobs:0,val:0,won:0,wonVal:0};clientMap[c].jobs++;clientMap[c].val+=p.total;if(wonStages.indexOf(p.stage)>-1){clientMap[c].won++;clientMap[c].wonVal+=p.total;}});
+  var topClients=Object.keys(clientMap).sort(function(a,b){return clientMap[b].val-clientMap[a].val;}).slice(0,10);
+  var clientRows=topClients.map(function(c){var d=clientMap[c];var wr=d.won+items.filter(function(p){return p.client===c&&p.stage==='Lost';}).length;return{cells:[esc(c),d.jobs,fmtMoney(d.val),d.won,wr>0?Math.round(d.won/wr*100)+'%':'-',fmtMoney(d.wonVal)]};});
+  h+='<div class="mc-card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">Top Clients</span></div><div class="card-body" style="overflow-x:auto;">';
+  h+=_rptTableHTML([{label:'Client'},{label:'Jobs',align:'center'},{label:'Total Value',align:'right'},{label:'Won',align:'center'},{label:'Win Rate',align:'center'},{label:'Won Revenue',align:'right'}],clientRows,{empty:'No clients in this period'});
+  h+='</div></div>';
+
+  // Salesperson leaderboard (only if multiple users)
+  var spMap={};items.forEach(function(p){var sp=p.created_by||'Unknown';if(!spMap[sp])spMap[sp]={est:0,val:0,won:0,wonVal:0};spMap[sp].est++;spMap[sp].val+=p.total;if(wonStages.indexOf(p.stage)>-1){spMap[sp].won++;spMap[sp].wonVal+=p.total;}});
+  var spKeys=Object.keys(spMap);
+  if(spKeys.length>1){
+    spKeys.sort(function(a,b){return spMap[b].wonVal-spMap[a].wonVal;});
+    var spRows=spKeys.map(function(sp){var d=spMap[sp];var dec=d.won+items.filter(function(p){return p.created_by===sp&&p.stage==='Lost';}).length;return{cells:[esc(sp),d.est,fmtMoney(d.val),d.won,fmtMoney(d.wonVal),dec>0?Math.round(d.won/dec*100)+'%':'-']};});
+    h+='<div class="mc-card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">Salesperson Leaderboard</span></div><div class="card-body" style="overflow-x:auto;">';
+    h+=_rptTableHTML([{label:'Salesperson'},{label:'Estimates',align:'center'},{label:'Total Value',align:'right'},{label:'Won',align:'center'},{label:'Won Revenue',align:'right'},{label:'Win Rate',align:'center'}],spRows);
+    h+='</div></div>';
+  }
+
+  // Pending/stale
+  var pending=items.filter(function(p){return !p.isClosed&&wonStages.indexOf(p.stage)===-1&&p.stage!=='Lost';});
+  if(pending.length){
+    var pendRows=pending.sort(function(a,b){return new Date(a.date||a.created_at)-new Date(b.date||b.created_at);}).map(function(p){
+      var age=Math.round((Date.now()-new Date(p.date||p.created_at))/(86400000));
+      var ageColor=age>30?'var(--badge-err)':age>14?'var(--badge-warn)':'var(--dgray)';
+      return{cells:[esc(p.name),esc(p.client),rptDateLabel(p.date||p.created_at),fmtMoney(p.total),esc(p.stage),'<span style="color:'+ageColor+';font-weight:600;">'+age+'d</span>']};
+    });
+    h+='<div class="mc-card"><div class="card-hdr"><span class="card-title">Pending Estimates ('+pending.length+')</span></div><div class="card-body" style="overflow-x:auto;">';
+    h+=_rptTableHTML([{label:'Name'},{label:'Client'},{label:'Date'},{label:'Value',align:'right'},{label:'Stage'},{label:'Age',align:'center'}],pendRows);
     h+='</div></div>';
   }
   out.innerHTML=h;
 }
 
-function renderRptClientPerf(){
+// ── 2. JOB PERFORMANCE ──
+function renderRptJobPerf(){
   var data=getFilteredData();var items=data.filtered;
-  var out=document.getElementById('rpt-output');
-  var clients={};
-  items.forEach(function(p){
-    var key=p.client||'Unknown';
-    if(!clients[key])clients[key]={count:0,value:0,won:0,lost:0,wonVal:0,avgSize:0,lastDate:'',margin:0,marginCount:0};
-    clients[key].count++;clients[key].value+=p.total;
-    if(p.stage==='Completed'||p.stage==='Approved'||p.stage==='Scheduled'||p.stage==='In Progress'){clients[key].won++;clients[key].wonVal+=p.total;}
-    if(p.stage==='Lost')clients[key].lost++;
-    if(p.jc_total_cost>0&&p.total>0){var m=(p.total-p.jc_total_cost)/p.total*100;clients[key].margin+=m;clients[key].marginCount++;}
-    if(p.date>clients[key].lastDate)clients[key].lastDate=p.date;
+  var out=document.getElementById('rpt-output');if(!out)return;
+  var projects=items.filter(function(p){return p.is_project;});
+  var approved=projects.filter(function(p){return p.stage==='Approved';});
+  var scheduled=projects.filter(function(p){return p.stage==='Scheduled';});
+  var inProgress=projects.filter(function(p){return p.stage==='In Progress';});
+  var completed=projects.filter(function(p){return p.stage==='Completed';});
+  var backlog=[].concat(approved,scheduled,inProgress);
+  var backlogVal=backlog.reduce(function(s,p){return s+p.total;},0);
+
+  // Est vs actual
+  var withActuals=projects.filter(function(p){return p.eva_actuals&&Object.keys(p.eva_actuals).length>0;});
+  var overBudget=0;
+  withActuals.forEach(function(p){
+    var actTotal=0;Object.values(p.eva_actuals).forEach(function(a){actTotal+=(parseFloat(a.actual_material)||0)+(parseFloat(a.actual_labor)||0)+(parseFloat(a.actual_trucking)||0);});
+    if(actTotal>p.jc_total_cost)overBudget++;
   });
-  Object.keys(clients).forEach(function(k){clients[k].avgSize=clients[k].count?clients[k].value/clients[k].count:0;});
-  var sorted=Object.keys(clients).sort(function(a,b){return clients[b].value-clients[a].value;});
-  // Summary stats
-  var repeatClients=sorted.filter(function(k){return clients[k].count>=2;}).length;
-  var dormant=sorted.filter(function(k){
-    var d=new Date(clients[k].lastDate);return(Date.now()-d.getTime())>180*86400000;
-  });
-  var h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+sorted.length+'</div><div class="rpt-stat-lbl">Total Clients</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:#27500A;">'+repeatClients+'</div><div class="rpt-stat-lbl">Repeat Clients</div><div class="rpt-stat-sub">2+ jobs</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:#B25000;">'+dormant.length+'</div><div class="rpt-stat-lbl">Dormant Clients</div><div class="rpt-stat-sub">6+ months inactive</div></div>';
-  h+='</div>';
-  // Client table
-  h+='<div class="card"><div class="card-hdr"><span class="card-title">Client Scorecard</span></div><div class="card-body" style="padding:0;overflow-x:auto;"><table class="rpt-tbl"><thead><tr><th>Client</th><th style="text-align:right;">Jobs</th><th style="text-align:right;">Total Value</th><th style="text-align:right;">Won</th><th style="text-align:right;">Win Rate</th><th style="text-align:right;">Avg Job Size</th><th style="text-align:right;">Avg Margin</th><th>Last Activity</th></tr></thead><tbody>';
-  sorted.forEach(function(k){
-    var d=clients[k];var wr=d.won+d.lost>0?(d.won/(d.won+d.lost)*100):0;
-    var avgM=d.marginCount>0?(d.margin/d.marginCount):0;
-    var loyalty=d.count>=5?'&#9733; Preferred':d.count>=2?'Repeat':'';
-    h+='<tr><td style="font-weight:600;">'+esc(k)+(loyalty?' <span style="font-size:10px;color:var(--red);font-weight:700;">'+loyalty+'</span>':'')+'</td><td style="text-align:right;">'+d.count+'</td><td style="text-align:right;">'+fmtMoney(d.value)+'</td><td style="text-align:right;color:#27500A;">'+d.won+'</td><td style="text-align:right;">'+fmtPct(wr)+'</td><td style="text-align:right;">'+fmtMoney(d.avgSize)+'</td><td style="text-align:right;">'+(avgM>0?fmtPct(avgM):'-')+'</td><td>'+rptDateLabel(d.lastDate)+'</td></tr>';
-  });
-  h+='</tbody></table></div></div>';
-  // Dormant clients
-  if(dormant.length){
-    h+='<div class="card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title" style="color:#B25000;">Dormant Clients</span><span style="font-size:11px;color:var(--dgray);margin-left:8px;">No activity in 6+ months</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Client</th><th style="text-align:right;">Past Jobs</th><th style="text-align:right;">Total Value</th><th>Last Activity</th><th style="text-align:right;">Days Since</th></tr></thead><tbody>';
-    dormant.forEach(function(k){
-      var d=clients[k];var days=Math.round((Date.now()-new Date(d.lastDate).getTime())/(86400000));
-      h+='<tr><td style="font-weight:600;">'+esc(k)+'</td><td style="text-align:right;">'+d.count+'</td><td style="text-align:right;">'+fmtMoney(d.value)+'</td><td>'+rptDateLabel(d.lastDate)+'</td><td style="text-align:right;color:#B25000;font-weight:600;">'+days+'d</td></tr>';
-    });
-    h+='</tbody></table></div></div>';
+
+  var h=_rptStatHTML([
+    {lbl:'Active Jobs',val:inProgress.length+scheduled.length},
+    {lbl:'Backlog',val:fmtMoney(backlogVal),sub:backlog.length+' jobs'},
+    {lbl:'Completed',val:completed.length},
+    {lbl:'Over Budget',val:overBudget,color:overBudget>0?'var(--badge-err)':undefined}
+  ]);
+
+  // Backlog breakdown
+  var sections=[{name:'Approved',items:approved,color:'var(--badge-info)'},{name:'Scheduled',items:scheduled,color:'var(--badge-warn)'},{name:'In Progress',items:inProgress,color:'var(--red)'}];
+  var backlogItems=sections.filter(function(s){return s.items.length>0;}).map(function(s){return{label:s.name,val:s.items.reduce(function(t,p){return t+p.total;},0),display:s.items.length+' ('+fmtMoney(s.items.reduce(function(t,p){return t+p.total;},0))+')',color:s.color};});
+  h+='<div class="mc-card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">Backlog Breakdown</span></div><div class="card-body">';
+  if(backlogItems.length)h+=_rptBarChart(backlogItems);
+  else h+='<div style="padding:16px;text-align:center;color:var(--dgray);font-size:12px;">No active backlog</div>';
+  h+='</div></div>';
+
+  // Concurrent jobs chart (last 16 weeks)
+  var weeks=[];var now=new Date();
+  for(var w=15;w>=0;w--){
+    var wStart=new Date(now);wStart.setDate(wStart.getDate()-w*7);wStart.setHours(0,0,0,0);
+    var wEnd=new Date(wStart);wEnd.setDate(wEnd.getDate()+6);
+    weeks.push({start:wStart,end:wEnd,label:(wStart.getMonth()+1)+'/'+wStart.getDate(),count:0});
   }
-  out.innerHTML=h;
-}
-
-function renderRptSalesperson(){
-  var data=getFilteredData();var items=data.filtered;
-  var out=document.getElementById('rpt-output');
-  var people={};
-  items.forEach(function(p){
-    var key=p.created_by||'Unknown';
-    if(!people[key])people[key]={count:0,value:0,won:0,lost:0,wonVal:0,margin:0,marginCount:0,closeTimes:[]};
-    people[key].count++;people[key].value+=p.total;
-    if(p.stage==='Completed'||p.stage==='Approved'||p.stage==='Scheduled'||p.stage==='In Progress'){people[key].won++;people[key].wonVal+=p.total;}
-    if(p.stage==='Lost')people[key].lost++;
-    if(p.jc_total_cost>0&&p.total>0){var m=(p.total-p.jc_total_cost)/p.total*100;people[key].margin+=m;people[key].marginCount++;}
-    if(p.date&&p.created_at){var diff=Math.abs(new Date(p.date)-new Date(p.created_at))/(86400000);if(diff>0&&diff<365)people[key].closeTimes.push(diff);}
-  });
-  var sorted=Object.keys(people).sort(function(a,b){return people[b].wonVal-people[a].wonVal;});
-  var h='<div class="card"><div class="card-hdr"><span class="card-title">Salesperson Leaderboard</span></div><div class="card-body" style="padding:0;overflow-x:auto;"><table class="rpt-tbl"><thead><tr><th>Salesperson</th><th style="text-align:right;">Estimates</th><th style="text-align:right;">Total Value</th><th style="text-align:right;">Won</th><th style="text-align:right;">Won Revenue</th><th style="text-align:right;">Win Rate</th><th style="text-align:right;">Avg Deal</th><th style="text-align:right;">Avg Margin</th><th style="text-align:right;">Avg Close (days)</th></tr></thead><tbody>';
-  sorted.forEach(function(k){
-    var d=people[k];var wr=d.won+d.lost>0?(d.won/(d.won+d.lost)*100):0;
-    var avgDeal=d.won>0?d.wonVal/d.won:0;
-    var avgM=d.marginCount>0?(d.margin/d.marginCount):0;
-    var avgClose=d.closeTimes.length?(d.closeTimes.reduce(function(a,b){return a+b;},0)/d.closeTimes.length):0;
-    h+='<tr><td style="font-weight:600;">'+esc(k)+'</td><td style="text-align:right;">'+d.count+'</td><td style="text-align:right;">'+fmtMoney(d.value)+'</td><td style="text-align:right;color:#27500A;">'+d.won+'</td><td style="text-align:right;font-weight:600;">'+fmtMoney(d.wonVal)+'</td><td style="text-align:right;">'+fmtPct(wr)+'</td><td style="text-align:right;">'+fmtMoney(avgDeal)+'</td><td style="text-align:right;">'+(avgM>0?fmtPct(avgM):'-')+'</td><td style="text-align:right;">'+(avgClose>0?Math.round(avgClose):'-')+'</td></tr>';
-  });
-  h+='</tbody></table></div></div>';
-  // Activity per month per salesperson
-  var monthPeople={};
-  items.forEach(function(p){
-    var d=new Date(p.date||p.created_at);if(isNaN(d))return;
-    var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    var who=p.created_by||'Unknown';
-    if(!monthPeople[key])monthPeople[key]={};
-    if(!monthPeople[key][who])monthPeople[key][who]=0;
-    monthPeople[key][who]++;
-  });
-  var mpMonths=Object.keys(monthPeople).sort().slice(-6);
-  if(mpMonths.length>1){
-    h+='<div class="card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title">Activity Per Month</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Month</th>';
-    sorted.forEach(function(k){h+='<th style="text-align:right;">'+esc(k)+'</th>';});
-    h+='</tr></thead><tbody>';
-    mpMonths.forEach(function(m){
-      var lbl=m.split('-');var mName=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(lbl[1])-1]+' '+lbl[0];
-      h+='<tr><td style="font-weight:600;">'+mName+'</td>';
-      sorted.forEach(function(k){h+='<td style="text-align:right;">'+(monthPeople[m][k]||0)+'</td>';});
-      h+='</tr>';
-    });
-    h+='</tbody></table></div></div>';
-  }
-  out.innerHTML=h;
-}
-
-// ==================== JOB REPORTS ====================
-
-function renderRptBacklog(){
-  var data=getFilteredData();
-  var out=document.getElementById('rpt-output');
-  // Backlog = approved but not scheduled, scheduled but not started
-  var allProjects=data.all.filter(function(p){return p.is_project;});
-  var approved=allProjects.filter(function(p){return p.stage==='Approved';});
-  var scheduled=allProjects.filter(function(p){return p.stage==='Scheduled';});
-  var inProgress=allProjects.filter(function(p){return p.stage==='In Progress';});
-  var approvedVal=approved.reduce(function(s,p){return s+p.total;},0);
-  var scheduledVal=scheduled.reduce(function(s,p){return s+p.total;},0);
-  var inProgressVal=inProgress.reduce(function(s,p){return s+p.total;},0);
-  var totalBacklog=approvedVal+scheduledVal;
-  var h='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:var(--red);">'+fmtMoney(totalBacklog)+'</div><div class="rpt-stat-lbl">Total Backlog</div><div class="rpt-stat-sub">Approved + Scheduled</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+approved.length+'</div><div class="rpt-stat-lbl">Approved</div><div class="rpt-stat-sub">'+fmtMoney(approvedVal)+'</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+scheduled.length+'</div><div class="rpt-stat-lbl">Scheduled</div><div class="rpt-stat-sub">'+fmtMoney(scheduledVal)+'</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+inProgress.length+'</div><div class="rpt-stat-lbl">In Progress</div><div class="rpt-stat-sub">'+fmtMoney(inProgressVal)+'</div></div>';
-  h+='</div>';
-  // Lists
-  var sections=[{title:'Approved — Not Yet Scheduled',items:approved,color:'#27500A'},{title:'Scheduled — Not Yet Started',items:scheduled,color:'#B25000'},{title:'In Progress',items:inProgress,color:'var(--red)'}];
-  sections.forEach(function(sec){
-    if(!sec.items.length)return;
-    h+='<div class="card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title" style="color:'+sec.color+';">'+sec.title+'</span><span style="font-size:11px;color:var(--dgray);margin-left:8px;">'+sec.items.length+' projects</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Project</th><th>Client</th><th>Location</th><th style="text-align:right;">Value</th><th>Created</th></tr></thead><tbody>';
-    sec.items.forEach(function(p){
-      h+='<tr><td style="font-weight:600;">'+esc(p.project_number||p.name)+'</td><td>'+esc(p.client)+'</td><td>'+esc(p.city_state||p.address)+'</td><td style="text-align:right;font-weight:600;">'+fmtMoney(p.total)+'</td><td>'+rptDateLabel(p.created_at)+'</td></tr>';
-    });
-    h+='</tbody></table></div></div>';
-  });
-  out.innerHTML=h;
-}
-
-function renderRptCompletion(){
-  var data=getFilteredData();var items=data.filtered.filter(function(p){return p.is_project;});
-  var out=document.getElementById('rpt-output');
-  var completed=items.filter(function(p){return p.stage==='Completed';});
-  // Average days: use work order dates or created_at to completion
-  var durations=[];
-  completed.forEach(function(p){
-    var start=new Date(p.created_at);
-    var wos=p.work_orders||[];
-    var lastWO=null;
-    wos.forEach(function(wo){if(wo.scheduled_end_date&&(!lastWO||wo.scheduled_end_date>lastWO))lastWO=wo.scheduled_end_date;});
-    var end=lastWO?new Date(lastWO):new Date(p.date||p.created_at);
-    var days=Math.round((end-start)/(86400000));
-    if(days>0)durations.push({name:p.name,client:p.client,days:days,total:p.total});
-  });
-  var avgDays=durations.length?(durations.reduce(function(s,d){return s+d.days;},0)/durations.length):0;
-  // On-time analysis: check if work orders completed within scheduled dates
-  var onTime=0;var overdue=0;
-  items.forEach(function(p){
-    (p.work_orders||[]).forEach(function(wo){
-      if(wo.status==='complete'){
-        onTime++;
-      }
-    });
-  });
-  var h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+completed.length+'</div><div class="rpt-stat-lbl">Completed Projects</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+Math.round(avgDays)+'</div><div class="rpt-stat-lbl">Avg Days to Complete</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+onTime+'</div><div class="rpt-stat-lbl">Work Orders Completed</div></div>';
-  h+='</div>';
-  // Table of completed jobs with duration
-  if(durations.length){
-    durations.sort(function(a,b){return b.days-a.days;});
-    h+='<div class="card"><div class="card-hdr"><span class="card-title">Completed Jobs — Duration</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Project</th><th>Client</th><th style="text-align:right;">Value</th><th style="text-align:right;">Days</th></tr></thead><tbody>';
-    durations.forEach(function(d){
-      var color=d.days>90?'#A32D2D':d.days>30?'#B25000':'#27500A';
-      h+='<tr><td style="font-weight:600;">'+esc(d.name)+'</td><td>'+esc(d.client)+'</td><td style="text-align:right;">'+fmtMoney(d.total)+'</td><td style="text-align:right;font-weight:600;color:'+color+';">'+d.days+'</td></tr>';
-    });
-    h+='</tbody></table></div></div>';
-  }
-  out.innerHTML=h;
-}
-
-function renderRptVolume(){
-  var data=getFilteredData();
-  var out=document.getElementById('rpt-output');
-  var monthData={};
-  data.all.filter(function(p){return p.is_project;}).forEach(function(p){
-    var d=new Date(p.date||p.created_at);if(isNaN(d))return;
-    var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    if(!monthData[key])monthData[key]={total:0,value:0,completed:0,lost:0};
-    monthData[key].total++;monthData[key].value+=p.total;
-    if(p.stage==='Completed')monthData[key].completed++;
-    if(p.stage==='Lost')monthData[key].lost++;
-  });
-  var months=Object.keys(monthData).sort().slice(-12);
-  var maxCount=Math.max.apply(null,months.map(function(k){return monthData[k].total;}).concat([1]));
-  var h='<div class="card"><div class="card-hdr"><span class="card-title">Jobs Per Month</span></div><div class="card-body" style="padding:14px;">';
-  h+='<div style="display:flex;align-items:flex-end;gap:8px;height:150px;">';
-  months.forEach(function(k){
-    var d=monthData[k];var pct=Math.max(5,d.total/maxCount*100);
-    var lbl=k.split('-');var mName=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(lbl[1])-1];
-    h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;">';
-    h+='<div style="font-size:11px;font-weight:700;margin-bottom:2px;">'+d.total+'</div>';
-    h+='<div class="rpt-bar" style="width:100%;height:'+pct+'%;background:var(--red);"></div>';
-    h+='<div style="font-size:9px;color:var(--dgray);margin-top:4px;">'+mName+'</div>';
-    h+='</div>';
-  });
-  h+='</div></div></div>';
-  // Table
-  h+='<div class="card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title">Monthly Detail</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Month</th><th style="text-align:right;">Total Jobs</th><th style="text-align:right;">Total Value</th><th style="text-align:right;">Completed</th><th style="text-align:right;">Lost</th></tr></thead><tbody>';
-  months.forEach(function(k){
-    var d=monthData[k];var lbl=k.split('-');var mName=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(lbl[1])-1]+' '+lbl[0];
-    h+='<tr><td style="font-weight:600;">'+mName+'</td><td style="text-align:right;">'+d.total+'</td><td style="text-align:right;">'+fmtMoney(d.value)+'</td><td style="text-align:right;color:#27500A;">'+d.completed+'</td><td style="text-align:right;color:#A32D2D;">'+d.lost+'</td></tr>';
-  });
-  h+='</tbody></table></div></div>';
-  out.innerHTML=h;
-}
-
-function renderRptConcurrent(){
-  var data=getFilteredData();
-  var out=document.getElementById('rpt-output');
-  // Find overlapping active jobs per week
-  var activeProjects=data.all.filter(function(p){return p.is_project&&(p.stage==='In Progress'||p.stage==='Scheduled');});
-  var weekData={};
-  activeProjects.forEach(function(p){
+  projects.forEach(function(p){
     var wos=p.work_orders||[];
     wos.forEach(function(wo){
       if(!wo.scheduled_date)return;
-      var d=new Date(wo.scheduled_date);
-      var weekStart=new Date(d);weekStart.setDate(weekStart.getDate()-weekStart.getDay());
-      var key=weekStart.toISOString().split('T')[0];
-      if(!weekData[key])weekData[key]=new Set();
-      weekData[key].add(p.id);
+      var wd=new Date(wo.scheduled_date).getTime();
+      weeks.forEach(function(wk){if(wd>=wk.start.getTime()&&wd<=wk.end.getTime())wk.count++;});
     });
   });
-  var weeks=Object.keys(weekData).sort().slice(-16);
-  var maxConcurrent=Math.max.apply(null,weeks.map(function(k){return weekData[k].size;}).concat([1]));
-  var peakWeek=weeks.find(function(k){return weekData[k].size===maxConcurrent;})||'';
-  var h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+activeProjects.length+'</div><div class="rpt-stat-lbl">Active Jobs</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:var(--red);">'+maxConcurrent+'</div><div class="rpt-stat-lbl">Peak Concurrent</div><div class="rpt-stat-sub">Week of '+rptDateLabel(peakWeek)+'</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+(weeks.length?Math.round(weeks.reduce(function(s,k){return s+weekData[k].size;},0)/weeks.length):0)+'</div><div class="rpt-stat-lbl">Avg Concurrent</div></div>';
-  h+='</div>';
-  // Chart
-  if(weeks.length){
-    h+='<div class="card"><div class="card-hdr"><span class="card-title">Concurrent Jobs by Week</span></div><div class="card-body" style="padding:14px;">';
-    h+='<div style="display:flex;align-items:flex-end;gap:4px;height:120px;">';
-    weeks.forEach(function(k){
-      var c=weekData[k].size;var pct=Math.max(5,c/maxConcurrent*100);
-      h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;">';
-      h+='<div style="font-size:10px;font-weight:600;margin-bottom:2px;">'+c+'</div>';
-      h+='<div class="rpt-bar" style="width:100%;height:'+pct+'%;background:var(--red);"></div>';
-      h+='<div style="font-size:8px;color:var(--dgray);margin-top:2px;">'+rptDateLabel(k).slice(0,5)+'</div>';
-      h+='</div>';
-    });
+  var maxCon=Math.max.apply(null,weeks.map(function(w){return w.count;}));
+  if(maxCon>0){
+    h+='<div class="mc-card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">Concurrent Jobs by Week</span></div><div class="card-body">';
+    h+='<div style="display:flex;align-items:flex-end;gap:4px;height:100px;">';
+    weeks.forEach(function(wk){var pct=Math.max(4,Math.round(wk.count/maxCon*100));h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="font-size:9px;color:var(--dgray);">'+wk.count+'</div><div style="width:100%;height:'+pct+'px;background:var(--red);border-radius:3px;"></div><div style="font-size:8px;color:var(--dgray);">'+wk.label+'</div></div>';});
     h+='</div></div></div>';
   }
+
+  // Est vs Actual table
+  if(withActuals.length){
+    var evaRows=withActuals.map(function(p){
+      var actTotal=0;Object.values(p.eva_actuals).forEach(function(a){actTotal+=(parseFloat(a.actual_material)||0)+(parseFloat(a.actual_labor)||0)+(parseFloat(a.actual_trucking)||0);});
+      var variance=actTotal-p.jc_total_cost;var pct=p.jc_total_cost>0?Math.round(variance/p.jc_total_cost*100):0;
+      var color=variance>0?'var(--badge-err)':'var(--badge-ok)';
+      return{cells:[esc(p.name),esc(p.client),fmtMoney(p.total),fmtMoney(p.jc_total_cost),fmtMoney(actTotal),'<span style="color:'+color+';font-weight:600;">'+(variance>=0?'+':'')+fmtMoney(variance)+'</span>','<span style="color:'+color+';font-weight:600;">'+pct+'%</span>']};
+    });
+    h+='<div class="mc-card"><div class="card-hdr"><span class="card-title">Estimated vs Actual</span></div><div class="card-body" style="overflow-x:auto;">';
+    h+=_rptTableHTML([{label:'Project'},{label:'Client'},{label:'Bid Price',align:'right'},{label:'Est. Cost',align:'right'},{label:'Actual Cost',align:'right'},{label:'Variance',align:'right'},{label:'%',align:'right'}],evaRows);
+    h+='</div></div>';
+  }
+
+  // Completed jobs
+  if(completed.length){
+    var compRows=completed.map(function(p){
+      var start=new Date(p.created_at);var end=new Date(p.date||p.created_at);
+      var days=Math.max(1,Math.round((end-start)/86400000));
+      var dColor=days>90?'var(--badge-err)':days>30?'var(--badge-warn)':'var(--badge-ok)';
+      return{cells:[esc(p.name),esc(p.client),fmtMoney(p.total),'<span style="color:'+dColor+';">'+days+'d</span>']};
+    });
+    h+='<div class="mc-card" style="margin-top:14px;"><div class="card-hdr"><span class="card-title">Completed Jobs</span></div><div class="card-body" style="overflow-x:auto;">';
+    h+=_rptTableHTML([{label:'Project'},{label:'Client'},{label:'Value',align:'right'},{label:'Days',align:'center'}],compRows);
+    h+='</div></div>';
+  }
+
+  if(!projects.length)h+='<div class="empty-state" style="margin-top:20px;"><div class="empty-state-title">No jobs in this period</div><div class="empty-state-desc">Convert estimates to projects to see job performance data.</div></div>';
   out.innerHTML=h;
 }
 
-function renderRptMobilization(){
-  var data=getFilteredData();var items=data.filtered.filter(function(p){return p.is_project;});
-  var out=document.getElementById('rpt-output');
-  var regions={};
-  items.forEach(function(p){
-    var key=p.city_state||'Unknown';
-    if(!regions[key])regions[key]={jobs:0,wos:0,value:0};
-    regions[key].jobs++;regions[key].value+=p.total;
-    regions[key].wos+=(p.work_orders||[]).length;
-  });
-  var sorted=Object.keys(regions).sort(function(a,b){return regions[b].wos-regions[a].wos;});
-  var maxWO=sorted.length?regions[sorted[0]].wos:1;
-  var h='<div class="card"><div class="card-hdr"><span class="card-title">Mobilization Frequency by Region</span></div><div class="card-body" style="padding:14px;">';
-  sorted.forEach(function(r){
-    var d=regions[r];var pct=Math.max(3,d.wos/maxWO*100);
-    h+='<div style="margin-bottom:8px;">';
-    h+='<div style="display:flex;justify-content:space-between;margin-bottom:2px;">';
-    h+='<span style="font-size:12px;font-weight:600;">'+esc(r)+'</span>';
-    h+='<span style="font-size:11px;color:var(--dgray);">'+d.wos+' mobilizations &middot; '+d.jobs+' jobs &middot; '+fmtMoney(d.value)+'</span>';
-    h+='</div>';
-    h+='<div style="background:#eee;border-radius:3px;height:16px;overflow:hidden;"><div class="rpt-bar" style="height:100%;width:'+pct+'%;background:var(--red);"></div></div>';
-    h+='</div>';
-  });
-  h+='</div></div>';
-  out.innerHTML=h;
-}
+// ── 3. MATERIALS & COSTS ──
+function renderRptMaterialsCosts(){
+  var data=getFilteredData();var items=data.filtered;
+  var out=document.getElementById('rpt-output');if(!out)return;
+  var projects=items.filter(function(p){return p.is_project;});
 
-function renderRptMaterialUsage(){
-  var data=getFilteredData();var items=data.filtered.filter(function(p){return p.is_project;});
-  var out=document.getElementById('rpt-output');
-  var materials={};
+  // Aggregate materials from proposals
+  var matMap={};var totalTons=0;var totalMatCost=0;var totalTruckCost=0;
   items.forEach(function(p){
-    // From proposal sections
-    (p.snap.sections||[]).forEach(function(sec){
-      (sec.layers||[]).forEach(function(lay){
-        var mat=lay.type||'Unknown';
-        if(!materials[mat])materials[mat]={tons:0,cost:0,jobs:0};
-        var area=parseFloat(sec.area)||0;var depth=parseFloat(lay.depth)||0;
-        var density=LBS[mat]||115;
-        var tons=area*depth/12*density/2000;
-        materials[mat].tons+=tons;
-        materials[mat].cost+=tons*(MAT[mat]||0);
+    var secs=(p.snap.sections||[]);
+    secs.forEach(function(sec){
+      (sec.layers||[]).forEach(function(lyr){
+        var type=lyr.type||'Unknown';var area=parseFloat(sec.area)||0;var depth=parseFloat(lyr.depth)||0;
+        var density=LBS[type]||115;var tons=(area*depth/12*density)/2000;
+        var costPerTon=MAT[type]||0;var cost=tons*costPerTon;
+        if(!matMap[type])matMap[type]={tons:0,cost:0,jobs:0,jobSet:{}};
+        matMap[type].tons+=tons;matMap[type].cost+=cost;
+        if(!matMap[type].jobSet[p.id]){matMap[type].jobSet[p.id]=true;matMap[type].jobs++;}
+        totalTons+=tons;totalMatCost+=cost;
+        totalTruckCost+=parseFloat(lyr.trucking)||0;
       });
     });
-    // From material tracking
+    // Also include material_tracking
     (p.material_tracking||[]).forEach(function(mt){
-      var mat=mt.material||mt.name||'Unknown';
-      if(!materials[mat])materials[mat]={tons:0,cost:0,jobs:0};
-      materials[mat].tons+=parseFloat(mt.qty)||0;
-      materials[mat].cost+=parseFloat(mt.cost)||0;
+      var type=mt.material||mt.name||'Unknown';var qty=parseFloat(mt.qty)||0;var cost=parseFloat(mt.cost)||0;
+      if(!matMap[type])matMap[type]={tons:0,cost:0,jobs:0,jobSet:{}};
+      matMap[type].tons+=qty;matMap[type].cost+=cost;
+      if(!matMap[type].jobSet[p.id]){matMap[type].jobSet[p.id]=true;matMap[type].jobs++;}
     });
   });
-  // Count jobs per material
-  items.forEach(function(p){
-    var seen={};
-    (p.snap.sections||[]).forEach(function(sec){(sec.layers||[]).forEach(function(lay){if(!seen[lay.type]){seen[lay.type]=true;if(materials[lay.type])materials[lay.type].jobs++;}});});
-  });
-  var sorted=Object.keys(materials).sort(function(a,b){return materials[b].tons-materials[a].tons;});
-  var totalTons=sorted.reduce(function(s,k){return s+materials[k].tons;},0);
-  var totalCost=sorted.reduce(function(s,k){return s+materials[k].cost;},0);
-  var h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+Math.round(totalTons).toLocaleString()+'</div><div class="rpt-stat-lbl">Total Tons</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+fmtMoney(totalCost)+'</div><div class="rpt-stat-lbl">Total Material Cost</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+sorted.length+'</div><div class="rpt-stat-lbl">Material Types</div></div>';
-  h+='</div>';
-  h+='<div class="card"><div class="card-hdr"><span class="card-title">Material Usage Summary</span></div><div class="card-body" style="padding:0;"><table class="rpt-tbl"><thead><tr><th>Material</th><th style="text-align:right;">Tons</th><th style="text-align:right;">Cost</th><th style="text-align:right;">$/Ton</th><th style="text-align:right;">Jobs</th><th style="text-align:right;">% of Total</th></tr></thead><tbody>';
-  sorted.forEach(function(k){
-    var d=materials[k];var perTon=d.tons>0?d.cost/d.tons:0;var pct=totalTons>0?(d.tons/totalTons*100):0;
-    h+='<tr><td style="font-weight:600;">'+esc(k)+'</td><td style="text-align:right;">'+Math.round(d.tons).toLocaleString()+'</td><td style="text-align:right;">'+fmtMoney(d.cost)+'</td><td style="text-align:right;">'+fmtMoney(perTon)+'</td><td style="text-align:right;">'+d.jobs+'</td><td style="text-align:right;">'+fmtPct(pct)+'</td></tr>';
-  });
-  h+='</tbody></table></div></div>';
-  out.innerHTML=h;
-}
 
-function renderRptEstVsActual(){
-  var data=getFilteredData();var items=data.filtered.filter(function(p){return p.is_project&&p.jc_total_cost>0;});
-  var out=document.getElementById('rpt-output');
-  var rows=[];var totalEst=0;var totalAct=0;
-  items.forEach(function(p){
-    var estCost=p.jc_total_cost;
-    var actCost=0;
-    if(p.eva_actuals){
-      Object.keys(p.eva_actuals).forEach(function(k){
-        var a=p.eva_actuals[k];
-        actCost+=(parseFloat(a.actual_material)||0)+(parseFloat(a.actual_labor)||0)+(parseFloat(a.actual_trucking)||0);
-      });
-    }
-    if(actCost>0){
-      var variance=actCost-estCost;var variancePct=estCost>0?(variance/estCost*100):0;
-      rows.push({name:p.name||p.project_number,client:p.client,bidPrice:p.total,estCost:estCost,actCost:actCost,variance:variance,variancePct:variancePct});
-      totalEst+=estCost;totalAct+=actCost;
-    }
-  });
-  var overCount=rows.filter(function(r){return r.variance>0;}).length;
-  var underCount=rows.filter(function(r){return r.variance<0;}).length;
-  var totalVariance=totalAct-totalEst;
-  var h='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+rows.length+'</div><div class="rpt-stat-lbl">Jobs with Actuals</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:'+(totalVariance>0?'#A32D2D':'#27500A')+';">'+fmtMoney(totalVariance)+'</div><div class="rpt-stat-lbl">Total Variance</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:#A32D2D;">'+overCount+'</div><div class="rpt-stat-lbl">Over Budget</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val" style="color:#27500A;">'+underCount+'</div><div class="rpt-stat-lbl">Under Budget</div></div>';
-  h+='</div>';
-  if(rows.length){
-    rows.sort(function(a,b){return b.variance-a.variance;});
-    h+='<div class="card"><div class="card-hdr"><span class="card-title">Estimated vs Actual Cost</span></div><div class="card-body" style="padding:0;overflow-x:auto;"><table class="rpt-tbl"><thead><tr><th>Project</th><th>Client</th><th style="text-align:right;">Bid Price</th><th style="text-align:right;">Est. Cost</th><th style="text-align:right;">Actual Cost</th><th style="text-align:right;">Variance $</th><th style="text-align:right;">Variance %</th></tr></thead><tbody>';
-    rows.forEach(function(r){
-      var color=r.variance>0?'#A32D2D':'#27500A';
-      h+='<tr><td style="font-weight:600;">'+esc(r.name)+'</td><td>'+esc(r.client)+'</td><td style="text-align:right;">'+fmtMoney(r.bidPrice)+'</td><td style="text-align:right;">'+fmtMoney(r.estCost)+'</td><td style="text-align:right;">'+fmtMoney(r.actCost)+'</td><td style="text-align:right;font-weight:600;color:'+color+';">'+(r.variance>0?'+':'')+fmtMoney(r.variance)+'</td><td style="text-align:right;color:'+color+';">'+(r.variancePct>0?'+':'')+fmtPct(r.variancePct)+'</td></tr>';
-    });
-    h+='</tbody></table></div></div>';
-  } else {
-    h+='<div class="card"><div class="card-body" style="padding:24px;text-align:center;color:var(--dgray);">No projects with actual cost data yet. Enter actuals in the Job Cost panel to see variance tracking here.</div></div>';
+  var matTypes=Object.keys(matMap).length;
+  var h=_rptStatHTML([
+    {lbl:'Total Tons',val:Math.round(totalTons).toLocaleString()},
+    {lbl:'Material Cost',val:fmtMoney(totalMatCost)},
+    {lbl:'Trucking Cost',val:fmtMoney(totalTruckCost)},
+    {lbl:'Material Types',val:matTypes}
+  ]);
+
+  // Material breakdown table
+  var matKeys=Object.keys(matMap).sort(function(a,b){return matMap[b].tons-matMap[a].tons;});
+  if(matKeys.length){
+    var matRows=matKeys.map(function(k){var d=matMap[k];var pct=totalTons>0?Math.round(d.tons/totalTons*100):0;return{cells:[esc(k),Math.round(d.tons).toLocaleString(),fmtMoney(d.cost),d.tons>0?fmtMoney(d.cost/d.tons):'-',d.jobs,pct+'%']};});
+    h+='<div class="mc-card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">Material Breakdown</span></div><div class="card-body" style="overflow-x:auto;">';
+    h+=_rptTableHTML([{label:'Material'},{label:'Tons',align:'right'},{label:'Cost',align:'right'},{label:'$/Ton',align:'right'},{label:'Jobs',align:'center'},{label:'% Total',align:'right'}],matRows);
+    h+='</div></div>';
   }
-  out.innerHTML=h;
-}
 
-function renderRptTrucking(){
-  var data=getFilteredData();var items=data.filtered.filter(function(p){return p.is_project;});
-  var out=document.getElementById('rpt-output');
-  var rows=[];var totalTrucking=0;
-  items.forEach(function(p){
-    var truckEst=0;var truckAct=0;
-    if(p.eva_actuals){
-      Object.keys(p.eva_actuals).forEach(function(k){
-        var a=p.eva_actuals[k];
-        truckAct+=parseFloat(a.actual_trucking)||0;
-      });
-    }
-    // Estimated trucking from snap
-    (p.snap.sections||[]).forEach(function(sec){
-      (sec.layers||[]).forEach(function(lay){
-        truckEst+=parseFloat(lay.trucking)||0;
-      });
-    });
-    if(truckEst>0||truckAct>0){
-      rows.push({name:p.name||p.project_number,client:p.client,total:p.total,truckEst:truckEst,truckAct:truckAct,pctOfJob:p.total>0?((truckAct||truckEst)/p.total*100):0});
-      totalTrucking+=truckAct||truckEst;
-    }
+  // Trucking by job
+  var truckJobs=projects.filter(function(p){
+    var t=0;(p.snap.sections||[]).forEach(function(s){(s.layers||[]).forEach(function(l){t+=parseFloat(l.trucking)||0;});});return t>0;
   });
-  rows.sort(function(a,b){return(b.truckAct||b.truckEst)-(a.truckAct||a.truckEst);});
-  var h='<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;">';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+fmtMoney(totalTrucking)+'</div><div class="rpt-stat-lbl">Total Trucking Costs</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+rows.length+'</div><div class="rpt-stat-lbl">Jobs with Trucking</div></div>';
-  h+='</div>';
-  if(rows.length){
-    h+='<div class="card"><div class="card-hdr"><span class="card-title">Trucking Costs by Job</span></div><div class="card-body" style="padding:0;overflow-x:auto;"><table class="rpt-tbl"><thead><tr><th>Project</th><th>Client</th><th style="text-align:right;">Job Value</th><th style="text-align:right;">Est. Trucking</th><th style="text-align:right;">Actual Trucking</th><th style="text-align:right;">% of Job</th></tr></thead><tbody>';
-    rows.forEach(function(r){
-      h+='<tr><td style="font-weight:600;">'+esc(r.name)+'</td><td>'+esc(r.client)+'</td><td style="text-align:right;">'+fmtMoney(r.total)+'</td><td style="text-align:right;">'+fmtMoney(r.truckEst)+'</td><td style="text-align:right;font-weight:600;">'+fmtMoney(r.truckAct)+'</td><td style="text-align:right;">'+fmtPct(r.pctOfJob)+'</td></tr>';
+  if(truckJobs.length){
+    var truckRows=truckJobs.map(function(p){
+      var est=0;(p.snap.sections||[]).forEach(function(s){(s.layers||[]).forEach(function(l){est+=parseFloat(l.trucking)||0;});});
+      var act=0;if(p.eva_actuals)Object.values(p.eva_actuals).forEach(function(a){act+=parseFloat(a.actual_trucking)||0;});
+      var pct=p.total>0?Math.round(est/p.total*100):0;
+      return{cells:[esc(p.name),esc(p.client),fmtMoney(p.total),fmtMoney(est),act>0?fmtMoney(act):'-',pct+'%']};
     });
-    h+='</tbody></table></div></div>';
-  } else {
-    h+='<div class="card"><div class="card-body" style="padding:24px;text-align:center;color:var(--dgray);">No trucking cost data available yet.</div></div>';
+    h+='<div class="mc-card"><div class="card-hdr"><span class="card-title">Trucking by Job</span></div><div class="card-body" style="overflow-x:auto;">';
+    h+=_rptTableHTML([{label:'Project'},{label:'Client'},{label:'Job Value',align:'right'},{label:'Est. Trucking',align:'right'},{label:'Actual',align:'right'},{label:'% of Job',align:'right'}],truckRows);
+    h+='</div></div>';
   }
+
+  if(!matKeys.length&&!truckJobs.length)h+='<div class="empty-state" style="margin-top:20px;"><div class="empty-state-title">No material data</div><div class="empty-state-desc">Material data is pulled from proposal sections and material tracking.</div></div>';
   out.innerHTML=h;
 }
 
-// ==================== EXECUTIVE SUMMARY ====================
-
+// ── 4. EXECUTIVE SUMMARY ──
 function renderRptExecutive(){
   var data=getFilteredData();var items=data.filtered;
-  var out=document.getElementById('rpt-output');
-  var projects=items.filter(function(p){return p.is_project;});
-  var won=projects.filter(function(p){return p.stage==='Completed'||p.stage==='Approved'||p.stage==='Scheduled'||p.stage==='In Progress';});
-  var lost=projects.filter(function(p){return p.stage==='Lost';});
-  var totalVal=items.reduce(function(s,p){return s+p.total;},0);
+  var out=document.getElementById('rpt-output');if(!out)return;
+  var wonStages=['Completed','Approved','Scheduled','In Progress'];
+  var won=items.filter(function(p){return wonStages.indexOf(p.stage)>-1;});
+  var lost=items.filter(function(p){return p.stage==='Lost';});
+  var decided=won.length+lost.length;var winRate=decided>0?Math.round(won.length/decided*100):0;
   var wonVal=won.reduce(function(s,p){return s+p.total;},0);
   var lostVal=lost.reduce(function(s,p){return s+p.total;},0);
-  var winRate=won.length+lost.length>0?(won.length/(won.length+lost.length)*100):0;
-  var pending=items.filter(function(p){return p.stage==='Estimate Sent'||p.stage==='Follow Up'||p.stage==='Under Review';});
-  var backlog=projects.filter(function(p){return p.stage==='Approved'||p.stage==='Scheduled';});
+  var backlog=items.filter(function(p){return p.stage==='Approved'||p.stage==='Scheduled'||p.stage==='In Progress';});
   var backlogVal=backlog.reduce(function(s,p){return s+p.total;},0);
-  // Top clients
-  var clientMap={};
-  items.forEach(function(p){var k=p.client||'';if(k){if(!clientMap[k])clientMap[k]=0;clientMap[k]+=p.total;}});
-  var topClients=Object.keys(clientMap).sort(function(a,b){return clientMap[b]-clientMap[a];}).slice(0,5);
-  // Top regions
-  var regionMap={};
-  items.forEach(function(p){var k=p.city_state||'';if(k){if(!regionMap[k])regionMap[k]=0;regionMap[k]+=p.total;}});
-  var topRegions=Object.keys(regionMap).sort(function(a,b){return regionMap[b]-regionMap[a];}).slice(0,5);
-  // Range label
-  var rng=document.getElementById('rpt-range');
-  var rangeLabel=rng?rng.options[rng.selectedIndex].text:'';
+  var pending=items.filter(function(p){return !p.isClosed&&wonStages.indexOf(p.stage)===-1&&p.stage!=='Lost';});
 
-  var h='<div style="border:2px solid var(--red);border-radius:8px;padding:20px;margin-bottom:16px;background:#fff;">';
-  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">';
-  h+='<div><div style="font-size:18px;font-weight:700;color:var(--red);">HD HAULING &amp; GRADING</div><div style="font-size:12px;color:var(--dgray);">Executive Summary &mdash; '+rangeLabel+'</div></div>';
-  h+='<div style="font-size:11px;color:var(--dgray);">Generated '+new Date().toLocaleDateString()+'</div>';
-  h+='</div>';
-  h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+items.length+'</div><div class="rpt-stat-lbl">Estimates</div><div class="rpt-stat-sub">'+fmtMoney(totalVal)+'</div></div>';
-  h+='<div class="rpt-stat" style="border-color:#27500A;"><div class="rpt-stat-val" style="color:#27500A;">'+won.length+'</div><div class="rpt-stat-lbl">Won</div><div class="rpt-stat-sub">'+fmtMoney(wonVal)+'</div></div>';
-  h+='<div class="rpt-stat" style="border-color:#A32D2D;"><div class="rpt-stat-val" style="color:#A32D2D;">'+lost.length+'</div><div class="rpt-stat-lbl">Lost</div><div class="rpt-stat-sub">'+fmtMoney(lostVal)+'</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+fmtPct(winRate)+'</div><div class="rpt-stat-lbl">Win Rate</div></div>';
-  h+='</div>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
-  h+='<div class="rpt-stat" style="border-color:var(--red);"><div class="rpt-stat-val" style="color:var(--red);">'+fmtMoney(backlogVal)+'</div><div class="rpt-stat-lbl">Backlog</div><div class="rpt-stat-sub">'+backlog.length+' jobs</div></div>';
-  h+='<div class="rpt-stat"><div class="rpt-stat-val">'+pending.length+'</div><div class="rpt-stat-lbl">Pending Decisions</div></div>';
-  h+='</div>';
-  // Top clients & regions side by side
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">';
+  var h='<div class="mc-card" style="margin-bottom:14px;border-left:3px solid var(--red);">';
+  h+='<div class="card-body" style="padding:20px;">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><div style="font-family:var(--font-display);font-size:16px;font-weight:700;">Executive Summary</div><div style="font-size:11px;color:var(--dgray);">Generated '+new Date().toLocaleDateString()+'</div></div>';
+  h+=_rptStatHTML([
+    {lbl:'Estimates',val:items.length,sub:fmtMoney(items.reduce(function(s,p){return s+p.total;},0))},
+    {lbl:'Won',val:won.length,sub:fmtMoney(wonVal),color:'var(--badge-ok)'},
+    {lbl:'Lost',val:lost.length,sub:fmtMoney(lostVal),color:'var(--badge-err)'},
+    {lbl:'Win Rate',val:winRate+'%'},
+    {lbl:'Backlog',val:fmtMoney(backlogVal),sub:backlog.length+' jobs'},
+    {lbl:'Pending',val:pending.length}
+  ]);
+
+  // Top clients and regions
+  var clientMap={};var regionMap={};
+  won.forEach(function(p){
+    var c=p.client||'Unknown';clientMap[c]=(clientMap[c]||0)+p.total;
+    var r=p.city_state||'Unknown';regionMap[r]=(regionMap[r]||0)+p.total;
+  });
+  var topClients=Object.keys(clientMap).sort(function(a,b){return clientMap[b]-clientMap[a];}).slice(0,5);
+  var topRegions=Object.keys(regionMap).sort(function(a,b){return regionMap[b]-regionMap[a];}).slice(0,5);
+
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">';
   h+='<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);margin-bottom:6px;">Top Clients</div>';
-  topClients.forEach(function(c,i){h+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;border-bottom:1px solid #eee;"><span>'+(i+1)+'. '+esc(c)+'</span><span style="font-weight:600;">'+fmtMoney(clientMap[c])+'</span></div>';});
+  topClients.forEach(function(c,i){h+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;border-bottom:1px solid var(--bdr);"><span>'+(i+1)+'. '+esc(c)+'</span><span style="font-weight:600;">'+fmtMoney(clientMap[c])+'</span></div>';});
+  if(!topClients.length)h+='<div style="font-size:12px;color:var(--dgray);">No won deals</div>';
   h+='</div>';
   h+='<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);margin-bottom:6px;">Top Regions</div>';
-  topRegions.forEach(function(r,i){h+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;border-bottom:1px solid #eee;"><span>'+(i+1)+'. '+esc(r)+'</span><span style="font-weight:600;">'+fmtMoney(regionMap[r])+'</span></div>';});
-  h+='</div>';
+  topRegions.forEach(function(r,i){h+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;border-bottom:1px solid var(--bdr);"><span>'+(i+1)+'. '+esc(r)+'</span><span style="font-weight:600;">'+fmtMoney(regionMap[r])+'</span></div>';});
+  if(!topRegions.length)h+='<div style="font-size:12px;color:var(--dgray);">No won deals</div>';
+  h+='</div></div>';
   h+='</div></div>';
   out.innerHTML=h;
 }
+
+// ── 5. PIPELINE HEALTH (NEW) ──
+function renderRptPipelineHealth(){
+  var data=getFilteredData();var all=data.all;var items=data.filtered;
+  var out=document.getElementById('rpt-output');if(!out)return;
+
+  // Pipeline = everything not closed/completed/lost
+  var openStages=['New Lead','Estimate Sent','Follow Up','Under Review','Approved','Scheduled','In Progress'];
+  var pipeline=all.filter(function(p){return openStages.indexOf(p.stage)>-1;});
+  var pipeVal=pipeline.reduce(function(s,p){return s+p.total;},0);
+
+  // Avg age
+  var totalAge=0;
+  pipeline.forEach(function(p){totalAge+=Math.round((Date.now()-new Date(p.date||p.created_at))/(86400000));});
+  var avgAge=pipeline.length>0?Math.round(totalAge/pipeline.length):0;
+
+  // Conversion rate (all time)
+  var wonAll=all.filter(function(p){return p.stage==='Completed'||p.stage==='Approved'||p.stage==='Scheduled'||p.stage==='In Progress';});
+  var lostAll=all.filter(function(p){return p.stage==='Lost';});
+  var decidedAll=wonAll.length+lostAll.length;
+  var convRate=decidedAll>0?Math.round(wonAll.length/decidedAll*100):0;
+
+  // Stale (14+ days without movement)
+  var stale=pipeline.filter(function(p){return Math.round((Date.now()-new Date(p.date||p.created_at))/(86400000))>=14;});
+
+  var h=_rptStatHTML([
+    {lbl:'Pipeline Value',val:fmtMoney(pipeVal),sub:pipeline.length+' active'},
+    {lbl:'Avg Age',val:avgAge+'d',color:avgAge>30?'var(--badge-warn)':undefined},
+    {lbl:'Conversion Rate',val:convRate+'%',sub:decidedAll+' decided'},
+    {lbl:'Stale (14d+)',val:stale.length,color:stale.length>0?'var(--badge-err)':undefined}
+  ]);
+
+  // Stage distribution
+  var stageItems=openStages.map(function(s){var inStage=pipeline.filter(function(p){return p.stage===s;});var val=inStage.reduce(function(t,p){return t+p.total;},0);return{label:s,val:inStage.length,display:inStage.length+' ('+fmtMoney(val)+')',color:'var(--red)'};}).filter(function(s){return s.val>0;});
+  h+='<div class="mc-card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">Stage Distribution</span></div><div class="card-body">'+_rptBarChart(stageItems)+'</div></div>';
+
+  // This week's activity
+  var weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);var weekAgoT=weekAgo.getTime();
+  var newThisWeek=items.filter(function(p){return new Date(p.created_at).getTime()>=weekAgoT;});
+  var wonThisWeek=items.filter(function(p){return (p.stage==='Completed'||p.stage==='Approved')&&new Date(p.date||p.created_at).getTime()>=weekAgoT;});
+  var lostThisWeek=items.filter(function(p){return p.stage==='Lost'&&new Date(p.date||p.created_at).getTime()>=weekAgoT;});
+
+  h+='<div class="mc-card" style="margin-bottom:14px;"><div class="card-hdr"><span class="card-title">This Week</span></div><div class="card-body">';
+  h+=_rptStatHTML([
+    {lbl:'New',val:newThisWeek.length},
+    {lbl:'Won',val:wonThisWeek.length,color:'var(--badge-ok)'},
+    {lbl:'Lost',val:lostThisWeek.length,color:lostThisWeek.length>0?'var(--badge-err)':undefined}
+  ]);
+  h+='</div></div>';
+
+  // Stale proposals list
+  if(stale.length){
+    var staleRows=stale.sort(function(a,b){return new Date(a.date||a.created_at)-new Date(b.date||b.created_at);}).map(function(p){
+      var age=Math.round((Date.now()-new Date(p.date||p.created_at))/(86400000));
+      var ageColor=age>30?'var(--badge-err)':'var(--badge-warn)';
+      return{cells:[esc(p.name),esc(p.client),esc(p.stage),fmtMoney(p.total),rptDateLabel(p.date||p.created_at),'<span style="color:'+ageColor+';font-weight:600;">'+age+'d</span>']};
+    });
+    h+='<div class="mc-card"><div class="card-hdr"><span class="card-title">Stale Proposals ('+stale.length+')</span></div><div class="card-body" style="overflow-x:auto;">';
+    h+=_rptTableHTML([{label:'Name'},{label:'Client'},{label:'Stage'},{label:'Value',align:'right'},{label:'Date'},{label:'Age',align:'center'}],staleRows);
+    h+='</div></div>';
+  }
+
+  out.innerHTML=h;
+}
+
 
 // ==================== REPORT PDF EXPORT ====================
 
@@ -13376,13 +13050,11 @@ async function exportReportPDF(){
   var rng=document.getElementById('rpt-range');
   var rangeLabel=rng?rng.options[rng.selectedIndex].text:'';
   var reportNames={
-    'monthly-summary':'Monthly Estimate Summary','geographic':'Geographic Analysis',
-    'client-perf':'Client Performance','salesperson':'Salesperson Performance',
-    'backlog':'Backlog Report','completion':'Completion & Schedule',
-    'volume':'Jobs Per Month','concurrent':'Concurrent Jobs',
-    'mobilization':'Mobilization by Region','material-usage':'Material Usage',
-    'est-vs-actual':'Estimated vs Actual','trucking':'Trucking Costs',
-    'executive':'Executive Summary'
+    'estimate-perf':'Estimate Performance',
+    'job-perf':'Job Performance',
+    'materials-costs':'Materials & Costs',
+    'executive':'Executive Summary',
+    'pipeline-health':'Pipeline Health'
   };
   var reportName=reportNames[_currentReport]||'Report';
   var sections=_extractReportSections(output);
