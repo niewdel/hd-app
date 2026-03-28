@@ -1033,33 +1033,44 @@ tr:hover td{background:var(--tbl-alt);}
 .gn{color:#A32D2D;font-weight:600;}
 
 /* Sections */
-.sec{border:1px solid var(--bdr);border-radius:var(--rad);background:var(--wht);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-s);}
-.sec-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--lgray);border-bottom:1px solid var(--bdr);flex-wrap:wrap;}
-.sec-hdr .sec-name{flex:1;min-width:180px;max-width:280px;font-weight:700;padding:5px 8px;font-size:14px;border:1px solid transparent;border-radius:6px;transition:border-color .15s;}
+.sec{border:1px solid var(--bdr);border-radius:var(--rad);background:var(--bg-el);margin-bottom:var(--card-gap);overflow:hidden;}
+.sec-hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-sub);border-bottom:1px solid var(--bdr);flex-wrap:wrap;}
+.sec-hdr .sec-name{flex:1;min-width:180px;max-width:300px;font-weight:700;padding:6px 10px;font-size:14px;border:1px solid var(--bdr);border-radius:6px;background:var(--wht);transition:border-color .15s;}
 .sec-hdr .sec-name:focus{border-color:var(--red);outline:none;}
-.sec-foot{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:4px;padding:10px 16px;background:var(--lgray);border-top:1px solid var(--bdr);}
+.sec-foot{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;padding:12px 16px;background:var(--bg-sub);border-top:1px solid var(--bdr);}
 .sec-foot-item{text-align:center;padding:4px 0;}
-.sec-foot-item .sf-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--dgray);font-weight:600;margin-bottom:1px;}
+.sec-foot-item .sf-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--dgray);font-weight:600;margin-bottom:2px;}
 .sec-foot-item .sf-val{font-size:14px;font-weight:700;color:var(--blk);}
-.lyr-row{padding:10px 16px;border-bottom:1px solid var(--bdr);transition:background .1s;}
+.lyr-row{padding:14px 16px;border-bottom:1px solid var(--bdr);transition:background .1s;}
 .lyr-row:last-child{border-bottom:none;}
-.lyr-row:hover{background:var(--lgray);}
-.lyr-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.lyr-top input[type="text"]{flex:1;font-size:13px;font-weight:600;padding:4px 8px;border:1px solid transparent;border-radius:5px;transition:border-color .15s;}
+.lyr-row:hover{background:var(--tbl-alt);}
+.lyr-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.lyr-top input[type="text"]{flex:1;font-size:13px;font-weight:600;padding:6px 10px;border:1px solid var(--bdr);border-radius:6px;background:var(--wht);transition:border-color .15s;}
 .lyr-top input[type="text"]:focus{border-color:var(--red);outline:none;}
-.lyr-fields{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
-.lyr-field{display:flex;flex-direction:column;gap:1px;}
+.lyr-fields{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:8px;}
+.lyr-field{display:flex;flex-direction:column;gap:3px;}
 .lyr-field label{font-size:9px;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin:0;line-height:1;}
-.lyr-field input{width:58px;padding:4px 6px;font-size:12px;border:1px solid var(--bdr);border-radius:5px;text-align:center;transition:border-color .15s;}
+.lyr-field input{width:72px;padding:6px 8px;font-size:13px;border:1px solid var(--bdr);border-radius:6px;text-align:center;transition:border-color .15s;}
 .lyr-field input:focus{border-color:var(--red);outline:none;}
-.lyr-field select{min-width:100px;padding:4px 6px;font-size:12px;border:1px solid var(--bdr);border-radius:5px;}
-.lyr-result{display:flex;align-items:center;gap:10px;margin-top:6px;padding:6px 10px;background:var(--lgray);border-radius:var(--rad-s);font-size:11px;color:var(--dgray);}
-.lyr-result b{color:var(--blk);font-size:12px;}
-.lyr-desc{width:100%;font-size:11px;padding:3px 8px;border:1px solid transparent;border-radius:5px;color:var(--dgray);transition:border-color .15s;}
-.lyr-desc:focus{border-color:var(--bdr);outline:none;}
+.lyr-field select{min-width:110px;padding:6px 8px;font-size:13px;border:1px solid var(--bdr);border-radius:6px;}
+.lyr-result{display:flex;align-items:center;gap:12px;margin-top:10px;padding:8px 12px;background:var(--bg-sub);border-radius:var(--rad-s);font-size:12px;color:var(--dgray);}
+.lyr-result b{color:var(--blk);font-size:13px;}
+.lyr-desc{width:100%;font-size:12px;padding:6px 10px;border:1px solid var(--bdr);border-radius:6px;color:var(--blk);background:var(--wht);transition:border-color .15s;margin-top:4px;}
+.lyr-desc:focus{border-color:var(--red);outline:none;}
+.lyr-desc::placeholder{color:var(--dgray);}
+.lyr-advanced{display:none;margin-top:6px;}
+.lyr-advanced.open{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;}
+.lyr-adv-toggle{font-size:11px;color:var(--dgray);cursor:pointer;border:none;background:none;font-family:var(--font);padding:2px 0;margin-top:4px;}
+.lyr-adv-toggle:hover{color:var(--blk);}
 .mubadge{font-size:10px;padding:3px 9px;border-radius:20px;white-space:nowrap;font-weight:600;}
-.mubadge.p{background:#EAF3DE;color:#27500A;}
-.mubadge.n{background:#FCEBEB;color:#A32D2D;}
+/* Sticky metrics bar */
+.metrics-sticky{position:sticky;bottom:0;z-index:10;background:var(--glass);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-top:1px solid var(--bdr);padding:10px 16px;margin:0 -20px;}
+.mubadge.p{background:var(--badge-ok-bg);color:var(--badge-ok);}
+.mubadge.n{background:var(--badge-err-bg);color:var(--badge-err);}
+body.dark .sec{background:rgba(24,24,27,0.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(255,255,255,0.06);}
+body.dark .sec-hdr,.sec-foot{background:rgba(255,255,255,0.03);}
+body.dark .lyr-desc,.body.dark .lyr-top input,.body.dark .sec-name{background:var(--wht);}
+body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255,255,255,0.06);}
 
 /* Presets */
 .preset-strip{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px;}
@@ -1710,39 +1721,62 @@ tr:hover td{background:var(--tbl-alt);}
           </div>
         </div>
 
-        <div class="card">
-      <div class="card-hdr"><span class="card-title">Pavement Sections</span></div>
-          <div class="card-body" style="padding-bottom:8px;">
+        <!-- PRESETS -->
+        <div class="mc-card" style="margin-bottom:var(--card-gap);">
+          <div class="card-hdr"><span class="card-title">Presets</span></div>
+          <div class="card-body" style="padding:12px 16px;">
             <div class="preset-strip" id="presets"></div>
-            <div id="sections"></div>
-            <button class="btn btn-sec btn-sm" onclick="addSection()" style="margin-top:4px;">+ Add Section</button>
           </div>
         </div>
 
-        <div class="card">
+        <!-- PAVEMENT (Asphalt Sections + Concrete) -->
+        <div class="mc-card" style="margin-bottom:var(--card-gap);">
           <div class="card-hdr">
-            <span class="card-title">Concrete &amp; Curb &amp; Gutter</span>
-            <button class="btn btn-sec btn-sm" onclick="addConc()">+ Add Type</button>
+            <span class="card-title">Pavement</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-sec btn-sm" onclick="addConc()">+ Concrete</button>
+              <button class="btn btn-sec btn-sm" onclick="addSection()">+ Add Section</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="sections"></div>
+            <div id="conc-rows"></div>
+            <div id="conc-empty" class="empty-state" style="padding:16px;display:none;"><div class="empty-state-desc">Concrete items will appear here.</div></div>
+            <div id="pavement-empty" class="empty-state" style="padding:24px 16px;"><div class="empty-state-title">No pavement sections yet</div><div class="empty-state-desc">Click a preset above or + Add Section to get started.</div></div>
+          </div>
+        </div>
+
+        <!-- SITE WORK (Line items from library) -->
+        <div class="mc-card" style="margin-bottom:var(--card-gap);">
+          <div class="card-hdr">
+            <span class="card-title">Site Work</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('sitework')">From Library</button>
+              <button class="btn btn-sec btn-sm" onclick="addSiteWorkItem()">+ Add Item</button>
+            </div>
           </div>
           <div>
-            <div id="conc-rows"></div>
-            <div id="conc-empty" style="padding:13px 15px;color:var(--dgray);font-size:12px;text-align:center;">No concrete items. Click + Add Type.</div>
+            <div id="sitework-rows"></div>
+            <div id="sitework-empty" class="empty-state" style="padding:16px;"><div class="empty-state-desc">Grading, utilities, erosion control, clearing, and other site work items.</div></div>
           </div>
         </div>
 
-        <div class="card">
+        <!-- ADDITIONAL ITEMS (Custom / misc) -->
+        <div class="mc-card" style="margin-bottom:var(--card-gap);">
           <div class="card-hdr">
             <span class="card-title">Additional Items</span>
-            <button class="btn btn-sec btn-sm" onclick="openLibraryPicker()">From Library</button>
-            <button class="btn btn-sec btn-sm" onclick="addExtra()">+ Add Item</button>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-sec btn-sm" onclick="openLibraryPicker()">From Library</button>
+              <button class="btn btn-sec btn-sm" onclick="addExtra()">+ Add Item</button>
+            </div>
           </div>
           <div>
             <div id="extra-rows"></div>
-            <div id="extra-empty" style="padding:13px 15px;color:var(--dgray);font-size:12px;text-align:center;">Add pavement markings, traffic control, signage, etc.</div>
+            <div id="extra-empty" class="empty-state" style="padding:16px;"><div class="empty-state-desc">Custom items, markings, traffic control, or anything not covered above.</div></div>
           </div>
         </div>
 
-        <div class="metrics">
+        <div class="metrics metrics-sticky">
           <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">-</div></div>
           <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">-</div></div>
           <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">-</div></div>
@@ -1754,8 +1788,8 @@ tr:hover td{background:var(--tbl-alt);}
           <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">-</div></div>
         </div>
 
-      <div class="card" id="bk-asphalt-card">
-        <div class="card-hdr"><span class="card-title">Asphalt Breakdown</span><button class="btn btn-sec btn-sm" onclick="exportPricingBreakdown()">Export PDF</button></div>
+      <div class="mc-card" id="bk-asphalt-card" style="margin-bottom:var(--card-gap);">
+        <div class="card-hdr"><span class="card-title">Pavement Breakdown</span><button class="btn btn-sec btn-sm" onclick="exportPricingBreakdown()">Export PDF</button></div>
           <div class="tbl-wrap">
             <table>
               <thead><tr><th>Section</th><th>Layer</th><th>SY</th><th>Depth</th><th>Tons</th><th>Days</th><th>Mat Cost</th><th>Crew</th><th>Trucking</th><th>Total</th><th>MU%</th></tr></thead>
@@ -1763,7 +1797,7 @@ tr:hover td{background:var(--tbl-alt);}
             </table>
           </div>
         </div>
-      <div class="card" id="bk-concrete-card" style="display:none;">
+      <div class="mc-card" id="bk-concrete-card" style="display:none;margin-bottom:var(--card-gap);">
         <div class="card-hdr"><span class="card-title">Concrete Breakdown</span></div>
           <div class="tbl-wrap">
             <table>
@@ -1772,7 +1806,16 @@ tr:hover td{background:var(--tbl-alt);}
             </table>
           </div>
         </div>
-      <div class="card" id="bk-extra-card" style="display:none;">
+      <div class="mc-card" id="bk-sitework-card" style="display:none;margin-bottom:var(--card-gap);">
+        <div class="card-hdr"><span class="card-title">Site Work Breakdown</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Mat Cost</th><th>Labor</th><th>Bid Price</th><th>MU%</th></tr></thead>
+              <tbody id="breakdown-sitework"></tbody>
+            </table>
+          </div>
+        </div>
+      <div class="mc-card" id="bk-extra-card" style="display:none;margin-bottom:var(--card-gap);">
         <div class="card-hdr"><span class="card-title">Additional Items Breakdown</span></div>
           <div class="tbl-wrap">
             <table>
@@ -3683,7 +3726,10 @@ function _snapshotLibrary(){
     window._libSnapshot[item.id]={name:item.name,rate:item.rate,desc:item.desc,unit:item.unit};
   });
 }
-function openLibraryPicker(){
+function openLibraryPicker(target){
+  // target: 'sitework' filters to sitework categories, undefined = all
+  var _libPickerTarget=target||'extra';
+  var SITEWORK_CATS=['Grading / Earthwork','Storm Drain','Sanitary Sewer','Water','Erosion Control','Land Clearing','Landscaping'];
   if(!BID_LIBRARY.length){toast("Library empty — go to Settings > Item Library and click Load Defaults","err");return;}
   var ex=document.getElementById("lib-picker-modal");if(ex)ex.remove();
   var modal=document.createElement("div");modal.id="lib-picker-modal";
@@ -3762,8 +3808,10 @@ function openLibraryPicker(){
         var ins=document.createElement("button");ins.className="btn btn-red btn-sm";ins.textContent="Insert";
         ins.addEventListener("click",function(){
           var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
-          extraItems.push({id:eid++,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:tradeBadge,material:item.material||'',mat_cost:item.mat_cost||0,labor_cost:0});
-          renderExtra();recalc();toast("Item added","ok");
+          var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:tradeBadge,material:item.material||'',mat_cost:item.mat_cost||0,labor_cost:0};
+          if(_libPickerTarget==='sitework'){newItem.id=swid++;siteWorkItems.push(newItem);renderSiteWork();}
+          else{newItem.id=eid++;extraItems.push(newItem);renderExtra();}
+          recalc();toast("Item added","ok");
         });
         row.appendChild(info);row.appendChild(ins);listWrap.appendChild(row);
       });
@@ -3988,9 +4036,11 @@ function boot(){
   document.getElementById('mob-cost').addEventListener('change',function(){renderJobCost();});
   renderPresets();
   if(!sections.length){
-    addSection('Light Duty Asphalt Pavement',[{type:'ABC',depth:6,rate:50},{type:'S9.5C',depth:2,rate:150}]);
-    addSection('Heavy Duty Asphalt Pavement',[{type:'ABC',depth:8,rate:50},{type:'I19.0C',depth:2.5,rate:150},{type:'S9.5C',depth:1.5,rate:150}]);
-  } else {renderAll();renderConc();renderExtra();}
+    // Start blank — user clicks preset to add sections
+    var secEl=document.getElementById('sections');
+    if(secEl)secEl.innerHTML='<div class="empty-state" style="padding:24px 16px;"><div class="empty-state-title">No sections yet</div><div class="empty-state-desc">Click a preset above or + Add Section to get started.</div></div>';
+  } else {renderAll();}
+  renderConc();renderExtra();
   loadClientsForAutocomplete();
   loadAllUsers();
   startNotifPolling();
@@ -7795,6 +7845,65 @@ function renderConc(){
 
 // -- Extra items ---------------------------------------------------------------
 function addExtra(){extraItems.push({id:eid++,name:'',desc:'',qty:1,unit:'LS',price:0,subtotal:0,mat_cost:0,labor_cost:0});renderExtra();}
+
+// Site Work items (same structure as extra items but separate array)
+var siteWorkItems=[],swid=0;
+function addSiteWorkItem(){siteWorkItems.push({id:swid++,name:'',desc:'',qty:1,unit:'LS',price:0,subtotal:0,mat_cost:0,labor_cost:0,badge:''});renderSiteWork();}
+function renderSiteWork(){
+  var c=document.getElementById('sitework-rows');if(!c)return;
+  var empty=document.getElementById('sitework-empty');
+  c.innerHTML='';
+  if(!siteWorkItems.length){if(empty)empty.style.display='';return;}
+  if(empty)empty.style.display='none';
+  siteWorkItems.forEach(function(item,idx){
+    var row=document.createElement('div');row.className='lyr-row';
+    row.style.cssText='padding:14px 16px;';
+    // Row 1: Name + badge + delete
+    var top=document.createElement('div');top.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:6px;';
+    if(item.badge){var bg=document.createElement('span');bg.className='badge '+item.badge;bg.style.cssText='font-size:10px;flex-shrink:0;';bg.textContent=BADGE_DEFS[item.badge]?BADGE_DEFS[item.badge].label:'';top.appendChild(bg);}
+    var nameIn=document.createElement('input');nameIn.type='text';nameIn.value=item.name;nameIn.placeholder='Item name';
+    nameIn.style.cssText='flex:1;font-size:13px;font-weight:600;padding:6px 10px;border:1px solid var(--bdr);border-radius:6px;background:var(--wht);';
+    (function(i){nameIn.addEventListener('change',function(){siteWorkItems[i].name=this.value;recalc();});})(idx);
+    top.appendChild(nameIn);
+    var del=document.createElement('button');del.className='btn-ico';del.style.color='var(--dgray)';del.innerHTML='&times;';
+    (function(i){del.addEventListener('click',function(){siteWorkItems.splice(i,1);renderSiteWork();recalc();});})(idx);
+    top.appendChild(del);
+    row.appendChild(top);
+    // Row 2: Description
+    var descIn=document.createElement('input');descIn.type='text';descIn.value=item.desc||'';descIn.placeholder='Description (appears on proposal)';
+    descIn.className='lyr-desc';
+    (function(i){descIn.addEventListener('change',function(){siteWorkItems[i].desc=this.value;});})(idx);
+    row.appendChild(descIn);
+    // Row 3: Qty | Unit | Mat $ | Labor $ | Bid $/unit | Subtotal
+    var fields=document.createElement('div');fields.className='lyr-fields';
+    // Qty
+    var qF=document.createElement('div');qF.className='lyr-field';
+    qF.innerHTML='<label>Qty</label>';
+    var qIn=document.createElement('input');qIn.type='number';qIn.min=0;qIn.step=1;qIn.value=item.qty;
+    (function(i){qIn.addEventListener('change',function(){siteWorkItems[i].qty=parseFloat(this.value)||0;siteWorkItems[i].subtotal=siteWorkItems[i].qty*siteWorkItems[i].price;recalc();});})(idx);
+    qF.appendChild(qIn);fields.appendChild(qF);
+    // Unit
+    var uF=document.createElement('div');uF.className='lyr-field';
+    uF.innerHTML='<label>Unit</label>';
+    var uSel=document.createElement('select');
+    ['LS','EA','LF','SY','SF','TON','CY','HR','DAY','WK','MO','VF','AC','LOAD'].forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;if(item.unit===u)o.selected=true;uSel.appendChild(o);});
+    (function(i){uSel.addEventListener('change',function(){siteWorkItems[i].unit=this.value;});})(idx);
+    uF.appendChild(uSel);fields.appendChild(uF);
+    // Bid $/unit
+    var pF=document.createElement('div');pF.className='lyr-field';
+    pF.innerHTML='<label>Bid $/Unit</label>';
+    var pIn=document.createElement('input');pIn.type='number';pIn.min=0;pIn.step=0.01;pIn.value=item.price;
+    (function(i){pIn.addEventListener('change',function(){siteWorkItems[i].price=parseFloat(this.value)||0;siteWorkItems[i].subtotal=siteWorkItems[i].qty*siteWorkItems[i].price;recalc();});})(idx);
+    pF.appendChild(pIn);fields.appendChild(pF);
+    // Subtotal display
+    var sub=document.createElement('span');sub.className='lres';sub.style.cssText='font-size:13px;font-weight:700;margin-left:auto;';
+    sub.setAttribute('data-sw',item.id);
+    sub.textContent=item.subtotal>0?'$'+Math.round(item.subtotal).toLocaleString():'';
+    fields.appendChild(sub);
+    row.appendChild(fields);
+    c.appendChild(row);
+  });
+}
 function remExtra(id){if(!confirm('Remove this item?'))return;extraItems=extraItems.filter(function(x){return x.id!==id;});renderExtra();recalc();}
 function updExtraName(id,v){var i=extraItems.find(function(x){return x.id===id;});if(i)i.name=v;}
 function updExtraDesc(id,v){var i=extraItems.find(function(x){return x.id===id;});if(i)i.desc=v;}
@@ -7852,7 +7961,7 @@ var _undoStack=[];var _redoStack=[];var _undoTimer=null;
 function pushUndo(){
   clearTimeout(_undoTimer);
   _undoTimer=setTimeout(function(){
-    var state=JSON.stringify({sections:sections,concItems:concItems,extraItems:extraItems});
+    var state=JSON.stringify({sections:sections,concItems:concItems,extraItems:extraItems,siteWorkItems:siteWorkItems});
     if(_undoStack.length&&_undoStack[_undoStack.length-1]===state)return;
     _undoStack.push(state);if(_undoStack.length>30)_undoStack.shift();
     _redoStack=[];
@@ -7951,9 +8060,24 @@ function recalc(){
       +'<td class="'+(mpE>=0?'gp':'gn')+'">'+(costE>0?mpE.toFixed(1)+'%':'-')+'</td>';
     bkExtra.appendChild(tr);
   });
+  // Site work items
+  var bkSW=document.getElementById('breakdown-sitework');if(bkSW)bkSW.innerHTML='';
+  var hasSW=false;
+  siteWorkItems.forEach(function(item){
+    if(!item.name||item.subtotal<=0)return;
+    hasSW=true;gB+=item.subtotal;
+    var costSW=(item.mat_cost||0)+(item.labor_cost||0);
+    var mpSW=costSW>0?((item.subtotal-costSW)/costSW*100):0;
+    if(bkSW){var tr=document.createElement('tr');tr.innerHTML='<td>'+esc(item.name)+'</td><td>'+item.qty+'</td><td>'+item.unit+'</td><td>'+(item.mat_cost?'$'+fi(item.mat_cost):'-')+'</td><td>'+(item.labor_cost?'$'+fi(item.labor_cost):'-')+'</td><td>$'+fi(item.subtotal)+'</td><td class="'+(mpSW>=0?'gp':'gn')+'">'+(costSW>0?mpSW.toFixed(1)+'%':'-')+'</td>';bkSW.appendChild(tr);}
+    // Update sitework subtotal display
+    var subEl=document.querySelector('[data-sw="'+item.id+'"]');if(subEl)subEl.textContent='$'+Math.round(item.subtotal).toLocaleString();
+  });
   // Show/hide breakdown cards
   var concCard=document.getElementById('bk-concrete-card');if(concCard)concCard.style.display=hasConc?'':'none';
+  var swCard=document.getElementById('bk-sitework-card');if(swCard)swCard.style.display=hasSW?'':'none';
   var extraCard=document.getElementById('bk-extra-card');if(extraCard)extraCard.style.display=hasExtra?'':'none';
+  // Update pavement empty state
+  var pavEmpty=document.getElementById('pavement-empty');if(pavEmpty)pavEmpty.style.display=(sections.length||concItems.length)?'none':'';
   var total=gB+mobv,gp=gB-gM-gCrew-gTruck;
   document.getElementById('m-sf').textContent=gSF>0?gSF.toLocaleString():'-';
   renderJobCost();
@@ -8401,6 +8525,18 @@ function buildRawLineItems(){
       src:'concrete'
     });
   });
+  siteWorkItems.forEach(function(i){
+    if(!i.name||!i.subtotal)return;
+    var swBadgeCls=i.badge||'b-grading';
+    var swBadgeLabel=i.badge&&BADGE_DEFS[i.badge]?BADGE_DEFS[i.badge].label:'Site Work';
+    items.push({
+      key:'sw-'+i.id,badge:swBadgeLabel,badgeCls:swBadgeCls,
+      name:i.name,description:i.desc||'',
+      qty:i.qty,unit:i.unit,
+      price:i.price,subtotal:i.subtotal,
+      src:'sitework'
+    });
+  });
   extraItems.forEach(function(i){
     if(!i.name||!i.subtotal)return;
     var eBadgeCls=i.badge||'b-misc';
@@ -8654,7 +8790,7 @@ async function saveQuote(){
     cs:document.getElementById('proj-cs').value,notes:document.getElementById('proj-notes').value,
     waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,mob_cost:document.getElementById('mob-cost').value,contingency:document.getElementById('contingency').value,
     selectedClient:selectedClient,liOverrides:liOverrides,
-    sections:sections,concItems:concItems,extraItems:extraItems};
+    sections:sections,concItems:concItems,extraItems:extraItems,siteWorkItems:siteWorkItems};
   var p=buildPayload();
   snap.document_number=p.document_number||'';
   snap.project_number=p.project_number||'';
@@ -8731,6 +8867,7 @@ function loadQuote(id){
   lid=sections.reduce(function(m,s){return s.layers.reduce(function(m2,l){return Math.max(m2,l.id+1);},m);},0);
   concItems=d.concItems||[];cid=concItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
   extraItems=d.extraItems||[];eid=extraItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
+  siteWorkItems=d.siteWorkItems||[];swid=siteWorkItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
   lastSavedQuoteId=q.id;
   evaActuals=d.eva_actuals||{};
   // Set project link from parent project if not already set
@@ -8740,7 +8877,7 @@ function loadQuote(id){
   }
   showPanel('build',document.querySelector('.nav-item'));
   updateProposalDocBadge();
-  renderAll();renderConc();renderExtra();
+  renderAll();renderConc();renderExtra();renderSiteWork();
   toast('Quote loaded');
 }
 async function delSaved(id){
