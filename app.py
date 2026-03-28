@@ -1699,7 +1699,7 @@ def public_proposal_approve(token):
             return jsonify({'ok': False, 'error': 'Your name is required to approve'}), 400
         # Find the proposal
         r = http.get(
-            sb_url('proposals', f'?share_token=eq.{token}&select=id,snap,stage_id'),
+            sb_url('proposals', f'?share_token=eq.{token}&select=id,snap,stage_id,created_by,name'),
             headers=sb_admin_headers(), timeout=10
         )
         items = r.json() if r.status_code == 200 else []
@@ -1707,15 +1707,26 @@ def public_proposal_approve(token):
             return jsonify({'ok': False, 'error': 'Proposal not found'}), 404
         prop = items[0]
         pid = prop['id']
+        owner = prop.get('created_by', '')
+        proj_name = prop.get('name', '')
         snap = json.loads(prop['snap']) if isinstance(prop.get('snap'), str) else (prop.get('snap') or {})
         # Record approval in snap
         snap['approved_by'] = approver_name
         snap['approved_at'] = datetime.utcnow().isoformat()
         if comment:
             snap['approval_comment'] = comment
-        # Find "Approved" stage
+        # Add activity log entry
+        if 'activity_log' not in snap:
+            snap['activity_log'] = []
+        snap['activity_log'].append({
+            'type': 'approval',
+            'text': f'Client "{approver_name}" approved the proposal' + (f': "{comment}"' if comment else ''),
+            'date': datetime.utcnow().isoformat(),
+            'user': 'client'
+        })
+        # Find "Won" stage
         sr = http.get(
-            sb_url('pipeline_stages', '?name=eq.Approved&select=id'),
+            sb_url('pipeline_stages', '?name=eq.Won&select=id'),
             headers=sb_headers(), timeout=5
         )
         stage_update = {}
@@ -1731,6 +1742,22 @@ def public_proposal_approve(token):
         )
         if r2.status_code >= 300:
             return jsonify({'ok': False, 'error': 'Failed to save approval'}), 400
+        # Send notification to project owner
+        if owner:
+            notif_title = f'Proposal approved by {approver_name}'
+            notif_body = f'{proj_name or "A proposal"} was approved by the client.'
+            if comment:
+                notif_body += f' Comment: "{comment}"'
+            notif_row = {
+                'recipient': owner,
+                'type': 'success',
+                'title': notif_title,
+                'body': notif_body,
+                'project_id': pid,
+                'project_name': proj_name,
+                'created_by': 'system'
+            }
+            http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=notif_row, timeout=5)
         return jsonify({'ok': True, 'message': 'Proposal approved'})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500

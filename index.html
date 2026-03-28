@@ -8968,6 +8968,7 @@ async function saveQuote(){
     sections:sections,concItems:concItems,extraItems:extraItems,siteWorkItems:siteWorkItems};
   if(document.getElementById('options-toggle').checked&&pricingOptions.length)snap.pricing_options=pricingOptions;
   var p=buildPayload();
+  snap.line_items=p.line_items;snap.total=p.total;
   snap.document_number=p.document_number||'';
   snap.project_number=p.project_number||'';
   var jcData=calcJobCost();snap.jc_labor_cost=jcData.laborCost;snap.jc_overhead_pct=jcData.ovhPct;snap.jc_total_cost=jcData.totalCost;snap.jc_margin_pct=jcData.marginPct;

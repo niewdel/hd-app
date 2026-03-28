@@ -83,8 +83,8 @@
     var client = snap.client || prop.client || '';
     var date = snap.date || prop.created_at || '';
     if(date && date.length > 10) date = new Date(date).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-    var address = snap.address || '';
-    if(snap.city_state) address = address ? (address + ', ' + snap.city_state) : snap.city_state;
+    var address = snap.address || snap.addr || '';
+    if(snap.city_state || snap.cs) address = address ? (address + ', ' + (snap.city_state||snap.cs)) : (snap.city_state||snap.cs);
 
     var html = '';
 
@@ -96,64 +96,28 @@
     if(snap.project_number) html += '<div><div class="meta-label">Project #</div><div class="meta-value">' + esc(snap.project_number) + '</div></div>';
     html += '</div></div></div>';
 
-    // Line items
-    var sections = snap.sections || [];
-    var concItems = snap.concItems || [];
-    var extraItems = snap.extraItems || [];
-    var grandTotal = 0;
+    // Line items — use pre-built line_items array if available (same format as PDF)
+    var lineItems = snap.line_items || [];
+    var total = snap.total || prop.total || 0;
 
-    if(sections.length || concItems.length || extraItems.length){
-      html += '<div class="card"><div class="card-hdr">Bid Items</div>';
-
-      // Pavement sections
-      sections.forEach(function(sec){
-        html += '<div class="section-title">' + esc(sec.name || 'Pavement Section') + '</div>';
-        html += '<table><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th class="text-right">Rate</th><th class="text-right">Amount</th></tr></thead><tbody>';
-        (sec.layers || []).forEach(function(lyr){
-          var amt = (lyr.qty||0) * (lyr.rate||lyr.bid_rate||0);
-          grandTotal += amt;
-          html += '<tr><td>' + esc(lyr.material||lyr.name||'') + (lyr.desc?'<div class="desc-cell">'+esc(lyr.desc)+'</div>':'') + '</td>';
-          html += '<td>' + (lyr.qty||'') + '</td><td>' + esc(lyr.unit||'TON') + '</td>';
-          html += '<td class="text-right">' + fmt(lyr.rate||lyr.bid_rate||0) + '</td>';
-          html += '<td class="text-right">' + fmt(amt) + '</td></tr>';
-        });
-        html += '</tbody></table>';
+    if(lineItems.length){
+      html += '<div class="card"><div class="card-hdr">Scope of Work</div>';
+      html += '<table><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th class="text-right">Rate</th><th class="text-right">Amount</th></tr></thead><tbody>';
+      lineItems.forEach(function(item){
+        var amt = item.subtotal || ((item.qty||0) * (item.price||0));
+        html += '<tr><td>' + esc(item.name||'');
+        if(item.description) html += '<div class="desc-cell">' + esc(item.description) + '</div>';
+        html += '</td>';
+        html += '<td>' + (item.qty||'') + '</td><td>' + esc(item.unit||'') + '</td>';
+        html += '<td class="text-right">' + fmt(item.price||0) + '</td>';
+        html += '<td class="text-right">' + fmt(amt) + '</td></tr>';
       });
-
-      // Concrete items
-      if(concItems.length){
-        html += '<div class="section-title">Concrete</div>';
-        html += '<table><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th class="text-right">Rate</th><th class="text-right">Amount</th></tr></thead><tbody>';
-        concItems.forEach(function(c){
-          var amt = (c.qty||0) * (c.price||c.rate||0);
-          grandTotal += amt;
-          html += '<tr><td>' + esc(c.name||'') + (c.desc?'<div class="desc-cell">'+esc(c.desc)+'</div>':'') + '</td>';
-          html += '<td>' + (c.qty||'') + '</td><td>' + esc(c.unit||'LF') + '</td>';
-          html += '<td class="text-right">' + fmt(c.price||c.rate||0) + '</td>';
-          html += '<td class="text-right">' + fmt(amt) + '</td></tr>';
-        });
-        html += '</tbody></table>';
-      }
-
-      // Extra items
-      if(extraItems.length){
-        html += '<div class="section-title">Additional Items</div>';
-        html += '<table><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th class="text-right">Rate</th><th class="text-right">Amount</th></tr></thead><tbody>';
-        extraItems.forEach(function(e){
-          var amt = e.subtotal || ((e.qty||0) * (e.price||0));
-          grandTotal += amt;
-          html += '<tr><td>' + esc(e.name||'') + (e.desc?'<div class="desc-cell">'+esc(e.desc)+'</div>':'') + '</td>';
-          html += '<td>' + (e.qty||'') + '</td><td>' + esc(e.unit||'EA') + '</td>';
-          html += '<td class="text-right">' + fmt(e.price||0) + '</td>';
-          html += '<td class="text-right">' + fmt(amt) + '</td></tr>';
-        });
-        html += '</tbody></table>';
-      }
-
-      // Use snap total if available, otherwise calculated
-      var total = snap.total || prop.total || grandTotal;
+      html += '</tbody></table>';
       html += '<table><tbody><tr class="total-row"><td colspan="4" class="text-right">Total</td><td class="text-right">' + fmt(total) + '</td></tr></tbody></table>';
       html += '</div>';
+    } else if(total){
+      // Fallback: no line items but has a total
+      html += '<div class="card"><div class="card-hdr">Proposal Total</div><div class="card-body" style="text-align:center;font-size:24px;font-weight:700;">' + fmt(total) + '</div></div>';
     }
 
     // Notes
