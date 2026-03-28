@@ -3634,16 +3634,14 @@ function renderLibraryList(){
   }});
   c.appendChild(libBulkBar);
   var hdr=document.createElement("div");
-  hdr.style.cssText="display:grid;grid-template-columns:24px 130px 1fr 1fr 70px 90px 28px;gap:6px;padding:0 0 6px;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;border-bottom:2px solid var(--bdr);margin-bottom:4px;";
-  hdr.innerHTML="<span></span><span>Category</span><span>Name</span><span>Description</span><span>Unit</span><span>$/Unit</span><span></span>";
+  hdr.style.cssText="display:grid;grid-template-columns:180px 1.2fr 1.5fr 60px 80px 28px;gap:8px;padding:6px 0;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--bdr);margin-bottom:4px;";
+  hdr.innerHTML="<span>Category</span><span>Name</span><span>Description</span><span>Unit</span><span>$/Unit</span><span></span>";
   c.appendChild(hdr);
   filtered.forEach(function(item){
     var row=document.createElement("div");
-    row.style.cssText="display:grid;grid-template-columns:24px 130px 1fr 1fr 70px 90px 28px;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdr);";
-    // Bulk checkbox
-    row.appendChild(_makeBulkCheckbox('library-list',item.id));
+    row.style.cssText="display:grid;grid-template-columns:180px 1.2fr 1.5fr 60px 80px 28px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);";
     // Category dropdown
-    var cs=document.createElement("select");cs.style.cssText="font-size:11px;padding:2px;";
+    var cs=document.createElement("select");cs.style.cssText="font-size:12px;padding:4px 6px;width:100%;";
     LIB_CATEGORIES.forEach(function(cat){
       var o=document.createElement("option");o.value=cat;o.textContent=cat;if(cat===item.category)o.selected=true;cs.appendChild(o);
     });
