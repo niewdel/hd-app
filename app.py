@@ -526,7 +526,7 @@ def get_users():
 def create_user():
     data = request.get_json() or {}
     username = str(data.get('username','')).strip().lower()
-    pin = str(data.get('pin','')).strip()
+    pin = str(data.get('password', data.get('pin',''))).strip()
     full_name = str(data.get('full_name','')).strip()
     email = str(data.get('email','')).strip()
     phone = str(data.get('phone','')).strip()
