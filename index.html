@@ -1508,7 +1508,7 @@ tr:hover td{background:var(--tbl-alt);}
             <div class="ops-stack">
               <div id="dash-weather-strip" style="border:1px solid var(--bdr);border-radius:var(--rad-l);overflow:hidden;background:var(--bg-el);">
                 <div class="wx-current-bar" style="border-radius:var(--rad-l) var(--rad-l) 0 0;" id="dash-wx-current">
-                  <span style="color:var(--dgray);font-size:12px;">Loading weather...</span>
+                  <div style="display:flex;align-items:center;gap:12px;padding:4px 0;"><div class="skeleton" style="width:24px;height:24px;border-radius:50%;"></div><div class="skeleton skeleton-text" style="width:60px;"></div><div class="skeleton skeleton-text" style="width:120px;"></div><div class="skeleton skeleton-text" style="width:80px;"></div></div>
                 </div>
               </div>
 
@@ -1942,7 +1942,7 @@ tr:hover td{background:var(--tbl-alt);}
                 </div>
               </div>
               <div id="proj-list-view" style="display:none;">
-                <div id="projects-list"><p style="color:var(--dgray);font-size:13px;padding:20px;">Loading projects...</p></div>
+                <div id="projects-list"></div>
               </div>
               <div id="proj-map-view" style="display:none;padding:16px;">
                 <div id="proj-map" style="width:100%;height:500px;border-radius:14px;border:1px solid var(--bdr);overflow:hidden;"></div>
@@ -2677,7 +2677,7 @@ tr:hover td{background:var(--tbl-alt);}
   <div id="admin-pane-users">
     <div class="card">
       <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">User Management</span><button class="btn btn-red btn-sm" onclick="openAddUserModal()">+ Add User</button></div>
-      <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
+      <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="users-tbody"><tr><td colspan="6" style="padding:0;"><div class="skeleton skeleton-block" style="height:40px;margin:8px 12px;"></div><div class="skeleton skeleton-block" style="height:40px;margin:8px 12px;"></div><div class="skeleton skeleton-block" style="height:40px;margin:8px 12px;"></div></td></tr></tbody></table></div></div>
     </div>
   </div>
   <!-- Activity Log tab -->
@@ -2693,7 +2693,7 @@ tr:hover td{background:var(--tbl-alt);}
         <select id="log-user-filter" onchange="loadLogs()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:12px;"><option value="">All Users</option></select>
         <button class="btn btn-sec btn-sm" onclick="loadLogs()">Refresh</button>
       </div>
-      <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Result</th><th>IP Address</th></tr></thead><tbody id="logs-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--dgray);">Loading...</td></tr></tbody></table></div></div>
+      <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Result</th><th>IP Address</th></tr></thead><tbody id="logs-tbody"><tr><td colspan="5" style="padding:0;"><div class="skeleton skeleton-block" style="height:36px;margin:6px 12px;"></div><div class="skeleton skeleton-block" style="height:36px;margin:6px 12px;"></div><div class="skeleton skeleton-block" style="height:36px;margin:6px 12px;"></div><div class="skeleton skeleton-block" style="height:36px;margin:6px 12px;"></div></td></tr></tbody></table></div></div>
     </div>
   </div>
   <!-- Archived tab -->
@@ -4086,6 +4086,43 @@ function _updateBulkCount(){}
 function _makeBulkCheckbox(){var d=document.createElement('span');d.style.display='none';return d;}
 function fmt12(t){if(!t)return '';var p=t.split(':'),h=parseInt(p[0],10),m=p[1],ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+m+' '+ap;}
 function fmtD(d){if(!d)return '';if(d.indexOf('/')>-1)return d;var p=d.split('-');if(p.length===3)return p[1]+'/'+p[2]+'/'+p[0];return d;}
+// Skeleton loading helpers
+function _skeletonRows(n,cols){
+  var h='';
+  for(var i=0;i<n;i++){
+    h+='<div style="display:flex;gap:12px;padding:10px 14px;border-bottom:1px solid var(--bdr);">';
+    for(var j=0;j<cols;j++){
+      var w=j===0?'40%':j===cols-1?'15%':'25%';
+      h+='<div class="skeleton skeleton-text" style="width:'+w+';"></div>';
+    }
+    h+='</div>';
+  }
+  return h;
+}
+function _skeletonTable(rows){
+  var h='<div style="padding:8px 14px;border-bottom:1px solid var(--bdr);"><div class="skeleton skeleton-text" style="width:100%;"></div></div>';
+  for(var i=0;i<(rows||4);i++){
+    h+='<div style="display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bdr);">';
+    h+='<div class="skeleton skeleton-text" style="width:30%;"></div>';
+    h+='<div class="skeleton skeleton-text" style="width:20%;"></div>';
+    h+='<div class="skeleton skeleton-text" style="width:25%;"></div>';
+    h+='<div class="skeleton skeleton-text" style="width:15%;"></div>';
+    h+='</div>';
+  }
+  return h;
+}
+function _skeletonCards(n){
+  var h='';
+  for(var i=0;i<(n||3);i++){
+    h+='<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--bdr);">';
+    h+='<div class="skeleton" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;"></div>';
+    h+='<div style="flex:1;"><div class="skeleton skeleton-text" style="width:60%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>';
+    h+='<div class="skeleton skeleton-text" style="width:50px;"></div>';
+    h+='</div>';
+  }
+  return h;
+}
+
 function toast(msg,type){
   var t=document.getElementById('toast');
   t.textContent=msg;t.className='toast '+(type==='ok'?'ok':type==='err'?'err':'');
@@ -5096,7 +5133,7 @@ function copySignatureLogo(){
 async function renderProjectsList(){
   var c=document.getElementById('projects-list');
   if(!c)return;
-  c.innerHTML='<p style="color:var(--dgray);font-size:13px;">Loading projects...</p>';
+  c.innerHTML=_skeletonCards(6);
   try{
     var r=await fetch('/pipeline/list');
     var d=await r.json();
@@ -8873,7 +8910,7 @@ async function generateJobCostFromSaved(qid){
 
 async function renderSaved(){
   var c=document.getElementById('saved-list');
-  c.innerHTML='<p style="color:var(--dgray);font-size:13px;">Loading...</p>';
+  c.innerHTML=_skeletonRows(4,3);
   try{
     var r=await fetch('/quotes/list');
     var d=await r.json();
@@ -9246,7 +9283,7 @@ function populateStageFilter(){
 async function renderPipeline() {
   var board = document.getElementById('pipeline-board');
   if (!board) return;
-  board.innerHTML = '<div style="color:var(--dgray);font-size:13px;padding:20px;">Loading...</div>';
+  board.innerHTML = _skeletonCards(5);
   try {
     var results = await Promise.all([fetch('/pipeline/stages'),fetch('/pipeline/list')]);
     var ds = await results[0].json();
@@ -9594,7 +9631,7 @@ async function loadClientsForAutocomplete(){
 async function renderClients() {
   var container = document.getElementById('contacts-clients-list') || document.getElementById('clients-list');
   if (!container) return;
-  container.innerHTML = '<p style="color:var(--dgray);font-size:13px;">Loading...</p>';
+  container.innerHTML = _skeletonCards(4);
   try {
     var r = await fetch('/clients/list');
     var d = await r.json();
@@ -10138,7 +10175,7 @@ async function changeOwnPassword(){
 
 async function loadLogs(){
   var tbody=document.getElementById('logs-tbody');if(!tbody)return;
-  tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dgray);">Loading...</td></tr>';
+  tbody.innerHTML='<tr><td colspan="5" style="padding:0;"><div class="skeleton skeleton-block" style="height:36px;margin:6px 12px;"></div><div class="skeleton skeleton-block" style="height:36px;margin:6px 12px;"></div><div class="skeleton skeleton-block" style="height:36px;margin:6px 12px;"></div></td></tr>';
   try{
     var uf=(document.getElementById('log-user-filter')||{}).value||'';
     var tf=(document.getElementById('log-type-filter')||{}).value||'';
@@ -13341,6 +13378,8 @@ function submitBug(){
 
 var _bugReportsError='';
 function loadBugList(){
+  var tb=document.getElementById('bugs-tbody');if(tb)tb.innerHTML='<tr><td colspan="8" style="padding:0;">'+_skeletonRows(3,4)+'</td></tr>';
+  var stb=document.getElementById('settings-bugs-tbody');if(stb)stb.innerHTML='<tr><td colspan="8" style="padding:0;">'+_skeletonRows(3,4)+'</td></tr>';
   fetch('/bugs/list').then(function(r){
     if(!r.ok)console.warn('[bugs/list] HTTP '+r.status);
     return r.json();
