@@ -196,13 +196,20 @@ def build_table(title, headers, rows, styles, col_widths=None):
         cw_each = CW / n_cols
         col_widths = [cw_each] * n_cols
 
+    # Detect right-aligned columns from data (first row)
+    right_cols = set()
+    if rows:
+        for j, cell in enumerate(rows[0]):
+            if is_right_aligned(strip_html(cell)):
+                right_cols.add(j)
+
     # Header row
     table_rows = []
     if headers:
         hdr_cells = []
-        for h in headers:
+        for j, h in enumerate(headers):
             txt = strip_html(h).replace('&', '&amp;')
-            st = styles['th_right'] if is_right_aligned(strip_html(h)) else styles['th']
+            st = styles['th_right'] if j in right_cols else styles['th']
             hdr_cells.append(Paragraph(txt, st))
         while len(hdr_cells) < n_cols:
             hdr_cells.append('')
@@ -215,7 +222,7 @@ def build_table(title, headers, rows, styles, col_widths=None):
             txt = strip_html(cell).replace('&', '&amp;')
             if j == 0:
                 st = styles['td_bold']
-            elif is_right_aligned(strip_html(cell)):
+            elif j in right_cols or is_right_aligned(strip_html(cell)):
                 st = styles['td_right_bold'] if txt.startswith('$') else styles['td_right']
             else:
                 st = styles['td']

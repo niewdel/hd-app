@@ -198,7 +198,8 @@ def auth_update_profile():
         return jsonify({'ok': False, 'error': 'Full name is required.'}), 400
     try:
         avatar_data = sanitize_avatar_data(data.get('avatar_data', session.get('avatar_data', '')))
-        update = {'full_name': full_name, 'email': email, 'phone': phone, 'avatar_data': avatar_data}
+        update = {'full_name': full_name, 'email': email, 'phone': phone}
+        # avatar_data stored in session only (column doesn't exist in hd_users)
         r = http.patch(
             sb_url('hd_users', f'?username=eq.{username}'),
             headers={**sb_headers(), 'Prefer': 'return=representation'},
@@ -211,6 +212,7 @@ def auth_update_profile():
         user = rows[0] if isinstance(rows, list) and rows else update
         user['username'] = user.get('username', username)
         user['role'] = user.get('role', session.get('role', 'user'))
+        user['avatar_data'] = avatar_data
         apply_user_session(user)
         return jsonify({'ok': True, 'profile': {
             'username': session.get('username', ''),
