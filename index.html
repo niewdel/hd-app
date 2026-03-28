@@ -1246,16 +1246,15 @@ tr:hover td{background:var(--tbl-alt);}
   #proj-stats .mc-kpi-val { font-size: 20px !important; }
   #wo-photos-grid { grid-template-columns: repeat(2, 1fr) !important; }
 
-  /* --- Reports: stack sidebar above content --- */
-  #panel-reports [style*="display:flex;gap:14px"] {
-    flex-direction: column !important;
-  }
-  #rpt-sidebar { width: 100% !important; display: flex !important; flex-wrap: nowrap; gap: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* --- Reports: full stack on mobile --- */
+  #panel-reports .content > div { display: block !important; }
+  #rpt-sidebar { width: 100% !important; display: flex !important; flex-shrink: 1 !important; flex-wrap: nowrap; gap: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 12px; }
   #rpt-sidebar .rpt-nav-item { flex: 0 0 auto; text-align: center; padding: 10px 12px; font-size: 12px; border-bottom: 2px solid transparent; border-left: none; white-space: nowrap; }
   #rpt-sidebar .rpt-nav-active { border-bottom-color: var(--red); border-left: none; }
   #rpt-output { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  #rpt-output .rpt-stat { min-width: 100px; }
-  #rpt-output [style*="grid-template-columns:repeat(auto-fit"] { grid-template-columns: repeat(2, 1fr) !important; }
+  #rpt-output .mc-card { overflow-x: auto; }
+  #rpt-output .rpt-tbl { min-width: 500px; }
+  #panel-reports { overflow-x: hidden; }
 
   /* --- Touch targets --- */
   .mob-menu-btn { padding: 12px !important; min-width: 44px; min-height: 44px; }
@@ -5041,7 +5040,6 @@ function renderProjectStats(){
   var winRate=decided>0?Math.round(wonProjects/decided*100):0;
   var stats=[
     {lbl:'Active Projects',val:activeProjects},
-    {lbl:'Total Projects',val:totalProjects},
     {lbl:'Win Rate',val:winRate+'%'}
   ];
   if(canSeePricing()){
