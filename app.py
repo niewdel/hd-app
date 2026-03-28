@@ -1,6 +1,7 @@
 import os, tempfile, functools, json, hashlib, time
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, session, send_file
+from werkzeug.utils import secure_filename
 from generate_proposal import build
 try:
     from googleapiclient.discovery import build as gmail_build
@@ -14,8 +15,7 @@ import requests as http
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 app.secret_key = os.environ.get('SECRET_KEY', 'hd-hauling-dev-key')
-
-APP_PIN             = os.environ.get('APP_PIN', '2025')
+app.permanent_session_lifetime = timedelta(hours=8)
 SUPABASE_URL        = os.environ.get('SUPABASE_URL', '')
 SUPABASE_KEY        = os.environ.get('SUPABASE_KEY', '')
 SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
@@ -37,11 +37,17 @@ def sb_admin_headers(prefer='return=representation'):
         'Prefer': prefer
     }
 
+@app.after_request
+def set_security_headers(response):
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    if request.is_secure:
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
+
 def sb_url(table, params=''):
     return f'{SUPABASE_URL}/rest/v1/{table}{params}'
-
-def hash_pin(pin):
-    return hashlib.sha256(str(pin).encode()).hexdigest()
 
 def hash_password(pw):
     return hashlib.sha256(str(pw).encode()).hexdigest()
@@ -181,10 +187,10 @@ def change_password():
 
 @app.route('/auth/check')
 def auth_check():
-    return jsonify({'authenticated': bool(session.get('authenticated')), 'role': session.get('role','user'),
-                    'username': session.get('username',''), 'full_name': session.get('full_name',''),
-                    'email': session.get('email',''), 'phone': session.get('phone',''),
-                    'avatar_data': session.get('avatar_data', '')})
+    if session.get('authenticated'):
+        return jsonify({'authenticated': True, 'role': session.get('role','user'),
+                        'username': session.get('username',''), 'full_name': session.get('full_name','')})
+    return jsonify({'authenticated': False})
 
 @app.route('/auth/profile', methods=['PATCH'])
 @require_auth
@@ -882,6 +888,13 @@ def upload_site_plan(project_id):
     if not file.filename:
         return jsonify({'ok': False, 'error': 'Empty filename'}), 400
 
+    # Check file size (50MB limit)
+    file.seek(0, 2)
+    size = file.tell()
+    file.seek(0)
+    if size > 50_000_000:
+        return jsonify({'ok': False, 'error': 'File too large. Maximum 50MB.'}), 400
+
     # Determine content type
     ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else 'png'
     allowed = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'webp'}
@@ -993,7 +1006,7 @@ def upload_project_file(project_id):
         return jsonify({'ok': False, 'error': 'File exceeds 10 MB limit.'}), 400
 
     ts = int(time.time() * 1000)
-    safe_name = file.filename.replace(' ', '_').replace('/', '_')
+    safe_name = secure_filename(file.filename) or 'upload'
     storage_path = f'project-{project_id}/files/{ts}-{safe_name}'
 
     try:
@@ -1052,6 +1065,9 @@ def delete_project_file(project_id):
     storage_path = data.get('path', '')
     if not storage_path:
         return jsonify({'ok': False, 'error': 'No path provided'}), 400
+    # Verify the path belongs to this project
+    if not storage_path.startswith(f'project-{project_id}/'):
+        return jsonify({'ok': False, 'error': 'Access denied'}), 403
 
     svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
     try:
@@ -1631,4 +1647,4 @@ def delete_roadmap(item_id):
         return jsonify({'ok': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=os.environ.get('FLASK_ENV') != 'production', port=5000)

@@ -964,16 +964,7 @@ body.dark .detail-hdr-btn:hover{border-color:rgba(255,255,255,0.15);color:#E4E4E
 .detail-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.2);z-index:49;display:none;}
 .detail-backdrop.open{display:block;}
 
-/* Floating Action Button */
-.fab{position:fixed;bottom:24px;right:24px;z-index:40;display:flex;flex-direction:column-reverse;align-items:flex-end;gap:8px;}
-.fab-trigger{width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(204,0,0,0.3);transition:transform .2s,box-shadow .2s;font-size:24px;}
-.fab-trigger:hover{transform:scale(1.05);box-shadow:0 6px 24px rgba(204,0,0,0.4);}
-.fab-trigger.open{transform:rotate(45deg);}
-.fab-menu{display:none;flex-direction:column;gap:6px;align-items:flex-end;}
-.fab-trigger.open+.fab-menu{display:flex;}
-.fab-action{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg-el);border:1px solid var(--bdr);border-radius:var(--rad-s);font-size:12px;font-weight:500;cursor:pointer;box-shadow:var(--shadow-m);white-space:nowrap;color:var(--blk);font-family:var(--font);transition:box-shadow .15s,transform .15s;}
-.fab-action:hover{box-shadow:var(--shadow-l);transform:translateY(-1px);}
-body.dark .fab-action{background:#27272A;border-color:rgba(255,255,255,0.08);color:#E4E4E7;}
+/* FAB removed */
 
 /* Cards */
 .card{background:var(--bg-el);border:1px solid var(--bdr);border-radius:12px;margin-bottom:var(--card-gap);overflow:hidden;box-shadow:none;transition:box-shadow .2s,border-color .2s;}
@@ -2165,54 +2156,7 @@ tr:hover td{background:var(--tbl-alt);}
 
 
       <!-- ANALYTICS PANEL -->
-      <div class="panel" id="panel-analytics" data-field-hidden><div class="content" style="">
-        <div class="ops-page-head">
-          <div class="ops-page-copy">
-            <div class="ops-page-eyebrow">Analytics</div>
-            <div class="ops-page-title"></div>
-          </div>
-          <div class="ops-head-actions">
-            <button class="btn btn-sec btn-sm" onclick="refreshLineItems()">Refresh Line Items</button>
-          </div>
-        </div>
-        <div id="analytics-summary" class="metrics" style="margin-bottom:20px;"></div>
-        <div class="mc-card" style="margin-bottom:14px;">
-          <div class="card-body" style="padding:0;">
-            <div style="overflow-x:auto;">
-              <table class="admin-table">
-                <thead>
-                  <tr>
-                    <th>Project</th>
-                    <th>Client</th>
-                    <th>Date</th>
-                    <th style="text-align:right;">Bid Price</th>
-                    <th style="text-align:right;">Margin $</th>
-                    <th style="text-align:right;">Margin %</th>
-                  </tr>
-                </thead>
-                <tbody id="analytics-tbody"></tbody>
-              </table>
-            </div>
-            <div id="analytics-empty" class="empty-state" style="display:none;">
-              <div class="empty-state-title">No saved quotes yet</div>
-              <div class="empty-state-desc">Save proposals from Build Proposal to see analytics here.</div>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px;">
-          <span class="badge" style="background:var(--badge-ok-bg);color:var(--badge-ok);">30%+ margin</span>
-          <span class="badge" style="background:var(--badge-warn-bg);color:var(--badge-warn);">15-30% margin</span>
-          <span class="badge" style="background:var(--badge-err-bg);color:var(--badge-err);">Under 15%</span>
-        </div>
-        <div class="mc-card">
-          <div class="card-hdr">
-            <span class="card-title">Proposal Line Items</span>
-          </div>
-          <div class="card-body">
-            <div id="li-table-wrap" style="overflow-x:auto;"></div>
-          </div>
-        </div>
-      </div></div>
+      <!-- Analytics panel removed — replaced by Reports -->
 
       <!-- SETTINGS PANEL -->
       <div class="panel" id="panel-settings">
@@ -2528,7 +2472,8 @@ tr:hover td{background:var(--tbl-alt);}
               <div class="card-hdr"><span class="card-title">Site Plan</span></div>
               <div class="card-body" id="wo-site-plan"><div class="empty-state"><div class="empty-state-desc">No site plan.</div></div></div>
             </div>
-            <!-- Details card removed — info shown elsewhere on page -->
+            <!-- Details card removed — hidden container kept for JS compatibility -->
+            <div id="wo-details" style="display:none;"></div>
             <div class="mc-card" style="margin-bottom:14px;">
               <div class="card-hdr"><span class="card-title">Crew Notes</span></div>
               <div class="card-body" id="wo-notes"><div class="empty-state"><div class="empty-state-desc">No notes.</div></div></div>
@@ -3977,20 +3922,6 @@ function _setDashGreeting(){
   if(window._userName)g+=', '+window._userName.split(' ')[0];
   var el=document.getElementById('dash-greeting');
   if(el)el.textContent=g;
-}
-
-// ── Floating Action Button ──
-function toggleFab(){
-  var trigger=document.getElementById('fab-trigger');
-  trigger.classList.toggle('open');
-}
-function _showFab(){
-  var fab=document.getElementById('fab');
-  if(fab)fab.style.display='';
-}
-function _hideFab(){
-  var fab=document.getElementById('fab');
-  if(fab){fab.style.display='none';document.getElementById('fab-trigger').classList.remove('open');}
 }
 
 function boot(){
@@ -7292,7 +7223,7 @@ function showPanel(id,el){
   if(id==='co'){populateCOProposalDropdown();updateCODocBadge();}
   if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('estimating');}
   if(id==='jobcost'){aggregateWOActualsIntoEVA();renderJobCost();renderEVA();}
-  if(id==='analytics'){setTimeout(renderAnalytics,50);renderLineItems();}
+  // analytics panel removed
   if(id==='pipeline')setTimeout(renderPipeline,50);
   if(id==='clients'){showPanel('contacts',document.querySelector('[onclick*=contacts]'));return;}
   if(id==='subs'){showPanel('contacts',document.querySelector('[onclick*=contacts]'));setTimeout(function(){showContactsTab('subs');},100);return;}
@@ -13430,10 +13361,9 @@ function loadBugList(){
   var tb=document.getElementById('bugs-tbody');if(tb)tb.innerHTML='<tr><td colspan="8" style="padding:0;">'+_skeletonRows(3,4)+'</td></tr>';
   var stb=document.getElementById('settings-bugs-tbody');if(stb)stb.innerHTML='<tr><td colspan="8" style="padding:0;">'+_skeletonRows(3,4)+'</td></tr>';
   fetch('/bugs/list').then(function(r){
-    if(!r.ok)console.warn('[bugs/list] HTTP '+r.status);
+    if(!r.ok)return r.json();
     return r.json();
   }).then(function(data){
-    console.log('[bugs/list] response:',JSON.stringify(data).slice(0,200));
     _bugReportsError='';
     if(data&&data.ok===false){
       _bugReports=[];
@@ -13606,10 +13536,9 @@ var _roadmapItemsError='';
 
 function loadRoadmapList(){
   fetch('/roadmap/list').then(function(r){
-    if(!r.ok)console.warn('[roadmap/list] HTTP '+r.status);
+    if(!r.ok)return r.json();
     return r.json();
   }).then(function(data){
-    console.log('[roadmap/list] response:',JSON.stringify(data).slice(0,200));
     _roadmapItemsError='';
     if(data&&data.ok===false){
       _roadmapItems=[];
