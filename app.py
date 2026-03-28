@@ -1647,5 +1647,89 @@ def delete_roadmap(item_id):
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
+# ── Reminders ─────────────────────────────────────────────
+@app.route('/reminders/list')
+@require_auth
+def list_reminders():
+    try:
+        q = f"{SUPABASE_URL}/rest/v1/hd_reminders?select=*&order=due_date.asc"
+        filt = request.args.get('filter')
+        if filt == 'due':
+            today = datetime.utcnow().strftime('%Y-%m-%d')
+            q += f"&completed=eq.false&due_date=lte.{today}"
+        elif filt == 'upcoming':
+            q += '&completed=eq.false'
+        elif filt == 'completed':
+            q += '&completed=eq.true'
+        else:
+            q += '&completed=eq.false'
+        r = http.get(q, headers=sb_admin_headers(), timeout=10)
+        if r.status_code != 200:
+            return jsonify({'ok': False, 'error': r.text[:500]}), r.status_code
+        return jsonify({'ok': True, 'items': r.json()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/reminders/save', methods=['POST'])
+@require_auth
+def save_reminder():
+    try:
+        d = request.json or {}
+        note = str(d.get('note', '')).strip()
+        due_date = str(d.get('due_date', '')).strip()
+        if not note or not due_date:
+            return jsonify({'ok': False, 'error': 'Note and due date are required'}), 400
+        row = {
+            'type': d.get('type', 'project'),
+            'ref_id': d.get('ref_id'),
+            'ref_name': str(d.get('ref_name', '')).strip(),
+            'note': note,
+            'due_date': due_date,
+            'assigned_to': str(d.get('assigned_to', '')).strip() or session.get('username'),
+            'created_by': session.get('username', 'unknown'),
+            'completed': False
+        }
+        r = http.post(f"{SUPABASE_URL}/rest/v1/hd_reminders", json=row, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True, 'item': r.json()[0] if isinstance(r.json(), list) else r.json()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/reminders/<int:rid>', methods=['PATCH'])
+@require_auth
+def update_reminder(rid):
+    try:
+        d = request.json or {}
+        updates = {}
+        if 'completed' in d:
+            updates['completed'] = bool(d['completed'])
+            if d['completed']:
+                updates['completed_at'] = datetime.utcnow().isoformat()
+            else:
+                updates['completed_at'] = None
+        if 'note' in d: updates['note'] = str(d['note']).strip()
+        if 'due_date' in d: updates['due_date'] = str(d['due_date']).strip()
+        if 'assigned_to' in d: updates['assigned_to'] = str(d['assigned_to']).strip()
+        if not updates:
+            return jsonify({'ok': False, 'error': 'Nothing to update'}), 400
+        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_reminders?id=eq.{rid}", json=updates, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/reminders/<int:rid>', methods=['DELETE'])
+@require_auth
+def delete_reminder(rid):
+    try:
+        r = http.delete(f"{SUPABASE_URL}/rest/v1/hd_reminders?id=eq.{rid}", headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=os.environ.get('FLASK_ENV') != 'production', port=5000)

@@ -1660,6 +1660,13 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             </div>
             <div class="dash-section">
               <div class="dash-section-hdr">
+                <span class="dash-section-title">Reminders</span>
+                <button class="btn btn-sec btn-sm" onclick="openAddReminderModal()">+ Add</button>
+              </div>
+              <div id="dash-reminders" style="max-height:300px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="empty-state-title">No reminders</div><div class="empty-state-desc">Follow-ups and callbacks will appear here</div></div></div>
+            </div>
+            <div class="dash-section">
+              <div class="dash-section-hdr">
                 <span class="dash-section-title">Recent Activity</span>
               </div>
               <div id="dash-recent-activity" style="max-height:360px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div></div></div>
@@ -2858,6 +2865,29 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
   </div>
 </div>
     
+<div class="modal-overlay hidden" id="reminder-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-hdr"><h3 id="reminder-modal-title">Add Reminder</h3><button class="btn-ico" onclick="closeReminderModal()" style="font-size:18px;">&#10005;</button></div>
+    <div class="modal-body">
+      <label>Note</label><input type="text" id="rem-note" placeholder="e.g. Follow up on estimate"/>
+      <label>Due Date</label><input type="date" id="rem-due-date"/>
+      <label>Assigned To</label><select id="rem-assigned-to"></select>
+      <label>Link To</label>
+      <select id="rem-type" onchange="toggleReminderRef()">
+        <option value="general">General</option>
+        <option value="project">Project</option>
+        <option value="client">Client</option>
+      </select>
+      <div id="rem-ref-wrap" style="display:none;margin-top:6px;">
+        <label id="rem-ref-label">Project</label>
+        <select id="rem-ref-id"></select>
+      </div>
+      <div id="reminder-modal-err" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeReminderModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveReminder()">Save Reminder</button></div>
+  </div>
+</div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 
@@ -4829,6 +4859,7 @@ function renderDashboard(){
   renderDashUpcomingWO();
   renderDashTodaySchedule();
   renderDashRecentActivity();
+  loadDashReminders();
   renderDashPipelineSnapshot();
   renderDashRecentProjects();
   if(!dashSelectedDate){
@@ -7300,6 +7331,7 @@ var TOPBAR_MENU = {
     {label:'New Change Order',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',fn:'createCOFromProject(_currentProjectId)',minRole:'user'},
     {sep:true},
     {label:'Job Costing',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',fn:"showPanel('jobcost',null)",minRole:'user'},
+    {label:'Set Reminder',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',fn:'addReminderFromProject()'},
     {sep:true},
     {label:'Edit Project',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',fn:'editCurrentProject()'}
   ],
@@ -14030,6 +14062,157 @@ function deleteRoadmapItem(id){
   fetch('/roadmap/'+id,{method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
     if(d.ok){if(typeof toast==='function')toast('Item deleted','ok');loadRoadmapList();}
   });
+}
+
+// ── Reminders ──────────────────────────────────────────
+var _editingReminderId=null;
+
+function loadDashReminders(){
+  var c=document.getElementById('dash-reminders');if(!c)return;
+  fetch('/reminders/list?filter=upcoming').then(function(r){return r.json();}).then(function(d){
+    if(!d.ok||!d.items||d.items.length===0){
+      c.innerHTML='<div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="empty-state-title">No reminders</div><div class="empty-state-desc">Follow-ups and callbacks will appear here</div></div>';
+      return;
+    }
+    var today=new Date().toISOString().slice(0,10);
+    var html='';
+    d.items.forEach(function(r){
+      var overdue=r.due_date<today;
+      var isToday=r.due_date===today;
+      var dateLabel=isToday?'Today':overdue?'Overdue':formatReminderDate(r.due_date);
+      var tagColor=overdue?'var(--red)':isToday?'#e88c00':'var(--dgray)';
+      var tagBg=overdue?'rgba(204,0,0,.1)':isToday?'rgba(232,140,0,.1)':'rgba(150,150,150,.1)';
+      html+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);">';
+      html+='<div style="flex:1;min-width:0;">';
+      html+='<div style="font-size:13px;font-weight:500;color:var(--blk);">'+esc(r.note)+'</div>';
+      html+='<div style="display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap;">';
+      html+='<span style="font-size:11px;font-weight:600;color:'+tagColor+';background:'+tagBg+';padding:1px 8px;border-radius:4px;">'+dateLabel+'</span>';
+      if(r.ref_name)html+='<span style="font-size:11px;color:var(--dgray);">'+esc(r.ref_name)+'</span>';
+      if(r.assigned_to)html+='<span style="font-size:11px;color:var(--dgray);">@'+esc(r.assigned_to)+'</span>';
+      html+='</div></div>';
+      html+='<div style="display:flex;gap:4px;flex-shrink:0;">';
+      html+='<button class="btn-ico" onclick="completeReminder('+r.id+')" title="Mark complete" style="color:var(--green,#27500A);font-size:16px;">&#10003;</button>';
+      html+='<button class="btn-ico" onclick="deleteReminder('+r.id+')" title="Delete" style="color:var(--dgray);font-size:14px;">&#10005;</button>';
+      html+='</div></div>';
+    });
+    c.innerHTML=html;
+  }).catch(function(){});
+}
+
+function formatReminderDate(ds){
+  var d=new Date(ds+'T12:00:00');
+  var now=new Date();
+  var diff=Math.round((d-now)/(1000*60*60*24));
+  if(diff===1)return 'Tomorrow';
+  if(diff>1&&diff<=7)return d.toLocaleDateString('en-US',{weekday:'short'});
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+function openAddReminderModal(type,refId,refName){
+  _editingReminderId=null;
+  document.getElementById('reminder-modal-title').textContent='Add Reminder';
+  document.getElementById('rem-note').value='';
+  var tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);
+  document.getElementById('rem-due-date').value=tomorrow.toISOString().slice(0,10);
+  document.getElementById('reminder-modal-err').textContent='';
+  // Populate assigned-to dropdown
+  var sel=document.getElementById('rem-assigned-to');
+  sel.innerHTML='';
+  if(window._adminUsers){
+    Object.values(window._adminUsers).forEach(function(u){
+      if(!u.active)return;
+      var o=document.createElement('option');o.value=u.username;o.textContent=u.full_name||u.username;
+      if(u.username===window._userUsername)o.selected=true;
+      sel.appendChild(o);
+    });
+  } else {
+    var o=document.createElement('option');o.value=window._userUsername||'';o.textContent=window._userName||'Me';
+    sel.appendChild(o);
+  }
+  // Set type if provided
+  var typeSel=document.getElementById('rem-type');
+  if(type){typeSel.value=type;}else{typeSel.value='general';}
+  toggleReminderRef();
+  // Pre-select ref if provided
+  if(refId&&refName){
+    setTimeout(function(){
+      var refSel=document.getElementById('rem-ref-id');
+      if(refSel){
+        for(var i=0;i<refSel.options.length;i++){
+          if(parseInt(refSel.options[i].value)===refId){refSel.selectedIndex=i;break;}
+        }
+      }
+    },200);
+  }
+  document.getElementById('reminder-modal').classList.remove('hidden');
+  setTimeout(function(){document.getElementById('rem-note').focus();},100);
+}
+
+function toggleReminderRef(){
+  var t=document.getElementById('rem-type').value;
+  var wrap=document.getElementById('rem-ref-wrap');
+  var label=document.getElementById('rem-ref-label');
+  var sel=document.getElementById('rem-ref-id');
+  if(t==='general'){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  label.textContent=t==='project'?'Project':'Client';
+  sel.innerHTML='<option value="">— Select —</option>';
+  if(t==='project'&&typeof pipelineProposals!=='undefined'){
+    pipelineProposals.forEach(function(p){
+      var snap=typeof p.snap==='string'?JSON.parse(p.snap):p.snap||{};
+      var name=snap.project_name||snap.client||'Untitled';
+      var o=document.createElement('option');o.value=p.id;o.textContent=name;sel.appendChild(o);
+    });
+  } else if(t==='client'){
+    fetch('/clients/list').then(function(r){return r.json();}).then(function(d){
+      var items=d.items||d.clients||d||[];
+      items.forEach(function(c){
+        var o=document.createElement('option');o.value=c.id;o.textContent=c.name||c.company||'Unnamed';sel.appendChild(o);
+      });
+    });
+  }
+}
+
+function closeReminderModal(){document.getElementById('reminder-modal').classList.add('hidden');_editingReminderId=null;}
+
+function saveReminder(){
+  var errEl=document.getElementById('reminder-modal-err');errEl.textContent='';
+  var note=document.getElementById('rem-note').value.trim();
+  var due=document.getElementById('rem-due-date').value;
+  var assigned=document.getElementById('rem-assigned-to').value;
+  var type=document.getElementById('rem-type').value;
+  var refSel=document.getElementById('rem-ref-id');
+  var refId=type!=='general'&&refSel.value?parseInt(refSel.value):null;
+  var refName=type!=='general'&&refSel.selectedIndex>0?refSel.options[refSel.selectedIndex].textContent:'';
+  if(!note){errEl.textContent='Note is required.';return;}
+  if(!due){errEl.textContent='Due date is required.';return;}
+  fetch('/reminders/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    note:note,due_date:due,assigned_to:assigned,type:type,ref_id:refId,ref_name:refName
+  })}).then(function(r){return r.json();}).then(function(d){
+    if(d.ok){closeReminderModal();loadDashReminders();toast('Reminder added','ok');}
+    else{errEl.textContent=d.error||'Failed to save.';}
+  });
+}
+
+function completeReminder(id){
+  fetch('/reminders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({completed:true})}).then(function(r){return r.json();}).then(function(d){
+    if(d.ok){loadDashReminders();toast('Reminder completed','ok');}
+  });
+}
+
+function deleteReminder(id){
+  if(!confirm('Delete this reminder?'))return;
+  fetch('/reminders/'+id,{method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
+    if(d.ok){loadDashReminders();toast('Reminder deleted','ok');}
+  });
+}
+
+function addReminderFromProject(){
+  if(!_currentProjectId)return;
+  var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+  var snap=proj?(typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{}):{};
+  var name=snap.project_name||snap.client||'Untitled';
+  openAddReminderModal('project',_currentProjectId,name);
 }
 </script>
 
