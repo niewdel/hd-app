@@ -125,23 +125,14 @@ def login():
         pw_hash = hash_password(password)
         if user.get('pin_hash') == pw_hash:
             apply_user_session(user)
-            log_access(user['username'], user.get('full_name',''), 'login', True)
-            # Get last login from access log
-            last_login = None
-            try:
-                lr = http.get(sb_url('hd_access_log', f'?username=eq.{user["username"]}&action=eq.login&success=eq.true&order=logged_at.desc&limit=2'),
-                              headers=sb_headers(), timeout=3)
-                if lr.status_code == 200:
-                    logs = lr.json()
-                    if len(logs) > 1: last_login = logs[1].get('logged_at')
-            except Exception:
-                pass
+            # Fire-and-forget: log access asynchronously
+            import threading
+            threading.Thread(target=log_access, args=(user['username'], user.get('full_name',''), 'login', True), daemon=True).start()
             return jsonify({'ok': True, 'role': session['role'], 'username': session['username'],
                             'full_name': session['full_name'],
                             'email': session['email'], 'phone': session['phone'],
                             'avatar_data': session.get('avatar_data', ''),
-                            'password_hint': user.get('password_hint', ''),
-                            'last_login': last_login})
+                            'password_hint': user.get('password_hint', '')})
         else:
             log_access(username, '', 'login', False)
             hint = user.get('password_hint', '')
@@ -277,6 +268,29 @@ def quotes_update(qid):
         r.raise_for_status()
         log_access(session.get('username',''), session.get('full_name',''), f'updated proposal "{data.get("name","")}"')
         return jsonify({'ok': True, 'id': qid})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/boot/data')
+@require_auth
+def boot_data():
+    """Single endpoint that returns quotes, pipeline stages, and pipeline proposals in one call."""
+    import concurrent.futures
+    def _fetch(url):
+        r = http.get(url, headers=sb_headers(), timeout=10)
+        r.raise_for_status()
+        return r.json()
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+            f_quotes = pool.submit(_fetch, sb_url('proposals', '?select=*&archived=neq.true&order=created_at.desc'))
+            f_stages = pool.submit(_fetch, sb_url('pipeline_stages', '?select=*&order=position.asc'))
+            f_pipeline = pool.submit(_fetch, sb_url('proposals', '?select=id,name,client,total,stage_id,snap,created_at,pipeline_stages!left(name,color,counts_in_ratio,is_closed)&archived=neq.true&order=created_at.desc'))
+        return jsonify({
+            'ok': True,
+            'quotes': f_quotes.result(),
+            'stages': f_stages.result(),
+            'proposals': f_pipeline.result()
+        })
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 

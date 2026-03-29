@@ -3647,9 +3647,7 @@ async function doLogin(){
       initSidebarCanvas();
       showAdminElements();
       renderUserChrome();
-      loadLastLogin();
       initAutoLogout();
-      if(!window._lastLogin)_showWelcome();
     } else {
       var errMsg=d.error||'Incorrect username or password.';
       if(d.hint){errMsg+='\nHint: '+d.hint;}
@@ -4237,12 +4235,16 @@ function boot(){
   updateMatIndicator();
   checkMobile();
   renderTopbar('dashboard');
-  // Render dashboard immediately with whatever data is cached, then refresh when data arrives
+  // Render dashboard immediately, then fetch all data in one call and re-render
   renderDashboard();
-  Promise.all([
-    fetch('/quotes/list').then(function(r){return r.json();}).then(function(d){if(d.ok&&d.quotes)savedQuotes=d.quotes;}).catch(function(){}),
-    renderPipeline()
-  ]).then(function(){renderDashboard();}).catch(function(){});
+  fetch('/boot/data').then(function(r){return r.json();}).then(function(d){
+    if(!d.ok)return;
+    if(d.quotes)savedQuotes=d.quotes;
+    if(d.stages){pipelineStages=d.stages;_pipelineStages=d.stages;}
+    if(d.proposals){pipelineProposals=d.proposals;window._pipelineLoadedAt=Date.now();}
+    populateStageFilter();
+    renderDashboard();
+  }).catch(function(){});
   
   document.addEventListener('click',function(e){
     if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))
