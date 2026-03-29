@@ -11,6 +11,21 @@
 
 ---
 
+## MCP Servers (Prioritize These)
+
+Always check for and use available MCP tools before falling back to manual approaches (curl, WebFetch, etc.).
+
+### Currently Installed
+- **Google Calendar** — Use `gcal_*` tools for calendar operations (list events, create events, find free time, etc.)
+
+### Desired But Not Yet Installed
+- **Supabase** — Would allow direct SQL execution and table management. Currently querying via REST API with service role key instead. If this becomes available, use it for all DB operations (creating tables, running migrations, querying data).
+
+### Rule
+When an MCP tool exists for a task, **always use it** instead of workarounds. Check `ToolSearch` at the start of each session to see what's available.
+
+---
+
 ## Project Overview
 
 An all-in-one internal web app for HD Hauling & Grading (paving contractor) — proposals, CRM, pipeline, scheduling, work orders, job costing, reporting, admin. Built with a Flask backend and a fully self-contained single-file frontend (`index.html`). Deployed on Railway, source on GitHub, database on Supabase.
