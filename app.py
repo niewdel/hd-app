@@ -2036,6 +2036,91 @@ def delete_time_entry(tid):
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
+# ── Tasks ──────────────────────────────────────────────────
+@app.route('/tasks/list')
+@require_auth
+def list_tasks():
+    try:
+        q = f"{SUPABASE_URL}/rest/v1/hd_tasks?select=*&order=due_date.asc.nullslast,created_at.desc"
+        filt = request.args.get('filter', 'open')
+        username = session.get('username')
+        if filt == 'completed':
+            q += '&completed=eq.true'
+        else:
+            q += '&completed=eq.false'
+        # Visibility: show public tasks + private tasks owned by or assigned to current user
+        q += f'&or=(visibility.eq.public,created_by.eq.{username},assigned_to.eq.{username})'
+        r = http.get(q, headers=sb_admin_headers(), timeout=10)
+        if r.status_code != 200:
+            return jsonify({'ok': False, 'error': r.text[:500]}), r.status_code
+        return jsonify({'ok': True, 'items': r.json()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/tasks/save', methods=['POST'])
+@require_auth
+def save_task():
+    try:
+        d = request.json or {}
+        title = str(d.get('title', '')).strip()
+        if not title:
+            return jsonify({'ok': False, 'error': 'Title is required'}), 400
+        row = {
+            'title': title,
+            'description': str(d.get('description', '')).strip(),
+            'priority': d.get('priority', 'medium'),
+            'visibility': d.get('visibility', 'public'),
+            'assigned_to': str(d.get('assigned_to', '')).strip() or session.get('username'),
+            'created_by': session.get('username', 'unknown'),
+            'due_date': d.get('due_date') or None,
+            'ref_type': d.get('ref_type') or None,
+            'ref_id': d.get('ref_id') or None,
+            'ref_name': str(d.get('ref_name', '')).strip() or None,
+            'completed': False
+        }
+        r = http.post(f"{SUPABASE_URL}/rest/v1/hd_tasks", json=row, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True, 'item': r.json()[0] if isinstance(r.json(), list) else r.json()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/tasks/<int:tid>', methods=['PATCH'])
+@require_auth
+def update_task(tid):
+    try:
+        d = request.json or {}
+        updates = {}
+        for field in ('title', 'description', 'priority', 'status', 'visibility', 'assigned_to', 'due_date', 'ref_type', 'ref_id', 'ref_name'):
+            if field in d:
+                updates[field] = d[field]
+        if 'completed' in d:
+            updates['completed'] = bool(d['completed'])
+            if d['completed']:
+                updates['completed_at'] = datetime.utcnow().isoformat()
+            else:
+                updates['completed_at'] = None
+        if not updates:
+            return jsonify({'ok': False, 'error': 'Nothing to update'}), 400
+        updates['updated_at'] = datetime.utcnow().isoformat()
+        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_tasks?id=eq.{tid}", json=updates, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/tasks/<int:tid>', methods=['DELETE'])
+@require_auth
+def delete_task(tid):
+    try:
+        r = http.delete(f"{SUPABASE_URL}/rest/v1/hd_tasks?id=eq.{tid}", headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 # ── Reminders ─────────────────────────────────────────────
 @app.route('/reminders/list')
 @require_auth
