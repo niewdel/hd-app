@@ -2712,15 +2712,6 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
       <!-- REPORTS PANEL -->
       <div class="panel" id="panel-reports" data-field-hidden><div class="content" style="">
-        <div class="ops-page-head">
-          <div class="ops-page-copy">
-            <div class="ops-page-eyebrow">Reporting Center</div>
-            <div class="ops-page-title"></div>
-          </div>
-          <div class="ops-head-actions">
-            <button class="btn btn-primary btn-sm" onclick="exportReportPDF()">Export PDF</button>
-          </div>
-        </div>
         <div style="display:flex;gap:14px;align-items:flex-start;">
           <div id="rpt-sidebar" class="mc-card" style="width:200px;flex-shrink:0;overflow:hidden;">
             <div class="rpt-nav-item rpt-nav-active" onclick="selectReport('estimate-perf',this)">Estimate Performance</div>
@@ -2739,6 +2730,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                 <div id="rpt-custom-dates" style="display:none;"><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--dgray);display:block;margin-bottom:2px;">From / To</label><div style="display:flex;gap:4px;"><input type="date" id="rpt-from" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/><input type="date" id="rpt-to" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/></div></div>
                 <div><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--dgray);display:block;margin-bottom:2px;">Client</label>
                 <select id="rpt-client" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All Clients</option></select></div>
+                <div style="margin-left:auto;"><button class="btn btn-primary btn-sm" onclick="exportReportPDF()">Export PDF</button></div>
               </div>
             </div>
             <div id="rpt-output"></div>
