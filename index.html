@@ -4238,11 +4238,12 @@ function boot(){
   updateMatIndicator();
   checkMobile();
   renderTopbar('dashboard');
-  // Pre-load saved quotes and pipeline data, then render dashboard
+  // Render dashboard immediately with whatever data is cached, then refresh when data arrives
+  renderDashboard();
   Promise.all([
     fetch('/quotes/list').then(function(r){return r.json();}).then(function(d){if(d.ok&&d.quotes)savedQuotes=d.quotes;}).catch(function(){}),
     renderPipeline()
-  ]).then(function(){renderDashboard();}).catch(function(){renderDashboard();});
+  ]).then(function(){renderDashboard();}).catch(function(){});
   
   document.addEventListener('click',function(e){
     if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))
