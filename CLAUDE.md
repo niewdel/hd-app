@@ -17,9 +17,7 @@ Always check for and use available MCP tools before falling back to manual appro
 
 ### Currently Installed
 - **Google Calendar** — Use `gcal_*` tools for calendar operations (list events, create events, find free time, etc.)
-
-### Desired But Not Yet Installed
-- **Supabase** — Would allow direct SQL execution and table management. Currently querying via REST API with service role key instead. If this becomes available, use it for all DB operations (creating tables, running migrations, querying data).
+- **Supabase** — Direct SQL execution and table management. Use Supabase MCP tools for all DB operations (creating tables, running migrations, querying data, updating bug reports). Authenticated via OAuth.
 
 ### Rule
 When an MCP tool exists for a task, **always use it** instead of workarounds. Check `ToolSearch` at the start of each session to see what's available.
@@ -114,6 +112,18 @@ id, title, description, category, status, priority, version, created_at.
 ### `hd_notifications`
 id, recipient, type, title, body, project_id, project_name, link, read, created_at.
 
+### `hd_tasks`
+id, title, description, priority (high/medium/low), status (open), visibility (public/private), assigned_to, created_by, due_date, ref_type (project/client), ref_id, ref_name, completed, completed_at, created_at, updated_at.
+
+### `hd_settings`
+key (PK, TEXT), value (JSONB), updated_at. Key-value store for app-wide settings (project_counter, company info, sender defaults, etc.).
+
+### `hd_time_entries`
+id, username, work_order_id, project_id, clock_in, clock_out, clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng, hours_worked, hourly_rate, labor_cost.
+
+### `change_orders`
+id, proposal_id, number, date, description, snap (JSONB), add_total, deduct_total, revised_total, created_by, created_at.
+
 ---
 
 ## Backend (`app.py`) — API Routes
@@ -198,6 +208,19 @@ id, recipient, type, title, body, project_id, project_name, link, read, created_
 | PATCH | `/admin/users/<id>` | Update user |
 | GET | `/admin/logs` | Activity log |
 
+### Tasks
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/tasks/list` | yes | List tasks (?filter=open/completed), respects visibility |
+| POST | `/tasks/save` | yes | Create task |
+| PATCH | `/tasks/<id>` | yes | Update task fields |
+| DELETE | `/tasks/<id>` | yes | Delete task |
+
+### Boot
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/boot/data` | yes | Returns quotes + pipeline stages + proposals in one call (parallel server-side) |
+
 ### Other Routes
 - `/roadmap/*` — Roadmap CRUD (admin)
 - `/notifications/*` — Notification system
@@ -226,6 +249,7 @@ The entire frontend is one HTML file. All CSS, JS, and HTML in one file. No buil
 | `panel-admin` | Admin — user management, activity log, archived items |
 | `panel-bugs` | Bug reports tab |
 | `panel-roadmap` | Product roadmap tab |
+| `panel-tasks` | Tasks & Reminders — two-tab panel (Tasks / Reminders) |
 | `panel-workorder` | Work order detail view |
 
 ### Authentication Flow
