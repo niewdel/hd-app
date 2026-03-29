@@ -2673,7 +2673,6 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <option value="upcoming">Upcoming</option>
               <option value="completed">Completed</option>
             </select>
-            <button class="btn btn-primary btn-sm" onclick="openAddReminderModal()">+ Add Reminder</button>
           </div>
           <div id="reminders-list-container"></div>
         </div>
@@ -14388,7 +14387,7 @@ function toggleReminderRef(){
   if(t==='project'&&typeof pipelineProposals!=='undefined'){
     pipelineProposals.forEach(function(p){
       var snap=typeof p.snap==='string'?JSON.parse(p.snap):p.snap||{};
-      var name=snap.project_name||snap.client||'Untitled';
+      var name=p.name||snap.name||snap.client||'Untitled';
       var o=document.createElement('option');o.value=p.id;o.textContent=name;sel.appendChild(o);
     });
   } else if(t==='client'){
@@ -14677,7 +14676,7 @@ function toggleTaskRef(){
   if(t==='project'&&typeof pipelineProposals!=='undefined'){
     pipelineProposals.forEach(function(p){
       var snap=typeof p.snap==='string'?JSON.parse(p.snap):p.snap||{};
-      var name=snap.project_name||snap.client||'Untitled';
+      var name=p.name||snap.name||snap.client||'Untitled';
       var o=document.createElement('option');o.value=p.id;o.textContent=name;sel.appendChild(o);
     });
   } else if(t==='client'){
@@ -14853,7 +14852,7 @@ function addReminderFromProject(){
   if(!_currentProjectId)return;
   var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
   var snap=proj?(typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{}):{};
-  var name=snap.project_name||snap.client||'Untitled';
+  var name=p.name||snap.name||snap.client||'Untitled';
   openAddReminderModal('project',_currentProjectId,name);
 }
 </script>
