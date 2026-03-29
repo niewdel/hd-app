@@ -2642,18 +2642,15 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
       <!-- TASKS PANEL -->
       <div class="panel" id="panel-tasks"><div class="content" style="padding:4px 16px;max-width:none;">
-        <div class="ops-page-head">
-          <div class="ops-page-copy">
-            <div class="ops-page-eyebrow">Tasks & Reminders</div>
-            <div class="ops-page-title"></div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+          <div class="ops-page-eyebrow" style="margin:0;">Tasks & Reminders</div>
+          <div style="display:flex;gap:0;">
+            <button class="mc-seg-btn on" data-tasks-tab="tasks" onclick="showTasksTab('tasks',this)">Tasks</button>
+            <button class="mc-seg-btn" data-tasks-tab="reminders" onclick="showTasksTab('reminders',this)">Reminders</button>
           </div>
-          <div class="ops-head-actions">
+          <div style="margin-left:auto;">
             <button class="btn btn-primary btn-sm" id="tasks-add-btn" onclick="openTaskModal()">+ Add Task</button>
           </div>
-        </div>
-        <div style="display:flex;gap:0;margin-bottom:14px;">
-          <button class="mc-seg-btn on" data-tasks-tab="tasks" onclick="showTasksTab('tasks',this)">Tasks</button>
-          <button class="mc-seg-btn" data-tasks-tab="reminders" onclick="showTasksTab('reminders',this)">Reminders</button>
         </div>
         <div id="tasks-tab-tasks">
           <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
