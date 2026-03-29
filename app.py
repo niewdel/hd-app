@@ -563,6 +563,8 @@ def update_user(uid):
         update['pin_hash'] = hash_password(data['password'])
     elif 'pin' in data and data['pin']:
         update['pin_hash'] = hash_password(data['pin'])
+    if 'hourly_rate' in data:
+        update['hourly_rate'] = float(data['hourly_rate'] or 0)
     if not update: return jsonify({'ok':False,'error':'Nothing to update'}), 400
     try:
         # If username is changing, look up the old one first
@@ -1914,6 +1916,123 @@ def convert_lead(lid):
                    json={'status': 'accepted', 'created_proposal_id': proposal_id},
                    headers=sb_admin_headers(), timeout=10)
         return jsonify({'ok': True, 'proposal_id': proposal_id, 'client_id': client_id})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ── Time Tracking (GPS Clock-In/Out) ──────────────────────
+@app.route('/time/clock-in', methods=['POST'])
+@require_auth
+def time_clock_in():
+    if session.get('role') != 'field':
+        return jsonify({'ok': False, 'error': 'Only field users can clock in'}), 403
+    try:
+        d = request.json or {}
+        username = session.get('username')
+        # Check for existing active clock-in
+        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_time_entries?username=eq.{username}&clock_out=is.null&select=id",
+                     headers=sb_admin_headers(), timeout=5)
+        if r.status_code == 200 and r.json():
+            return jsonify({'ok': False, 'error': 'Already clocked in. Clock out first.'}), 400
+        row = {
+            'username': username,
+            'work_order_id': str(d.get('work_order_id', '')),
+            'project_id': d.get('project_id'),
+            'clock_in': datetime.utcnow().isoformat(),
+            'clock_in_lat': d.get('lat'),
+            'clock_in_lng': d.get('lng')
+        }
+        r = http.post(f"{SUPABASE_URL}/rest/v1/hd_time_entries", json=row, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        entry = r.json()[0] if isinstance(r.json(), list) else r.json()
+        return jsonify({'ok': True, 'entry': entry})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/time/clock-out', methods=['POST'])
+@require_auth
+def time_clock_out():
+    if session.get('role') != 'field':
+        return jsonify({'ok': False, 'error': 'Only field users can clock out'}), 403
+    try:
+        d = request.json or {}
+        username = session.get('username')
+        # Find active entry
+        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_time_entries?username=eq.{username}&clock_out=is.null&select=*&limit=1",
+                     headers=sb_admin_headers(), timeout=5)
+        if r.status_code != 200 or not r.json():
+            return jsonify({'ok': False, 'error': 'No active clock-in found'}), 400
+        entry = r.json()[0]
+        eid = entry['id']
+        clock_in = datetime.fromisoformat(entry['clock_in'].replace('Z', '+00:00').replace('+00:00', ''))
+        clock_out = datetime.utcnow()
+        hours = round((clock_out - clock_in).total_seconds() / 3600, 2)
+        # Look up hourly rate
+        ur = http.get(sb_url('hd_users', f'?username=eq.{username}&select=hourly_rate'), headers=sb_admin_headers(), timeout=5)
+        rate = 0
+        if ur.status_code == 200 and ur.json():
+            rate = float(ur.json()[0].get('hourly_rate') or 0)
+        cost = round(hours * rate, 2)
+        update = {
+            'clock_out': clock_out.isoformat(),
+            'clock_out_lat': d.get('lat'),
+            'clock_out_lng': d.get('lng'),
+            'hours_worked': hours,
+            'hourly_rate': rate,
+            'labor_cost': cost
+        }
+        r2 = http.patch(f"{SUPABASE_URL}/rest/v1/hd_time_entries?id=eq.{eid}", json=update, headers=sb_admin_headers(), timeout=10)
+        if r2.status_code >= 300:
+            return jsonify({'ok': False, 'error': r2.text[:500]}), 400
+        return jsonify({'ok': True, 'hours': hours, 'cost': cost})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/time/active')
+@require_auth
+def time_active():
+    try:
+        username = session.get('username')
+        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_time_entries?username=eq.{username}&clock_out=is.null&select=*&limit=1",
+                     headers=sb_admin_headers(), timeout=5)
+        if r.status_code == 200 and r.json():
+            return jsonify({'ok': True, 'active': r.json()[0]})
+        return jsonify({'ok': True, 'active': None})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/time/entries')
+@require_auth
+def time_entries():
+    try:
+        project_id = request.args.get('project_id')
+        wo_id = request.args.get('work_order_id')
+        q = f"{SUPABASE_URL}/rest/v1/hd_time_entries?select=*&order=clock_in.desc"
+        if project_id:
+            q += f"&project_id=eq.{project_id}"
+        if wo_id:
+            q += f"&work_order_id=eq.{wo_id}"
+        r = http.get(q, headers=sb_admin_headers(), timeout=10)
+        if r.status_code != 200:
+            return jsonify({'ok': False, 'error': r.text[:500]}), r.status_code
+        entries = r.json()
+        # Strip cost data for non-admin users
+        if session.get('role') != 'admin':
+            for e in entries:
+                e.pop('hourly_rate', None)
+                e.pop('labor_cost', None)
+        return jsonify({'ok': True, 'entries': entries})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/time/<int:tid>', methods=['DELETE'])
+@require_admin
+def delete_time_entry(tid):
+    try:
+        r = http.delete(f"{SUPABASE_URL}/rest/v1/hd_time_entries?id=eq.{tid}", headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 

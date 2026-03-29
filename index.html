@@ -2537,6 +2537,18 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div class="ops-page-title" id="wo-detail-header"></div>
           </div>
         </div>
+        <!-- Clock In/Out — field users only -->
+        <div id="wo-clock-card" class="mc-card" style="margin-bottom:14px;display:none;">
+          <div class="card-hdr"><span class="card-title">Time Clock</span></div>
+          <div class="card-body" id="wo-clock-body" style="text-align:center;padding:16px;">
+            <div id="wo-clock-status" style="font-size:13px;color:var(--dgray);margin-bottom:12px;">Loading...</div>
+            <div id="wo-clock-timer" style="font-size:28px;font-weight:800;font-family:var(--font-display);color:var(--blk);display:none;margin-bottom:12px;">0:00:00</div>
+            <button id="wo-clock-btn" class="btn btn-sm" style="padding:10px 28px;font-size:14px;font-weight:700;" onclick="toggleWOClock()">Clock In</button>
+            <div id="wo-clock-gps" style="font-size:10px;color:var(--dgray);margin-top:8px;"></div>
+          </div>
+          <div id="wo-time-log" style="border-top:1px solid var(--bdr);"></div>
+        </div>
+
         <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;">
           <div>
             <div class="mc-card" style="margin-bottom:14px;">
@@ -2862,6 +2874,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       <label>Password <span id="pin-hint" style="font-size:11px;color:var(--dgray);">(min 6 characters)</span></label><input type="password" id="edit-pin" placeholder="Enter password"/>
       <label>Password Hint <span style="font-size:11px;color:var(--dgray);">(optional)</span></label><input type="text" id="edit-pw-hint" placeholder="e.g. My dog's name"/>
       <label>Role</label><select id="edit-role"><option value="user">Standard User</option><option value="field">Field User</option><option value="admin">Admin</option></select>
+      <label>Hourly Rate <span style="font-size:11px;color:var(--dgray);">($)</span></label><input type="number" id="edit-hourly-rate" placeholder="0.00" step="0.01" min="0"/>
       <div id="user-modal-err" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
     </div>
     <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeUserModal()">Cancel</button><button class="btn btn-red btn-sm" onclick="saveUser()">Save User</button></div>
@@ -7479,7 +7492,7 @@ function showPanel(id,el){
   if(id==='subs'){showPanel('contacts',document.querySelector('[onclick*=contacts]'));setTimeout(function(){showContactsTab('subs');},100);return;}
   if(id==='contacts'){setTimeout(renderClients,50);setTimeout(renderSubsList,80);showContactsTab('clients');}
   if(id==='client-summary')renderClientSummary();
-  if(id==='workorder')renderWorkOrderDetail();
+  if(id==='workorder'){renderWorkOrderDetail();initWOClock();}
   if(id==='schedule')renderSchedule();
   if(id==='reports')initReports();
   if(id==='bugs'){loadBugList();}
@@ -10584,10 +10597,10 @@ async function renderArchived(){
     });
   }catch(e){c.innerHTML='<p style="color:var(--dgray);font-size:12px;">Error loading archived items.</p>';}
 }
-function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-email').value='';document.getElementById('edit-phone').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value='';document.getElementById('edit-role').value='user';document.getElementById('pin-hint').textContent='(min 6 characters)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
-function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-email').value=u.email||'';document.getElementById('edit-phone').value=u.phone||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value=u.password_hint||'';document.getElementById('edit-role').value=u.role||'user';document.getElementById('pin-hint').textContent='(leave blank to keep current)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');}
+function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-email').value='';document.getElementById('edit-phone').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value='';document.getElementById('edit-role').value='user';document.getElementById('edit-hourly-rate').value='';document.getElementById('pin-hint').textContent='(min 6 characters)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
+function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-email').value=u.email||'';document.getElementById('edit-phone').value=u.phone||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value=u.password_hint||'';document.getElementById('edit-role').value=u.role||'user';document.getElementById('edit-hourly-rate').value=u.hourly_rate||'';document.getElementById('pin-hint').textContent='(leave blank to keep current)';document.getElementById('user-modal-err').textContent='';document.getElementById('user-modal').classList.remove('hidden');}
 function closeUserModal(){document.getElementById('user-modal').classList.add('hidden');_editingUserId=null;}
-async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var em=document.getElementById('edit-email').value.trim();var ph=document.getElementById('edit-phone').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pw=document.getElementById('edit-pin').value.trim();var hint=document.getElementById('edit-pw-hint').value.trim();var role=document.getElementById('edit-role').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,email:em,phone:ph,role:role,password_hint:hint};if(pw)upd.password=pw;var origUser=window._adminUsers&&window._adminUsers[_editingUserId];if(origUser&&un!==origUser.username)upd.username=un;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){if(upd.username&&origUser.username===window._userUsername){window._userUsername=un;}closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pw||pw.length<6){errEl.textContent='Password must be at least 6 characters.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,email:em,phone:ph,password:pw,password_hint:hint,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
+async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var em=document.getElementById('edit-email').value.trim();var ph=document.getElementById('edit-phone').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pw=document.getElementById('edit-pin').value.trim();var hint=document.getElementById('edit-pw-hint').value.trim();var role=document.getElementById('edit-role').value;var hrate=document.getElementById('edit-hourly-rate').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,email:em,phone:ph,role:role,password_hint:hint,hourly_rate:parseFloat(hrate)||0};if(pw)upd.password=pw;var origUser=window._adminUsers&&window._adminUsers[_editingUserId];if(origUser&&un!==origUser.username)upd.username=un;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){if(upd.username&&origUser.username===window._userUsername){window._userUsername=un;}closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pw||pw.length<6){errEl.textContent='Password must be at least 6 characters.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,email:em,phone:ph,password:pw,password_hint:hint,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
 async function deactivateUser(uid,username,active){if(!confirm((active?'Deactivate':'Reactivate')+' "'+username+'"?'))return;var r=await fetch('/admin/users/'+uid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!active})});var d=await r.json();if(d.ok){loadUsers();toast('User '+(active?'deactivated':'reactivated'),'ok');}else toast('Error: '+(d.error||'failed'),'err');}
 
 // -- Work Order Detail View ---------------------------------------------------
@@ -10596,6 +10609,142 @@ var _currentWorkOrderId=null;
 function openWorkOrderView(woId){
   _currentWorkOrderId=woId;
   showPanel('workorder',null);
+}
+
+// ── Time Clock (GPS Clock-In/Out) ────────────────────────
+var _woClockInterval=null;
+var _woActiveEntry=null;
+
+function initWOClock(){
+  var card=document.getElementById('wo-clock-card');
+  if(!card)return;
+  // Only show for field users
+  if(window._userRole!=='field'){card.style.display='none';return;}
+  card.style.display='block';
+  loadWOClockState();
+}
+
+function loadWOClockState(){
+  fetch('/time/active').then(function(r){return r.json();}).then(function(d){
+    if(d.ok&&d.active){
+      _woActiveEntry=d.active;
+      showClockedInState();
+    } else {
+      _woActiveEntry=null;
+      showClockedOutState();
+    }
+    loadWOTimeLog();
+  }).catch(function(){
+    document.getElementById('wo-clock-status').textContent='Error loading clock state';
+  });
+}
+
+function showClockedOutState(){
+  var btn=document.getElementById('wo-clock-btn');
+  var timer=document.getElementById('wo-clock-timer');
+  var status=document.getElementById('wo-clock-status');
+  btn.textContent='Clock In';btn.style.background='#27500A';btn.style.color='#fff';
+  timer.style.display='none';
+  status.textContent='Not clocked in';
+  if(_woClockInterval){clearInterval(_woClockInterval);_woClockInterval=null;}
+}
+
+function showClockedInState(){
+  var btn=document.getElementById('wo-clock-btn');
+  var timer=document.getElementById('wo-clock-timer');
+  var status=document.getElementById('wo-clock-status');
+  btn.textContent='Clock Out';btn.style.background='var(--red)';btn.style.color='#fff';
+  timer.style.display='block';
+  status.textContent='Clocked in';
+  updateClockTimer();
+  if(_woClockInterval)clearInterval(_woClockInterval);
+  _woClockInterval=setInterval(updateClockTimer,1000);
+}
+
+function updateClockTimer(){
+  if(!_woActiveEntry)return;
+  var start=new Date(_woActiveEntry.clock_in);
+  var now=new Date();
+  var diff=Math.floor((now-start)/1000);
+  var h=Math.floor(diff/3600);
+  var m=Math.floor((diff%3600)/60);
+  var s=diff%60;
+  document.getElementById('wo-clock-timer').textContent=h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function toggleWOClock(){
+  var btn=document.getElementById('wo-clock-btn');
+  var gpsEl=document.getElementById('wo-clock-gps');
+  btn.disabled=true;
+  gpsEl.textContent='Getting GPS location...';
+  getGPSLocation(function(lat,lng){
+    gpsEl.textContent=lat?'GPS: '+lat.toFixed(5)+', '+lng.toFixed(5):'GPS unavailable';
+    if(_woActiveEntry){
+      // Clock out
+      fetch('/time/clock-out',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:lat,lng:lng})})
+        .then(function(r){return r.json();}).then(function(d){
+          btn.disabled=false;
+          if(d.ok){_woActiveEntry=null;showClockedOutState();loadWOTimeLog();toast('Clocked out — '+d.hours+' hrs','ok');}
+          else{toast(d.error||'Clock out failed','err');}
+        }).catch(function(){btn.disabled=false;toast('Network error','err');});
+    } else {
+      // Clock in
+      var woId=_currentWorkOrderId||'';
+      var projId=_currentProjectId||0;
+      fetch('/time/clock-in',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({work_order_id:woId,project_id:projId,lat:lat,lng:lng})})
+        .then(function(r){return r.json();}).then(function(d){
+          btn.disabled=false;
+          if(d.ok){_woActiveEntry=d.entry;showClockedInState();toast('Clocked in','ok');}
+          else{toast(d.error||'Clock in failed','err');}
+        }).catch(function(){btn.disabled=false;toast('Network error','err');});
+    }
+  });
+}
+
+function getGPSLocation(cb){
+  if(!navigator.geolocation){cb(null,null);return;}
+  navigator.geolocation.getCurrentPosition(
+    function(pos){cb(pos.coords.latitude,pos.coords.longitude);},
+    function(){cb(null,null);},
+    {enableHighAccuracy:true,timeout:10000,maximumAge:0}
+  );
+}
+
+function loadWOTimeLog(){
+  var c=document.getElementById('wo-time-log');if(!c)return;
+  var woId=_currentWorkOrderId||'';
+  if(!woId){c.innerHTML='';return;}
+  fetch('/time/entries?work_order_id='+woId).then(function(r){return r.json();}).then(function(d){
+    if(!d.ok||!d.entries||!d.entries.length){c.innerHTML='<div style="padding:12px 16px;font-size:12px;color:var(--dgray);">No time entries yet.</div>';return;}
+    var html='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:var(--bg-sub);"><th style="padding:8px 12px;text-align:left;font-weight:600;">User</th><th style="padding:8px 12px;text-align:left;">Date</th><th style="padding:8px 12px;text-align:left;">In</th><th style="padding:8px 12px;text-align:left;">Out</th><th style="padding:8px 12px;text-align:right;">Hours</th>';
+    if(window._userRole==='admin')html+='<th style="padding:8px 12px;text-align:right;">Cost</th><th style="padding:8px 12px;"></th>';
+    html+='</tr></thead><tbody>';
+    d.entries.forEach(function(e){
+      var inD=new Date(e.clock_in);
+      var outD=e.clock_out?new Date(e.clock_out):null;
+      html+='<tr style="border-top:1px solid var(--bdr);">';
+      html+='<td style="padding:8px 12px;">'+esc(e.username)+'</td>';
+      html+='<td style="padding:8px 12px;">'+inD.toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</td>';
+      html+='<td style="padding:8px 12px;">'+inD.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+'</td>';
+      html+='<td style="padding:8px 12px;">'+(outD?outD.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'<span style="color:var(--red);">Active</span>')+'</td>';
+      html+='<td style="padding:8px 12px;text-align:right;">'+(e.hours_worked?e.hours_worked.toFixed(1)+'h':'—')+'</td>';
+      if(window._userRole==='admin'){
+        html+='<td style="padding:8px 12px;text-align:right;">'+(e.labor_cost?'$'+e.labor_cost.toFixed(2):'—')+'</td>';
+        html+='<td style="padding:8px 12px;text-align:right;"><button class="btn-ico" onclick="deleteTimeEntry('+e.id+')" title="Delete" style="color:var(--dgray);font-size:12px;">&#10005;</button></td>';
+      }
+      html+='</tr>';
+    });
+    html+='</tbody></table>';
+    c.innerHTML=html;
+  }).catch(function(){});
+}
+
+function deleteTimeEntry(id){
+  if(!confirm('Delete this time entry?'))return;
+  fetch('/time/'+id,{method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
+    if(d.ok){loadWOTimeLog();toast('Time entry deleted','ok');}
+    else toast(d.error||'Failed','err');
+  });
 }
 
 function renderWorkOrderDetail(){
