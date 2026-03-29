@@ -1,0 +1,30 @@
+# Environment variables
+.env
+.env.*
+.env.local
+.env.production
+
+# Claude Code local config (may contain tokens in permissions)
+.claude/settings.local.json
+
+# MCP config (contains project refs)
+.mcp.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Node (frontend build tools if used)
+node_modules/
+frontend/node_modules/
