@@ -2059,20 +2059,16 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
       <!-- CONTACTS PANEL (merged clients + subs) -->
       <div class="panel" id="panel-contacts"><div class="content" style="">
-        <div class="ops-page-head">
-          <div class="ops-page-copy">
-            <div class="ops-page-eyebrow">Contacts Workspace</div>
-            <div class="ops-page-title"></div>
-          </div>
-          <div class="ops-head-actions">
-            <button class="btn btn-sec btn-sm" onclick="openClientModal()">Add Client</button>
-            <button class="btn btn-primary btn-sm" onclick="openSubModal()">Add Subcontractor</button>
-          </div>
-        </div>
         <div class="mc-card">
-          <div class="settings-tab-bar" style="margin:0 16px;">
-            <button class="stab on" id="contacts-tab-clients" onclick="showContactsTab('clients')">Clients</button>
-            <button class="stab" id="contacts-tab-subs" onclick="showContactsTab('subs')">Subcontractors</button>
+          <div style="display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--bdr);flex-wrap:wrap;">
+            <div class="settings-tab-bar" style="margin:0;">
+              <button class="stab on" id="contacts-tab-clients" onclick="showContactsTab('clients')">Clients</button>
+              <button class="stab" id="contacts-tab-subs" onclick="showContactsTab('subs')">Subcontractors</button>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:8px;" id="contacts-action-btns">
+              <button class="btn btn-sec btn-sm" onclick="openClientModal()">Add Client</button>
+              <button class="btn btn-primary btn-sm" onclick="openSubModal()">Add Subcontractor</button>
+            </div>
           </div>
           <div class="card-body">
             <div id="contacts-pane-clients">
