@@ -1730,7 +1730,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div style="display:flex;gap:6px;" onclick="event.stopPropagation();">
               <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('pavement')">From Library</button>
               <button class="btn btn-sec btn-sm" onclick="showPresetPicker('pavement')">Add Preset</button>
-              <button class="btn btn-sec btn-sm" onclick="addPavementItem()">+ Add Item</button>
+              <button class="btn btn-sec btn-sm" onclick="addSection('',[{type:'ABC'}])">+ Add Item</button>
             </div>
           </div>
           <div class="card-collapsible" style="padding:0;">
@@ -3953,7 +3953,17 @@ function openLibraryPicker(target){
           var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
           var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,mat_cost:item.mat_cost||0,sub_cost:item.sub_cost||0,crew:item.crew||'',markup:20,days_override:null,badge:tradeBadge,material:item.material||''};
           if(_libPickerTarget==='sitework'){newItem.id=swid++;siteWorkItems.push(newItem);renderSiteWork();}
-          else if(_libPickerTarget==='pavement'){newItem.id=pvid++;pavementItems.push(newItem);renderPavementItems();}
+          else if(_libPickerTarget==='pavement'){
+            var _trade=item.crew||TRADE_BADGE_MAP[item.category]||'';
+            if(_trade==='b-asphalt'||_trade==='b-stone'){
+              // Asphalt/stone: create full section with SF/tonnage/trucks calc
+              var _matType=_resolveMatType(item.material||item.name);
+              addSection(item.name,[{type:_matType,depth:DDEPTH[_matType]||4,name:item.name,description:item.desc||''}]);
+            } else {
+              // Concrete/other: simple line item in pavement card
+              newItem.id=pvid++;pavementItems.push(newItem);renderPavementItems();
+            }
+          }
           else{newItem.id=eid++;extraItems.push(newItem);renderExtra();}
           recalc();toast("Item added","ok");
         });
@@ -3988,7 +3998,7 @@ function renderExtra(){
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var ei=extraItems[i];ei.name=libItem.name;ei.desc=libItem.desc||'';ei.unit=libItem.unit;
       ei.material=libItem.material||'';ei.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
-      ei.crew=libItem.crew||'';ei.sub_cost=libItem.sub_cost||0;ei.markup=20;ei.days_override=null;
+      ei.crew=libItem.crew||'';ei.sub_cost=libItem.sub_cost||0;ei.price=libItem.rate||0;ei.markup=20;ei.days_override=null;
       ei.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';
       renderExtra();recalc();
     });})(idx);
@@ -4000,9 +4010,25 @@ function renderExtra(){
     descIn.className="lyr-desc";
     (function(id){descIn.addEventListener("change",function(){updExtraDesc(id,this.value);});})(item.id);
     row.appendChild(descIn);
-    // Row 3: Material | Qty | Days | Markup % | $/Unit | Subtotal
+    // Row 3: Fields
     var fields=document.createElement("div");fields.className="lyr-fields";
-    // Material dropdown
+    if(_isStripingItem(item)){
+      var lsF=document.createElement("div");lsF.className="lyr-field";lsF.innerHTML="<label>Lump Sum ($)</label>";
+      var lsIn=document.createElement("input");lsIn.type="number";lsIn.min=0;lsIn.step=100;lsIn.value=item.price||"";lsIn.placeholder="0";
+      lsIn.style.cssText="font-weight:600;";
+      (function(i){lsIn.addEventListener("change",function(){extraItems[i].price=parseFloat(this.value)||0;renderExtra();recalc();});})(idx);
+      lsF.appendChild(lsIn);fields.appendChild(lsF);
+      var muF=document.createElement("div");muF.className="lyr-field";muF.innerHTML="<label>Markup %</label>";
+      var muIn=document.createElement("input");muIn.type="number";muIn.min=0;muIn.step=1;muIn.value=item.markup||0;
+      (function(i){muIn.addEventListener("change",function(){extraItems[i].markup=parseFloat(this.value)||0;renderExtra();recalc();});})(idx);
+      muF.appendChild(muIn);fields.appendChild(muF);
+      var totEl=document.createElement("div");totEl.className="lyr-field";totEl.innerHTML="<label>Total</label>";
+      var totVal=document.createElement("span");totVal.style.cssText="display:block;font-size:14px;font-weight:700;color:var(--red);padding:4px 0;";
+      totVal.textContent=bid>0?"$"+Math.round(bid).toLocaleString():"—";
+      totEl.appendChild(totVal);fields.appendChild(totEl);
+      row.appendChild(fields);c.appendChild(row);return;
+    }
+    // Normal: Material | Qty | Days/Sub | Markup % | $/Unit | Margin
     var matF=document.createElement("div");matF.className="lyr-field";matF.innerHTML="<label>Material</label>";
     var matSel=document.createElement("select");
     var matNone=document.createElement("option");matNone.value="";matNone.textContent="— None —";matSel.appendChild(matNone);
@@ -8429,7 +8455,7 @@ function renderSiteWork(){
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var sw=siteWorkItems[i];sw.name=libItem.name;sw.desc=libItem.desc||'';sw.unit=libItem.unit;
       sw.material=libItem.material||'';sw.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
-      sw.crew=libItem.crew||'';sw.sub_cost=libItem.sub_cost||0;sw.markup=20;sw.days_override=null;
+      sw.crew=libItem.crew||'';sw.sub_cost=libItem.sub_cost||0;sw.price=libItem.rate||0;sw.markup=20;sw.days_override=null;
       sw.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';
       renderSiteWork();recalc();
     });})(idx);
@@ -8442,9 +8468,26 @@ function renderSiteWork(){
     descIn.className='lyr-desc';
     (function(i){descIn.addEventListener('change',function(){siteWorkItems[i].desc=this.value;});})(idx);
     row.appendChild(descIn);
-    // Row 3: Material | Qty | Days | Markup % | $/Unit | Subtotal
+    // Row 3: Fields — different layout for striping (lump sum) vs normal
     var fields=document.createElement('div');fields.className='lyr-fields';
-    // Material dropdown
+    if(_isStripingItem(item)){
+      // Striping: Lump Sum Price + Markup only
+      var lsF=document.createElement('div');lsF.className='lyr-field';lsF.innerHTML='<label>Lump Sum ($)</label>';
+      var lsIn=document.createElement('input');lsIn.type='number';lsIn.min=0;lsIn.step=100;lsIn.value=item.price||'';lsIn.placeholder='0';
+      lsIn.style.cssText='font-weight:600;';
+      (function(i){lsIn.addEventListener('change',function(){siteWorkItems[i].price=parseFloat(this.value)||0;renderSiteWork();recalc();});})(idx);
+      lsF.appendChild(lsIn);fields.appendChild(lsF);
+      var muF=document.createElement('div');muF.className='lyr-field';muF.innerHTML='<label>Markup %</label>';
+      var muIn=document.createElement('input');muIn.type='number';muIn.min=0;muIn.step=1;muIn.value=item.markup||0;
+      (function(i){muIn.addEventListener('change',function(){siteWorkItems[i].markup=parseFloat(this.value)||0;renderSiteWork();recalc();});})(idx);
+      muF.appendChild(muIn);fields.appendChild(muF);
+      var totEl=document.createElement('div');totEl.className='lyr-field';totEl.innerHTML='<label>Total</label>';
+      var totVal=document.createElement('span');totVal.style.cssText='display:block;font-size:14px;font-weight:700;color:var(--red);padding:4px 0;';
+      totVal.textContent=bid>0?'$'+Math.round(bid).toLocaleString():'—';
+      totEl.appendChild(totVal);fields.appendChild(totEl);
+      row.appendChild(fields);c.appendChild(row);return;
+    }
+    // Normal items: Material | Qty | Days/Sub | Markup % | $/Unit | Margin
     var matF=document.createElement('div');matF.className='lyr-field';matF.innerHTML='<label>Material</label>';
     var matSel=document.createElement('select');
     var matNone=document.createElement('option');matNone.value='';matNone.textContent='— None —';matSel.appendChild(matNone);
@@ -8548,20 +8591,23 @@ function calcLayerRate(tons, layer){
 
 // -- Item (site work / extra) calc functions -----------------------------------
 function _isConcreteItem(item){return item.crew==='b-general'&&item.material==='Concrete';}
+function _isStripingItem(item){return item.crew==='b-striping';}
 function calcItemDays(item){
-  if(_isConcreteItem(item))return 0; // concrete is subbed out, no crew days
+  if(_isConcreteItem(item)||_isStripingItem(item))return 0;
   if(item.days_override!==null&&item.days_override!==undefined)return item.days_override;
   var crew=getCrewForTrade(item.crew||'');
   if(!crew||!crew.productivity||!item.qty)return 0;
   return Math.ceil(item.qty/crew.productivity*2)/2;
 }
 function calcItemLabor(item){
+  if(_isStripingItem(item))return 0; // lump sum, no labor calc
   if(_isConcreteItem(item))return (item.sub_cost||0)*(item.qty||0);
   var days=calcItemDays(item);
   var crew=getCrewForTrade(item.crew||'');
   return days*(crew?crew.daily_rate:0);
 }
 function calcItemBid(item){
+  if(_isStripingItem(item))return (item.price||0)*(1+(item.markup||0)/100);
   var matTotal=(item.mat_cost||0)*(item.qty||0);
   var laborTotal=calcItemLabor(item);
   var cost=matTotal+laborTotal;
