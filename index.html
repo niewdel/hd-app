@@ -1730,12 +1730,13 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div style="display:flex;gap:6px;" onclick="event.stopPropagation();">
               <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('pavement')">From Library</button>
               <button class="btn btn-sec btn-sm" onclick="showPresetPicker('pavement')">Add Preset</button>
-              <button class="btn btn-sec btn-sm" onclick="addExtra()">+ Add Item</button>
+              <button class="btn btn-sec btn-sm" onclick="addPavementItem()">+ Add Item</button>
             </div>
           </div>
           <div class="card-collapsible" style="padding:0;">
             <div id="sections"></div>
             <div id="conc-rows"></div>
+            <div id="pavement-items"></div>
             <div id="pavement-empty" class="empty-state" style="padding:24px 16px;"><div class="empty-state-title">No pavement items yet</div><div class="empty-state-desc">Click "Add Preset", "From Library", or "+ Add Item" above to get started.</div></div>
           </div>
         </div>
@@ -3947,6 +3948,7 @@ function openLibraryPicker(target){
           var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
           var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,mat_cost:item.mat_cost||0,crew:item.crew||'',markup:20,days_override:null,badge:tradeBadge,material:item.material||''};
           if(_libPickerTarget==='sitework'){newItem.id=swid++;siteWorkItems.push(newItem);renderSiteWork();}
+          else if(_libPickerTarget==='pavement'){newItem.id=pvid++;pavementItems.push(newItem);renderPavementItems();}
           else{newItem.id=eid++;extraItems.push(newItem);renderExtra();}
           recalc();toast("Item added","ok");
         });
@@ -4361,7 +4363,7 @@ function boot(){
     var secEl=document.getElementById('sections');
     if(secEl)secEl.innerHTML='';
   } else {renderAll();}
-  renderConc();renderExtra();
+  renderConc();renderExtra();renderPavementItems();
   loadClientsForAutocomplete();
   loadAllUsers();
   startNotifPolling();
@@ -7956,7 +7958,7 @@ function saveMatPrices(){
   if(el) el.textContent='Last updated: '+new Date().toLocaleDateString();
   updateMatIndicator();
   toast('Material prices saved','ok');
-  renderAll();renderConc();renderExtra();
+  renderAll();renderConc();renderExtra();renderPavementItems();
 }
 
 function resetMatPrices(){
@@ -7968,7 +7970,7 @@ function resetMatPrices(){
   _saveSetting('hd_mat_prices', null);
   renderMatTable(); updateMatIndicator();
   toast('Materials reset to defaults');
-  renderAll();renderConc();renderExtra();
+  renderAll();renderConc();renderExtra();renderPavementItems();
 }
 
 // -- Presets -------------------------------------------------------------------
@@ -8308,6 +8310,81 @@ function renderConc(){
 function addExtra(){extraItems.push({id:eid++,name:'',desc:'',qty:1,unit:'EA',mat_cost:0,crew:'',markup:20,days_override:null,badge:''});renderExtra();}
 
 // Site Work items (same structure as extra items but separate array)
+var pavementItems=[],pvid=0;
+function addPavementItem(){pavementItems.push({id:pvid++,name:'',desc:'',qty:1,unit:'EA',mat_cost:0,crew:'',markup:20,days_override:null,badge:'b-asphalt',material:''});renderPavementItems();}
+function renderPavementItems(){
+  var c=document.getElementById('pavement-items');if(!c)return;
+  c.innerHTML='';
+  var emptyEl=document.getElementById('pavement-empty');
+  if(emptyEl)emptyEl.style.display=(sections.length||concItems.length||pavementItems.length)?'none':'';
+  pavementItems.forEach(function(item,idx){
+    if(item.markup===undefined)item.markup=20;
+    if(item.days_override===undefined)item.days_override=null;
+    var bid=calcItemBid(item);var days=calcItemDays(item);var labor=calcItemLabor(item);
+    var ppu=item.qty>0?bid/item.qty:0;
+    var row=document.createElement('div');row.className='lyr-row';row.style.cssText='padding:14px 16px;';
+    var top=document.createElement('div');top.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:6px;';
+    if(item.badge){var bg=document.createElement('span');bg.className='badge '+item.badge;bg.style.cssText='font-size:10px;flex-shrink:0;';bg.textContent=BADGE_DEFS[item.badge]?BADGE_DEFS[item.badge].label:'';top.appendChild(bg);}
+    var nameIn=document.createElement('input');nameIn.type='text';nameIn.value=item.name||'';nameIn.placeholder='Item name — type to search';
+    nameIn.style.cssText='flex:1;font-size:13px;font-weight:600;padding:6px 10px;border:1px solid var(--bdr);border-radius:6px;background:var(--wht);';
+    (function(i){nameIn.addEventListener('change',function(){pavementItems[i].name=this.value;recalc();});})(idx);
+    top.appendChild(nameIn);
+    (function(i){_attachLibAutocomplete(nameIn,function(libItem){
+      var pv=pavementItems[i];pv.name=libItem.name;pv.desc=libItem.desc||'';pv.unit=libItem.unit;
+      pv.material=libItem.material||'';pv.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
+      pv.crew=libItem.crew||'';pv.markup=20;pv.days_override=null;
+      pv.badge=TRADE_BADGE_MAP[libItem.category]||'b-asphalt';
+      renderPavementItems();recalc();
+    });})(idx);
+    var del=document.createElement('button');del.className='btn-ico';del.style.color='var(--red)';del.innerHTML='&times;';
+    (function(i){del.addEventListener('click',function(){pavementItems.splice(i,1);renderPavementItems();recalc();});})(idx);
+    top.appendChild(del);row.appendChild(top);
+    var descIn=document.createElement('input');descIn.type='text';descIn.value=item.desc||'';descIn.placeholder='Description for PDF...';descIn.className='lyr-desc';
+    (function(i){descIn.addEventListener('change',function(){pavementItems[i].desc=this.value;});})(idx);
+    row.appendChild(descIn);
+    var fields=document.createElement('div');fields.className='lyr-fields';
+    // Material
+    var matF=document.createElement('div');matF.className='lyr-field';matF.innerHTML='<label>Material</label>';
+    var matSel=document.createElement('select');
+    var matNone=document.createElement('option');matNone.value='';matNone.textContent='— None —';matSel.appendChild(matNone);
+    var allMats=LTYPES.slice();if(item.material&&allMats.indexOf(item.material)<0)allMats.unshift(item.material);
+    allMats.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m+' ($'+(MAT[m]||0)+')';if(m===item.material)o.selected=true;matSel.appendChild(o);});
+    (function(i){matSel.addEventListener('change',function(){pavementItems[i].material=this.value;pavementItems[i].mat_cost=MAT[this.value]||0;renderPavementItems();recalc();});})(idx);
+    matF.appendChild(matSel);fields.appendChild(matF);
+    // Qty
+    var qF=document.createElement('div');qF.className='lyr-field';qF.innerHTML='<label>Qty</label>';
+    var qIn=document.createElement('input');qIn.type='number';qIn.min=0;qIn.step=1;qIn.value=item.qty;
+    (function(i){qIn.addEventListener('change',function(){pavementItems[i].qty=parseFloat(this.value)||0;pavementItems[i].days_override=null;renderPavementItems();recalc();});})(idx);
+    qF.appendChild(qIn);fields.appendChild(qF);
+    // Days
+    var dF=document.createElement('div');dF.className='lyr-field';dF.innerHTML='<label>Days</label>';
+    var dIn=document.createElement('input');dIn.type='number';dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);
+    (function(i){dIn.addEventListener('change',function(){var v=parseFloat(this.value)||0;var auto=calcItemDays({qty:pavementItems[i].qty,crew:pavementItems[i].crew,days_override:null});pavementItems[i].days_override=Math.abs(v-auto)<0.01?null:v;renderPavementItems();recalc();});})(idx);
+    dF.appendChild(dIn);fields.appendChild(dF);
+    // Markup %
+    var muF=document.createElement('div');muF.className='lyr-field';muF.innerHTML='<label>Markup %</label>';
+    var muIn=document.createElement('input');muIn.type='number';muIn.min=0;muIn.step=1;muIn.value=item.markup||0;
+    (function(i){muIn.addEventListener('change',function(){pavementItems[i].markup=parseFloat(this.value)||0;renderPavementItems();recalc();});})(idx);
+    muF.appendChild(muIn);fields.appendChild(muF);
+    // $/Unit
+    var ppuEl=document.createElement('div');ppuEl.className='lyr-field';ppuEl.innerHTML='<label>$/Unit</label>';
+    var ppuVal=document.createElement('span');ppuVal.style.cssText='display:block;font-size:13px;font-weight:700;color:var(--red);padding:4px 0;';
+    ppuVal.textContent=ppu>0?'$'+ppu.toFixed(2):'—';
+    ppuEl.appendChild(ppuVal);fields.appendChild(ppuEl);
+    // Margin
+    var matT=(item.mat_cost||0)*(item.qty||0);var costT=matT+labor;var mp=costT>0?((bid-costT)/costT*100):0;
+    var mub=document.createElement('span');mub.className='mubadge '+(mp>=0?'p':'n');mub.textContent=bid>0?mp.toFixed(1)+'%':'';
+    fields.appendChild(mub);
+    row.appendChild(fields);
+    if(item.qty>0&&bid>0){
+      var d='<span style="margin:0 3px;color:var(--dot-sep);">&middot;</span>';
+      var resEl=document.createElement('div');resEl.className='lyr-result';
+      resEl.innerHTML='<span class="lres">Mat <b>$'+fi(matT)+'</b>'+d+'Labor <b>$'+fi(labor)+'</b>'+d+'Cost <b>$'+fi(costT)+'</b>'+d+'Total <b style="color:var(--red);">$'+fi(bid)+'</b>'+d+'<span class="'+(mp>=0?'gp':'gn')+'">'+mp.toFixed(1)+'%</span></span>';
+      row.appendChild(resEl);
+    }
+    c.appendChild(row);
+  });
+}
 var siteWorkItems=[],swid=0;
 function addSiteWorkItem(){siteWorkItems.push({id:swid++,name:'',desc:'',qty:1,unit:'EA',mat_cost:0,crew:'',markup:20,days_override:null,badge:''});renderSiteWork();}
 function renderSiteWork(){
@@ -8468,7 +8545,7 @@ var _undoStack=[];var _redoStack=[];var _undoTimer=null;
 function pushUndo(){
   clearTimeout(_undoTimer);
   _undoTimer=setTimeout(function(){
-    var state=JSON.stringify({sections:sections,concItems:concItems,extraItems:extraItems,siteWorkItems:siteWorkItems});
+    var state=JSON.stringify({sections:sections,concItems:concItems,extraItems:extraItems,siteWorkItems:siteWorkItems,pavementItems:pavementItems});
     if(_undoStack.length&&_undoStack[_undoStack.length-1]===state)return;
     _undoStack.push(state);if(_undoStack.length>30)_undoStack.shift();
     _redoStack=[];
@@ -8483,7 +8560,7 @@ function undo(){
   lid=sections.reduce(function(m,s){return Math.max(m,s.layers.reduce(function(m2,l){return Math.max(m2,l.id+1);},0));},0);
   cid=concItems.reduce(function(m,c){return Math.max(m,c.id+1);},0);
   eid=extraItems.reduce(function(m,e){return Math.max(m,e.id+1);},0);
-  renderAll();renderConc();renderExtra();recalc();toast('Undo','ok');
+  renderAll();renderConc();renderExtra();renderPavementItems();recalc();toast('Undo','ok');
 }
 function redo(){
   if(!_redoStack.length){toast('Nothing to redo','err');return;}
@@ -8494,7 +8571,7 @@ function redo(){
   lid=sections.reduce(function(m,s){return Math.max(m,s.layers.reduce(function(m2,l){return Math.max(m2,l.id+1);},0));},0);
   cid=concItems.reduce(function(m,c){return Math.max(m,c.id+1);},0);
   eid=extraItems.reduce(function(m,e){return Math.max(m,e.id+1);},0);
-  renderAll();renderConc();renderExtra();recalc();toast('Redo','ok');
+  renderAll();renderConc();renderExtra();renderPavementItems();recalc();toast('Redo','ok');
 }
 
 function recalc(){
@@ -8552,6 +8629,11 @@ function recalc(){
       +'<td style="font-weight:600;">$'+fi(bidC)+'</td>'
       +'<td class="'+(mp>=0?'gp':'gn')+'">'+mp.toFixed(1)+'%</td>';
     bkConc.appendChild(tr);
+  });
+  pavementItems.forEach(function(i){
+    var bid=calcItemBid(i);
+    if(!i.name||bid<=0)return;
+    gB+=bid;
   });
   extraItems.forEach(function(i){
     var bid=calcItemBid(i);
@@ -9053,6 +9135,20 @@ function buildRawLineItems(){
       src:'concrete'
     });
   });
+  pavementItems.forEach(function(i){
+    var bid=calcItemBid(i);
+    if(!i.name||bid<=0)return;
+    var pvBadgeCls=i.badge||'b-asphalt';
+    var pvBadgeLabel=i.badge&&BADGE_DEFS[i.badge]?BADGE_DEFS[i.badge].label:'Pavement';
+    var ppu=i.qty>0?bid/i.qty:0;
+    items.push({
+      key:'pv-'+i.id,badge:pvBadgeLabel,badgeCls:pvBadgeCls,
+      name:i.name,description:i.desc||'',
+      qty:i.qty,unit:i.unit,
+      price:parseFloat(ppu.toFixed(2)),subtotal:parseFloat(bid.toFixed(2)),
+      src:'pavement'
+    });
+  });
   siteWorkItems.forEach(function(i){
     var bid=calcItemBid(i);
     if(!i.name||bid<=0)return;
@@ -9337,7 +9433,7 @@ async function saveQuote(quiet){
     cs:document.getElementById('proj-cs').value,notes:document.getElementById('proj-notes').value,
     waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,mob_cost:document.getElementById('mob-cost').value,contingency:document.getElementById('contingency').value,
     selectedClient:selectedClient,liOverrides:liOverrides,
-    sections:sections,concItems:concItems,extraItems:extraItems,siteWorkItems:siteWorkItems};
+    sections:sections,concItems:concItems,extraItems:extraItems,siteWorkItems:siteWorkItems,pavementItems:pavementItems};
   if(document.getElementById('options-toggle').checked&&pricingOptions.length)snap.pricing_options=pricingOptions;
   var p=buildPayload();
   snap.line_items=p.line_items;snap.total=p.total;
@@ -9418,6 +9514,7 @@ function loadQuote(id){
   concItems=d.concItems||[];cid=concItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
   extraItems=d.extraItems||[];eid=extraItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
   siteWorkItems=d.siteWorkItems||[];swid=siteWorkItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
+  pavementItems=d.pavementItems||[];pvid=pavementItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
   lastSavedQuoteId=q.id;
   evaActuals=d.eva_actuals||{};
   // Set project link from parent project if not already set
@@ -9438,7 +9535,7 @@ function loadQuote(id){
   }
   showPanel('build',document.querySelector('.nav-item'));
   updateProposalDocBadge();
-  renderAll();renderConc();renderExtra();renderSiteWork();
+  renderAll();renderConc();renderExtra();renderPavementItems();renderSiteWork();
   _proposalDirty=false;
   toast('Quote loaded');
 }
@@ -9706,7 +9803,7 @@ async function duplicateProposal(id){
   }catch(e){toast('Duplicate error: '+e.message,'err');}
 }
 function resetAll(){
-  sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;lastSavedQuoteId=null;
+  sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;pavementItems=[];pvid=0;siteWorkItems=[];swid=0;lastSavedQuoteId=null;
   ['proj-name','proj-client','proj-addr','proj-cs'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('proj-notes').value=_defaultProjectNotes;
   document.getElementById('waste').value=5;document.getElementById('mob').value=10000;document.getElementById('mob-cost').value=5000;document.getElementById('contingency').value=0;
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
@@ -9716,7 +9813,7 @@ function resetAll(){
   pricingOptions=[];
   document.getElementById('options-toggle').checked=false;
   document.getElementById('pricing-options-body').style.display='none';
-  renderAll();renderConc();renderExtra();
+  renderAll();renderConc();renderExtra();renderPavementItems();
   toast('Reset');
 }
 
