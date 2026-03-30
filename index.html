@@ -1709,7 +1709,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div style="margin-bottom:11px;"><label>Mobilization — Bid ($)</label><input id="mob" type="number" value="10000" min="0" step="500"/></div>
               <div><label>Mobilization — Est. Cost ($)</label><input id="mob-cost" type="number" value="5000" min="0" step="500"/></div>
             </div>
-              <div><label>Project Notes</label><textarea id="proj-notes" rows="6" placeholder="Notes for the proposal..." style="resize:vertical;font-family:inherit;font-size:13px;">All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. See Exhibit A on Page 3 for Site Plan &amp; Takeoffs.</textarea></div>
+              <div><label>Project Notes</label><textarea id="proj-notes" rows="6" placeholder="Notes for the proposal..." style="resize:vertical;font-family:inherit;font-size:13px;"></textarea></div>
             </div>
             <input id="waste" type="hidden" value="0"/>
             <input id="contingency" type="hidden" value="0"/>
@@ -2352,7 +2352,19 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
         </div>
 
         <!-- Estimating Tab (merges Materials + Badges + Presets) -->
-        <div id="stab-content-estimating"></div>
+        <div id="stab-content-estimating">
+          <div class="card" style="margin-bottom:var(--card-gap);">
+            <div class="card-hdr"><span class="card-title">Default Project Notes</span></div>
+            <div class="card-body">
+              <p style="font-size:12px;color:var(--dgray);margin:0 0 8px;">This text will auto-fill the Project Notes field when creating a new proposal.</p>
+              <textarea id="setting-default-notes" rows="4" style="width:100%;resize:vertical;font-family:inherit;font-size:13px;" placeholder="Enter default notes for new proposals..."></textarea>
+              <div style="margin-top:8px;display:flex;gap:8px;">
+                <button class="btn btn-primary btn-sm" onclick="saveDefaultNotes()">Save</button>
+                <button class="btn btn-sec btn-sm" onclick="resetDefaultNotes()">Reset to Default</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Materials Tab (now shown inside Estimating) -->
         <div id="stab-content-materials" style="display:none;">
@@ -4306,6 +4318,7 @@ function boot(){
   _restoreSbPin();
   applyBadgeStyles();
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('proj-notes').value=_defaultProjectNotes;
   var coD=document.getElementById('co-date');if(coD)coD.value=new Date().toISOString().split('T')[0];
   initJobCost();
   var coOA=document.getElementById('co-orig-amount');if(coOA)coOA.addEventListener('input',function(){recalcCO();});
@@ -4373,6 +4386,8 @@ function loadStorage(){
     if(eq){try{EQUIPMENT=JSON.parse(eq);}catch(e){}}
     var up=localStorage.getItem('hd_unit_prices');
     if(up){try{UNIT_PRICES=JSON.parse(up);}catch(e){}}
+    var dn=localStorage.getItem('hd_default_notes');
+    if(dn){try{_defaultProjectNotes=JSON.parse(dn);}catch(e){_defaultProjectNotes=dn;}}
   }catch(e){}
   // Async: fetch from Supabase and overlay
   _loadFromSupabase();
@@ -4437,7 +4452,7 @@ function _applyJCDefaults(d){
 }
 
 function _loadFromSupabase(){
-  fetch('/settings/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:['hd_sender','hd_presets','hd_badge_defs','hd_mat_prices','hd_jc_defaults','hd_crews','hd_bid_library','hd_handbook_url','hd_equipment','hd_unit_prices','hd_notif_prefs','hd_company_info','hd_dark_mode','hd_auto_logout','hd_sb_pinned','hd_subcontractors']})})
+  fetch('/settings/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:['hd_sender','hd_presets','hd_badge_defs','hd_mat_prices','hd_jc_defaults','hd_crews','hd_bid_library','hd_handbook_url','hd_equipment','hd_unit_prices','hd_notif_prefs','hd_company_info','hd_dark_mode','hd_auto_logout','hd_sb_pinned','hd_subcontractors','hd_default_notes']})})
     .then(function(r){return r.json();}).then(function(d){
       if(!d.ok||!d.values)return;
       var v=d.values;
@@ -4458,6 +4473,7 @@ function _loadFromSupabase(){
       if(v.hd_auto_logout!==undefined){_autoLogoutMinutes=parseInt(v.hd_auto_logout)||0;try{localStorage.setItem('hd_auto_logout',String(_autoLogoutMinutes));}catch(e){}}
       if(v.hd_sb_pinned!==undefined){try{localStorage.setItem('hd_sb_pinned',v.hd_sb_pinned);}catch(e){}_restoreSbPin();}
       if(v.hd_subcontractors){try{localStorage.setItem('hd_subcontractors',JSON.stringify(v.hd_subcontractors));}catch(e){}}
+      if(v.hd_default_notes!==undefined){_defaultProjectNotes=v.hd_default_notes;try{localStorage.setItem('hd_default_notes',JSON.stringify(v.hd_default_notes));}catch(e){}}
     }).catch(function(){});
 }
 
@@ -9557,7 +9573,7 @@ async function duplicateProposal(id){
 }
 function resetAll(){
   sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;lastSavedQuoteId=null;
-  ['proj-name','proj-client','proj-addr','proj-cs'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('proj-notes').value='All work to be performed in accordance with approved construction drawings, NCDOT standards, and applicable local/state regulations. Site must be accessible and clear of obstructions prior to mobilization. Quantities are based on engineer-provided plans; actual field-measured quantities may vary and will be billed at the stated unit prices. Any unforeseen conditions encountered during construction — including but not limited to rock excavation, unsuitable soils, groundwater, or utility conflicts — may be subject to additional charges via written change order at the unit prices stated herein. Rock excavation, undercut, and dewatering are excluded unless specifically listed as a bid item. All geotechnical and civil engineering services are the responsibility of the owner. Material pricing subject to market conditions at time of delivery. Payment due within 30 days of invoice.';
+  ['proj-name','proj-client','proj-addr','proj-cs'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('proj-notes').value=_defaultProjectNotes;
   document.getElementById('waste').value=5;document.getElementById('mob').value=10000;document.getElementById('mob-cost').value=5000;document.getElementById('contingency').value=0;
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('client-bar').style.display='none';
@@ -9631,6 +9647,19 @@ function loadSenderUI(){
   var email=document.getElementById('sender-email'); if(email)email.value=sender.email||'';
   var phone=document.getElementById('sender-phone'); if(phone)phone.value=sender.phone||'';
 }
+var DEFAULT_PROJECT_NOTES='All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. See Exhibit A on Page 3 for Site Plan & Takeoffs.';
+var _defaultProjectNotes=DEFAULT_PROJECT_NOTES;
+function saveDefaultNotes(){
+  _defaultProjectNotes=document.getElementById('setting-default-notes').value;
+  _saveSetting('hd_default_notes',_defaultProjectNotes);
+  toast('Default notes saved','ok');
+}
+function resetDefaultNotes(){
+  _defaultProjectNotes=DEFAULT_PROJECT_NOTES;
+  document.getElementById('setting-default-notes').value=_defaultProjectNotes;
+  _saveSetting('hd_default_notes',_defaultProjectNotes);
+  toast('Default notes reset','ok');
+}
 function showSettingsTab(tab){
   // Map merged tabs to their child tabs
   var allTabs=['general','estimating','badges','presets','library','materials','crews','equipment','crewequip','bugreport'];
@@ -9645,6 +9674,7 @@ function showSettingsTab(tab){
   if(tab==='estimating'){
     ['materials','badges','presets'].forEach(function(t){var e=document.getElementById('stab-content-'+t);if(e)e.style.display='';});
     renderMatTable();renderBadgeList();renderPresetMgr();
+    var dnEl=document.getElementById('setting-default-notes');if(dnEl)dnEl.value=_defaultProjectNotes;
   }
   // Crew & Equipment = Crews + Equipment shown together
   if(tab==='crewequip'){
