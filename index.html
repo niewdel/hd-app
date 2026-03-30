@@ -3788,12 +3788,12 @@ function renderLibraryList(){
   }});
   c.appendChild(libBulkBar);
   var hdr=document.createElement("div");
-  hdr.style.cssText="display:grid;grid-template-columns:180px 1.2fr 1.5fr 60px 80px 28px;gap:8px;padding:6px 0;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--bdr);margin-bottom:4px;";
-  hdr.innerHTML="<span>Category</span><span>Name</span><span>Description</span><span>Unit</span><span>$/Unit</span><span></span>";
+  hdr.style.cssText="display:grid;grid-template-columns:150px 1.2fr 1.5fr 60px 80px 120px 28px;gap:8px;padding:6px 0;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--bdr);margin-bottom:4px;";
+  hdr.innerHTML="<span>Category</span><span>Name</span><span>Description</span><span>Unit</span><span>$/Unit</span><span>Crew</span><span></span>";
   c.appendChild(hdr);
   filtered.forEach(function(item){
     var row=document.createElement("div");
-    row.style.cssText="display:grid;grid-template-columns:180px 1.2fr 1.5fr 60px 80px 28px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);";
+    row.style.cssText="display:grid;grid-template-columns:150px 1.2fr 1.5fr 60px 80px 120px 28px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);";
     // Category dropdown
     var cs=document.createElement("select");cs.style.cssText="font-size:12px;padding:4px 6px;width:100%;";
     LIB_CATEGORIES.forEach(function(cat){
@@ -3814,6 +3814,11 @@ function renderLibraryList(){
     // Rate
     var ri=document.createElement("input");ri.type="number";ri.value=item.rate||"";ri.min="0";ri.step="0.01";ri.style.fontSize="12px";
     ri.addEventListener("change",(function(it){return function(){it.rate=parseFloat(this.value)||0;};})(item));row.appendChild(ri);
+    // Crew dropdown
+    var crewSel=document.createElement("select");crewSel.style.cssText="font-size:11px;padding:4px 6px;width:100%;";
+    var crewNone=document.createElement("option");crewNone.value='';crewNone.textContent='— None —';crewSel.appendChild(crewNone);
+    CREWS.forEach(function(cr){var o=document.createElement("option");o.value=cr.trade;o.textContent=cr.name+' ($'+cr.daily_rate+'/day)';if(cr.trade===item.crew)o.selected=true;crewSel.appendChild(o);});
+    crewSel.addEventListener("change",(function(it){return function(){it.crew=this.value;};})(item));row.appendChild(crewSel);
     // Delete
     var db=document.createElement("button");db.className="btn-ico";db.style.color="var(--red)";db.textContent="\u00d7";
     db.addEventListener("click",(function(id){return function(){if(!confirm('Delete this library item?'))return;BID_LIBRARY=BID_LIBRARY.filter(function(x){return x.id!==id;});renderLibraryList();};})(item.id));
@@ -3824,7 +3829,7 @@ function renderLibraryList(){
 function addLibraryItem(){
   var filterEl=document.getElementById("lib-cat-filter");
   var cat=(filterEl&&filterEl.value)||'General / Misc';
-  BID_LIBRARY.push({id:_libId++,name:"",desc:"",unit:"LS",rate:0,badge:"",material:"",category:cat});
+  BID_LIBRARY.push({id:_libId++,name:"",desc:"",unit:"LS",rate:0,badge:"",material:"",category:cat,crew:TRADE_BADGE_MAP[cat]||''});
   renderLibraryList();
 }
 function loadDefaultLibrary(){
