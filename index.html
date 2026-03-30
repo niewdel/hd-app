@@ -3108,14 +3108,27 @@ var CREW_COSTS = {};
 function getCrewForTrade(trade){
   return CREWS.find(function(c){return c.trade===trade;})||null;
 }
-function getCrewParam(matType, param){
+function _resolveTradeForMat(matType){
   var trade=MAT_TRADE[matType]||'';
-  var crew=getCrewForTrade(trade);
-  // If no crew found for current trade, try the default trade mapping
-  if(!crew && MAT_TRADE_DEFAULT && MAT_TRADE_DEFAULT[matType]){
-    trade=MAT_TRADE_DEFAULT[matType];
-    crew=getCrewForTrade(trade);
+  if(trade && trade!=='b-general' && getCrewForTrade(trade)) return trade;
+  // Try default trade mapping for standard material names
+  if(MAT_TRADE_DEFAULT && MAT_TRADE_DEFAULT[matType]){
+    var dt=MAT_TRADE_DEFAULT[matType];
+    if(getCrewForTrade(dt)) return dt;
   }
+  // Try resolving via bid library base material reference
+  var allLib=(BID_LIBRARY||[]).concat(DEFAULT_BID_LIBRARY||[]);
+  var item=allLib.find(function(x){return x.name===matType;});
+  if(item && item.material){
+    var baseTrade=MAT_TRADE[item.material]||
+      (MAT_TRADE_DEFAULT&&MAT_TRADE_DEFAULT[item.material])||'';
+    if(baseTrade && getCrewForTrade(baseTrade)) return baseTrade;
+  }
+  return trade||'';
+}
+function getCrewParam(matType, param){
+  var trade=_resolveTradeForMat(matType);
+  var crew=getCrewForTrade(trade);
   if(crew){
     if(param === 'crew_rate') return crew.daily_rate||jcCrewRate;
     if(param === 'productivity') return crew.productivity||jcProductivity;
@@ -4388,7 +4401,7 @@ function getMatCost(type){
   return 0;
 }
 function tons(sf,d,lbs,matType){
-  var trade=MAT_TRADE[matType]||'';
+  var trade=_resolveTradeForMat(matType);
   if(trade==='b-asphalt'){
     // Asphalt: (SF/9 * lbs/2000) * depth_inches
     return Math.ceil((sf/9*(lbs||115)/2000)*d);
