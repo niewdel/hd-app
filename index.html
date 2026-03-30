@@ -4350,7 +4350,15 @@ function _loadFromSupabase(){
 }
 
 // -- Helpers -------------------------------------------------------------------
-function tons(sf,d,lbs){return Math.ceil((sf*(d/12)*(lbs||115))/2000);}
+function tons(sf,d,lbs,matType){
+  var trade=MAT_TRADE[matType]||'';
+  if(trade==='b-asphalt'){
+    // Asphalt: (SF/9 * lbs/2000) * depth_inches
+    return Math.ceil((sf/9*(lbs||115)/2000)*d);
+  }
+  // Stone/aggregate/default: SF * depth_inches/12 * lbs/2000
+  return Math.ceil((sf*(d/12)*(lbs||150))/2000);
+}
 function calcSY(sf){return Math.ceil(sf/9);}
 function wf(){return 1+(parseFloat(document.getElementById('waste').value)||0)/100;}
 function mob(){return parseFloat(document.getElementById('mob').value)||0;}
@@ -4558,7 +4566,7 @@ function buildEVAEstimates(){
   sections.forEach(function(s){
     var sf=s.sf||0;
     s.layers.forEach(function(l){
-      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
+      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type],l.type):0;
       var t=rawT*wfv;
       var matC=t*(MAT[l.type]||0);
       var days=calcLayerDays(t,l);
@@ -7834,7 +7842,7 @@ function updLyrMarkup(sid2,lid2,v){
 function updLyrDays(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
-  var t=(s.sf>0)?tons(s.sf,l.depth,LBS[l.type])*wf():0;
+  var t=(s.sf>0)?tons(s.sf,l.depth,LBS[l.type],l.type)*wf():0;
   var autoD=jcProductivity>0?t/jcProductivity:0;
   var entered=parseFloat(v)||0;
   // If value matches auto, clear override; otherwise set override
@@ -7850,7 +7858,7 @@ function updTrucks(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   var sf=s.sf||0,wfv=wf();
-  var t=(sf>0)?tons(sf,l.depth,LBS[l.type])*wfv:0;
+  var t=(sf>0)?tons(sf,l.depth,LBS[l.type],l.type)*wfv:0;
   var autoTrucks=calcTruckCount(t,{trucks_override:null,type:l.type});
   var entered=parseInt(v)||0;
   l.trucks_override=(entered===autoTrucks)?null:entered;
@@ -7872,7 +7880,7 @@ function updLyrDesc(sid2,lid2,v){
 function secTot(s){
   var wfv=wf(),tt=0,tm=0,tl=0,ttr=0,tcost=0,tb=0;
   s.layers.forEach(function(l){
-    var t=(s.sf>0)?tons(s.sf,l.depth,LBS[l.type])*wfv:0;
+    var t=(s.sf>0)?tons(s.sf,l.depth,LBS[l.type],l.type)*wfv:0;
     var matC=t*(MAT[l.type]||0);
     var days=calcLayerDays(t,l);
     var crewC=days*getCrewParam(l.type,'crew_rate');
@@ -7907,7 +7915,7 @@ function updateLyrResult(sid2,lid2){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   var sf=s.sf||0,wfv=wf();
-  var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
+  var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type],l.type):0;
   var t=rawT*wfv;var sy=calcSY(sf);
   var bidC=calcLayerBid(t,l);
   var matC=t*(MAT[l.type]||0);
@@ -7946,7 +7954,7 @@ function renderAll(){
     var lrows='';
     s.layers.forEach(function(l){
       var wfv=wf();
-      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
+      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type],l.type):0;
       var t=rawT*wfv;
       var bidC=calcLayerBid(t,l);
       var matC=t*(MAT[l.type]||0);
@@ -8236,7 +8244,7 @@ function recalc(){
   sections.forEach(function(s){
     var sf=s.sf||0,sy=calcSY(sf);gSF+=sf;gSY+=sy;
     s.layers.forEach(function(l){
-      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
+      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type],l.type):0;
       var t=rawT*wfv;
       var mC=t*(MAT[l.type]||0);
       var bC=calcLayerBid(t,l);
@@ -8732,7 +8740,7 @@ function buildRawLineItems(){
   sections.forEach(function(s){
     var sf=s.sf||0,sy=calcSY(sf);
     s.layers.forEach(function(l){
-      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
+      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type],l.type):0;
       var t=rawT*wfv;
       var bC=calcLayerBid(t,l);
       var autoDesc='Install '+l.depth+'" '+(l.name||l.type);
@@ -9192,7 +9200,7 @@ async function exportPricingBreakdown(){
   sections.forEach(function(s){
     var sf=s.sf||0;var sy=calcSY(sf);
     s.layers.forEach(function(l){
-      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type]):0;
+      var rawT=(sf>0)?tons(sf,l.depth,LBS[l.type],l.type):0;
       var t=rawT*wfv;
       var matC=t*(MAT[l.type]||0);
       var days=calcLayerDays(t,l);
