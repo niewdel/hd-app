@@ -3156,6 +3156,7 @@ function _backfillLibMaterial(){
       if(!item.mat_cost&&def.mat_cost)item.mat_cost=def.mat_cost;
       if(!item.category&&def.category)item.category=def.category;
       if(!item.crew&&def.crew)item.crew=def.crew;
+      if(item.sub_cost===undefined&&def.sub_cost)item.sub_cost=def.sub_cost;
     }
   });
 }
@@ -3273,21 +3274,21 @@ var DEFAULT_BID_LIBRARY=[
   {name:'Stone Shoulder Repair',desc:'Stone shoulder grading and repair',unit:'LF',rate:0,material:'ABC',mat_cost:5,category:'Stone / Aggregate',crew:'b-stone'},
   {name:'Gravel Driveway / Parking',desc:'Furnish & install gravel surface',unit:'SY',rate:0,material:'Gravel',mat_cost:8,category:'Stone / Aggregate',crew:'b-stone'},
   // ── CONCRETE ──
-  {name:'Concrete Curb & Gutter (18" Std)',desc:'Install 18" 3000PSI standard curb & gutter',unit:'LF',rate:0,material:'Concrete',mat_cost:5.60,category:'Concrete',crew:'b-general'},
-  {name:'Concrete Curb & Gutter (24")',desc:'Install 24" 3000PSI curb & gutter',unit:'LF',rate:0,material:'Concrete',mat_cost:7.40,category:'Concrete',crew:'b-general'},
-  {name:'Concrete Curb & Gutter (30")',desc:'Install 30" 3000PSI curb & gutter',unit:'LF',rate:0,material:'Concrete',mat_cost:9.20,category:'Concrete',crew:'b-general'},
-  {name:'6" Vertical Curb',desc:'Install 6" vertical concrete curb',unit:'LF',rate:0,material:'Concrete',mat_cost:2.40,category:'Concrete',crew:'b-general'},
-  {name:'6" Mountable Curb',desc:'Install 6" mountable concrete curb',unit:'LF',rate:0,material:'Concrete',mat_cost:2.40,category:'Concrete',crew:'b-general'},
-  {name:'Valley Gutter',desc:'Install concrete valley gutter',unit:'LF',rate:0,material:'Concrete',mat_cost:9.80,category:'Concrete',crew:'b-general'},
-  {name:'Ribbon Curb',desc:'Install concrete ribbon curb',unit:'LF',rate:0,material:'Concrete',mat_cost:3.80,category:'Concrete',crew:'b-general'},
-  {name:'Concrete Flume',desc:'Install concrete flume',unit:'LF',rate:0,material:'Concrete',mat_cost:3.80,category:'Concrete',crew:'b-general'},
-  {name:'Concrete Sidewalk (4")',desc:'Install 4" concrete sidewalk',unit:'SF',rate:0,material:'Concrete',mat_cost:2.50,category:'Concrete',crew:'b-general'},
-  {name:'Concrete Sidewalk (6")',desc:'Install 6" concrete sidewalk',unit:'SF',rate:0,material:'Concrete',mat_cost:3.75,category:'Concrete',crew:'b-general'},
-  {name:'Concrete Driveway Apron',desc:'Install concrete driveway apron',unit:'SY',rate:0,material:'Concrete',mat_cost:22,category:'Concrete',crew:'b-general'},
-  {name:'Concrete Pad',desc:'Install concrete equipment/dumpster pad',unit:'SF',rate:0,material:'Concrete',mat_cost:4,category:'Concrete',crew:'b-general'},
-  {name:'ADA Ramp',desc:'Install ADA-compliant concrete ramp with detectable warning',unit:'EA',rate:0,material:'Concrete',mat_cost:240,category:'Concrete',crew:'b-general'},
-  {name:'Concrete Median',desc:'Install concrete median per plans',unit:'LF',rate:0,material:'Concrete',mat_cost:10,category:'Concrete',crew:'b-general'},
-  {name:'Thickened Edge',desc:'Install concrete thickened edge',unit:'LF',rate:0,material:'Concrete',mat_cost:1.80,category:'Concrete',crew:'b-general'},
+  {name:'Concrete Curb & Gutter (18" Std)',desc:'Install 18" 3000PSI standard curb & gutter',unit:'LF',rate:0,material:'Concrete',mat_cost:5.60,sub_cost:18,category:'Concrete',crew:'b-general'},
+  {name:'Concrete Curb & Gutter (24")',desc:'Install 24" 3000PSI curb & gutter',unit:'LF',rate:0,material:'Concrete',mat_cost:7.40,sub_cost:22,category:'Concrete',crew:'b-general'},
+  {name:'Concrete Curb & Gutter (30")',desc:'Install 30" 3000PSI curb & gutter',unit:'LF',rate:0,material:'Concrete',mat_cost:9.20,sub_cost:26,category:'Concrete',crew:'b-general'},
+  {name:'6" Vertical Curb',desc:'Install 6" vertical concrete curb',unit:'LF',rate:0,material:'Concrete',mat_cost:2.40,sub_cost:10,category:'Concrete',crew:'b-general'},
+  {name:'6" Mountable Curb',desc:'Install 6" mountable concrete curb',unit:'LF',rate:0,material:'Concrete',mat_cost:2.40,sub_cost:10,category:'Concrete',crew:'b-general'},
+  {name:'Valley Gutter',desc:'Install concrete valley gutter',unit:'LF',rate:0,material:'Concrete',mat_cost:9.80,sub_cost:28,category:'Concrete',crew:'b-general'},
+  {name:'Ribbon Curb',desc:'Install concrete ribbon curb',unit:'LF',rate:0,material:'Concrete',mat_cost:3.80,sub_cost:12,category:'Concrete',crew:'b-general'},
+  {name:'Concrete Flume',desc:'Install concrete flume',unit:'LF',rate:0,material:'Concrete',mat_cost:3.80,sub_cost:12,category:'Concrete',crew:'b-general'},
+  {name:'Concrete Sidewalk (4")',desc:'Install 4" concrete sidewalk',unit:'SF',rate:0,material:'Concrete',mat_cost:2.50,sub_cost:5,category:'Concrete',crew:'b-general'},
+  {name:'Concrete Sidewalk (6")',desc:'Install 6" concrete sidewalk',unit:'SF',rate:0,material:'Concrete',mat_cost:3.75,sub_cost:6,category:'Concrete',crew:'b-general'},
+  {name:'Concrete Driveway Apron',desc:'Install concrete driveway apron',unit:'SY',rate:0,material:'Concrete',mat_cost:22,sub_cost:45,category:'Concrete',crew:'b-general'},
+  {name:'Concrete Pad',desc:'Install concrete equipment/dumpster pad',unit:'SF',rate:0,material:'Concrete',mat_cost:4,sub_cost:6,category:'Concrete',crew:'b-general'},
+  {name:'ADA Ramp',desc:'Install ADA-compliant concrete ramp with detectable warning',unit:'EA',rate:0,material:'Concrete',mat_cost:240,sub_cost:1200,category:'Concrete',crew:'b-general'},
+  {name:'Concrete Median',desc:'Install concrete median per plans',unit:'LF',rate:0,material:'Concrete',mat_cost:10,sub_cost:20,category:'Concrete',crew:'b-general'},
+  {name:'Thickened Edge',desc:'Install concrete thickened edge',unit:'LF',rate:0,material:'Concrete',mat_cost:1.80,sub_cost:6,category:'Concrete',crew:'b-general'},
   // ── STRIPING / SIGNAGE ──
   {name:'Pavement Markings (Latex Paint)',desc:'Install pavement markings per plans',unit:'LS',rate:0,material:'Traffic Paint',mat_cost:0,category:'Striping / Signage',crew:'b-striping'},
   {name:'Pavement Markings (Thermoplastic)',desc:'Install thermoplastic pavement markings per plans',unit:'LS',rate:0,material:'Thermoplastic',mat_cost:0,category:'Striping / Signage',crew:'b-striping'},
@@ -3950,7 +3951,7 @@ function openLibraryPicker(target){
         var ins=document.createElement("button");ins.className="btn btn-red btn-sm";ins.textContent="Insert";
         ins.addEventListener("click",function(){
           var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
-          var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,mat_cost:item.mat_cost||0,crew:item.crew||'',markup:20,days_override:null,badge:tradeBadge,material:item.material||''};
+          var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,mat_cost:item.mat_cost||0,sub_cost:item.sub_cost||0,crew:item.crew||'',markup:20,days_override:null,badge:tradeBadge,material:item.material||''};
           if(_libPickerTarget==='sitework'){newItem.id=swid++;siteWorkItems.push(newItem);renderSiteWork();}
           else if(_libPickerTarget==='pavement'){newItem.id=pvid++;pavementItems.push(newItem);renderPavementItems();}
           else{newItem.id=eid++;extraItems.push(newItem);renderExtra();}
@@ -3987,7 +3988,7 @@ function renderExtra(){
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var ei=extraItems[i];ei.name=libItem.name;ei.desc=libItem.desc||'';ei.unit=libItem.unit;
       ei.material=libItem.material||'';ei.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
-      ei.crew=libItem.crew||'';ei.markup=20;ei.days_override=null;
+      ei.crew=libItem.crew||'';ei.sub_cost=libItem.sub_cost||0;ei.markup=20;ei.days_override=null;
       ei.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';
       renderExtra();recalc();
     });})(idx);
@@ -4014,11 +4015,18 @@ function renderExtra(){
     var qIn=document.createElement("input");qIn.type="number";qIn.min=0;qIn.step=1;qIn.value=item.qty;
     (function(i){qIn.addEventListener("change",function(){extraItems[i].qty=parseFloat(this.value)||0;extraItems[i].days_override=null;renderExtra();recalc();});})(idx);
     qF.appendChild(qIn);fields.appendChild(qF);
-    // Days
-    var dF=document.createElement("div");dF.className="lyr-field";dF.innerHTML="<label>Days</label>";
-    var dIn=document.createElement("input");dIn.type="number";dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);dIn.title="Auto: "+calcItemDays({qty:item.qty,crew:item.crew,days_override:null}).toFixed(2)+"d";
-    (function(i){dIn.addEventListener("change",function(){var v=parseFloat(this.value)||0;var auto=calcItemDays({qty:extraItems[i].qty,crew:extraItems[i].crew,days_override:null});extraItems[i].days_override=Math.abs(v-auto)<0.01?null:v;renderExtra();recalc();});})(idx);
-    dF.appendChild(dIn);fields.appendChild(dF);
+    // Days or Sub $/Unit
+    if(_isConcreteItem(item)){
+      var scF=document.createElement("div");scF.className="lyr-field";scF.innerHTML="<label>Sub $/Unit</label>";
+      var scIn=document.createElement("input");scIn.type="number";scIn.min=0;scIn.step=0.5;scIn.value=item.sub_cost||"";scIn.placeholder="0";
+      (function(i){scIn.addEventListener("change",function(){extraItems[i].sub_cost=parseFloat(this.value)||0;renderExtra();recalc();});})(idx);
+      scF.appendChild(scIn);fields.appendChild(scF);
+    } else {
+      var dF=document.createElement("div");dF.className="lyr-field";dF.innerHTML="<label>Days</label>";
+      var dIn=document.createElement("input");dIn.type="number";dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);dIn.title="Auto: "+calcItemDays({qty:item.qty,crew:item.crew,days_override:null}).toFixed(2)+"d";
+      (function(i){dIn.addEventListener("change",function(){var v=parseFloat(this.value)||0;var auto=calcItemDays({qty:extraItems[i].qty,crew:extraItems[i].crew,days_override:null});extraItems[i].days_override=Math.abs(v-auto)<0.01?null:v;renderExtra();recalc();});})(idx);
+      dF.appendChild(dIn);fields.appendChild(dF);
+    }
     // Markup %
     var muF=document.createElement("div");muF.className="lyr-field";muF.innerHTML="<label>Markup %</label>";
     var muIn=document.createElement("input");muIn.type="number";muIn.min=0;muIn.step=1;muIn.value=item.markup||0;
@@ -8336,7 +8344,7 @@ function renderPavementItems(){
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var pv=pavementItems[i];pv.name=libItem.name;pv.desc=libItem.desc||'';pv.unit=libItem.unit;
       pv.material=libItem.material||'';pv.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
-      pv.crew=libItem.crew||'';pv.markup=20;pv.days_override=null;
+      pv.crew=libItem.crew||'';pv.sub_cost=libItem.sub_cost||0;pv.markup=20;pv.days_override=null;
       pv.badge=TRADE_BADGE_MAP[libItem.category]||'b-asphalt';
       renderPavementItems();recalc();
     });})(idx);
@@ -8360,11 +8368,18 @@ function renderPavementItems(){
     var qIn=document.createElement('input');qIn.type='number';qIn.min=0;qIn.step=1;qIn.value=item.qty;
     (function(i){qIn.addEventListener('change',function(){pavementItems[i].qty=parseFloat(this.value)||0;pavementItems[i].days_override=null;renderPavementItems();recalc();});})(idx);
     qF.appendChild(qIn);fields.appendChild(qF);
-    // Days
-    var dF=document.createElement('div');dF.className='lyr-field';dF.innerHTML='<label>Days</label>';
-    var dIn=document.createElement('input');dIn.type='number';dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);
-    (function(i){dIn.addEventListener('change',function(){var v=parseFloat(this.value)||0;var auto=calcItemDays({qty:pavementItems[i].qty,crew:pavementItems[i].crew,days_override:null});pavementItems[i].days_override=Math.abs(v-auto)<0.01?null:v;renderPavementItems();recalc();});})(idx);
-    dF.appendChild(dIn);fields.appendChild(dF);
+    // Days or Sub $/Unit
+    if(_isConcreteItem(item)){
+      var scF=document.createElement('div');scF.className='lyr-field';scF.innerHTML='<label>Sub $/Unit</label>';
+      var scIn=document.createElement('input');scIn.type='number';scIn.min=0;scIn.step=0.5;scIn.value=item.sub_cost||'';scIn.placeholder='0';
+      (function(i){scIn.addEventListener('change',function(){pavementItems[i].sub_cost=parseFloat(this.value)||0;renderPavementItems();recalc();});})(idx);
+      scF.appendChild(scIn);fields.appendChild(scF);
+    } else {
+      var dF=document.createElement('div');dF.className='lyr-field';dF.innerHTML='<label>Days</label>';
+      var dIn=document.createElement('input');dIn.type='number';dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);
+      (function(i){dIn.addEventListener('change',function(){var v=parseFloat(this.value)||0;var auto=calcItemDays({qty:pavementItems[i].qty,crew:pavementItems[i].crew,days_override:null});pavementItems[i].days_override=Math.abs(v-auto)<0.01?null:v;renderPavementItems();recalc();});})(idx);
+      dF.appendChild(dIn);fields.appendChild(dF);
+    }
     // Markup %
     var muF=document.createElement('div');muF.className='lyr-field';muF.innerHTML='<label>Markup %</label>';
     var muIn=document.createElement('input');muIn.type='number';muIn.min=0;muIn.step=1;muIn.value=item.markup||0;
@@ -8414,7 +8429,7 @@ function renderSiteWork(){
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var sw=siteWorkItems[i];sw.name=libItem.name;sw.desc=libItem.desc||'';sw.unit=libItem.unit;
       sw.material=libItem.material||'';sw.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
-      sw.crew=libItem.crew||'';sw.markup=20;sw.days_override=null;
+      sw.crew=libItem.crew||'';sw.sub_cost=libItem.sub_cost||0;sw.markup=20;sw.days_override=null;
       sw.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';
       renderSiteWork();recalc();
     });})(idx);
@@ -8442,11 +8457,18 @@ function renderSiteWork(){
     var qIn=document.createElement('input');qIn.type='number';qIn.min=0;qIn.step=1;qIn.value=item.qty;
     (function(i){qIn.addEventListener('change',function(){siteWorkItems[i].qty=parseFloat(this.value)||0;siteWorkItems[i].days_override=null;renderSiteWork();recalc();});})(idx);
     qF.appendChild(qIn);fields.appendChild(qF);
-    // Days
-    var dF=document.createElement('div');dF.className='lyr-field';dF.innerHTML='<label>Days</label>';
-    var dIn=document.createElement('input');dIn.type='number';dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);dIn.title='Auto: '+calcItemDays({qty:item.qty,crew:item.crew,days_override:null}).toFixed(2)+'d';
-    (function(i){dIn.addEventListener('change',function(){var v=parseFloat(this.value)||0;var auto=calcItemDays({qty:siteWorkItems[i].qty,crew:siteWorkItems[i].crew,days_override:null});siteWorkItems[i].days_override=Math.abs(v-auto)<0.01?null:v;renderSiteWork();recalc();});})(idx);
-    dF.appendChild(dIn);fields.appendChild(dF);
+    // Days or Sub $/Unit (concrete items use sub cost instead of crew days)
+    if(_isConcreteItem(item)){
+      var scF=document.createElement('div');scF.className='lyr-field';scF.innerHTML='<label>Sub $/Unit</label>';
+      var scIn=document.createElement('input');scIn.type='number';scIn.min=0;scIn.step=0.5;scIn.value=item.sub_cost||'';scIn.placeholder='0';
+      (function(i){scIn.addEventListener('change',function(){siteWorkItems[i].sub_cost=parseFloat(this.value)||0;renderSiteWork();recalc();});})(idx);
+      scF.appendChild(scIn);fields.appendChild(scF);
+    } else {
+      var dF=document.createElement('div');dF.className='lyr-field';dF.innerHTML='<label>Days</label>';
+      var dIn=document.createElement('input');dIn.type='number';dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);dIn.title='Auto: '+calcItemDays({qty:item.qty,crew:item.crew,days_override:null}).toFixed(2)+'d';
+      (function(i){dIn.addEventListener('change',function(){var v=parseFloat(this.value)||0;var auto=calcItemDays({qty:siteWorkItems[i].qty,crew:siteWorkItems[i].crew,days_override:null});siteWorkItems[i].days_override=Math.abs(v-auto)<0.01?null:v;renderSiteWork();recalc();});})(idx);
+      dF.appendChild(dIn);fields.appendChild(dF);
+    }
     // Markup %
     var muF=document.createElement('div');muF.className='lyr-field';muF.innerHTML='<label>Markup %</label>';
     var muIn=document.createElement('input');muIn.type='number';muIn.min=0;muIn.step=1;muIn.value=item.markup||0;
@@ -8525,13 +8547,16 @@ function calcLayerRate(tons, layer){
 }
 
 // -- Item (site work / extra) calc functions -----------------------------------
+function _isConcreteItem(item){return item.crew==='b-general'&&item.material==='Concrete';}
 function calcItemDays(item){
+  if(_isConcreteItem(item))return 0; // concrete is subbed out, no crew days
   if(item.days_override!==null&&item.days_override!==undefined)return item.days_override;
   var crew=getCrewForTrade(item.crew||'');
   if(!crew||!crew.productivity||!item.qty)return 0;
   return Math.ceil(item.qty/crew.productivity*2)/2;
 }
 function calcItemLabor(item){
+  if(_isConcreteItem(item))return (item.sub_cost||0)*(item.qty||0);
   var days=calcItemDays(item);
   var crew=getCrewForTrade(item.crew||'');
   return days*(crew?crew.daily_rate:0);
