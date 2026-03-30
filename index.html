@@ -4301,6 +4301,12 @@ function _applyMatPrices(mpd){
       if(DRATE[m.name]===undefined) DRATE[m.name]=(m.trade==='b-stone')?50:150;
       if(DDEPTH[m.name]===undefined) DDEPTH[m.name]=(m.trade==='b-stone')?6:2;
     });
+    // Backfill any standard materials missing from saved data so presets always have valid costs
+    Object.keys(MAT_DEFAULT).forEach(function(k){
+      if(MAT[k]===undefined){MAT[k]=MAT_DEFAULT[k];if(LTYPES.indexOf(k)<0)LTYPES.push(k);}
+      if(LBS[k]===undefined) LBS[k]=LBS_DEFAULT?LBS_DEFAULT[k]:115;
+      if(MAT_TRADE[k]===undefined&&MAT_TRADE_DEFAULT) MAT_TRADE[k]=MAT_TRADE_DEFAULT[k];
+    });
   } else if(mpd.mat){
     // Legacy format: cost overrides only
     LTYPES.forEach(function(k){
