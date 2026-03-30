@@ -3111,10 +3111,17 @@ function getCrewForTrade(trade){
 function getCrewParam(matType, param){
   var trade=MAT_TRADE[matType]||'';
   var crew=getCrewForTrade(trade);
+  // If no crew found for current trade, try the default trade mapping
+  if(!crew && MAT_TRADE_DEFAULT && MAT_TRADE_DEFAULT[matType]){
+    trade=MAT_TRADE_DEFAULT[matType];
+    crew=getCrewForTrade(trade);
+  }
   if(crew){
     if(param === 'crew_rate') return crew.daily_rate||jcCrewRate;
     if(param === 'productivity') return crew.productivity||jcProductivity;
     if(param === 'prod_unit') return crew.prod_unit||'TON';
+    if(param === 'tons_per_truck') return jcTonsPerTruck;
+    if(param === 'truck_daily_rate') return jcTruckRate * jcTruckHours;
   }
   // Fall back to globals
   if(param === 'crew_rate') return jcCrewRate;
@@ -4296,7 +4303,7 @@ function _applyMatPrices(mpd){
       LTYPES.push(m.name);
       MAT[m.name]=m.cost;
       MAT_UNIT[m.name]=m.unit||'TON';
-      MAT_TRADE[m.name]=m.trade||'b-general';
+      MAT_TRADE[m.name]=m.trade||(MAT_TRADE_DEFAULT&&MAT_TRADE_DEFAULT[m.name])||'b-general';
       if(LBS[m.name]===undefined) LBS[m.name]=(m.trade==='b-stone'||m.trade==='b-grading')?150:115;
       if(DRATE[m.name]===undefined) DRATE[m.name]=(m.trade==='b-stone')?50:150;
       if(DDEPTH[m.name]===undefined) DDEPTH[m.name]=(m.trade==='b-stone')?6:2;
@@ -7845,6 +7852,7 @@ function updLyrType(sid2,lid2,v){
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   var oldType=l.type;
   l.type=v;l.depth=DDEPTH[v];l.rate=DRATE[v];
+  l.days_override=null;l.trucks_override=null;
   if(!l.name||l.name===oldType)l.name=v;
   var mat=MAT[v]||0;l.markup=mat>0?Math.round((l.rate-mat)/mat*100):0;
   renderAll();
@@ -7852,7 +7860,7 @@ function updLyrType(sid2,lid2,v){
 function updLyrDepth(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
-  l.depth=parseFloat(v)||0;recalc();updateLyrResult(sid2,lid2);
+  l.depth=parseFloat(v)||0;l.days_override=null;l.trucks_override=null;recalc();renderAll();
 }
 function updLyrRate(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
