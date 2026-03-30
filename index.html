@@ -1727,7 +1727,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div style="display:flex;gap:6px;">
               <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('pavement')">From Library</button>
               <button class="btn btn-sec btn-sm" onclick="showPresetPicker('pavement')">Add Preset</button>
-              <button class="btn btn-sec btn-sm" onclick="addSection()">+ Add Item</button>
+              <button class="btn btn-sec btn-sm" onclick="addSection('',[{type:'ABC'}])">+ Add Item</button>
             </div>
           </div>
           <div class="card-body" style="padding:0;">
@@ -3831,31 +3831,7 @@ function openLibraryPicker(target){
   var tt=document.createElement("span");tt.style.cssText="font-weight:700;font-size:15px;";tt.textContent="Insert from Library";
   var cl=document.createElement("button");cl.className="btn-ico";cl.textContent="\u00d7";cl.onclick=function(){modal.remove();};
   tr.appendChild(tt);tr.appendChild(cl);box.appendChild(tr);
-  // Quick-add preset chips
-  var presetBar=document.createElement("div");presetBar.style.cssText="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0;";
-  BID_PRESETS.forEach(function(preset){
-    var chip=document.createElement("button");
-    chip.style.cssText="font-size:11px;padding:4px 10px;border:1px solid var(--bdr);border-radius:16px;background:var(--wht);cursor:pointer;color:var(--dgray);font-weight:600;white-space:nowrap;transition:all .15s;";
-    chip.textContent=preset.icon+' '+preset.name;
-    chip.addEventListener("mouseenter",function(){chip.style.background='var(--red)';chip.style.color='#fff';chip.style.borderColor='var(--red)';});
-    chip.addEventListener("mouseleave",function(){chip.style.background='#fff';chip.style.color='var(--dgray)';chip.style.borderColor='var(--bdr)';});
-    chip.addEventListener("click",function(){
-      var added=0;
-      var libMap={};BID_LIBRARY.forEach(function(x){libMap[x.name]=x;});
-      preset.items.forEach(function(itemName){
-        var item=libMap[itemName];
-        if(item){
-          var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
-          extraItems.push({id:eid++,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:tradeBadge,material:item.material||'',mat_cost:item.mat_cost||0,labor_cost:0});
-          added++;
-        }
-      });
-      if(added){renderExtra();recalc();toast(added+" "+preset.name+" items added","ok");}
-      else{toast("No matching items in library. Load defaults first.","err");}
-    });
-    presetBar.appendChild(chip);
-  });
-  box.appendChild(presetBar);
+  // Category preset chips removed — users insert items individually
   // Search + category filter
   var filterBar=document.createElement("div");filterBar.style.cssText="display:flex;gap:8px;margin-bottom:10px;flex-shrink:0;";
   var searchInp=document.createElement("input");searchInp.type="text";searchInp.placeholder="Search items...";searchInp.style.cssText="flex:1;padding:6px 10px;border:1px solid var(--bdr);border-radius:5px;font-size:12px;";
@@ -3901,7 +3877,11 @@ function openLibraryPicker(target){
           var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
           var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:tradeBadge,material:item.material||'',mat_cost:item.mat_cost||0,labor_cost:0};
           if(_libPickerTarget==='sitework'){newItem.id=swid++;siteWorkItems.push(newItem);renderSiteWork();}
-          else if(_libPickerTarget==='pavement'){newItem.id=eid++;extraItems.push(newItem);renderExtra();}
+          else if(_libPickerTarget==='pavement'){
+            var lyrType=item.material||item.name;
+            var depth=DDEPTH[lyrType]||DDEPTH[item.material]||4;
+            addSection(item.name,[{type:lyrType,depth:depth,name:item.name,description:item.desc||''}]);
+          }
           else{newItem.id=eid++;extraItems.push(newItem);renderExtra();}
           recalc();toast("Item added","ok");
         });
