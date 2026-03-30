@@ -1777,7 +1777,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
         <div class="metrics metrics-sticky">
           <div class="metric"><div class="metric-lbl">Total SF</div><div class="metric-val" id="m-sf">-</div></div>
           <div class="metric"><div class="metric-lbl">Total SY</div><div class="metric-val" id="m-sy">-</div></div>
-          <div class="metric"><div class="metric-lbl">Total Tons</div><div class="metric-val" id="m-tons">-</div></div>
+          <div class="metric"><div class="metric-lbl">Total Tonnage</div><div class="metric-val" id="m-tons">-</div></div>
           <div class="metric"><div class="metric-lbl">Material Cost</div><div class="metric-val" id="m-mat">-</div></div>
           <div class="metric"><div class="metric-lbl">Crew Cost</div><div class="metric-val" id="m-crew">-</div></div>
           <div class="metric"><div class="metric-lbl">Trucking</div><div class="metric-val" id="m-truck">-</div></div>
@@ -2599,7 +2599,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div class="dash-stat-cell"><div class="dash-stat-val" id="sched-kpi-active">0</div><div class="dash-stat-lbl">Active</div></div>
               <div class="dash-stat-cell"><div class="dash-stat-val" id="sched-kpi-week">0</div><div class="dash-stat-lbl">This Week</div></div>
               <div class="dash-stat-cell"><div class="dash-stat-val warn" id="sched-kpi-overdue">0</div><div class="dash-stat-lbl">Overdue</div></div>
-              <div class="dash-stat-cell"><div class="dash-stat-val" id="sched-kpi-tons">0</div><div class="dash-stat-lbl">Total Tons</div></div>
+              <div class="dash-stat-cell"><div class="dash-stat-val" id="sched-kpi-tons">0</div><div class="dash-stat-lbl">Total Tonnage</div></div>
             </div>
 
             <div class="mc-card">
@@ -13707,7 +13707,7 @@ function renderRptMaterialsCosts(){
 
   var matTypes=Object.keys(matMap).length;
   var h=_rptStatHTML([
-    {lbl:'Total Tons',val:Math.round(totalTons).toLocaleString()},
+    {lbl:'Total Tonnage',val:Math.round(totalTons).toLocaleString()},
     {lbl:'Material Cost',val:fmtMoney(totalMatCost)},
     {lbl:'Trucking Cost',val:fmtMoney(totalTruckCost)},
     {lbl:'Material Types',val:matTypes}
