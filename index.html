@@ -3432,6 +3432,21 @@ var PRESETS = [
 // -- State ---------------------------------------------------------------------
 var sections=[], sid=0, lid=0;
 var _proposalDirty=false;
+var _autoSaveTimer=null;
+var _autoSaving=false;
+function _scheduleAutoSave(){
+  if(_autoSaveTimer)clearTimeout(_autoSaveTimer);
+  _autoSaveTimer=setTimeout(function(){
+    _autoSaveTimer=null;
+    // Only auto-save if there's content worth saving
+    var hasName=document.getElementById('proj-name')&&document.getElementById('proj-name').value.trim();
+    var hasContent=sections.length||concItems.length||extraItems.length||siteWorkItems.length;
+    if(!hasContent&&!hasName)return;
+    if(_autoSaving)return;
+    _autoSaving=true;
+    saveQuote(true).then(function(){_autoSaving=false;}).catch(function(){_autoSaving=false;});
+  },2000);
+}
 window.addEventListener('beforeunload',function(e){if(_proposalDirty){e.preventDefault();e.returnValue='';}});
 var concItems=[], cid=0;
 var extraItems=[], eid=0;
@@ -4278,6 +4293,10 @@ function boot(){
   var coOA=document.getElementById('co-orig-amount');if(coOA)coOA.addEventListener('input',function(){recalcCO();});
   document.getElementById('mob').addEventListener('change',function(){recalc();});
   document.getElementById('mob-cost').addEventListener('change',function(){renderJobCost();});
+  // Auto-save on project info field changes
+  ['proj-name','proj-client','proj-addr','proj-date','proj-notes'].forEach(function(fid){
+    var el=document.getElementById(fid);if(el)el.addEventListener('change',function(){_proposalDirty=true;_scheduleAutoSave();});
+  });
   renderPresets();
   if(!sections.length){
     // Start blank — user clicks preset to add sections
@@ -8325,6 +8344,7 @@ function redo(){
 
 function recalc(){
   _proposalDirty=true;
+  _scheduleAutoSave();
   pushUndo();
   var bk=document.getElementById('breakdown');bk.innerHTML='';
   var bkConc=document.getElementById('breakdown-conc');bkConc.innerHTML='';
@@ -9118,7 +9138,7 @@ function selectClientById(id){
 }
 
 // -- Save / Load ---------------------------------------------------------------
-async function saveQuote(){
+async function saveQuote(quiet){
   var name=document.getElementById('proj-name').value||('Quote '+(savedQuotes.length+1));
   var snap={name:name,client:document.getElementById('proj-client').value,
     date:document.getElementById('proj-date').value,addr:document.getElementById('proj-addr').value,
@@ -9173,11 +9193,11 @@ async function saveQuote(){
         }
       } else {
         _proposalDirty=false;
-        toast(method==='PATCH'?'Quote updated':'Quote saved','ok');
+        if(!quiet)toast(method==='PATCH'?'Quote updated':'Quote saved','ok');
       }
     }
-    else{toast('Save failed: '+(d.error||'unknown'),'err');}
-  }catch(e){toast('Save error: '+e.message,'err');}
+    else{if(!quiet)toast('Save failed: '+(d.error||'unknown'),'err');}
+  }catch(e){if(!quiet)toast('Save error: '+e.message,'err');}
 }
 function loadQuote(id){
   var q=savedQuotes.find(function(x){return x.id===id;})||pipelineProposals.find(function(x){return x.id===id;});
