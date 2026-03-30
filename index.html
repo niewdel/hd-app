@@ -3980,7 +3980,8 @@ function renderExtra(){
     top.appendChild(nameIn);
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var ei=extraItems[i];ei.name=libItem.name;ei.desc=libItem.desc||'';ei.unit=libItem.unit;
-      ei.mat_cost=libItem.mat_cost||0;ei.crew=libItem.crew||'';ei.markup=20;ei.days_override=null;
+      ei.material=libItem.material||'';ei.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
+      ei.crew=libItem.crew||'';ei.markup=20;ei.days_override=null;
       ei.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';
       renderExtra();recalc();
     });})(idx);
@@ -3992,35 +3993,40 @@ function renderExtra(){
     descIn.className="lyr-desc";
     (function(id){descIn.addEventListener("change",function(){updExtraDesc(id,this.value);});})(item.id);
     row.appendChild(descIn);
+    // Row 3: Material | Qty | Days | Markup % | $/Unit | Subtotal
     var fields=document.createElement("div");fields.className="lyr-fields";
+    // Material dropdown
+    var matF=document.createElement("div");matF.className="lyr-field";matF.innerHTML="<label>Material</label>";
+    var matSel=document.createElement("select");
+    var matNone=document.createElement("option");matNone.value="";matNone.textContent="— None —";matSel.appendChild(matNone);
+    var allMats=LTYPES.slice();if(item.material&&allMats.indexOf(item.material)<0)allMats.unshift(item.material);
+    allMats.forEach(function(m){var o=document.createElement("option");o.value=m;o.textContent=m+" ($"+(MAT[m]||0)+")";if(m===item.material)o.selected=true;matSel.appendChild(o);});
+    (function(i){matSel.addEventListener("change",function(){extraItems[i].material=this.value;extraItems[i].mat_cost=MAT[this.value]||0;renderExtra();recalc();});})(idx);
+    matF.appendChild(matSel);fields.appendChild(matF);
+    // Qty
     var qF=document.createElement("div");qF.className="lyr-field";qF.innerHTML="<label>Qty</label>";
     var qIn=document.createElement("input");qIn.type="number";qIn.min=0;qIn.step=1;qIn.value=item.qty;
     (function(i){qIn.addEventListener("change",function(){extraItems[i].qty=parseFloat(this.value)||0;extraItems[i].days_override=null;renderExtra();recalc();});})(idx);
     qF.appendChild(qIn);fields.appendChild(qF);
-    var uF=document.createElement("div");uF.className="lyr-field";uF.innerHTML="<label>Unit</label>";
-    var uSel=document.createElement("select");
-    ["LS","EA","LF","SY","SF","TON","CY","HR","DAY","WK","MO","VF","AC","LOAD"].forEach(function(u){var o=document.createElement("option");o.value=u;o.textContent=u;if(item.unit===u)o.selected=true;uSel.appendChild(o);});
-    (function(i){uSel.addEventListener("change",function(){extraItems[i].unit=this.value;});})(idx);
-    uF.appendChild(uSel);fields.appendChild(uF);
-    var mF=document.createElement("div");mF.className="lyr-field";mF.innerHTML="<label>Mat $/Unit</label>";
-    var mIn=document.createElement("input");mIn.type="number";mIn.min=0;mIn.step=1;mIn.value=item.mat_cost||"";mIn.placeholder="0";
-    (function(i){mIn.addEventListener("change",function(){extraItems[i].mat_cost=parseFloat(this.value)||0;renderExtra();recalc();});})(idx);
-    mF.appendChild(mIn);fields.appendChild(mF);
+    // Days
     var dF=document.createElement("div");dF.className="lyr-field";dF.innerHTML="<label>Days</label>";
-    var dIn=document.createElement("input");dIn.type="number";dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);dIn.title='Auto: '+calcItemDays({qty:item.qty,crew:item.crew,days_override:null}).toFixed(2)+'d';
+    var dIn=document.createElement("input");dIn.type="number";dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);dIn.title="Auto: "+calcItemDays({qty:item.qty,crew:item.crew,days_override:null}).toFixed(2)+"d";
     (function(i){dIn.addEventListener("change",function(){var v=parseFloat(this.value)||0;var auto=calcItemDays({qty:extraItems[i].qty,crew:extraItems[i].crew,days_override:null});extraItems[i].days_override=Math.abs(v-auto)<0.01?null:v;renderExtra();recalc();});})(idx);
     dF.appendChild(dIn);fields.appendChild(dF);
+    // Markup %
     var muF=document.createElement("div");muF.className="lyr-field";muF.innerHTML="<label>Markup %</label>";
     var muIn=document.createElement("input");muIn.type="number";muIn.min=0;muIn.step=1;muIn.value=item.markup||0;
     (function(i){muIn.addEventListener("change",function(){extraItems[i].markup=parseFloat(this.value)||0;renderExtra();recalc();});})(idx);
     muF.appendChild(muIn);fields.appendChild(muF);
+    // $/Unit (auto)
     var ppuEl=document.createElement("div");ppuEl.className="lyr-field";ppuEl.innerHTML="<label>$/Unit</label>";
     var ppuVal=document.createElement("span");ppuVal.style.cssText="display:block;font-size:13px;font-weight:700;color:var(--red);padding:4px 0;";
     ppuVal.textContent=ppu>0?"$"+ppu.toFixed(2):"—";
     ppuEl.appendChild(ppuVal);fields.appendChild(ppuEl);
-    var sub=document.createElement("span");sub.className="lres";sub.style.cssText="font-size:13px;font-weight:700;margin-left:auto;";
-    sub.textContent=bid>0?"$"+Math.round(bid).toLocaleString():"";
-    fields.appendChild(sub);
+    // Margin badge
+    var matT2=(item.mat_cost||0)*(item.qty||0);var costT2=matT2+labor;var mp2=costT2>0?((bid-costT2)/costT2*100):0;
+    var mub2=document.createElement("span");mub2.className="mubadge "+(mp2>=0?"p":"n");mub2.textContent=bid>0?mp2.toFixed(1)+"%":"";
+    fields.appendChild(mub2);
     row.appendChild(fields);
     if(item.qty>0&&bid>0){
       var matT=(item.mat_cost||0)*item.qty;var costT=matT+labor;var mp=costT>0?((bid-costT)/costT*100):0;
@@ -8326,7 +8332,8 @@ function renderSiteWork(){
     top.appendChild(nameIn);
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var sw=siteWorkItems[i];sw.name=libItem.name;sw.desc=libItem.desc||'';sw.unit=libItem.unit;
-      sw.mat_cost=libItem.mat_cost||0;sw.crew=libItem.crew||'';sw.markup=20;sw.days_override=null;
+      sw.material=libItem.material||'';sw.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
+      sw.crew=libItem.crew||'';sw.markup=20;sw.days_override=null;
       sw.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';
       renderSiteWork();recalc();
     });})(idx);
@@ -8339,36 +8346,40 @@ function renderSiteWork(){
     descIn.className='lyr-desc';
     (function(i){descIn.addEventListener('change',function(){siteWorkItems[i].desc=this.value;});})(idx);
     row.appendChild(descIn);
-    // Row 3: Qty | Unit | Mat $/Unit | Days | Markup % | $/Unit | Subtotal
+    // Row 3: Material | Qty | Days | Markup % | $/Unit | Subtotal
     var fields=document.createElement('div');fields.className='lyr-fields';
+    // Material dropdown
+    var matF=document.createElement('div');matF.className='lyr-field';matF.innerHTML='<label>Material</label>';
+    var matSel=document.createElement('select');
+    var matNone=document.createElement('option');matNone.value='';matNone.textContent='— None —';matSel.appendChild(matNone);
+    var allMats=LTYPES.slice();if(item.material&&allMats.indexOf(item.material)<0)allMats.unshift(item.material);
+    allMats.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m+' ($'+(MAT[m]||0)+')';if(m===item.material)o.selected=true;matSel.appendChild(o);});
+    (function(i){matSel.addEventListener('change',function(){siteWorkItems[i].material=this.value;siteWorkItems[i].mat_cost=MAT[this.value]||0;renderSiteWork();recalc();});})(idx);
+    matF.appendChild(matSel);fields.appendChild(matF);
+    // Qty
     var qF=document.createElement('div');qF.className='lyr-field';qF.innerHTML='<label>Qty</label>';
     var qIn=document.createElement('input');qIn.type='number';qIn.min=0;qIn.step=1;qIn.value=item.qty;
     (function(i){qIn.addEventListener('change',function(){siteWorkItems[i].qty=parseFloat(this.value)||0;siteWorkItems[i].days_override=null;renderSiteWork();recalc();});})(idx);
     qF.appendChild(qIn);fields.appendChild(qF);
-    var uF=document.createElement('div');uF.className='lyr-field';uF.innerHTML='<label>Unit</label>';
-    var uSel=document.createElement('select');
-    ['LS','EA','LF','SY','SF','TON','CY','HR','DAY','WK','MO','VF','AC','LOAD'].forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;if(item.unit===u)o.selected=true;uSel.appendChild(o);});
-    (function(i){uSel.addEventListener('change',function(){siteWorkItems[i].unit=this.value;});})(idx);
-    uF.appendChild(uSel);fields.appendChild(uF);
-    var mF=document.createElement('div');mF.className='lyr-field';mF.innerHTML='<label>Mat $/Unit</label>';
-    var mIn=document.createElement('input');mIn.type='number';mIn.min=0;mIn.step=1;mIn.value=item.mat_cost||'';mIn.placeholder='0';
-    (function(i){mIn.addEventListener('change',function(){siteWorkItems[i].mat_cost=parseFloat(this.value)||0;renderSiteWork();recalc();});})(idx);
-    mF.appendChild(mIn);fields.appendChild(mF);
+    // Days
     var dF=document.createElement('div');dF.className='lyr-field';dF.innerHTML='<label>Days</label>';
     var dIn=document.createElement('input');dIn.type='number';dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);dIn.title='Auto: '+calcItemDays({qty:item.qty,crew:item.crew,days_override:null}).toFixed(2)+'d';
     (function(i){dIn.addEventListener('change',function(){var v=parseFloat(this.value)||0;var auto=calcItemDays({qty:siteWorkItems[i].qty,crew:siteWorkItems[i].crew,days_override:null});siteWorkItems[i].days_override=Math.abs(v-auto)<0.01?null:v;renderSiteWork();recalc();});})(idx);
     dF.appendChild(dIn);fields.appendChild(dF);
+    // Markup %
     var muF=document.createElement('div');muF.className='lyr-field';muF.innerHTML='<label>Markup %</label>';
     var muIn=document.createElement('input');muIn.type='number';muIn.min=0;muIn.step=1;muIn.value=item.markup||0;
     (function(i){muIn.addEventListener('change',function(){siteWorkItems[i].markup=parseFloat(this.value)||0;renderSiteWork();recalc();});})(idx);
     muF.appendChild(muIn);fields.appendChild(muF);
+    // $/Unit (auto)
     var ppuEl=document.createElement('div');ppuEl.className='lyr-field';ppuEl.innerHTML='<label>$/Unit</label>';
     var ppuVal=document.createElement('span');ppuVal.style.cssText='display:block;font-size:13px;font-weight:700;color:var(--red);padding:4px 0;';
     ppuVal.textContent=ppu>0?'$'+ppu.toFixed(2):'—';
     ppuEl.appendChild(ppuVal);fields.appendChild(ppuEl);
-    var sub=document.createElement('span');sub.className='lres';sub.style.cssText='font-size:13px;font-weight:700;margin-left:auto;';
-    sub.textContent=bid>0?'$'+Math.round(bid).toLocaleString():'';
-    fields.appendChild(sub);
+    // Margin badge
+    var matT=(item.mat_cost||0)*(item.qty||0);var costT=matT+labor;var mp=costT>0?((bid-costT)/costT*100):0;
+    var mub=document.createElement('span');mub.className='mubadge '+(mp>=0?'p':'n');mub.textContent=bid>0?mp.toFixed(1)+'%':'';
+    fields.appendChild(mub);
     row.appendChild(fields);
     // Result strip
     if(item.qty>0&&bid>0){
