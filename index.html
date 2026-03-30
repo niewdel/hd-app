@@ -9110,7 +9110,7 @@ function refreshLineItems(){
 
 function getLineItemsForPayload(){
   var raw=buildRawLineItems();
-  return raw.map(function(item){
+  var mapped=raw.map(function(item){
     var ov=liOverrides[item.key]||{};
     var nm=ov.name!==undefined?ov.name:item.name;
     var desc=ov.description!==undefined?ov.description:item.description;
@@ -9118,8 +9118,23 @@ function getLineItemsForPayload(){
     var unit=ov.unit!==undefined?ov.unit:item.unit;
     var price=ov.price!==undefined?ov.price:item.price;
     var divLabel=item.badgeCls&&BADGE_DEFS[item.badgeCls]?BADGE_DEFS[item.badgeCls].label:'';
-    return {name:nm,description:desc,qty:qty,unit:unit,price:price,subtotal:qty*price,division:divLabel};
+    return {name:nm,description:desc,qty:qty,unit:unit,price:price,subtotal:qty*price,division:divLabel,_isMob:item.key==='_mobilization'};
   });
+  // Sort: Mobilization first (no division header), then group by division
+  var mobItems=mapped.filter(function(x){return x._isMob;});
+  var rest=mapped.filter(function(x){return !x._isMob;});
+  // Group by division preserving first-appearance order
+  var divOrder=[];var divGroups={};
+  rest.forEach(function(item){
+    var d=item.division||'';
+    if(!divGroups[d]){divGroups[d]=[];divOrder.push(d);}
+    divGroups[d].push(item);
+  });
+  var sorted=[];
+  mobItems.forEach(function(m){m.division='';sorted.push(m);});
+  divOrder.forEach(function(d){divGroups[d].forEach(function(item){sorted.push(item);});});
+  sorted.forEach(function(item){delete item._isMob;});
+  return sorted;
 }
 
 // -- PDF export ----------------------------------------------------------------
