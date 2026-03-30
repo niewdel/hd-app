@@ -8251,20 +8251,36 @@ function renderAll(){
         +'<div class="lyr-result"><span class="lres" data-lyr="'+s.id+'-'+l.id+'">'+resHTML+'</span></div>'
         +'</div>';
     });
-    div.innerHTML='<div class="sec-hdr">'
-      +'<input class="sec-name" data-sid="'+s.id+'" type="text" value="'+esc(s.name)+'" placeholder="Section name" onchange="updSecName('+s.id+',this.value)"/>'
-      +'<div style="display:flex;align-items:center;gap:6px;">'
-      +'<label style="margin:0;font-size:10px;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;font-weight:600;">SF</label>'
-      +'<input type="number" value="'+(sf||'')+'" placeholder="0" min="0" step="1" style="width:100px;text-align:center;font-weight:600;font-size:14px;padding:4px 8px;border:1px solid var(--bdr);border-radius:5px;" onchange="updSecSF('+s.id+',this.value)">'
-      +'</div>'
-      +'<button class="btn btn-sec btn-sm" onclick="addLyr('+s.id+')" style="font-size:11px;">+ Layer</button>'
-      +'<button class="btn-ico" onclick="dupSection('+s.id+')" style="margin-left:auto;opacity:.4;" title="Duplicate section"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
-      +'<button class="btn-ico" onclick="remSec('+s.id+')" style="color:var(--red);opacity:.5;" title="Remove section">×</button>'
-      +'</div>'
-      +'<div>'+lrows+'</div>'
-      +'<div class="sec-foot" data-sid="'+s.id+'">'
-      +buildFooterHTML(sf,sy,st)
-      +'</div>';
+    var isSingleItem=s.layers.length===1&&!s.name;
+    if(isSingleItem){
+      // Compact single-item layout: SF inline with layer, no header/footer
+      div.innerHTML='<div>'+lrows.replace(
+        '<div class="lyr-top">',
+        '<div class="lyr-top">'
+        +'<div style="display:flex;align-items:center;gap:4px;flex-shrink:0;"><label style="margin:0;font-size:10px;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;font-weight:600;">SF</label>'
+        +'<input type="number" value="'+(sf||'')+'" placeholder="0" min="0" step="1" style="width:80px;text-align:center;font-weight:600;font-size:13px;padding:4px 6px;border:1px solid var(--bdr);border-radius:5px;" onchange="updSecSF('+s.id+',this.value)"></div>'
+      ).replace(
+        'title="Remove layer"','title="Remove item"'
+      ).replace(
+        'onclick="remLyr('+s.id+','+s.layers[0].id+')"','onclick="remSec('+s.id+')"'
+      )+'</div>';
+    } else {
+      // Full section layout with header + footer
+      div.innerHTML='<div class="sec-hdr">'
+        +'<input class="sec-name" data-sid="'+s.id+'" type="text" value="'+esc(s.name)+'" placeholder="Section name" onchange="updSecName('+s.id+',this.value)"/>'
+        +'<div style="display:flex;align-items:center;gap:6px;">'
+        +'<label style="margin:0;font-size:10px;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;font-weight:600;">SF</label>'
+        +'<input type="number" value="'+(sf||'')+'" placeholder="0" min="0" step="1" style="width:100px;text-align:center;font-weight:600;font-size:14px;padding:4px 8px;border:1px solid var(--bdr);border-radius:5px;" onchange="updSecSF('+s.id+',this.value)">'
+        +'</div>'
+        +'<button class="btn btn-sec btn-sm" onclick="addLyr('+s.id+')" style="font-size:11px;">+ Layer</button>'
+        +'<button class="btn-ico" onclick="dupSection('+s.id+')" style="margin-left:auto;opacity:.4;" title="Duplicate section"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
+        +'<button class="btn-ico" onclick="remSec('+s.id+')" style="color:var(--red);opacity:.5;" title="Remove section">×</button>'
+        +'</div>'
+        +'<div>'+lrows+'</div>'
+        +'<div class="sec-foot" data-sid="'+s.id+'">'
+        +buildFooterHTML(sf,sy,st)
+        +'</div>';
+    }
     c.appendChild(div);
   });
   // Attach autocomplete to layer name inputs
