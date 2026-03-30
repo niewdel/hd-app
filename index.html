@@ -5625,6 +5625,10 @@ function renderProjectSummary(){
     return;
   }
   _renderProjectSummaryInner(proj);
+  // Refresh quotes cache in background so linked proposals resolve
+  fetch('/quotes/list').then(function(r){return r.json();}).then(function(d){
+    if(d.ok&&d.quotes){savedQuotes=d.quotes;_renderProjectSummaryInner(proj);}
+  }).catch(function(){});
 }
 
 function calcProjectTotal(proj){
@@ -5632,7 +5636,7 @@ function calcProjectTotal(proj){
   var linked=snap.linked_proposals||[];
   var proposalTotal=0;
   linked.forEach(function(qid){
-    var q=savedQuotes.find(function(x){return x.id===qid;});
+    var q=savedQuotes.find(function(x){return x.id===qid;})||pipelineProposals.find(function(x){return x.id===qid;});
     if(q)proposalTotal+=parseFloat(q.total)||0;
   });
   var coNet=0;
@@ -5746,7 +5750,7 @@ function _renderProjectSummaryInner(proj){
     psProposals.innerHTML='';
     if(linked.length){
       linked.forEach(function(qid,idx){
-        var q=savedQuotes.find(function(x){return x.id===qid;});
+        var q=savedQuotes.find(function(x){return x.id===qid;})||pipelineProposals.find(function(x){return x.id===qid;});
         var card=document.createElement('div');
         card.className='dk-card';
         card.style.cssText='padding:12px 14px;margin-bottom:10px;';
@@ -9366,7 +9370,7 @@ async function exportPricingBreakdown(){
 }
 
 async function exportPDFFromSaved(qid){
-  var q=savedQuotes.find(function(x){return x.id===qid;});
+  var q=savedQuotes.find(function(x){return x.id===qid;})||pipelineProposals.find(function(x){return x.id===qid;});
   if(!q){toast('Proposal not found','err');return;}
   // Load the quote into the builder, generate PDF, then restore
   loadQuote(qid);
@@ -9499,7 +9503,7 @@ async function renderSaved(){
   }catch(e){c.innerHTML='<p style="color:var(--red);font-size:13px;">Error: '+e.message+'</p>';}
 }
 async function duplicateProposal(id){
-  var q=savedQuotes.find(function(x){return x.id===id;});
+  var q=savedQuotes.find(function(x){return x.id===id;})||pipelineProposals.find(function(x){return x.id===id;});
   if(!q){toast('Proposal not found','err');return;}
   var snap=typeof q.snap==='string'?JSON.parse(q.snap):JSON.parse(JSON.stringify(q.snap));
   snap.name=(snap.name||q.name)+' (Copy)';
