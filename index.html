@@ -1705,9 +1705,11 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           <div class="card-hdr"><span class="card-title">Global Settings</span></div>
           <div class="card-body">
             <div class="fg fg2">
-            <div><label>Mobilization — Bid ($)</label><input id="mob" type="number" value="10000" min="0" step="500"/></div>
-            <div><label>Mobilization — Est. Cost ($)</label><input id="mob-cost" type="number" value="5000" min="0" step="500"/></div>
-              <div><label>Project Notes</label><textarea id="proj-notes" rows="3" placeholder="Notes for the proposal..." style="resize:vertical;font-family:inherit;font-size:13px;">All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. Any unforeseen conditions encountered during construction may be subject to additional charges via written change order. Payment due within 30 days of invoice. See Exhibit A on Page 3 for Site Plan &amp; Takeoffs.</textarea></div>
+            <div>
+              <div style="margin-bottom:11px;"><label>Mobilization — Bid ($)</label><input id="mob" type="number" value="10000" min="0" step="500"/></div>
+              <div><label>Mobilization — Est. Cost ($)</label><input id="mob-cost" type="number" value="5000" min="0" step="500"/></div>
+            </div>
+              <div><label>Project Notes</label><textarea id="proj-notes" rows="6" placeholder="Notes for the proposal..." style="resize:vertical;font-family:inherit;font-size:13px;">All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. See Exhibit A on Page 3 for Site Plan &amp; Takeoffs.</textarea></div>
             </div>
             <input id="waste" type="hidden" value="0"/>
             <input id="contingency" type="hidden" value="0"/>
@@ -7955,7 +7957,7 @@ function updLyrType(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   var oldType=l.type;
-  l.type=v;l.depth=DDEPTH[v]||l.depth;
+  l.type=v;
   l.days_override=null;l.trucks_override=null;l.rate_override=null;
   if(!l.name||l.name===oldType)l.name=v;
   // Keep existing markup %, recalculate rate from new material cost
