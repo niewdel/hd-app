@@ -2473,7 +2473,11 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           <div class="card">
             <div class="card-hdr">
               <span class="card-title">Crew Costs</span>
-              <button class="btn btn-sec btn-sm" onclick="addCrew()">+ Add Crew</button>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-sec btn-sm" onclick="addCrew()">+ Add Crew</button>
+                <button class="btn btn-sec btn-sm" onclick="resetCrewCosts()">Reset Defaults</button>
+                <button class="btn btn-primary btn-sm" onclick="saveCrews()">Save Crews</button>
+              </div>
             </div>
             <div class="card-body">
               <div id="crews-list"></div>
@@ -3820,7 +3824,7 @@ function renderLibraryList(){
     // Crew dropdown
     var crewSel=document.createElement("select");crewSel.style.cssText="font-size:11px;padding:4px 6px;width:100%;";
     var crewNone=document.createElement("option");crewNone.value='';crewNone.textContent='— None —';crewSel.appendChild(crewNone);
-    CREWS.forEach(function(cr){var o=document.createElement("option");o.value=cr.trade;o.textContent=cr.name+' ($'+cr.daily_rate+'/day)';if(cr.trade===item.crew)o.selected=true;crewSel.appendChild(o);});
+    CREWS.forEach(function(cr){var o=document.createElement("option");o.value=cr.trade;o.textContent=cr.name;if(cr.trade===item.crew)o.selected=true;crewSel.appendChild(o);});
     crewSel.addEventListener("change",(function(it){return function(){it.crew=this.value;};})(item));row.appendChild(crewSel);
     // Delete
     var db=document.createElement("button");db.className="btn-ico";db.style.color="var(--red)";db.textContent="\u00d7";
