@@ -1730,7 +1730,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div style="display:flex;gap:6px;" onclick="event.stopPropagation();">
               <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('pavement')">From Library</button>
               <button class="btn btn-sec btn-sm" onclick="showPresetPicker('pavement')">Add Preset</button>
-              <button class="btn btn-sec btn-sm" onclick="addSection('',[{type:'ABC'}])">+ Add Item</button>
+              <button class="btn btn-sec btn-sm" onclick="addExtra()">+ Add Item</button>
             </div>
           </div>
           <div class="card-collapsible" style="padding:0;">
@@ -3944,13 +3944,10 @@ function openLibraryPicker(target){
         var ins=document.createElement("button");ins.className="btn btn-red btn-sm";ins.textContent="Insert";
         ins.addEventListener("click",function(){
           var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
-          var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:tradeBadge,material:item.material||'',mat_cost:item.mat_cost||0,labor_cost:0,crew:item.crew||''};
+          var _labCost=item.labor_cost||0;
+          if(!_labCost&&item.rate&&item.mat_cost)_labCost=Math.max(0,Math.round((item.rate-item.mat_cost)*100)/100);
+          var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,price:item.rate||0,subtotal:item.rate||0,badge:tradeBadge,material:item.material||'',mat_cost:item.mat_cost||0,labor_cost:_labCost,crew:item.crew||''};
           if(_libPickerTarget==='sitework'){newItem.id=swid++;siteWorkItems.push(newItem);renderSiteWork();}
-          else if(_libPickerTarget==='pavement'){
-            var lyrType=item.material||item.name;
-            var depth=DDEPTH[lyrType]||DDEPTH[item.material]||4;
-            addSection(item.name,[{type:lyrType,depth:depth,name:item.name,description:item.desc||''}]);
-          }
           else{newItem.id=eid++;extraItems.push(newItem);renderExtra();}
           recalc();toast("Item added","ok");
         });
@@ -3981,7 +3978,8 @@ function renderExtra(){
     // Autocomplete from library
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var ei=extraItems[i];ei.name=libItem.name;ei.desc=libItem.desc||'';ei.unit=libItem.unit;ei.price=libItem.rate||0;ei.subtotal=ei.qty*ei.price;
-      ei.mat_cost=libItem.mat_cost||0;ei.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';ei.crew=libItem.crew||'';
+      ei.mat_cost=libItem.mat_cost||0;ei.labor_cost=(libItem.labor_cost||0)||(libItem.rate&&libItem.mat_cost?Math.max(0,Math.round((libItem.rate-libItem.mat_cost)*100)/100):0);
+      ei.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';ei.crew=libItem.crew||'';
       renderExtra();
     });})(idx);
     var del=document.createElement("button");del.className="btn-ico";del.style.color="var(--dgray)";del.innerHTML="&times;";
@@ -8302,7 +8300,8 @@ function renderSiteWork(){
     // Autocomplete from library
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var sw=siteWorkItems[i];sw.name=libItem.name;sw.desc=libItem.desc||'';sw.unit=libItem.unit;sw.price=libItem.rate||0;sw.subtotal=sw.qty*sw.price;
-      sw.mat_cost=libItem.mat_cost||0;sw.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';sw.crew=libItem.crew||'';
+      sw.mat_cost=libItem.mat_cost||0;sw.labor_cost=(libItem.labor_cost||0)||(libItem.rate&&libItem.mat_cost?Math.max(0,Math.round((libItem.rate-libItem.mat_cost)*100)/100):0);
+      sw.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';sw.crew=libItem.crew||'';
       renderSiteWork();recalc();
     });})(idx);
     var del=document.createElement('button');del.className='btn-ico';del.style.color='var(--red)';del.innerHTML='&times;';
@@ -8329,6 +8328,18 @@ function renderSiteWork(){
     ['LS','EA','LF','SY','SF','TON','CY','HR','DAY','WK','MO','VF','AC','LOAD'].forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;if(item.unit===u)o.selected=true;uSel.appendChild(o);});
     (function(i){uSel.addEventListener('change',function(){siteWorkItems[i].unit=this.value;});})(idx);
     uF.appendChild(uSel);fields.appendChild(uF);
+    // Mat $/unit
+    var mF=document.createElement('div');mF.className='lyr-field';
+    mF.innerHTML='<label>Mat $</label>';
+    var mIn=document.createElement('input');mIn.type='number';mIn.min=0;mIn.step=1;mIn.value=item.mat_cost||'';mIn.placeholder='0';
+    (function(i){mIn.addEventListener('change',function(){siteWorkItems[i].mat_cost=parseFloat(this.value)||0;recalc();});})(idx);
+    mF.appendChild(mIn);fields.appendChild(mF);
+    // Labor $/unit
+    var lF=document.createElement('div');lF.className='lyr-field';
+    lF.innerHTML='<label>Labor $</label>';
+    var lIn=document.createElement('input');lIn.type='number';lIn.min=0;lIn.step=1;lIn.value=item.labor_cost||'';lIn.placeholder='0';
+    (function(i){lIn.addEventListener('change',function(){siteWorkItems[i].labor_cost=parseFloat(this.value)||0;recalc();});})(idx);
+    lF.appendChild(lIn);fields.appendChild(lF);
     // Bid $/unit
     var pF=document.createElement('div');pF.className='lyr-field';
     pF.innerHTML='<label>Bid $/Unit</label>';
