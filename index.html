@@ -1610,24 +1610,21 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                 </div>
               </div>
 
-              <div class="dash-section">
+              <div class="dash-section" style="flex:1;display:flex;flex-direction:column;">
                 <div class="dash-section-hdr">
                   <span class="dash-section-title">This Week</span>
                 </div>
-                <div id="dash-upcoming-wo"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div></div></div>
+                <div id="dash-upcoming-wo" style="flex:1;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div></div></div>
               </div>
             </div>
 
             <div class="ops-stack" id="dash-pipeline-col">
               <div class="dash-section">
                 <div class="dash-section-hdr">
-                  <span class="dash-section-title">Pipeline Snapshot</span>
-                  <button class="btn btn-sec btn-sm" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Pipeline</button>
+                  <span class="dash-section-title">New Leads</span>
+                  <button class="btn btn-sec btn-sm" onclick="window.open('/lead-form','_blank')">View Form</button>
                 </div>
-                <div id="dash-pipeline-snapshot" class="ops-mini-grid">
-                  <div class="mc-card"><div class="skeleton skeleton-text" style="width:45%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
-                  <div class="mc-card"><div class="skeleton skeleton-text" style="width:45%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
-                </div>
+                <div id="dash-leads" style="max-height:280px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><div class="empty-state-title">No new leads</div><div class="empty-state-desc">Share your lead form to capture inbound requests</div></div></div>
               </div>
 
               <div class="dash-section">
@@ -1659,10 +1656,13 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             </div>
             <div class="dash-section">
               <div class="dash-section-hdr">
-                <span class="dash-section-title">New Leads</span>
-                <button class="btn btn-sec btn-sm" onclick="window.open('/lead-form','_blank')">View Form</button>
+                <span class="dash-section-title">Pipeline Snapshot</span>
+                <button class="btn btn-sec btn-sm" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Pipeline</button>
               </div>
-              <div id="dash-leads" style="max-height:280px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><div class="empty-state-title">No new leads</div><div class="empty-state-desc">Share your lead form to capture inbound requests</div></div></div>
+              <div id="dash-pipeline-snapshot" class="ops-mini-grid">
+                <div class="mc-card"><div class="skeleton skeleton-text" style="width:45%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
+                <div class="mc-card"><div class="skeleton skeleton-text" style="width:45%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
+              </div>
             </div>
           </div>
         </div>
