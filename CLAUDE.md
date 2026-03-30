@@ -307,11 +307,30 @@ extraItems  // additional items array [{id, name, desc, qty, unit, price, subtot
 
 ### Material Pricing System
 - Materials stored in `MAT` object (cost $/ton) — editable in Settings
-- `LBS` stores density (lbs/ton) — used internally for tonnage calc, NOT shown in UI
-- `DRATE` stores default bid rates, `DDEPTH` stores default depths
-- `LBADGE` maps material name → CSS badge class
+- `MAT_DEFAULT` is the authoritative fallback — never corrupted by saved data
+- `getMatCost(type)` helper resolves material cost with fallbacks: MAT → MAT_DEFAULT → bid library base material → mat_cost. **Always use `getMatCost()` instead of `MAT[type]` in calculations.**
+- `LBS` stores density — 115 lbs/SY/inch for asphalt, 150 lbs/CF for stone
+- `DRATE` stores default bid rates, `DDEPTH` stores default depths (non-zero)
+- `LBADGE` maps material name → CSS badge class (= MAT_TRADE)
 - `renderMatTable()` renders the settings table — all rows are deletable including defaults
 - Density column intentionally removed from UI (still used in calculations)
+
+### Tonnage Formulas (TWO different formulas based on material trade)
+```js
+function tons(sf, d, lbs, matType) {
+  // Asphalt (b-asphalt): (SF/9 * lbs/2000) * depth_inches
+  // Stone/default:        SF * depth_inches/12 * lbs/2000
+}
+```
+- **Asphalt**: `(SF / 9 × 115 / 2000) × depth"` — density is per SY per inch
+- **Stone**: `SF × depth" / 12 × 150 / 2000` — density is per cubic foot
+- The 4th arg `matType` is required — determines which formula via `MAT_TRADE[matType]`
+
+### Material Data Resolution
+When Settings customization replaces standard material names (e.g., "ABC" → "Heavy Duty Aggregate Base Course"), `_applyMatPrices` backfills missing data from:
+1. `MAT_DEFAULT` for standard materials
+2. `DEFAULT_BID_LIBRARY` for bid library items (resolves `material` reference to base material)
+3. Populates `LBS`, `DRATE`, `DDEPTH`, `MAT_TRADE` for all entries
 
 ### Concrete CY Calculation
 ```js
@@ -332,10 +351,11 @@ CY is displayed in green next to each concrete row result.
 2. **Job Cost Defaults** — crew day rate, overhead %, productivity (t/day)
 3. **Material Prices** — editable table (cost, rate, depth, badge) + delete all rows
 4. **Layer Badges** — add/remove/rename badge types (Base, Binder, Surface, Millings, Concrete)
-5. **Bid Items Library** — reusable line items with descriptions
+5. **Item Library** — reusable line items with descriptions (UI label is "Item Library", code var is `BID_LIBRARY`)
 
-### Bid Items Library
+### Item Library (code: BID_LIBRARY)
 - Stored in `localStorage` key `hd_bid_library`
+- `DEFAULT_BID_LIBRARY` has authoritative defaults including `material` (base material ref) and `mat_cost`
 - `renderLibraryList()` — renders in Settings
 - `openLibraryPicker()` — modal picker in Build Proposal
 - Clicking "Insert" in picker adds item to `extraItems` with name, desc, unit, price pre-filled
@@ -403,9 +423,40 @@ These functions MUST use the DOM API, not innerHTML string building. Previous ve
 
 ### Default Materials
 ```js
-MAT = {'ABC base':45, 'Mill & Pave':35, 'B25.0C':85, 'I19.0C':92, 'S9.5B':95, 'S9.5C':95}
-LBS = {'ABC base':150, 'Mill & Pave':115, 'B25.0C':115, 'I19.0C':115, 'S9.5B':115, 'S9.5C':115}
+MAT = {'ABC':30, '#57 Stone':35, 'S9.5B':100, 'S9.5C':90, 'I19.0C':90, 'B25.0C':90, 'Concrete':200, ...}
+LBS = {'ABC':150, '#57 Stone':150, 'S9.5B':115, 'S9.5C':115, 'I19.0C':115, 'B25.0C':115, 'Concrete':150, ...}
+DDEPTH = {'ABC':6, '#57 Stone':3, 'S9.5B':1.5, 'S9.5C':2, 'I19.0C':2.5, 'B25.0C':4, 'Concrete':4}
 ```
+
+### Presets (Proposal Builder)
+```js
+PRESETS = [
+  {name:'Light Duty Asphalt', layers:[{type:'ABC',depth:6}, {type:'S9.5C',depth:2}]},
+  {name:'Heavy Duty Asphalt', layers:[{type:'ABC',depth:8}, {type:'I19.0C',depth:2.5}, {type:'S9.5C',depth:1.5}]},
+  {name:'Parking Lot', layers:[{type:'ABC',depth:6}, {type:'S9.5C',depth:2}]},
+  {name:'NCDOT Pavement', layers:[{type:'B25.0C',depth:5}, {type:'I19.0C',depth:4}, {type:'S9.5C',depth:3}]},
+  {name:'Mill & Overlay', layers:[{type:'S9.5B',depth:1.5}, {type:'S9.5C',depth:1.5}]},
+  {name:'Stone Driveway', layers:[{type:'ABC',depth:6}, {type:'#57 Stone',depth:3}]},
+]
+```
+- Presets have `name` (friendly) and `description` fields per layer — NO `rate` field (uses DRATE defaults)
+- Presets can be overridden from localStorage (`hd_presets`) or Supabase
+- Material dropdown always includes the layer's `type` even if not in LTYPES (prevents mismatch)
+
+### Crew & Trucking System
+```js
+CREWS = [
+  {name:'Asphalt Crew', trade:'b-asphalt', daily_rate:5000, productivity:400, prod_unit:'TON'},
+  {name:'Stone Crew', trade:'b-stone', daily_rate:2500, productivity:800, prod_unit:'TON'},
+  {name:'Concrete Crew', trade:'b-concrete', daily_rate:3500, productivity:50, prod_unit:'CY'},
+  // ... more crews
+]
+MAT_TRADE = {'ABC':'b-stone', 'S9.5B':'b-asphalt', 'I19.0C':'b-asphalt', ...}
+```
+- `getCrewParam(matType, param)` — resolves crew by material's trade
+- Trucking: `trucks × $800/day × days` (TRUCK_RATE=$100/hr × 8hrs)
+- `calcTruckCount` uses `tons/day ÷ tons_per_truck` (default 100 t/truck)
+- `updTrucks` and `updLyrDays` must use crew-specific productivity and include `days_override` in temp objects
 
 ---
 
@@ -438,6 +489,8 @@ curl -s -X PATCH "https://azznfkboiwayifhhcguz.supabase.co/rest/v1/hd_bug_report
 - [ ] Phase tabs: multi-phase support partially built but not fully wired
 - [ ] Badge Manager: dynamically inject CSS for custom badge colors
 - [ ] Concrete items: allow custom `cy_per_lf` override per item
+- [ ] Truck calculator: user reported still needs testing after override fixes (2026-03-30)
+- [ ] Verify material costs populate correctly for all presets after Settings customization
 
 ---
 
