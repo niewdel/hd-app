@@ -4228,9 +4228,10 @@ function _attachLayerAutocomplete(input,sid2,lid2){
         var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
         var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
         l.type=r.type;l.name=r.name;l.description=r.desc||r.name;
-        l.depth=r.depth;l.rate=DRATE[r.type]||150;
+        l.depth=r.depth;
         l.days_override=null;l.trucks_override=null;l.rate_override=null;
-        var mat=MAT[r.type]||0;l.markup=mat>0?Math.round((l.rate-mat)/mat*100):20;
+        l.markup=20;
+        var mat=getMatCost(r.type);l.rate=mat>0?Math.round(mat*1.2*100)/100:DRATE[r.type]||150;
         dropdown.style.display='none';
         renderAll();
       });
@@ -7906,12 +7907,26 @@ function renderPresets(){
 }
 
 // -- Sections ------------------------------------------------------------------
+function _resolveMatType(type){
+  // If type is a raw material in LTYPES, use it directly
+  if(LTYPES.indexOf(type)>=0) return type;
+  // If type is a bid library item name, resolve to its base material
+  var allLib=(DEFAULT_BID_LIBRARY||[]).concat(BID_LIBRARY||[]);
+  var item=allLib.find(function(x){return x.name===type && x.material;});
+  if(item && item.material && LTYPES.indexOf(item.material)>=0) return item.material;
+  return type;
+}
 function mkLayer(l){
-  return {id:lid++,type:l.type,
-    name:l.name!==undefined?l.name:l.type,
-    depth:l.depth!==undefined?l.depth:DDEPTH[l.type],
-    rate:l.rate!==undefined?l.rate:DRATE[l.type],
-    markup:l.markup!==undefined?l.markup:20,
+  var matType=_resolveMatType(l.type);
+  var friendlyName=l.name!==undefined?l.name:(matType!==l.type?l.type:matType);
+  var mu=l.markup!==undefined?l.markup:20;
+  var mat=getMatCost(matType);
+  var defaultRate=mat>0?Math.round(mat*(1+mu/100)*100)/100:DRATE[matType]||150;
+  return {id:lid++,type:matType,
+    name:friendlyName,
+    depth:l.depth!==undefined?l.depth:DDEPTH[matType],
+    rate:l.rate!==undefined?l.rate:defaultRate,
+    markup:mu,
     days_override:l.days_override!==undefined?l.days_override:null,
     overhead:l.overhead!==undefined?l.overhead:jcOverheadPct,
     rate_override:l.rate_override!==undefined?l.rate_override:null,
@@ -7940,10 +7955,12 @@ function updLyrType(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   var oldType=l.type;
-  l.type=v;l.depth=DDEPTH[v];l.rate=DRATE[v];
-  l.days_override=null;l.trucks_override=null;
+  l.type=v;l.depth=DDEPTH[v]||l.depth;
+  l.days_override=null;l.trucks_override=null;l.rate_override=null;
   if(!l.name||l.name===oldType)l.name=v;
-  var mat=MAT[v]||0;l.markup=mat>0?Math.round((l.rate-mat)/mat*100):0;
+  // Keep existing markup %, recalculate rate from new material cost
+  var mat=getMatCost(v);
+  l.rate=mat>0?Math.round(mat*(1+l.markup/100)*100)/100:DRATE[v]||l.rate;
   renderAll();
 }
 function updLyrDepth(sid2,lid2,v){
