@@ -981,6 +981,10 @@ body.dark .mob-bottom-nav{background:rgba(9,9,11,0.95);border-top-color:rgba(255
 .card{background:var(--bg-el);border:1px solid var(--bdr);border-radius:12px;margin-bottom:var(--card-gap);overflow:hidden;box-shadow:none;transition:box-shadow .2s,border-color .2s;}
 .card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.08);}
 .card-hdr{padding:10px 16px;border-bottom:1px solid var(--bdr);background:transparent;display:flex;align-items:center;justify-content:space-between;min-height:42px;}
+.card-collapsible{transition:max-height .25s ease,opacity .2s ease;overflow:hidden;}
+.card-collapsed .card-collapsible{max-height:0!important;opacity:0;overflow:hidden;}
+.card-collapsed .card-hdr{border-bottom:none;}
+.card-collapsed .collapse-chevron{transform:rotate(-90deg);}
 .card-title{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:-0.01em;}
 .card-body{padding:14px 16px;}
 
@@ -1716,15 +1720,18 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
         <!-- PAVEMENT (Asphalt Sections + Concrete + Library items) -->
         <div class="mc-card" style="margin-bottom:var(--card-gap);">
-          <div class="card-hdr">
-            <span class="card-title">Pavement</span>
-            <div style="display:flex;gap:6px;">
+          <div class="card-hdr" style="cursor:pointer;" onclick="toggleCardCollapse(this)">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg class="collapse-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+              <span class="card-title">Pavement</span>
+            </div>
+            <div style="display:flex;gap:6px;" onclick="event.stopPropagation();">
               <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('pavement')">From Library</button>
               <button class="btn btn-sec btn-sm" onclick="showPresetPicker('pavement')">Add Preset</button>
               <button class="btn btn-sec btn-sm" onclick="addSection('',[{type:'ABC'}])">+ Add Item</button>
             </div>
           </div>
-          <div class="card-body" style="padding:0;">
+          <div class="card-collapsible" style="padding:0;">
             <div id="sections"></div>
             <div id="conc-rows"></div>
             <div id="pavement-empty" class="empty-state" style="padding:24px 16px;"><div class="empty-state-title">No pavement items yet</div><div class="empty-state-desc">Click "Add Preset", "From Library", or "+ Add Item" above to get started.</div></div>
@@ -1733,15 +1740,18 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
         <!-- SITE WORK (Line items from library) -->
         <div class="mc-card" style="margin-bottom:var(--card-gap);">
-          <div class="card-hdr">
-            <span class="card-title">Site Work</span>
-            <div style="display:flex;gap:6px;">
+          <div class="card-hdr" style="cursor:pointer;" onclick="toggleCardCollapse(this)">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg class="collapse-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+              <span class="card-title">Site Work</span>
+            </div>
+            <div style="display:flex;gap:6px;" onclick="event.stopPropagation();">
               <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('sitework')">From Library</button>
               <button class="btn btn-sec btn-sm" onclick="showPresetPicker('sitework')">Add Preset</button>
               <button class="btn btn-sec btn-sm" onclick="addSiteWorkItem()">+ Add Item</button>
             </div>
           </div>
-          <div>
+          <div class="card-collapsible">
             <div id="sitework-rows"></div>
             <div id="sitework-empty" class="empty-state" style="padding:16px;"><div class="empty-state-title" style="font-size:13px;">No site work items yet</div><div class="empty-state-desc">Grading, utilities, erosion control, clearing, and other site work items.</div></div>
           </div>
@@ -1749,11 +1759,16 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
         <!-- ADDITIONAL ITEMS (Custom manual items only) -->
         <div class="mc-card" style="margin-bottom:var(--card-gap);">
-          <div class="card-hdr">
-            <span class="card-title">Additional Items</span>
-            <button class="btn btn-sec btn-sm" onclick="addExtra()">+ Add Item</button>
+          <div class="card-hdr" style="cursor:pointer;" onclick="toggleCardCollapse(this)">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg class="collapse-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+              <span class="card-title">Additional Items</span>
+            </div>
+            <div onclick="event.stopPropagation();">
+              <button class="btn btn-sec btn-sm" onclick="addExtra()">+ Add Item</button>
+            </div>
           </div>
-          <div>
+          <div class="card-collapsible">
             <div id="extra-rows"></div>
             <div id="extra-empty" class="empty-state" style="padding:16px;"><div class="empty-state-title" style="font-size:13px;">No additional items yet</div><div class="empty-state-desc">Custom items not in the library. Click "+ Add Item" above.</div></div>
           </div>
@@ -7573,6 +7588,10 @@ var TOPBAR_MENU = {
   admin:[],
   settings:[]
 };
+function toggleCardCollapse(hdr){
+  var card=hdr.closest('.mc-card')||hdr.closest('.card');
+  if(card)card.classList.toggle('card-collapsed');
+}
 function toggleActionsMenu(){
   var m=document.getElementById('topbar-actions-menu');
   if(m)m.classList.toggle('open');
