@@ -4307,6 +4307,25 @@ function _applyMatPrices(mpd){
       if(LBS[k]===undefined) LBS[k]=LBS_DEFAULT?LBS_DEFAULT[k]:115;
       if(MAT_TRADE[k]===undefined&&MAT_TRADE_DEFAULT) MAT_TRADE[k]=MAT_TRADE_DEFAULT[k];
     });
+    // Resolve bid library items used as materials — inherit cost/density/trade from base material
+    var allLib=(BID_LIBRARY||[]).concat(DEFAULT_BID_LIBRARY||[]);
+    LTYPES.forEach(function(k){
+      if(!MAT[k]||MAT[k]<=0){
+        var item=allLib.find(function(x){return x.name===k;});
+        if(item){
+          if(item.material&&MAT[item.material]>0) MAT[k]=MAT[item.material];
+          else if(item.mat_cost>0) MAT[k]=item.mat_cost;
+        }
+      }
+      if(LBS[k]===undefined){
+        var item2=allLib.find(function(x){return x.name===k;});
+        if(item2&&item2.material&&LBS[item2.material]!==undefined) LBS[k]=LBS[item2.material];
+      }
+      if(!MAT_TRADE[k]||MAT_TRADE[k]==='b-general'){
+        var item3=allLib.find(function(x){return x.name===k;});
+        if(item3&&item3.material&&MAT_TRADE[item3.material]) MAT_TRADE[k]=MAT_TRADE[item3.material];
+      }
+    });
   } else if(mpd.mat){
     // Legacy format: cost overrides only
     LTYPES.forEach(function(k){
