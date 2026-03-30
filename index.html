@@ -4161,6 +4161,55 @@ function _showWelcome(){
 }
 
 // Library autocomplete for item name inputs
+function _attachLayerAutocomplete(input,sid2,lid2){
+  var wrap=document.createElement('div');wrap.style.cssText='position:relative;flex:1;';
+  input.parentNode.insertBefore(wrap,input);wrap.appendChild(input);
+  var dropdown=document.createElement('div');dropdown.style.cssText='display:none;position:absolute;top:100%;left:0;right:0;background:var(--wht);border:1px solid var(--bdr);border-radius:6px;box-shadow:var(--shadow-m);z-index:20;max-height:240px;overflow-y:auto;';
+  wrap.appendChild(dropdown);
+  input.addEventListener('input',function(){
+    var q=(this.value||'').toLowerCase();dropdown.innerHTML='';
+    if(q.length<1){dropdown.style.display='none';return;}
+    // Build combined list: raw materials + bid library pavement items
+    var seen={};var results=[];
+    LTYPES.forEach(function(name){
+      if(name.toLowerCase().indexOf(q)>-1){
+        seen[name]=1;
+        results.push({name:name,type:name,depth:DDEPTH[name]||4,desc:'',source:'material',trade:MAT_TRADE[name]||''});
+      }
+    });
+    var allLib=(DEFAULT_BID_LIBRARY||[]).concat(BID_LIBRARY||[]);
+    allLib.forEach(function(item){
+      if(seen[item.name])return;
+      if(item.name.toLowerCase().indexOf(q)>-1||(item.desc||'').toLowerCase().indexOf(q)>-1){
+        seen[item.name]=1;
+        var matType=item.material||item.name;
+        results.push({name:item.name,type:matType,depth:DDEPTH[matType]||4,desc:item.desc||'',source:'library',trade:MAT_TRADE[matType]||'',category:item.category||''});
+      }
+    });
+    if(!results.length){dropdown.style.display='none';return;}
+    results.slice(0,10).forEach(function(r){
+      var opt=document.createElement('div');opt.style.cssText='padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--bdr);transition:background .1s;';
+      var sub=r.source==='library'?(r.category||'Library'):(r.trade||'Material');
+      opt.innerHTML='<div style="font-weight:600;">'+esc(r.name)+'</div><div style="font-size:10px;color:var(--dgray);">'+esc(sub)+' &middot; '+r.depth+'&quot; default depth</div>';
+      opt.addEventListener('mouseenter',function(){this.style.background='var(--tbl-alt)';});
+      opt.addEventListener('mouseleave',function(){this.style.background='';});
+      opt.addEventListener('mousedown',function(e){
+        e.preventDefault();
+        var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
+        var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
+        l.type=r.type;l.name=r.name;l.description=r.desc||r.name;
+        l.depth=r.depth;l.rate=DRATE[r.type]||150;
+        l.days_override=null;l.trucks_override=null;l.rate_override=null;
+        var mat=MAT[r.type]||0;l.markup=mat>0?Math.round((l.rate-mat)/mat*100):20;
+        dropdown.style.display='none';
+        renderAll();
+      });
+      dropdown.appendChild(opt);
+    });
+    dropdown.style.display='';
+  });
+  input.addEventListener('blur',function(){setTimeout(function(){dropdown.style.display='none';},150);});
+}
 function _attachLibAutocomplete(input,onSelect){
   var wrap=document.createElement('div');wrap.style.cssText='position:relative;flex:1;';
   input.parentNode.insertBefore(wrap,input);wrap.appendChild(input);
@@ -8009,7 +8058,7 @@ function renderAll(){
         // Top row: badge + name + delete
         +'<div class="lyr-top">'
         +'<span class="badge '+badgeCls+'" style="font-size:10px;flex-shrink:0;">'+esc(BADGE_DEFS[badgeCls]?BADGE_DEFS[badgeCls].label:l.type)+'</span>'
-        +'<input type="text" value="'+esc(l.name||l.type)+'" placeholder="Layer name" onchange="updLyrName('+s.id+','+l.id+',this.value)">'
+        +'<input type="text" value="'+esc(l.name||l.type)+'" placeholder="Layer name — type to search" data-lyr-name="'+s.id+'-'+l.id+'" onchange="updLyrName('+s.id+','+l.id+',this.value)">'
         +'<button class="btn-ico" onclick="remLyr('+s.id+','+l.id+')" title="Remove layer" style="flex-shrink:0;color:var(--red);opacity:.5;">×</button>'
         +'</div>'
         // Description
@@ -8043,6 +8092,12 @@ function renderAll(){
       +buildFooterHTML(sf,sy,st)
       +'</div>';
     c.appendChild(div);
+  });
+  // Attach autocomplete to layer name inputs
+  document.querySelectorAll('[data-lyr-name]').forEach(function(inp){
+    var key=inp.getAttribute('data-lyr-name');
+    var parts=key.split('-');var sid2=parseInt(parts[0]),lid2=parseInt(parts[1]);
+    _attachLayerAutocomplete(inp,sid2,lid2);
   });
   recalc();
 }
