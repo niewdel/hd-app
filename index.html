@@ -4367,7 +4367,16 @@ function boot(){
     if(d.stages){pipelineStages=d.stages;_pipelineStages=d.stages;}
     if(d.proposals){pipelineProposals=d.proposals;window._pipelineLoadedAt=Date.now();}
     populateStageFilter();
-    renderDashboard();
+    // Re-render dashboard with full data — no deferral
+    _setDashGreeting();
+    renderDashTodaySchedule();
+    renderDashUpcomingWO();
+    renderDashPipelineSnapshot();
+    renderDashCal();
+    updateNavBadges();
+    renderDashWeatherMini();
+    renderDashRecentActivity();
+    loadDashLeads();
   }).catch(function(){});
   
   document.addEventListener('click',function(e){
