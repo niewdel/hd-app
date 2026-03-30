@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#111111"/>
 <meta name="color-scheme" content="light dark"/>
 <title>HD Hauling &amp; Grading - Proposal Generator</title>
+<link rel="icon" type="image/png" href="/hd_logo_cropped.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -7278,7 +7279,7 @@ async function loadCOList(){
         +'<button class="btn btn-sec btn-sm" onclick="exportCOFromSaved('+co.id+')" title="Export PDF">PDF</button>'
         +'<button class="btn btn-sec btn-sm" onclick="generateWOFromCO('+co.id+')" title="Generate work order">Work Order</button>'
         +'<button class="btn btn-sec btn-sm" onclick="generateJCFromCO('+co.id+')" title="Generate job cost">Job Cost</button>'
-        +'<button class="btn-ico" onclick="delCO('+co.id+')">x</button>';
+        +'<button class="btn-ico" onclick="delCO('+co.id+')" style="color:var(--red);">×</button>';
       c.appendChild(div);
     });
   }catch(e){c.innerHTML='<p style="color:var(--dgray);font-size:12px;">Error loading change orders.</p>';}
@@ -7439,9 +7440,7 @@ async function delCO(id){
 }
 
 var TOPBAR_MENU = {
-  dashboard:[
-    {label:'New Project',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',fn:'openProjectModal()'}
-  ],
+  dashboard:[],
   projects:[
     {label:'New Project',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',fn:'openProjectModal()'}
   ],
@@ -8011,7 +8010,7 @@ function renderAll(){
         +'<div class="lyr-top">'
         +'<span class="badge '+badgeCls+'" style="font-size:10px;flex-shrink:0;">'+esc(BADGE_DEFS[badgeCls]?BADGE_DEFS[badgeCls].label:l.type)+'</span>'
         +'<input type="text" value="'+esc(l.name||l.type)+'" placeholder="Layer name" onchange="updLyrName('+s.id+','+l.id+',this.value)">'
-        +'<button class="btn-ico" onclick="remLyr('+s.id+','+l.id+')" title="Remove layer" style="flex-shrink:0;opacity:.4;">×</button>'
+        +'<button class="btn-ico" onclick="remLyr('+s.id+','+l.id+')" title="Remove layer" style="flex-shrink:0;color:var(--red);opacity:.5;">×</button>'
         +'</div>'
         // Description
         +'<input type="text" class="lyr-desc" value="'+esc(l.description||'')+'" placeholder="Description for PDF..." onchange="updLyrDesc('+s.id+','+l.id+',this.value)">'
@@ -8037,7 +8036,7 @@ function renderAll(){
       +'</div>'
       +'<button class="btn btn-sec btn-sm" onclick="addLyr('+s.id+')" style="font-size:11px;">+ Layer</button>'
       +'<button class="btn-ico" onclick="dupSection('+s.id+')" style="margin-left:auto;opacity:.4;" title="Duplicate section"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
-      +'<button class="btn-ico" onclick="remSec('+s.id+')" style="opacity:.4;" title="Remove section">×</button>'
+      +'<button class="btn-ico" onclick="remSec('+s.id+')" style="color:var(--red);opacity:.5;" title="Remove section">×</button>'
       +'</div>'
       +'<div>'+lrows+'</div>'
       +'<div class="sec-foot" data-sid="'+s.id+'">'
@@ -8096,7 +8095,7 @@ function renderConc(){
       '<div class="lyr-top">'
       +'<span class="badge b-conc" style="font-size:10px;flex-shrink:0;">Concrete</span>'
       +'<select onchange="updConcType('+item.id+',this.value)" style="flex:1;font-size:13px;font-weight:600;padding:4px 8px;border:1px solid transparent;border-radius:5px;">'+ctOpts+'</select>'
-      +'<button class="btn-ico" onclick="remConc('+item.id+')" title="Remove" style="flex-shrink:0;opacity:.4;">×</button>'
+      +'<button class="btn-ico" onclick="remConc('+item.id+')" title="Remove" style="flex-shrink:0;color:var(--red);opacity:.5;">×</button>'
       +'</div>'
       // Description
       +'<input type="text" class="lyr-desc" value="'+esc(item.description||ct.desc||'')+'" placeholder="Description for PDF..." onchange="var i=concItems.find(function(x){return x.id==='+item.id+';});if(i)i.description=this.value;">'
@@ -9418,7 +9417,7 @@ async function renderSaved(){
         +'<button class="btn btn-sec btn-sm" onclick="exportPDFFromSaved('+q.id+')" title="Export PDF">PDF</button>'
         +'<button class="btn btn-sec btn-sm" onclick="generateWorkOrder('+q.id+')" title="Generate crew work order">Work Order</button>'
         +'<button class="btn btn-sec btn-sm" onclick="generateJobCostFromSaved('+q.id+')" title="Generate job cost report">Job Cost</button>'
-        +'<button class="btn-ico" onclick="delSaved('+q.id+')">x</button>';
+        +'<button class="btn-ico" onclick="delSaved('+q.id+')" style="color:var(--red);">×</button>';
       div.appendChild(infoDiv);
       c.appendChild(div);
     });
@@ -10129,7 +10128,7 @@ async function renderClients() {
         +'<div class="client-sub">'+[c.phone,c.email,c.city_state].filter(Boolean).map(esc).join(' | ')+'</div>'
         +'</div>'
         +'<button class="btn btn-sec btn-sm" onclick="event.stopPropagation();editClient('+c.id+')">Edit</button>'
-        +'<button class="btn-ico" onclick="event.stopPropagation();deleteClient('+c.id+')">x</button>';
+        +'<button class="btn-ico" onclick="event.stopPropagation();deleteClient('+c.id+')" style="color:var(--red);">×</button>';
       var cb=_makeBulkCheckbox('clients-list',c.id);
       cb.style.marginRight='6px';
       cb.addEventListener('click',function(e){e.stopPropagation();});
@@ -10239,7 +10238,7 @@ function renderSubsList(){
       +'<div style="font-size:11px;color:var(--dgray);margin-top:2px;">'+[sub.phone,sub.quote_amount?'$'+Math.round(sub.quote_amount).toLocaleString():''].filter(Boolean).join(' | ')+'</div>'
       +'</div>'
       +'<button class="btn btn-sec btn-sm" onclick="editSub('+idx+')">Edit</button>'
-      +'<button class="btn-ico" onclick="deleteSub('+idx+')" style="color:var(--dgray);">x</button>';
+      +'<button class="btn-ico" onclick="deleteSub('+idx+')" style="color:var(--red);">×</button>';
     c.appendChild(card);
   });
   // Mirror into contacts panel
@@ -10405,7 +10404,7 @@ function renderClientNotes(){
     var ts=n.date?new Date(n.date).toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}):'';
     row.innerHTML='<div style="font-size:12px;">'+esc(n.text)+'</div>'
       +'<div style="font-size:10px;color:var(--dgray);margin-top:2px;">'+esc(n.user||'')+' &middot; '+ts
-      +' <button class="btn-ico" style="font-size:11px;color:var(--dgray);" onclick="removeClientNote('+i+')">x</button></div>';
+      +' <button class="btn-ico" style="font-size:11px;color:var(--red);" onclick="removeClientNote('+i+')">×</button></div>';
     list.appendChild(row);
   });
 }
@@ -10489,7 +10488,7 @@ async function deleteClient(id) {
 }
 
 document.addEventListener('click',function(e){if(e.target.id==='client-modal')closeClientModal();});
-var _loginCanvasRaf=null;function initLoginCanvas(){var cv=document.getElementById('login-canvas');if(!cv)return;var ctx=cv.getContext('2d');var W,H,pts;var N=55;function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}function rr(a,b){return a+Math.random()*(b-a);}function init(){resize();pts=[];for(var i=0;i<N;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:rr(-0.15,0.15),vy:rr(-0.15,0.15),r:rr(1,2)});}function draw(){ctx.clearRect(0,0,W,H);for(var i=0;i<N;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;}for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){var dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<150){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(170,170,170,'+(1-dist/150)*0.15+')';ctx.lineWidth=0.5;ctx.stroke();}if(dist<75){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(204,0,0,'+(1-dist/75)*0.2+')';ctx.lineWidth=0.6;ctx.stroke();}}for(var i=0;i<N;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,6.28);ctx.fillStyle='rgba(255,255,255,0.22)';ctx.fill();}_loginCanvasRaf=requestAnimationFrame(draw);}window.addEventListener('resize',resize);init();draw();}function stopLoginCanvas(){if(_loginCanvasRaf){cancelAnimationFrame(_loginCanvasRaf);_loginCanvasRaf=null;}}initLoginCanvas();
+var _loginCanvasRaf=null;function initLoginCanvas(){var cv=document.getElementById('login-canvas');if(!cv)return;var ctx=cv.getContext('2d');var W,H,pts;var N=55;function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}function rr(a,b){return a+Math.random()*(b-a);}function init(){resize();pts=[];for(var i=0;i<N;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:rr(-0.15,0.15),vy:rr(-0.15,0.15),r:rr(1,2)});}function draw(){ctx.clearRect(0,0,W,H);for(var i=0;i<N;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;}for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){var dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<150){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(200,200,200,'+(1-dist/150)*0.35+')';ctx.lineWidth=0.7;ctx.stroke();}if(dist<75){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(204,0,0,'+(1-dist/75)*0.45+')';ctx.lineWidth=0.8;ctx.stroke();}}for(var i=0;i<N;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,pts[i].r,0,6.28);ctx.fillStyle=i%4===0?'rgba(204,0,0,0.5)':'rgba(255,255,255,0.45)';ctx.fill();}_loginCanvasRaf=requestAnimationFrame(draw);}window.addEventListener('resize',resize);init();draw();}function stopLoginCanvas(){if(_loginCanvasRaf){cancelAnimationFrame(_loginCanvasRaf);_loginCanvasRaf=null;}}initLoginCanvas();
 
 var _sidebarCanvasRaf=null;
 function initSidebarCanvas(){
@@ -10835,7 +10834,7 @@ function loadWOTimeLog(){
       html+='<td style="padding:8px 12px;text-align:right;">'+(e.hours_worked?e.hours_worked.toFixed(1)+'h':'—')+'</td>';
       if(window._userRole==='admin'){
         html+='<td style="padding:8px 12px;text-align:right;">'+(e.labor_cost?'$'+e.labor_cost.toFixed(2):'—')+'</td>';
-        html+='<td style="padding:8px 12px;text-align:right;"><button class="btn-ico" onclick="deleteTimeEntry('+e.id+')" title="Delete" style="color:var(--dgray);font-size:12px;">&#10005;</button></td>';
+        html+='<td style="padding:8px 12px;text-align:right;"><button class="btn-ico" onclick="deleteTimeEntry('+e.id+')" title="Delete" style="color:var(--red);font-size:12px;">&#10005;</button></td>';
       }
       html+='</tr>';
     });
@@ -14378,7 +14377,7 @@ function loadDashReminders(){
       html+='</div></div>';
       html+='<div style="display:flex;gap:4px;flex-shrink:0;">';
       html+='<button class="btn-ico" onclick="completeReminder('+r.id+')" title="Mark complete" style="color:var(--green,#27500A);font-size:16px;">&#10003;</button>';
-      html+='<button class="btn-ico" onclick="deleteReminder('+r.id+')" title="Delete" style="color:var(--dgray);font-size:14px;">&#10005;</button>';
+      html+='<button class="btn-ico" onclick="deleteReminder('+r.id+')" title="Delete" style="color:var(--red);font-size:14px;">&#10005;</button>';
       html+='</div></div>';
     });
     c.innerHTML=html;
@@ -14845,7 +14844,7 @@ function renderPricingOptions(){
     html+='<input type="text" value="'+esc(opt.description)+'" placeholder="Brief description" style="font-size:13px;padding:6px 10px;" onchange="updatePricingOption(\''+opt.id+'\',\'description\',this.value)"/>';
     html+='<input type="number" value="'+(opt.total||'')+'" placeholder="$ Total" style="font-size:13px;padding:6px 10px;" onchange="updatePricingOption(\''+opt.id+'\',\'total\',this.value)"/>';
     html+='</div>';
-    html+='<button class="btn-ico" onclick="removePricingOption(\''+opt.id+'\')" style="color:var(--dgray);font-size:14px;margin-top:4px;">&#10005;</button>';
+    html+='<button class="btn-ico" onclick="removePricingOption(\''+opt.id+'\')" style="color:var(--red);font-size:14px;margin-top:4px;">&#10005;</button>';
     html+='</div>';
   });
   c.innerHTML=html;
@@ -14874,7 +14873,7 @@ function loadDashLeads(){
       html+='</div>';
       html+='<div style="display:flex;gap:4px;flex-shrink:0;">';
       html+='<button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="convertLead('+l.id+')">Accept</button>';
-      html+='<button class="btn-ico" onclick="dismissLead('+l.id+')" title="Dismiss" style="color:var(--dgray);font-size:14px;">&#10005;</button>';
+      html+='<button class="btn-ico" onclick="dismissLead('+l.id+')" title="Dismiss" style="color:var(--red);font-size:14px;">&#10005;</button>';
       html+='</div></div>';
     });
     c.innerHTML=html;
@@ -14919,7 +14918,7 @@ function addReminderFromProject(){
 <!-- Client Modal -->
 <div id="client-modal" class="modal-overlay hidden">
   <div class="modal" style="width:460px;">
-    <div class="modal-hdr"><h3 id="client-modal-title">New Client</h3><button class="btn-ico" onclick="closeClientModal()">x</button></div>
+    <div class="modal-hdr"><h3 id="client-modal-title">New Client</h3><button class="btn-ico" onclick="closeClientModal()" style="font-size:18px;">&#10005;</button></div>
     <div class="modal-body">
       <label>Full Name *</label><input id="cm-name" type="text" placeholder="Client full name"/>
       <label>Company</label><input id="cm-company" type="text" placeholder="Company name"/>
