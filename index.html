@@ -3731,6 +3731,7 @@ async function doLogin(){
       showAdminElements();
       renderUserChrome();
       initAutoLogout();
+      _fetchBootData();
     } else {
       var errMsg=d.error||'Incorrect username or password.';
       if(d.hint){errMsg+='\nHint: '+d.hint;}
@@ -4359,15 +4360,25 @@ function boot(){
   updateMatIndicator();
   checkMobile();
   renderTopbar('dashboard');
-  // Render dashboard immediately, then fetch all data in one call and re-render
   renderDashboard();
+  
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))
+      document.getElementById('client-sug').style.display='none';
+  });
+  // Show admin-only elements if admin
+  showAdminElements();
+  // FAB removed
+}
+
+function _fetchBootData(){
   fetch('/boot/data').then(function(r){return r.json();}).then(function(d){
     if(!d.ok)return;
     if(d.quotes)savedQuotes=d.quotes;
     if(d.stages){pipelineStages=d.stages;_pipelineStages=d.stages;}
     if(d.proposals){pipelineProposals=d.proposals;window._pipelineLoadedAt=Date.now();}
     populateStageFilter();
-    // Re-render dashboard with full data — no deferral
+    // Re-render dashboard with full data
     _setDashGreeting();
     renderDashTodaySchedule();
     renderDashUpcomingWO();
@@ -4377,15 +4388,7 @@ function boot(){
     renderDashWeatherMini();
     renderDashRecentActivity();
     loadDashLeads();
-  }).catch(function(){});
-  
-  document.addEventListener('click',function(e){
-    if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))
-      document.getElementById('client-sug').style.display='none';
-  });
-  // Show admin-only elements if admin
-  showAdminElements();
-  // FAB removed
+  }).catch(function(e){console.warn('boot/data fetch failed:',e);});
 }
 
 // -- Storage (Supabase-backed, localStorage fallback) --------------------------
@@ -13400,6 +13403,8 @@ function copyCalFeedUrl(){
       showAdminElements();
       renderUserChrome();
       initAutoLogout();
+      // Ensure dashboard loads even if boot partially failed
+      _fetchBootData();
     }
   }catch(e){}
 })();
