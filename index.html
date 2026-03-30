@@ -7873,11 +7873,12 @@ function updLyrDays(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   var t=(s.sf>0)?tons(s.sf,l.depth,LBS[l.type],l.type)*wf():0;
-  var autoD=jcProductivity>0?t/jcProductivity:0;
+  var prod=getCrewParam(l.type,'productivity');
+  var autoD=prod>0?Math.ceil(t/prod*2)/2:0;
   var entered=parseFloat(v)||0;
   // If value matches auto, clear override; otherwise set override
   l.days_override=Math.abs(entered-autoD)<0.01?null:entered;
-  recalc();updateLyrResult(sid2,lid2);
+  recalc();renderAll();
 }
 function updLyrOverhead(sid2,lid2,v){
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
@@ -7889,7 +7890,7 @@ function updTrucks(sid2,lid2,v){
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   var sf=s.sf||0,wfv=wf();
   var t=(sf>0)?tons(sf,l.depth,LBS[l.type],l.type)*wfv:0;
-  var autoTrucks=calcTruckCount(t,{trucks_override:null,type:l.type});
+  var autoTrucks=calcTruckCount(t,{trucks_override:null,type:l.type,days_override:l.days_override});
   var entered=parseInt(v)||0;
   l.trucks_override=(entered===autoTrucks)?null:entered;
   recalc();renderAll();
