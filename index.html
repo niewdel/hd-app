@@ -7821,9 +7821,12 @@ function renderMatTable(){
     var tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid var(--bdr)';
     if(idx%2)tr.style.background='var(--lgray)';
-    // Name (read-only)
-    var td0 = document.createElement('td'); td0.style.cssText='padding:8px 10px;font-weight:600;font-size:13px;';
-    td0.textContent=k; tr.appendChild(td0);
+    // Name (editable)
+    var td0 = document.createElement('td'); td0.style.cssText='padding:8px 10px;';
+    var nameIn=document.createElement('input');nameIn.type='text';nameIn.value=k;
+    nameIn.style.cssText='font-weight:600;font-size:13px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;width:100%;';
+    (function(oldName){nameIn.addEventListener('change',function(){renameMaterial(oldName,this.value.trim());});})(k);
+    td0.appendChild(nameIn); tr.appendChild(td0);
     // Trade badge (editable dropdown from BADGE_DEFS)
     var td1=document.createElement('td');td1.style.cssText='padding:8px 10px;text-align:center;';
     var tradeCls=MAT_TRADE[k]||'b-general';
@@ -7858,6 +7861,22 @@ function renderMatTable(){
   });
 }
 
+function renameMaterial(oldName,newName){
+  if(!newName||newName===oldName)return;
+  if(MAT[newName]!==undefined){toast('Material "'+newName+'" already exists','err');renderMatTable();return;}
+  // Update all data structures
+  var idx=LTYPES.indexOf(oldName);if(idx>=0)LTYPES[idx]=newName;
+  MAT[newName]=MAT[oldName];delete MAT[oldName];
+  if(MAT_UNIT[oldName]!==undefined){MAT_UNIT[newName]=MAT_UNIT[oldName];delete MAT_UNIT[oldName];}
+  if(MAT_TRADE[oldName]!==undefined){MAT_TRADE[newName]=MAT_TRADE[oldName];delete MAT_TRADE[oldName];}
+  if(LBS[oldName]!==undefined){LBS[newName]=LBS[oldName];delete LBS[oldName];}
+  if(DRATE[oldName]!==undefined){DRATE[newName]=DRATE[oldName];delete DRATE[oldName];}
+  if(DDEPTH[oldName]!==undefined){DDEPTH[newName]=DDEPTH[oldName];delete DDEPTH[oldName];}
+  if(LBADGE[oldName]!==undefined){LBADGE[newName]=LBADGE[oldName];delete LBADGE[oldName];}
+  // Update any layers using the old name
+  sections.forEach(function(s){s.layers.forEach(function(l){if(l.type===oldName)l.type=newName;if(l.name===oldName)l.name=newName;});});
+  renderMatTable();renderAll();
+}
 function deleteMaterial(name){
   if(!confirm('Remove "'+name+'" from materials?')) return;
   var idx=LTYPES.indexOf(name);
