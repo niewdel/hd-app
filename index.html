@@ -9626,8 +9626,14 @@ function loadQuote(id){
   }
   showPanel('build',document.querySelector('.nav-item'));
   updateProposalDocBadge();
-  renderAll();renderConc();renderExtra();renderPavementItems();renderSiteWork();
+  renderAll();renderConc();
+  // Defer item renders to ensure DOM is ready after panel switch
   _proposalDirty=false;
+  setTimeout(function(){
+    renderExtra();renderPavementItems();renderSiteWork();
+    _proposalDirty=false;
+    if(_autoSaveTimer){clearTimeout(_autoSaveTimer);_autoSaveTimer=null;}
+  },50);
   toast('Quote loaded');
 }
 async function delSaved(id){
