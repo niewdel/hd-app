@@ -4263,7 +4263,8 @@ function _attachLibAutocomplete(input,onSelect){
   input.addEventListener('input',function(){
     var q=(this.value||'').toLowerCase();dropdown.innerHTML='';
     if(q.length<2){dropdown.style.display='none';return;}
-    var matches=BID_LIBRARY.filter(function(item){return item.name.toLowerCase().indexOf(q)>-1;}).slice(0,8);
+    var seen={};var allItems=(DEFAULT_BID_LIBRARY||[]).concat(BID_LIBRARY||[]);
+    var matches=allItems.filter(function(item){if(seen[item.name])return false;seen[item.name]=1;return item.name.toLowerCase().indexOf(q)>-1;}).slice(0,8);
     if(!matches.length){dropdown.style.display='none';return;}
     matches.forEach(function(item){
       var opt=document.createElement('div');opt.style.cssText='padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--bdr);transition:background .1s;';
@@ -8275,7 +8276,7 @@ function renderSiteWork(){
       sw.mat_cost=libItem.mat_cost||0;sw.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';
       renderSiteWork();recalc();
     });})(idx);
-    var del=document.createElement('button');del.className='btn-ico';del.style.color='var(--dgray)';del.innerHTML='&times;';
+    var del=document.createElement('button');del.className='btn-ico';del.style.color='var(--red)';del.innerHTML='&times;';
     (function(i){del.addEventListener('click',function(){siteWorkItems.splice(i,1);renderSiteWork();recalc();});})(idx);
     top.appendChild(del);
     row.appendChild(top);
@@ -8460,14 +8461,14 @@ function recalc(){
     if(!i.name||!i.subtotal)return;
     hasExtra=true;
     gB+=i.subtotal;
-    var mc=parseFloat(i.mat_cost)||0;var lc=parseFloat(i.labor_cost)||0;
-    var costE=mc+lc;var mpE=costE>0?((i.subtotal-costE)/costE*100):0;
+    var qty=i.qty||0;var mc=parseFloat(i.mat_cost)||0;var lc=parseFloat(i.labor_cost)||0;
+    var costE=mc*qty+lc*qty;var mpE=costE>0?((i.subtotal-costE)/costE*100):0;
     var tr=document.createElement('tr');
     tr.innerHTML='<td>'+esc(i.name)+'</td>'
       +'<td>'+i.qty+'</td>'
       +'<td>'+esc(i.unit)+'</td>'
-      +'<td>'+(mc>0?'$'+fi(mc):'-')+'</td>'
-      +'<td>'+(lc>0?'$'+fi(lc):'-')+'</td>'
+      +'<td>'+(mc>0?'$'+fi(mc*qty):'-')+'</td>'
+      +'<td>'+(lc>0?'$'+fi(lc*qty):'-')+'</td>'
       +'<td style="font-weight:600;">$'+fi(i.subtotal)+'</td>'
       +'<td class="'+(mpE>=0?'gp':'gn')+'">'+(costE>0?mpE.toFixed(1)+'%':'-')+'</td>';
     bkExtra.appendChild(tr);
@@ -8478,9 +8479,10 @@ function recalc(){
   siteWorkItems.forEach(function(item){
     if(!item.name||item.subtotal<=0)return;
     hasSW=true;gB+=item.subtotal;
-    var costSW=(item.mat_cost||0)+(item.labor_cost||0);
+    var qty=item.qty||0;
+    var costSW=(item.mat_cost||0)*qty+(item.labor_cost||0)*qty;
     var mpSW=costSW>0?((item.subtotal-costSW)/costSW*100):0;
-    if(bkSW){var tr=document.createElement('tr');tr.innerHTML='<td>'+esc(item.name)+'</td><td>'+item.qty+'</td><td>'+item.unit+'</td><td>'+(item.mat_cost?'$'+fi(item.mat_cost):'-')+'</td><td>'+(item.labor_cost?'$'+fi(item.labor_cost):'-')+'</td><td>$'+fi(item.subtotal)+'</td><td class="'+(mpSW>=0?'gp':'gn')+'">'+(costSW>0?mpSW.toFixed(1)+'%':'-')+'</td>';bkSW.appendChild(tr);}
+    if(bkSW){var tr=document.createElement('tr');tr.innerHTML='<td>'+esc(item.name)+'</td><td>'+item.qty+'</td><td>'+item.unit+'</td><td>'+(item.mat_cost?'$'+fi(item.mat_cost*qty):'-')+'</td><td>'+(item.labor_cost?'$'+fi(item.labor_cost*qty):'-')+'</td><td>$'+fi(item.subtotal)+'</td><td class="'+(mpSW>=0?'gp':'gn')+'">'+(costSW>0?mpSW.toFixed(1)+'%':'-')+'</td>';bkSW.appendChild(tr);}
     // Update sitework subtotal display
     var subEl=document.querySelector('[data-sw="'+item.id+'"]');if(subEl)subEl.textContent='$'+Math.round(item.subtotal).toLocaleString();
   });
