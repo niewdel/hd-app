@@ -3101,6 +3101,18 @@ var CREW_COSTS = {};
 function getCrewForTrade(trade){
   return CREWS.find(function(c){return c.trade===trade;})||null;
 }
+function _backfillLibMaterial(){
+  // Fill in missing material/mat_cost fields from DEFAULT_BID_LIBRARY
+  var defMap={};(DEFAULT_BID_LIBRARY||[]).forEach(function(d){defMap[d.name]=d;});
+  BID_LIBRARY.forEach(function(item){
+    var def=defMap[item.name];
+    if(def){
+      if(!item.material&&def.material)item.material=def.material;
+      if(!item.mat_cost&&def.mat_cost)item.mat_cost=def.mat_cost;
+      if(!item.category&&def.category)item.category=def.category;
+    }
+  });
+}
 function _resolveTradeForMat(matType){
   var trade=MAT_TRADE[matType]||'';
   if(trade && trade!=='b-general' && getCrewForTrade(trade)) return trade;
@@ -3110,9 +3122,10 @@ function _resolveTradeForMat(matType){
     if(getCrewForTrade(dt)) return dt;
   }
   // Try resolving via bid library base material reference
-  var allLib=(BID_LIBRARY||[]).concat(DEFAULT_BID_LIBRARY||[]);
-  var item=allLib.find(function(x){return x.name===matType;});
-  if(item && item.material){
+  // Check DEFAULT_BID_LIBRARY first (always has material field), then user library
+  var allLib=(DEFAULT_BID_LIBRARY||[]).concat(BID_LIBRARY||[]);
+  var item=allLib.find(function(x){return x.name===matType && x.material;});
+  if(item){
     var baseTrade=MAT_TRADE[item.material]||
       (MAT_TRADE_DEFAULT&&MAT_TRADE_DEFAULT[item.material])||'';
     if(baseTrade && getCrewForTrade(baseTrade)) return baseTrade;
@@ -4268,7 +4281,7 @@ function loadStorage(){
     var cr=localStorage.getItem('hd_crews');
     if(cr){try{CREWS=JSON.parse(cr);}catch(e){}}
     var bl=localStorage.getItem('hd_bid_library');
-    if(bl){try{BID_LIBRARY=JSON.parse(bl);}catch(e){}}
+    if(bl){try{BID_LIBRARY=JSON.parse(bl);_backfillLibMaterial();}catch(e){}}
     var eq=localStorage.getItem('hd_equipment');
     if(eq){try{EQUIPMENT=JSON.parse(eq);}catch(e){}}
     var up=localStorage.getItem('hd_unit_prices');
@@ -4347,7 +4360,7 @@ function _loadFromSupabase(){
       if(v.hd_mat_prices){_applyMatPrices(v.hd_mat_prices);try{localStorage.setItem('hd_mat_prices',JSON.stringify(v.hd_mat_prices));}catch(e){}}
       if(v.hd_jc_defaults){_applyJCDefaults(v.hd_jc_defaults);try{localStorage.setItem('hd_jc_defaults',JSON.stringify(v.hd_jc_defaults));}catch(e){}}
       if(v.hd_crews){CREWS=v.hd_crews;_crewNextId=CREWS.reduce(function(mx,c){return Math.max(mx,c.id);},0)+1;try{localStorage.setItem('hd_crews',JSON.stringify(v.hd_crews));}catch(e){}}
-      if(v.hd_bid_library){BID_LIBRARY=v.hd_bid_library;try{localStorage.setItem('hd_bid_library',JSON.stringify(v.hd_bid_library));}catch(e){}}
+      if(v.hd_bid_library){BID_LIBRARY=v.hd_bid_library;_backfillLibMaterial();try{localStorage.setItem('hd_bid_library',JSON.stringify(BID_LIBRARY));}catch(e){}}
       if(v.hd_equipment){EQUIPMENT=v.hd_equipment;_eqId=EQUIPMENT.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},17);try{localStorage.setItem('hd_equipment',JSON.stringify(v.hd_equipment));}catch(e){}}
       if(v.hd_unit_prices){UNIT_PRICES=v.hd_unit_prices;_upId=UNIT_PRICES.reduce(function(m,x){return Math.max(m,(x.id||0)+1);},11);try{localStorage.setItem('hd_unit_prices',JSON.stringify(v.hd_unit_prices));}catch(e){}}
       if(v.hd_handbook_url){var el=document.getElementById('dash-handbook-url');if(el)el.value=v.hd_handbook_url;}
