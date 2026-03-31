@@ -830,13 +830,14 @@ def tc_pages(st):
             'All invoices are due Net 30 (thirty calendar days from the invoice date). Invoices will be submitted upon completion of each defined phase of work or on a monthly basis, whichever occurs first.',
             '• Balances not received within thirty (30) days of the invoice date accrue interest at 1.5% per month (18% annually).',
             '• Final payment is due within thirty (30) calendar days of the final completion invoice. Where applicable and agreed in writing, retention may be withheld per the terms of the prime contract but shall be released no later than thirty (30) days after final completion and acceptance of the work.',
-            '• The individual executing this contract on behalf of the Customer/Purchaser provides a personal guarantee for full payment of all outstanding principal and accrued interest.',
+            '• The Customer/Purchaser entity executing this contract assumes full responsibility for payment of all invoiced amounts and accrued interest.',
         ]),
         ('22. Lien Rights', [
             'HD Hauling & Grading expressly reserves its right to file a Claim of Lien pursuant to N.C.G.S. Chapter 44A in the event of non-payment. Nothing herein constitutes a waiver of lien rights. In the event legal action is required, the Customer shall be responsible for all reasonable attorney\'s fees and collection costs per N.C.G.S. \u00a7\u00a044A-35.',
         ]),
         ('23. Material Pricing & Availability', [
-            'Due to volatility in liquid asphalt, aggregate, pipe, fuel, and commodity markets, material costs may be adjusted to reflect prevailing market rates if costs increase more than ten percent (10%) from the proposal date. Written notice will be provided prior to any price adjustment.',
+            'Due to volatility in liquid asphalt, aggregate, pipe, fuel, and commodity markets, material costs are subject to change between the proposal date and the date of installation. No material price adjustments will be applied without a written Change Order submitted to and approved by the Customer.',
+            '• If the Customer denies a Change Order for a material price adjustment, HD Hauling & Grading reserves the right to suspend or terminate the affected scope of work, as the work cannot proceed at the original pricing if material costs have materially increased.',
             '• HD Hauling & Grading is not liable for delays caused by plant shutdowns, material shortages, or supplier availability issues.',
         ]),
         ('24. Force Majeure', [
