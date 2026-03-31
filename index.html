@@ -7693,7 +7693,6 @@ var TOPBAR_MENU = {
   build:[
     {label:'Save Proposal',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>',fn:'saveQuote()'},
     {label:'Export PDF',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',fn:'exportPDF()'},
-    {label:'Export Word',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',fn:'exportDOCX()'},
     {sep:true},
     {label:'Email Proposal',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',fn:'openEmailModal()'},
     {label:'Upload Site Plan',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',fn:"document.getElementById('site-plan-input').click()"},
@@ -9517,33 +9516,6 @@ async function exportPDF(){
   }catch(e){toast('PDF error: '+e.message,'err');}
   finally{
     if(btn){btn.disabled=false;btn.textContent='Export PDF';}
-  }
-}
-
-// -- Word export ---------------------------------------------------------------
-async function exportDOCX(){
-  var btn=document.getElementById('docx-btn');
-  btn.disabled=true;btn.textContent='Generating...';
-  try{
-    var p=buildPayload();
-    if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
-    var _spProjId2=window._pendingProjectLink||(lastSavedQuoteId?findParentProject(lastSavedQuoteId):null);
-    if(!p.site_plan_image&&_spProjId2){
-      var _proj=pipelineProposals.find(function(x){return x.id===_spProjId2;});
-      if(_proj){var _sn=typeof _proj.snap==='string'?JSON.parse(_proj.snap):_proj.snap||{};if(_sn.site_plan_url)p.site_plan_url=_sn.site_plan_url;}
-    }
-    var r=await fetch('/generate-docx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
-    if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
-    var blob=await r.blob();
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.href=url;a.download=(p.document_number||'HD_Proposal')+'_'+p.project_name.replace(/\s+/g,'_')+'.docx';
-    a.click();URL.revokeObjectURL(url);
-    toast('Word doc downloaded','ok');
-  }catch(e){toast('Word error: '+e.message,'err');}
-  finally{
-    btn.disabled=false;
-    btn.innerHTML='<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 7h8v1H4zm0 2h8v1H4zm0 2h5v1H4z"/></svg>Word';
   }
 }
 

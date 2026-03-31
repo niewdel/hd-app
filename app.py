@@ -9,7 +9,7 @@ try:
     GMAIL_AVAILABLE = True
 except ImportError:
     GMAIL_AVAILABLE = False
-import generate_docx
+
 import generate_report
 import requests as http
 
@@ -684,18 +684,6 @@ def generate_pdf():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/generate-docx', methods=['POST'])
-@require_auth
-def generate_docx_route():
-    data = request.get_json()
-    with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as f:
-        out = f.name
-    try:
-        generate_docx.build(data, out)
-        return send_file(out, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                         as_attachment=True, download_name='HD_Proposal.docx')
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/generate-co-pdf', methods=['POST'])
 @require_auth
