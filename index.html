@@ -5875,7 +5875,9 @@ function _renderProjectSummaryInner(proj){
       +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:4px;">'
       +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
       +'<h2 style="margin:0;font-size:22px;font-weight:800;">'+esc(proj.name||'Untitled Project')+'</h2>'
-      +'<span style="font-size:10px;font-weight:700;color:#fff;background:'+stageColor+';padding:3px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;">'+esc(stageName)+'</span>'
+      +'<select id="ps-stage-select" style="font-size:10px;font-weight:700;color:#fff;background:'+stageColor+';padding:4px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;border:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url(\'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22><path d=%22M0 0l5 6 5-6z%22 fill=%22white%22/></svg>\');background-repeat:no-repeat;background-position:right 6px center;padding-right:20px;">'
+      +(_pipelineStages||[]).map(function(s){return '<option value="'+s.id+'" style="background:#fff;color:#333;text-transform:none;"'+(s.id===proj.stage_id?' selected':'')+'>'+esc(s.name)+'</option>';}).join('')
+      +'</select>'
       +'</div>'
       +(dueStr?'<span style="font-size:11px;font-weight:700;color:var(--red);">'+dueStr+'</span>':'')
       +'</div>'
@@ -5886,6 +5888,16 @@ function _renderProjectSummaryInner(proj){
       +'</div>'
       +'<div id="ps-notes-feed" style="margin-top:10px;"></div>'
       +'<div id="ps-notes-input" style="margin-top:8px;display:flex;gap:8px;align-items:flex-end;"></div>';
+    var stageSel=document.getElementById('ps-stage-select');
+    if(stageSel){
+      stageSel.addEventListener('change',function(){
+        var newId=parseInt(this.value,10);
+        var newStage=(_pipelineStages||[]).find(function(s){return s.id===newId;});
+        if(newStage){this.style.background=newStage.color;this.style.backgroundImage="url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22><path d=%22M0 0l5 6 5-6z%22 fill=%22white%22/></svg>')";this.style.backgroundRepeat='no-repeat';this.style.backgroundPosition='right 6px center';}
+        moveCard(proj.id,newId);
+        setTimeout(function(){renderProjectSummary();},300);
+      });
+    }
   }
   // Render notes feed
   renderProjectNotesFeed(snap);
