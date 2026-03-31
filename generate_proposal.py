@@ -259,7 +259,6 @@ def info_block(data, st):
         ('RIGHTPADDING',  (0,0),(-1,-1), 6),
         ('LINEBEFORE',    (1,0),(1,-1),  1.0, MGRAY),
         ('LINEBEFORE',    (2,0),(2,-1),  1.0, MGRAY),
-        ('LINEABOVE',     (0,0),(-1,0),  1.0, BLACK),
         ('LINEBELOW',     (0,-1),(-1,-1),1.0, MGRAY),
         ('VALIGN',        (0,0),(0,-1),  'MIDDLE'),
         ('VALIGN',        (1,0),(-1,-1), 'TOP'),
