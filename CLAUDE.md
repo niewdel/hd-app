@@ -291,8 +291,12 @@ CTYPES     // [{id, name, desc, unit, cy_per_lf}]
 BADGE_DEFS // {cssClass: {label, color}} — editable in Settings
 
 // Bid Items Library
-BID_LIBRARY  // [{id, name, desc, unit, rate}] — persisted in localStorage
+BID_LIBRARY  // [{id, name, desc, unit, material, mat_cost, crew, prod_rate, sub_cost, has_trucks, depth, category}]
 _libId       // auto-increment counter for library items
+
+// Crews (7 total)
+CREWS_DEFAULT  // Asphalt, Stone, Grading, Utility, Erosion Control, Striping, Signage
+CREWS          // loaded from Supabase/localStorage, migrated by _migrateLegacyTrades()
 
 // Job cost
 jcCrewRate      // crew day rate ($)
@@ -300,9 +304,11 @@ jcOverheadPct   // overhead %
 jcProductivity  // tons/day (note: variable name is jcProductivity, NOT productivity)
 
 // Proposal state
-sections    // pavement sections array
-concItems   // concrete items array
-extraItems  // additional items array [{id, name, desc, qty, unit, price, subtotal}]
+sections       // pavement preset sections array (multi-layer, with SF)
+pavementItems  // pavement single items (from + Add Item / library)
+concItems      // concrete items array
+extraItems     // additional items array
+siteWorkItems  // site work items array
 ```
 
 ### Material Pricing System
@@ -354,17 +360,38 @@ CY is displayed in green next to each concrete row result.
 5. **Item Library** — reusable line items with descriptions (UI label is "Item Library", code var is `BID_LIBRARY`)
 
 ### Item Library (code: BID_LIBRARY)
-- Stored in `localStorage` key `hd_bid_library`
-- `DEFAULT_BID_LIBRARY` has authoritative defaults including `material` (base material ref) and `mat_cost`
-- `renderLibraryList()` — renders in Settings
+- Stored in Supabase (`hd_bid_library`) + localStorage cache — 130 items
+- No "Load Defaults" button — library is fully user-managed
+- Each item has: name, desc, unit, material, mat_cost, crew, prod_rate, sub_cost, has_trucks, depth, category
+- `renderLibraryList()` — renders in Settings (columns: Category, Name, Description, Unit, Crew)
 - `openLibraryPicker()` — modal picker in Build Proposal
-- Clicking "Insert" in picker adds item to `extraItems` with name, desc, unit, price pre-filled
 
-### Additional Items (Extra Items)
-- Each item has: `{id, name, desc, qty, unit, price, subtotal}`
-- Description field added (`updExtraDesc()` function)
-- "From Library" button opens `openLibraryPicker()` modal
-- `renderExtra()` built with DOM API (not innerHTML strings) to avoid escaping issues
+### Estimating Engine (Site Work / Extra / Pavement Items)
+- **calcItemDays(item)**: uses `item.prod_rate` first, falls back to crew default productivity
+- **calcItemLabor(item)**: days × crew daily_rate (or sub_cost × qty for concrete/traffic control)
+- **calcItemTrucking(item)**: trucks × days × truck daily rate (for has_trucks items)
+- **calcItemBid(item)**: (material + labor + trucking) × (1 + markup%)
+- **Special item types:**
+  - Concrete (`_isConcreteItem`): sub_cost per unit, no crew days
+  - Striping (`_isStripingItem`): lump sum price + markup only
+  - Sub cost items (`_isSubCostItem`): labor = qty × sub_cost (traffic control, concrete)
+  - Export/import items (`has_trucks`): show Trucks field, trucking added to cost
+- **Single-item sections** (`singleItem:true`): compact layout, SF inline, no header/footer
+- **Auto-save**: 2-second debounce, quiet mode (no toast)
+- **Autocomplete**: `_autoSelected` flag prevents change handler from overwriting title
+
+### Crew System (7 crews)
+```
+Asphalt Crew    | b-asphalt | $5,000/day | 400 TON/day
+Stone Crew      | b-stone   | $2,500/day | 800 TON/day
+Grading Crew    | b-grading | $4,000/day | 500 CY/day
+Utility Crew    | b-utility | $3,500/day | 120 LF/day
+Erosion Ctrl    | b-erosion | $1,800/day | 2,000 LF/day
+Striping Crew   | b-striping| $2,500/day | 5,000 LF/day
+Signage Crew    | b-signage | $1,000/day | 40 EA/day
+```
+- `_migrateLegacyTrades()` converts old trade strings (b-storm-drain→b-utility, etc.)
+- `_resolveTradeForMat()` resolves material→trade via MAT_TRADE, MAT_TRADE_DEFAULT, bid library
 
 ### Login Page
 - Full-screen black background with animated red particle network canvas (`initLoginCanvas()`)
