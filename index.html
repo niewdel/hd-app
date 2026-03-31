@@ -9535,29 +9535,39 @@ function setSitePlan(inp){
 }
 
 var clientTimer=null;
+function _showClientSuggestions(v){
+  var sug=document.getElementById('client-sug');
+  var m=clients.filter(function(c){return c.name.toLowerCase().indexOf(v.toLowerCase())>=0;}).slice(0,6);
+  if(!m.length){sug.style.display='none';return;}
+  var exact=m.find(function(c){return c.name.toLowerCase()===v.trim().toLowerCase();});
+  if(exact){selectClientById(exact.id);return;}
+  sug.innerHTML='';
+  m.forEach(function(c){
+    var div=document.createElement('div');
+    div.style.cssText='padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);';
+    div.addEventListener('mouseover',function(){this.style.background='#f5f5f5';});
+    div.addEventListener('mouseout',function(){this.style.background='';});
+    div.addEventListener('mousedown',function(e){e.preventDefault();selectClientById(c.id);});
+    div.innerHTML='<div style="font-weight:600">'+esc(c.name)+'</div>'
+      +'<div style="font-size:11px;color:var(--dgray)">'+(c.company?esc(c.company)+'  -  ':'')+esc(c.phone||c.email||'')+'</div>';
+    sug.appendChild(div);
+  });
+  sug.style.display='block';
+}
 function onClientInput(v){
-  console.log('[HD] onClientInput called, value="'+v+'", clients.length='+clients.length);
   clearTimeout(clientTimer);
   var sug=document.getElementById('client-sug');
   if(!v||v.length<2){sug.style.display='none';return;}
   clientTimer=setTimeout(function(){
-    var m=clients.filter(function(c){return c.name.toLowerCase().indexOf(v.toLowerCase())>=0;}).slice(0,6);
-    if(!m.length){sug.style.display='none';return;}
-    // Auto-select if exact match
-    var exact=m.find(function(c){return c.name.toLowerCase()===v.toLowerCase();});
-    if(exact){selectClientById(exact.id);return;}
-    sug.innerHTML='';
-    m.forEach(function(c){
-      var div=document.createElement('div');
-      div.style.cssText='padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);';
-      div.addEventListener('mouseover',function(){this.style.background='#f5f5f5';});
-      div.addEventListener('mouseout',function(){this.style.background='';});
-      div.addEventListener('mousedown',function(e){e.preventDefault();selectClientById(c.id);});
-      div.innerHTML='<div style="font-weight:600">'+esc(c.name)+'</div>'
-        +'<div style="font-size:11px;color:var(--dgray)">'+(c.company?esc(c.company)+'  -  ':'')+esc(c.phone||c.email||'')+'</div>';
-      sug.appendChild(div);
-    });
-    sug.style.display='block';
+    if(clients.length){_showClientSuggestions(v);return;}
+    // Clients not loaded yet — fetch on demand
+    fetch('/clients/list').then(function(r){return r.json();}).then(function(d){
+      if(d.ok&&d.clients){
+        clientsList=d.clients;
+        clients=clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||'',address:c.address||'',city_state:c.city_state||''};});
+      }
+      _showClientSuggestions(v);
+    }).catch(function(){_showClientSuggestions(v);});
   },200);
 }
 function selectClientById(id){
