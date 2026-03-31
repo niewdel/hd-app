@@ -8378,7 +8378,8 @@ function updateConcResult(id){
 }
 function renderConc(){
   var c=document.getElementById('conc-rows'),em=document.getElementById('conc-empty');
-  c.innerHTML='';em.style.display=concItems.length?'none':'block';
+  if(!c)return;
+  c.innerHTML='';if(em)em.style.display=concItems.length?'none':'block';
   concItems.forEach(function(item){
     var ct=CTYPES.find(function(x){return x.id===item.type;})||CTYPES[0];
     var cy=calcConcCY(item);var matC=concMatCost(item);var labC=concLaborCost(item);var bidC=concBidTotal(item);var bR=concBidPerUnit(item);
