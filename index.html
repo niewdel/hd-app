@@ -25,7 +25,7 @@ html{scroll-behavior:smooth;color-scheme:light dark;}
 :focus-visible{outline:2px solid var(--red);outline-offset:2px;border-radius:var(--rad-s);}
 :root{
   --red:#CC0000;--red-h:#E03030;--red-soft:rgba(204,0,0,0.10);
-  --accent:#CC0000;
+  --accent:#CC0000;--blue:#2563EB;--blue-h:#1D4ED8;
   --blk:#1A1A1A;--wht:#fff;--lgray:#EEEDF2;--mgray:#E0DFE5;--dgray:#71717A;--bdr:#D8D8DE;
   --bg-base:#E8E7EC;--bg-el:rgba(255,255,255,0.72);--bg-sub:#DDDCE2;
   --tbl-alt:#FAFAFA;--tbl-accent:#FFF5F5;
@@ -86,7 +86,7 @@ body.dark{
   --shadow-m:0 4px 12px rgba(0,0,0,.5);
   --shadow-l:0 12px 40px rgba(0,0,0,.6);
   --glass:rgba(24,24,27,0.80);--glass-blur:blur(24px);
-  --red-h:#FF4444;--red-soft:rgba(204,0,0,0.15);
+  --red-h:#FF4444;--red-soft:rgba(204,0,0,0.15);--blue:#6BABF7;--blue-h:#93C5FD;
   --tbl-alt:rgba(255,255,255,0.02);--tbl-accent:rgba(204,0,0,0.08);
   --badge-ok-bg:#1C2C1D;--badge-ok:#84C464;
   --badge-warn-bg:#2C2414;--badge-warn:#E6A800;
@@ -798,6 +798,7 @@ body.dark .mc-queue-card:hover{border-color:rgba(204,0,0,0.3);}
 .sb:hover .nav-grp,.sb.pinned .nav-grp{opacity:1;height:auto;}
 .nav-item{display:flex;align-items:center;gap:14px;padding:8px 14px;font-family:var(--font-display);font-size:13px;font-weight:600;color:rgba(255,255,255,.45);cursor:pointer;border-radius:10px;transition:color .15s,background .15s;position:relative;white-space:nowrap;overflow:hidden;margin-bottom:1px;}
 .nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);}
+.nav-item:focus-visible{outline:2px solid var(--red);outline-offset:-2px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);}
 .nav-item.on{background:rgba(204,0,0,0.08);color:#fff;}
 .nav-item.on::before{content:'';position:absolute;left:0;top:25%;height:50%;width:3px;background:var(--red);border-radius:0 2px 2px 0;box-shadow:3px 0 12px rgba(204,0,0,0.25);}
 .nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.5;}
@@ -1002,17 +1003,19 @@ textarea{resize:vertical;min-height:52px;}
 .btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:background .15s cubic-bezier(.4,0,.2,1),color .15s,box-shadow .15s,opacity .15s;font-family:var(--font);letter-spacing:-.01em;}
 .btn-primary{background:var(--blk);color:var(--wht);font-weight:600;box-shadow:none;}
 .btn-red{background:var(--accent);color:#fff;font-weight:600;box-shadow:none;}
-.btn-blue{background:#2563EB;color:#fff;font-weight:600;}
-.btn-blue:hover{background:#1D4ED8;}
-.btn-primary:hover{opacity:1;background:#333;box-shadow:0 2px 6px rgba(0,0,0,0.12);}
-.btn-red:hover{background:#A30000;box-shadow:0 2px 8px rgba(204,0,0,0.25);}
-body.dark .btn-primary:hover{background:#D4D4D8;}
+.btn-blue{background:var(--blue);color:#fff;font-weight:600;}
+.btn-blue:hover{background:var(--blue-h);}
+.btn-primary:hover{opacity:1;background:var(--mgray);box-shadow:var(--shadow-s);}
+.btn-red:hover{background:var(--red-h);box-shadow:0 2px 8px rgba(204,0,0,0.25);}
+body.dark .btn-primary:hover{background:var(--mgray);}
+body.dark .btn-blue{background:var(--blue);color:#18181B;}
+body.dark .btn-blue:hover{background:var(--blue-h);}
 body.dark .btn-red{box-shadow:0 1px 3px rgba(204,0,0,0.3);}
-body.dark .btn-red:hover{background:#FF3333;box-shadow:0 2px 8px rgba(204,0,0,0.35);}
+body.dark .btn-red:hover{background:var(--red-h);box-shadow:0 2px 8px rgba(204,0,0,0.35);}
 .btn-sec{background:transparent;color:var(--blk);border:1px solid var(--bdr);}.btn-sec:hover{background:var(--bg-sub);border-color:var(--dgray);}
-.btn-dark{background:#1e1e1e;color:#fff;}.btn-dark:hover{background:#333;}
+.btn-dark{background:var(--blk);color:var(--wht);}.btn-dark:hover{background:var(--mgray);}
 .btn-sm{padding:4px 10px;font-size:12px;border-radius:6px;}
-.btn-ico{background:none;border:none;cursor:pointer;padding:4px;color:var(--dgray);display:flex;align-items:center;border-radius:6px;transition:color .12s,background .12s;}
+.btn-ico{background:none;border:none;cursor:pointer;padding:6px;min-width:32px;min-height:32px;justify-content:center;color:var(--dgray);display:flex;align-items:center;border-radius:6px;transition:color .12s,background .12s;}
 .btn-ico:hover{color:var(--blk);background:var(--bg-sub);}
 .btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none;}
 .btn-danger{background:transparent;color:var(--red);border:1px solid rgba(204,0,0,.3);}.btn-danger:hover{background:var(--red-soft);}
@@ -1444,21 +1447,21 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       <div class="sb-brand">Hauling &amp; Grading</div>
     </div>
     <nav>
-      <div class="nav-item on" role="button" tabindex="0" onclick="showPanel('dashboard',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('dashboard',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg><span class="nav-label">Dashboard</span></div>
-      <div class="nav-item" role="button" tabindex="0" onclick="showPanel('projects',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('projects',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg><span class="nav-label">Projects</span><span class="nav-badge" id="nav-badge-projects" style="display:none;"></span></div>
-      <div class="nav-item" role="button" tabindex="0" onclick="showPanel('schedule',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('schedule',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg><span class="nav-label">Schedule</span><span class="nav-badge" id="nav-badge-schedule" style="display:none;"></span></div>
-      <div class="nav-item" role="button" tabindex="0" onclick="showPanel('tasks',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('tasks',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2a1 1 0 011-1h10a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V2zm2 2v1h8V4H4zm0 3v1h8V7H4zm0 3v1h5v-1H4z"/></svg><span class="nav-label">Tasks</span><span class="nav-badge" id="nav-badge-tasks" style="display:none;"></span></div>
-      <div class="nav-item" data-field-hidden role="button" tabindex="0" onclick="showPanel('contacts',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('contacts',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg><span class="nav-label">Contacts</span></div>
-      <div class="nav-item" data-field-hidden role="button" tabindex="0" onclick="showPanel('reports',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('reports',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h3v12H2zm4.5 3h3v9h-3zM11 7h3v7h-3z"/></svg><span class="nav-label">Reports</span></div>
+      <div class="nav-item on" role="button" tabindex="0" aria-label="Dashboard" onclick="showPanel('dashboard',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('dashboard',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg><span class="nav-label">Dashboard</span></div>
+      <div class="nav-item" role="button" tabindex="0" aria-label="Projects" onclick="showPanel('projects',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('projects',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg><span class="nav-label">Projects</span><span class="nav-badge" id="nav-badge-projects" style="display:none;"></span></div>
+      <div class="nav-item" role="button" tabindex="0" aria-label="Schedule" onclick="showPanel('schedule',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('schedule',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 0v2H2a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2V0h-2v2H6V0H4zm-2 6h12v8H2V6zm2 2v2h2V8H4zm4 0v2h2V8H8zm4 0v2h2V8h-2z"/></svg><span class="nav-label">Schedule</span><span class="nav-badge" id="nav-badge-schedule" style="display:none;"></span></div>
+      <div class="nav-item" role="button" tabindex="0" aria-label="Tasks" onclick="showPanel('tasks',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('tasks',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2a1 1 0 011-1h10a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V2zm2 2v1h8V4H4zm0 3v1h8V7H4zm0 3v1h5v-1H4z"/></svg><span class="nav-label">Tasks</span><span class="nav-badge" id="nav-badge-tasks" style="display:none;"></span></div>
+      <div class="nav-item" data-field-hidden role="button" tabindex="0" aria-label="Contacts" onclick="showPanel('contacts',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('contacts',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg><span class="nav-label">Contacts</span></div>
+      <div class="nav-item" data-field-hidden role="button" tabindex="0" aria-label="Reports" onclick="showPanel('reports',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('reports',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h3v12H2zm4.5 3h3v9h-3zM11 7h3v7h-3z"/></svg><span class="nav-label">Reports</span></div>
       <div class="nav-sep" role="separator"></div>
-      <div class="nav-item" data-admin-hidden role="button" tabindex="0" onclick="showPanel('settings',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('settings',this);}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.7m0 9.6v1.7m-4.6-2.6l1.2-1.2m6.8-6.8l1.2-1.2M1.5 8h1.7m9.6 0h1.7M3.4 12.6l1.2-1.2m6.8-6.8l1.2-1.2"/></svg><span class="nav-label">App Settings</span></div>
-      <div class="nav-item admin-only" id="nav-admin" data-admin-hidden role="button" tabindex="0" onclick="showPanel('admin',this);loadUsers();showAdminTab('company');" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('admin',this);loadUsers();showAdminTab('company');}">
+      <div class="nav-item" data-admin-hidden role="button" tabindex="0" aria-label="App Settings" onclick="showPanel('settings',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('settings',this);}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.7m0 9.6v1.7m-4.6-2.6l1.2-1.2m6.8-6.8l1.2-1.2M1.5 8h1.7m9.6 0h1.7M3.4 12.6l1.2-1.2m6.8-6.8l1.2-1.2"/></svg><span class="nav-label">App Settings</span></div>
+      <div class="nav-item admin-only" id="nav-admin" data-admin-hidden role="button" tabindex="0" aria-label="Admin" onclick="showPanel('admin',this);loadUsers();showAdminTab('company');" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('admin',this);loadUsers();showAdminTab('company');}">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M8 1L2 4v3c0 3.9 2.5 7.1 6 8 3.5-.9 6-4.1 6-8V4L8 1z"/><path d="M6 8l1.5 1.5L10 6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nav-label">Admin</span></div>
-      <div class="nav-item" role="button" tabindex="0" onclick="showPanel('bugs',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('bugs',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a1 1 0 011 1v1.07a5 5 0 013.61 2.64L14 5l1 1-1.68 1.68A5 5 0 0113 10h2v1.5h-2a5 5 0 01-.68 1.82L14 15l-1 1-1.39-1.39A5 5 0 018 16a5 5 0 01-3.61-1.39L3 16l-1-1 1.68-1.68A5 5 0 013 11.5H1V10h2a5 5 0 01.32-2.32L1.64 6 3 5l1.39 1.71A5 5 0 017 3.07V2a1 1 0 011-1zm0 4a3 3 0 100 6 3 3 0 000-6z"/></svg><span class="nav-label">Bug Report</span></div>
+      <div class="nav-item" role="button" tabindex="0" aria-label="Bug Report" onclick="showPanel('bugs',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('bugs',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a1 1 0 011 1v1.07a5 5 0 013.61 2.64L14 5l1 1-1.68 1.68A5 5 0 0113 10h2v1.5h-2a5 5 0 01-.68 1.82L14 15l-1 1-1.39-1.39A5 5 0 018 16a5 5 0 01-3.61-1.39L3 16l-1-1 1.68-1.68A5 5 0 013 11.5H1V10h2a5 5 0 01.32-2.32L1.64 6 3 5l1.39 1.71A5 5 0 017 3.07V2a1 1 0 011-1zm0 4a3 3 0 100 6 3 3 0 000-6z"/></svg><span class="nav-label">Bug Report</span></div>
     </nav>
     <div class="sb-foot">
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <button onclick="doLogout()" title="Sign out"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span class="nav-label"> Sign out</span></button>
+        <button onclick="doLogout()" title="Sign out" aria-label="Sign out"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span class="nav-label"> Sign out</span></button>
         <button class="sb-pin" onclick="toggleSbPin()" title="Pin sidebar" aria-label="Pin sidebar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2v10l3.5-3.5"/><circle cx="12" cy="12" r="10" fill="none"/></svg></button>
       </div>
     </div>
@@ -1502,7 +1505,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
   <div class="cmdk-overlay" id="cmdk-overlay" onclick="if(event.target===this)closeCmdK()" role="dialog" aria-modal="true" aria-label="Command palette">
     <div class="cmdk-box">
       <div class="cmdk-input-wrap">
-        <input class="cmdk-input" id="cmdk-input" type="text" placeholder="Search proposals, clients, or type a command&hellip;" autocomplete="off" oninput="filterCmdK(this.value)" onkeydown="cmdkKeydown(event)"/>
+        <input class="cmdk-input" id="cmdk-input" type="text" aria-label="Search proposals, clients, or type a command" placeholder="Search proposals, clients, or type a command&hellip;" autocomplete="off" oninput="filterCmdK(this.value)" onkeydown="cmdkKeydown(event)"/>
       </div>
       <div class="cmdk-results" id="cmdk-results"></div>
     </div>
@@ -1683,9 +1686,9 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           </div>
           <div class="card-body">
             <div class="fg fg2" style="margin-bottom:11px;">
-              <div><label>Project Name</label><input id="proj-name" type="text" placeholder="e.g. Smith Commercial Lot"/></div>
+              <div><label for="proj-name">Project Name</label><input id="proj-name" type="text" placeholder="e.g. Smith Commercial Lot"/></div>
               <div>
-                <label>Client</label>
+                <label for="proj-client">Client</label>
                 <div style="position:relative;">
                   <input id="proj-client" type="text" placeholder="Client name" autocomplete="off" oninput="onClientInput(this.value)"/>
                   <div id="client-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad-s);z-index:20;box-shadow:var(--shadow-m);"></div>
@@ -1693,8 +1696,8 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               </div>
             </div>
             <div class="fg fg2">
-              <div><label>Job Site Address</label><input id="proj-addr" type="text" placeholder="123 Main St, Greensboro, NC"/></div>
-              <div><label>Date</label><input id="proj-date" type="date"/></div>
+              <div><label for="proj-addr">Job Site Address</label><input id="proj-addr" type="text" placeholder="123 Main St, Greensboro, NC"/></div>
+              <div><label for="proj-date">Date</label><input id="proj-date" type="date"/></div>
             </div>
             <input id="proj-cs" type="hidden" value=""/>
             <div id="client-bar" style="display:none;margin-top:9px;padding:6px 11px;background:var(--lgray);border-radius:6px;font-size:12px;color:var(--dgray);"></div>
@@ -1706,10 +1709,10 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           <div class="card-body">
             <div class="fg fg2">
             <div>
-              <div style="margin-bottom:11px;"><label>Mobilization — Bid ($)</label><input id="mob" type="number" value="10000" min="0" step="500"/></div>
-              <div><label>Mobilization — Est. Cost ($)</label><input id="mob-cost" type="number" value="5000" min="0" step="500"/></div>
+              <div style="margin-bottom:11px;"><label for="mob">Mobilization — Bid ($)</label><input id="mob" type="number" value="10000" min="0" step="500"/></div>
+              <div><label for="mob-cost">Mobilization — Est. Cost ($)</label><input id="mob-cost" type="number" value="5000" min="0" step="500"/></div>
             </div>
-              <div><label>Project Notes</label><textarea id="proj-notes" rows="6" placeholder="Notes for the proposal..." style="resize:vertical;font-family:inherit;font-size:13px;"></textarea></div>
+              <div><label for="proj-notes">Project Notes</label><textarea id="proj-notes" rows="6" placeholder="Notes for the proposal..." style="resize:vertical;font-family:inherit;font-size:13px;"></textarea></div>
             </div>
             <input id="waste" type="hidden" value="0"/>
             <input id="contingency" type="hidden" value="0"/>
@@ -2086,7 +2089,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div id="contacts-pane-clients">
               <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
                 <div id="contacts-clients-count" style="font-size:13px;color:var(--dgray);"></div>
-                <input id="contacts-clients-search" type="text" placeholder="Search clients&hellip;" oninput="filterClients(this.value)" style="flex:1;max-width:400px;"/>
+                <input id="contacts-clients-search" type="text" aria-label="Search clients" placeholder="Search clients&hellip;" oninput="filterClients(this.value)" style="flex:1;max-width:400px;"/>
               </div>
               <div id="contacts-clients-list">
                 <div class="empty-state">
@@ -2098,7 +2101,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div id="contacts-pane-subs" style="display:none;">
               <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
                 <div id="contacts-subs-count" style="font-size:13px;color:var(--dgray);"></div>
-                <input id="contacts-subs-search" type="text" placeholder="Search subcontractors&hellip;" oninput="filterSubs(this.value)" style="flex:1;max-width:400px;"/>
+                <input id="contacts-subs-search" type="text" aria-label="Search subcontractors" placeholder="Search subcontractors&hellip;" oninput="filterSubs(this.value)" style="flex:1;max-width:400px;"/>
               </div>
               <div id="contacts-subs-list">
                 <div class="empty-state">
@@ -2141,7 +2144,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div class="card-body" id="cs-notes">
                 <div id="cs-notes-list"></div>
                 <div style="margin-top:10px;display:flex;gap:8px;">
-                  <input id="cs-note-input" type="text" placeholder="Add a note..." style="flex:1;padding:6px 10px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;"/>
+                  <input id="cs-note-input" type="text" aria-label="Add a note" placeholder="Add a note..." style="flex:1;padding:6px 10px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;"/>
                   <button class="btn btn-primary btn-sm" onclick="addClientNote()">Add</button>
                 </div>
               </div>
@@ -2165,20 +2168,20 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                   <div class="card-hdr"><span class="card-title">Change Order Info</span></div>
                   <div class="card-body">
                     <div style="margin-bottom:10px;">
-                      <label>Link to Proposal</label>
+                      <label for="co-proposal-link">Link to Proposal</label>
                       <select id="co-proposal-link" onchange="linkCOToProposal(this.value)" style="width:100%;">
                         <option value="">-- Select a saved proposal (optional) --</option>
                       </select>
                     </div>
                     <div class="fg fg4">
-                      <div><label>Project Name</label><input id="co-project" type="text" placeholder="Project name..."/></div>
-                      <div><label>Client Name</label><input id="co-client" type="text" placeholder="Client name..."/></div>
-                      <div><label>Change Order #</label><input id="co-number" type="number" value="1" min="1" oninput="updateCODocBadge()"/></div>
-                      <div><label>Date</label><input id="co-date" type="date"/></div>
+                      <div><label for="co-project">Project Name</label><input id="co-project" type="text" placeholder="Project name..."/></div>
+                      <div><label for="co-client">Client Name</label><input id="co-client" type="text" placeholder="Client name..."/></div>
+                      <div><label for="co-number">Change Order #</label><input id="co-number" type="number" value="1" min="1" oninput="updateCODocBadge()"/></div>
+                      <div><label for="co-date">Date</label><input id="co-date" type="date"/></div>
                     </div>
                     <div class="fg fg2" style="margin-top:11px;">
-                      <div><label>Original Contract Date</label><input id="co-orig-date" type="date"/></div>
-                      <div><label>Original Contract Amount ($)</label><input id="co-orig-amount" type="number" value="0" min="0" step="0.01"/></div>
+                      <div><label for="co-orig-date">Original Contract Date</label><input id="co-orig-date" type="date"/></div>
+                      <div><label for="co-orig-amount">Original Contract Amount ($)</label><input id="co-orig-amount" type="number" value="0" min="0" step="0.01"/></div>
                     </div>
                   </div>
                 </div>
@@ -2261,9 +2264,9 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               </div>
               <input id="profile-avatar-data" type="hidden"/>
               <div class="fg fg3">
-                <div><label>Your Name</label><input id="profile-name" type="text" placeholder="Full name"/></div>
-                <div><label>Your Email</label><input id="profile-email" type="text" placeholder="email@hdgrading.com"/></div>
-                <div><label>Your Phone</label><input id="profile-phone" type="text" placeholder="(555) 000-0000"/></div>
+                <div><label for="profile-name">Your Name</label><input id="profile-name" type="text" placeholder="Full name"/></div>
+                <div><label for="profile-email">Your Email</label><input id="profile-email" type="text" placeholder="email@hdgrading.com"/></div>
+                <div><label for="profile-phone">Your Phone</label><input id="profile-phone" type="text" placeholder="(555) 000-0000"/></div>
               </div>
               <div class="profile-form-grid">
                 <div class="profile-meta-chip">
@@ -2397,10 +2400,10 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div id="add-mat-form" style="display:none;margin-top:12px;padding:12px;background:var(--lgray);border-radius:6px;border:1px solid var(--bdr);">
                 <div style="font-weight:600;font-size:13px;margin-bottom:8px;">New Material</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;align-items:end;">
-                  <div><label style="font-size:11px;">Name</label><input id="add-mat-name" type="text" placeholder="e.g. Granite" style="font-size:12px;"/></div>
-                  <div><label style="font-size:11px;">Trade</label><select id="add-mat-trade" style="font-size:12px;"></select></div>
-                  <div><label style="font-size:11px;">Cost $/unit</label><input id="add-mat-cost" type="number" value="0" min="0" step="1" style="font-size:12px;"/></div>
-                  <div><label style="font-size:11px;">Unit</label><select id="add-mat-unit" style="font-size:12px;"><option>TON</option><option>CY</option><option>SY</option><option>LF</option><option>EA</option><option>GAL</option><option>AC</option><option>SF</option><option>HR</option></select></div>
+                  <div><label for="add-mat-name" style="font-size:11px;">Name</label><input id="add-mat-name" type="text" placeholder="e.g. Granite" style="font-size:12px;"/></div>
+                  <div><label for="add-mat-trade" style="font-size:11px;">Trade</label><select id="add-mat-trade" style="font-size:12px;"></select></div>
+                  <div><label for="add-mat-cost" style="font-size:11px;">Cost $/unit</label><input id="add-mat-cost" type="number" value="0" min="0" step="1" style="font-size:12px;"/></div>
+                  <div><label for="add-mat-unit" style="font-size:11px;">Unit</label><select id="add-mat-unit" style="font-size:12px;"><option>TON</option><option>CY</option><option>SY</option><option>LF</option><option>EA</option><option>GAL</option><option>AC</option><option>SF</option><option>HR</option></select></div>
                 </div>
                 <div style="margin-top:10px;display:flex;gap:8px;">
                   <button class="btn btn-primary btn-sm" onclick="confirmAddMaterial()">Add</button>
@@ -2504,11 +2507,11 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div class="card-hdr"><span class="card-title">Report a Bug</span></div>
               <div class="card-body" style="padding:16px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                  <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Title</label><input type="text" id="settings-bug-title" class="inp" placeholder="Brief summary of the issue" style="width:100%;"/></div>
-                  <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Severity</label><select id="settings-bug-severity" class="inp" style="width:100%;"><option>Minor</option><option>Major</option><option>Critical</option><option>Cosmetic</option></select></div>
-                  <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Panel / Area</label><select id="settings-bug-panel" class="inp" style="width:100%;"><option value="">General</option><option>Dashboard</option><option>Projects</option><option>Build Proposal</option><option>Change Orders</option><option>Saved Documents</option><option>Clients</option><option>Subcontractors</option><option>Pipeline</option><option>Schedule</option><option>Settings</option><option>Reports</option><option>Admin</option><option>Other</option></select></div>
+                  <div style="grid-column:1/-1;"><label for="settings-bug-title" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Title</label><input type="text" id="settings-bug-title" class="inp" placeholder="Brief summary of the issue" style="width:100%;"/></div>
+                  <div><label for="settings-bug-severity" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Severity</label><select id="settings-bug-severity" class="inp" style="width:100%;"><option>Minor</option><option>Major</option><option>Critical</option><option>Cosmetic</option></select></div>
+                  <div><label for="settings-bug-panel" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Panel / Area</label><select id="settings-bug-panel" class="inp" style="width:100%;"><option value="">General</option><option>Dashboard</option><option>Projects</option><option>Build Proposal</option><option>Change Orders</option><option>Saved Documents</option><option>Clients</option><option>Subcontractors</option><option>Pipeline</option><option>Schedule</option><option>Settings</option><option>Reports</option><option>Admin</option><option>Other</option></select></div>
                 </div>
-                <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Description</label>
+                <label for="settings-bug-desc" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Description</label>
                 <textarea id="settings-bug-desc" rows="4" class="inp" placeholder="What happened? What did you expect? Steps to reproduce..." style="width:100%;margin-bottom:12px;"></textarea>
                 <div style="display:flex;align-items:center;gap:10px;">
                   <button class="btn btn-red btn-sm" onclick="submitSettingsBug()">Submit Bug Report</button>
@@ -2642,7 +2645,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                     <span id="sched-queue-count" style="font-size:10px;font-weight:700;background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;margin-left:auto;"></span>
                   </div>
                   <div style="padding:8px 10px;border-bottom:1px solid var(--bdr);display:flex;gap:6px;">
-                    <input type="text" id="sched-queue-search" placeholder="Search projects..." style="flex:1;padding:8px 12px;font-size:13px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg-sub);" oninput="filterSchedQueue()"/>
+                    <input type="text" id="sched-queue-search" aria-label="Search projects" placeholder="Search projects..." style="flex:1;padding:8px 12px;font-size:13px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg-sub);" oninput="filterSchedQueue()"/>
                     <select id="sched-queue-sort" style="padding:5px 8px;font-size:11px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg-sub);cursor:pointer;" onchange="renderSchedule()">
                       <option value="name">Name</option>
                       <option value="date">Date Added</option>
@@ -2710,27 +2713,27 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
         <div class="modal" style="max-width:480px;">
           <div class="modal-hdr"><h3 id="task-modal-title">Add Task</h3><button class="btn-ico" onclick="closeTaskModal()" style="font-size:18px;">&#10005;</button></div>
           <div class="modal-body">
-            <label>Title</label><input type="text" id="task-title" placeholder="e.g. Review bid for Main St"/>
-            <label>Description <span style="color:var(--dgray);font-weight:400;">(optional)</span></label><textarea id="task-desc" rows="2" placeholder="Details..."></textarea>
+            <label for="task-title">Title</label><input type="text" id="task-title" placeholder="e.g. Review bid for Main St"/>
+            <label for="task-desc">Description <span style="color:var(--dgray);font-weight:400;">(optional)</span></label><textarea id="task-desc" rows="2" placeholder="Details..."></textarea>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <div><label>Priority</label><select id="task-priority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div>
-              <div><label>Due Date <span style="color:var(--dgray);font-weight:400;">(optional)</span></label><input type="date" id="task-due-date"/></div>
+              <div><label for="task-priority">Priority</label><select id="task-priority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div>
+              <div><label for="task-due-date">Due Date <span style="color:var(--dgray);font-weight:400;">(optional)</span></label><input type="date" id="task-due-date"/></div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <div><label>Assigned To</label><select id="task-assigned-to"></select></div>
-              <div><label>Visibility</label><select id="task-visibility"><option value="public">Public</option><option value="private">Private</option></select></div>
+              <div><label for="task-assigned-to">Assigned To</label><select id="task-assigned-to"></select></div>
+              <div><label for="task-visibility">Visibility</label><select id="task-visibility"><option value="public">Public</option><option value="private">Private</option></select></div>
             </div>
-            <label>Link To</label>
+            <label for="task-ref-type">Link To</label>
             <select id="task-ref-type" onchange="toggleTaskRef()">
               <option value="">None</option>
               <option value="project">Project</option>
               <option value="client">Client</option>
             </select>
             <div id="task-ref-wrap" style="display:none;">
-              <label id="task-ref-label">Project</label>
+              <label for="task-ref-id" id="task-ref-label">Project</label>
               <select id="task-ref-id"></select>
             </div>
-            <div id="task-modal-err" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
+            <div id="task-modal-err" role="alert" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
           </div>
           <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeTaskModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveTask()">Save Task</button></div>
         </div>
@@ -2749,12 +2752,12 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           <div style="flex:1;min-width:0;">
             <div class="mc-card" style="margin-bottom:14px;">
               <div class="card-body" style="padding:8px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                <div><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--dgray);display:block;margin-bottom:2px;">Date Range</label>
+                <div><label for="rpt-range" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--dgray);display:block;margin-bottom:2px;">Date Range</label>
                 <select id="rpt-range" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;">
                   <option value="ytd">Year to Date</option><option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="this-quarter">This Quarter</option><option value="last-year">Last Year</option><option value="all">All Time</option><option value="custom">Custom Range</option>
                 </select></div>
-                <div id="rpt-custom-dates" style="display:none;"><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--dgray);display:block;margin-bottom:2px;">From / To</label><div style="display:flex;gap:4px;"><input type="date" id="rpt-from" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/><input type="date" id="rpt-to" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/></div></div>
-                <div><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--dgray);display:block;margin-bottom:2px;">Client</label>
+                <div id="rpt-custom-dates" style="display:none;"><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--dgray);display:block;margin-bottom:2px;">From / To</label><div style="display:flex;gap:4px;"><input type="date" id="rpt-from" aria-label="Report from date" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/><input type="date" id="rpt-to" aria-label="Report to date" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"/></div></div>
+                <div><label for="rpt-client" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--dgray);display:block;margin-bottom:2px;">Client</label>
                 <select id="rpt-client" onchange="renderCurrentReport()" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px;"><option value="">All Clients</option></select></div>
                 <div style="margin-left:auto;"><button class="btn btn-primary btn-sm" onclick="exportReportPDF()">Export PDF</button></div>
               </div>
@@ -2779,24 +2782,24 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       <div class="card-hdr"><span class="card-title">Company Information</span></div>
       <div class="card-body" style="padding:16px;">
         <div class="fg fg2" style="gap:10px;margin-bottom:10px;">
-          <div><label>Company Name</label><input type="text" id="co-name" class="inp" placeholder="HD Hauling & Grading" style="width:100%;"/></div>
-          <div><label>License / Contractor #</label><input type="text" id="co-license" class="inp" placeholder="e.g. NC-12345" style="width:100%;"/></div>
+          <div><label for="co-name">Company Name</label><input type="text" id="co-name" class="inp" placeholder="HD Hauling & Grading" style="width:100%;"/></div>
+          <div><label for="co-license">License / Contractor #</label><input type="text" id="co-license" class="inp" placeholder="e.g. NC-12345" style="width:100%;"/></div>
         </div>
         <div style="margin-bottom:10px;">
-          <label>Address</label><input type="text" id="co-address" class="inp" placeholder="Street address" style="width:100%;margin-bottom:6px;"/>
+          <label for="co-address">Address</label><input type="text" id="co-address" class="inp" placeholder="Street address" style="width:100%;margin-bottom:6px;"/>
           <div class="fg fg3" style="gap:10px;">
-            <div><input type="text" id="co-city" class="inp" placeholder="City" style="width:100%;"/></div>
-            <div><input type="text" id="co-state" class="inp" placeholder="State" style="width:100%;"/></div>
-            <div><input type="text" id="co-zip" class="inp" placeholder="ZIP" style="width:100%;"/></div>
+            <div><input type="text" id="co-city" class="inp" aria-label="City" placeholder="City" style="width:100%;"/></div>
+            <div><input type="text" id="co-state" class="inp" aria-label="State" placeholder="State" style="width:100%;"/></div>
+            <div><input type="text" id="co-zip" class="inp" aria-label="ZIP" placeholder="ZIP" style="width:100%;"/></div>
           </div>
         </div>
         <div class="fg fg2" style="gap:10px;margin-bottom:10px;">
-          <div><label>Phone</label><input type="tel" id="co-phone" class="inp" placeholder="(555) 000-0000" style="width:100%;"/></div>
-          <div><label>Email</label><input type="email" id="co-email" class="inp" placeholder="info@company.com" style="width:100%;"/></div>
+          <div><label for="co-phone">Phone</label><input type="tel" id="co-phone" class="inp" placeholder="(555) 000-0000" style="width:100%;"/></div>
+          <div><label for="co-email">Email</label><input type="email" id="co-email" class="inp" placeholder="info@company.com" style="width:100%;"/></div>
         </div>
         <div class="fg fg2" style="gap:10px;margin-bottom:12px;">
-          <div><label>Website</label><input type="text" id="co-website" class="inp" placeholder="www.company.com" style="width:100%;"/></div>
-          <div><label>Tagline</label><input type="text" id="co-tagline" class="inp" placeholder="e.g. Quality paving since 2005" style="width:100%;"/></div>
+          <div><label for="co-website">Website</label><input type="text" id="co-website" class="inp" placeholder="www.company.com" style="width:100%;"/></div>
+          <div><label for="co-tagline">Tagline</label><input type="text" id="co-tagline" class="inp" placeholder="e.g. Quality paving since 2005" style="width:100%;"/></div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;">
           <button class="btn btn-primary btn-sm" onclick="saveCompanyInfo()">Save Company Info</button>
@@ -2860,11 +2863,11 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
     <div class="card-hdr"><span class="card-title">Report a Bug</span></div>
     <div class="card-body" style="padding:16px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-        <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Title</label><input type="text" id="bug-title" class="inp" placeholder="Brief summary of the issue" style="width:100%;"/></div>
-        <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Severity</label><select id="bug-severity" class="inp" style="width:100%;"><option>Minor</option><option>Major</option><option>Critical</option><option>Cosmetic</option></select></div>
-        <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Panel / Area</label><select id="bug-panel" class="inp" style="width:100%;"><option value="">General</option><option>Dashboard</option><option>Projects</option><option>Build Proposal</option><option>Change Orders</option><option>Saved Documents</option><option>Clients</option><option>Subcontractors</option><option>Pipeline</option><option>Schedule</option><option>Settings</option><option>Reports</option><option>Admin</option><option>Other</option></select></div>
+        <div style="grid-column:1/-1;"><label for="bug-title" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Title</label><input type="text" id="bug-title" class="inp" placeholder="Brief summary of the issue" style="width:100%;"/></div>
+        <div><label for="bug-severity" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Severity</label><select id="bug-severity" class="inp" style="width:100%;"><option>Minor</option><option>Major</option><option>Critical</option><option>Cosmetic</option></select></div>
+        <div><label for="bug-panel" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Panel / Area</label><select id="bug-panel" class="inp" style="width:100%;"><option value="">General</option><option>Dashboard</option><option>Projects</option><option>Build Proposal</option><option>Change Orders</option><option>Saved Documents</option><option>Clients</option><option>Subcontractors</option><option>Pipeline</option><option>Schedule</option><option>Settings</option><option>Reports</option><option>Admin</option><option>Other</option></select></div>
       </div>
-      <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Description</label>
+      <label for="bug-desc" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Description</label>
       <textarea id="bug-desc" rows="4" class="inp" placeholder="What happened? What did you expect? Steps to reproduce..." style="width:100%;margin-bottom:12px;"></textarea>
       <div style="display:flex;align-items:center;gap:10px;">
         <button class="btn btn-red btn-sm" onclick="submitBug()">Submit Bug Report</button>
@@ -2911,22 +2914,22 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 <!-- Roadmap Add/Edit Modal -->
 <div class="modal-overlay hidden" id="roadmap-modal">
   <div class="modal" style="max-width:520px;">
-    <div class="modal-hdr"><h3 id="roadmap-modal-title">Add Item</h3><button class="btn-ico" onclick="document.getElementById('roadmap-modal').classList.add('hidden')" style="font-size:18px;">&#10005;</button></div>
+    <div class="modal-hdr"><h3 id="roadmap-modal-title">Add Item</h3><button class="btn-ico" onclick="closeModalA11y('roadmap-modal')" style="font-size:18px;">&#10005;</button></div>
     <div class="modal-body">
-      <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Title</label>
+      <label for="rm-title" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Title</label>
       <input type="text" id="rm-title" class="inp" style="width:100%;margin-bottom:10px;" placeholder="Feature or request name"/>
-      <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Description</label>
+      <label for="rm-desc" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Description</label>
       <textarea id="rm-desc" rows="3" class="inp" style="width:100%;margin-bottom:10px;" placeholder="Details, motivation, notes..."></textarea>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-        <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Category</label><select id="rm-category" class="inp" style="width:100%;"><option>Feature</option><option>Enhancement</option><option>Fix</option><option>Cleanup</option></select></div>
-        <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Priority</label><select id="rm-priority" class="inp" style="width:100%;"><option>High</option><option selected>Medium</option><option>Low</option><option>Wish List</option></select></div>
-        <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Effort</label><select id="rm-effort" class="inp" style="width:100%;"><option>Quick</option><option selected>Medium</option><option>Large</option></select></div>
-        <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Status</label><select id="rm-status" class="inp" style="width:100%;"><option>Planned</option><option>In Progress</option><option>Done</option></select></div>
+        <div><label for="rm-category" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Category</label><select id="rm-category" class="inp" style="width:100%;"><option>Feature</option><option>Enhancement</option><option>Fix</option><option>Cleanup</option></select></div>
+        <div><label for="rm-priority" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Priority</label><select id="rm-priority" class="inp" style="width:100%;"><option>High</option><option selected>Medium</option><option>Low</option><option>Wish List</option></select></div>
+        <div><label for="rm-effort" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Effort</label><select id="rm-effort" class="inp" style="width:100%;"><option>Quick</option><option selected>Medium</option><option>Large</option></select></div>
+        <div><label for="rm-status" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Status</label><select id="rm-status" class="inp" style="width:100%;"><option>Planned</option><option>In Progress</option><option>Done</option></select></div>
       </div>
-      <label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Target Version</label>
+      <label for="rm-version" style="font-size:11px;font-weight:600;display:block;margin-bottom:3px;">Target Version</label>
       <input type="text" id="rm-version" class="inp" style="width:100%;" placeholder="e.g. v1.1, v2.0, Backlog"/>
     </div>
-    <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="document.getElementById('roadmap-modal').classList.add('hidden')">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveRoadmapItem()">Save</button></div>
+    <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeModalA11y('roadmap-modal')">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveRoadmapItem()">Save</button></div>
   </div>
 </div>
 
@@ -2934,15 +2937,15 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
   <div class="modal" style="max-width:420px;">
     <div class="modal-hdr"><h3 id="user-modal-title">Add User</h3><button class="btn-ico" onclick="closeUserModal()" style="font-size:18px;">&#10005;</button></div>
     <div class="modal-body">
-      <label>Full Name</label><input type="text" id="edit-full-name" placeholder="e.g. John Smith"/>
-      <label>Email</label><input type="email" id="edit-email" placeholder="e.g. john@hdgrading.com"/>
-      <label>Phone</label><input type="tel" id="edit-phone" placeholder="e.g. 704-555-0000"/>
-      <label>Username <span style="font-size:11px;color:var(--dgray);">(lowercase, no spaces)</span></label><input type="text" id="edit-username" placeholder="e.g. jsmith" style="text-transform:lowercase;"/>
-      <label>Password <span id="pin-hint" style="font-size:11px;color:var(--dgray);">(min 6 characters)</span></label><input type="password" id="edit-pin" placeholder="Enter password"/>
-      <label>Password Hint <span style="font-size:11px;color:var(--dgray);">(optional)</span></label><input type="text" id="edit-pw-hint" placeholder="e.g. My dog's name"/>
-      <label>Role</label><select id="edit-role"><option value="user">Standard User</option><option value="field">Field User</option><option value="admin">Admin</option></select>
-      <label>Hourly Rate <span style="font-size:11px;color:var(--dgray);">($)</span></label><input type="number" id="edit-hourly-rate" placeholder="0.00" step="0.01" min="0"/>
-      <div id="user-modal-err" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
+      <label for="edit-full-name">Full Name</label><input type="text" id="edit-full-name" placeholder="e.g. John Smith"/>
+      <label for="edit-email">Email</label><input type="email" id="edit-email" placeholder="e.g. john@hdgrading.com"/>
+      <label for="edit-phone">Phone</label><input type="tel" id="edit-phone" placeholder="e.g. 704-555-0000"/>
+      <label for="edit-username">Username <span style="font-size:11px;color:var(--dgray);">(lowercase, no spaces)</span></label><input type="text" id="edit-username" placeholder="e.g. jsmith" style="text-transform:lowercase;"/>
+      <label for="edit-pin">Password <span id="pin-hint" style="font-size:11px;color:var(--dgray);">(min 6 characters)</span></label><input type="password" id="edit-pin" placeholder="Enter password"/>
+      <label for="edit-pw-hint">Password Hint <span style="font-size:11px;color:var(--dgray);">(optional)</span></label><input type="text" id="edit-pw-hint" placeholder="e.g. My dog's name"/>
+      <label for="edit-role">Role</label><select id="edit-role"><option value="user">Standard User</option><option value="field">Field User</option><option value="admin">Admin</option></select>
+      <label for="edit-hourly-rate">Hourly Rate <span style="font-size:11px;color:var(--dgray);">($)</span></label><input type="number" id="edit-hourly-rate" placeholder="0.00" step="0.01" min="0"/>
+      <div id="user-modal-err" role="alert" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
     </div>
     <div class="modal-foot" style="justify-content:space-between;"><div id="user-modal-delete"></div><div style="display:flex;gap:8px;"><button class="btn btn-sec btn-sm" onclick="closeUserModal()">Cancel</button><button class="btn btn-red btn-sm" onclick="saveUser()">Save User</button></div></div>
   </div>
@@ -2952,20 +2955,20 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
   <div class="modal" style="max-width:420px;">
     <div class="modal-hdr"><h3 id="reminder-modal-title">Add Reminder</h3><button class="btn-ico" onclick="closeReminderModal()" style="font-size:18px;">&#10005;</button></div>
     <div class="modal-body">
-      <label>Note</label><input type="text" id="rem-note" placeholder="e.g. Follow up on estimate"/>
-      <label>Due Date</label><input type="date" id="rem-due-date"/>
-      <label>Assigned To</label><select id="rem-assigned-to"></select>
-      <label>Link To</label>
+      <label for="rem-note">Note</label><input type="text" id="rem-note" placeholder="e.g. Follow up on estimate"/>
+      <label for="rem-due-date">Due Date</label><input type="date" id="rem-due-date"/>
+      <label for="rem-assigned-to">Assigned To</label><select id="rem-assigned-to"></select>
+      <label for="rem-type">Link To</label>
       <select id="rem-type" onchange="toggleReminderRef()">
         <option value="general">General</option>
         <option value="project">Project</option>
         <option value="client">Client</option>
       </select>
       <div id="rem-ref-wrap" style="display:none;margin-top:6px;">
-        <label id="rem-ref-label">Project</label>
+        <label for="rem-ref-id" id="rem-ref-label">Project</label>
         <select id="rem-ref-id"></select>
       </div>
-      <div id="reminder-modal-err" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
+      <div id="reminder-modal-err" role="alert" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px;"></div>
     </div>
     <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeReminderModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveReminder()">Save Reminder</button></div>
   </div>
@@ -2991,9 +2994,9 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       <input id="acct-avatar-data" type="hidden"/>
       <input id="acct-photo-file" type="file" accept="image/*" style="display:none;" onchange="handleAcctPhoto(this.files)"/>
       <div class="fg fg3" style="margin-bottom:10px;">
-        <div><label>Name</label><input id="acct-name" type="text" placeholder="Full name"/></div>
-        <div><label>Email</label><input id="acct-email" type="text" placeholder="email@hdgrading.com"/></div>
-        <div><label>Phone</label><input id="acct-phone" type="text" placeholder="(555) 000-0000"/></div>
+        <div><label for="acct-name">Name</label><input id="acct-name" type="text" placeholder="Full name"/></div>
+        <div><label for="acct-email">Email</label><input id="acct-email" type="text" placeholder="email@hdgrading.com"/></div>
+        <div><label for="acct-phone">Phone</label><input id="acct-phone" type="text" placeholder="(555) 000-0000"/></div>
       </div>
       <div style="display:flex;gap:12px;margin-bottom:12px;">
         <div style="font-size:11px;color:var(--dgray);"><span style="text-transform:uppercase;font-weight:600;letter-spacing:.4px;">Username</span><div id="acct-username" style="font-weight:600;font-size:13px;color:var(--blk);margin-top:2px;">—</div></div>
@@ -3081,6 +3084,33 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
+// -- Accessibility: Generic Modal Focus Trap -----------------------------------
+var _modalFocusPrev=null;
+function _modalTrapFocus(e){
+  var modal=e.currentTarget;
+  if(e.key==='Escape'){var closeBtn=modal.querySelector('.modal-hdr .btn-ico');if(closeBtn)closeBtn.click();return;}
+  if(e.key!=='Tab')return;
+  var focusable=modal.querySelectorAll('button,input,select,textarea,[tabindex="0"],a[href]');
+  if(!focusable.length)return;
+  var first=focusable[0],last=focusable[focusable.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+}
+function openModalA11y(id){
+  var el=document.getElementById(id);if(!el)return;
+  _modalFocusPrev=document.activeElement;
+  el.classList.remove('hidden');
+  el.addEventListener('keydown',_modalTrapFocus);
+  var first=el.querySelector('input,select,textarea,button');
+  if(first)setTimeout(function(){first.focus();},50);
+}
+function closeModalA11y(id){
+  var el=document.getElementById(id);if(!el)return;
+  el.removeEventListener('keydown',_modalTrapFocus);
+  el.classList.add('hidden');
+  if(_modalFocusPrev)try{_modalFocusPrev.focus();}catch(e){}
+  _modalFocusPrev=null;
+}
 // -- Constants -----------------------------------------------------------------
 var LTYPES = ['ABC','#57 Stone','S9.5B','S9.5C','I19.0C','B25.0C','Concrete',
   'Tack Coat','Paving Fabric','Rip Rap','Gravel','Select Fill','Structural Fill','Topsoil',
@@ -3588,7 +3618,7 @@ function openAccountModal(){
   var ad=document.getElementById('acct-avatar-data');if(ad)ad.value=window._draftUserAvatar||window._userAvatar||'';
   // Avatar preview
   var ap=document.getElementById('acct-avatar-preview');
-  if(ap){if(window._userAvatar){ap.innerHTML='<img src="'+window._userAvatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';}else{ap.innerHTML='<span>'+getUserInitials(window._userName||'HD')+'</span>';}}
+  if(ap){if(window._userAvatar){ap.innerHTML='<img src="'+window._userAvatar+'" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';}else{ap.innerHTML='<span>'+getUserInitials(window._userName||'HD')+'</span>';}}
   // Dark mode checkbox
   var dc=document.getElementById('acct-dark-cb');if(dc)dc.checked=document.body.classList.contains('dark');
   // Auto-logout
@@ -3620,7 +3650,7 @@ function handleAcctPhoto(files){
       window._draftUserAvatar=dataUrl;
       document.getElementById('acct-avatar-data').value=dataUrl;
       var ap=document.getElementById('acct-avatar-preview');
-      if(ap)ap.innerHTML='<img src="'+dataUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+      if(ap)ap.innerHTML='<img src="'+dataUrl+'" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
     };
     reader.readAsDataURL(blob);
   });
@@ -6083,7 +6113,7 @@ function _renderProjectSummaryInner(proj){
       var isPdf=spUrl.toLowerCase().indexOf('.pdf')>-1;
       psSP.innerHTML=(isPdf
         ?'<iframe src="'+esc(spUrl)+'" style="width:100%;height:300px;border:1px solid var(--bdr);border-radius:6px;" frameborder="0"></iframe>'
-        :'<img src="'+esc(spUrl)+'" style="max-width:100%;border-radius:6px;border:1px solid var(--bdr);"/>')
+        :'<img src="'+esc(spUrl)+'" alt="Site plan" style="max-width:100%;border-radius:6px;border:1px solid var(--bdr);"/>')
         +'<div style="margin-top:8px;"><label class="btn btn-sec btn-sm" style="cursor:pointer;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Replace</label></div>';
     }
   }
@@ -7692,7 +7722,7 @@ var TOPBAR_MENU = {
 };
 function toggleCardCollapse(hdr){
   var card=hdr.closest('.mc-card')||hdr.closest('.card');
-  if(card)card.classList.toggle('card-collapsed');
+  if(card){card.classList.toggle('card-collapsed');var isCollapsed=card.classList.contains('card-collapsed');hdr.setAttribute('aria-expanded',!isCollapsed);}
 }
 function toggleActionsMenu(){
   var m=document.getElementById('topbar-actions-menu');
@@ -11204,9 +11234,9 @@ async function renderArchived(){
     });
   }catch(e){c.innerHTML='<p style="color:var(--dgray);font-size:12px;">Error loading archived items.</p>';}
 }
-function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-email').value='';document.getElementById('edit-phone').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value='';document.getElementById('edit-role').value='user';document.getElementById('edit-hourly-rate').value='';document.getElementById('pin-hint').textContent='(min 6 characters)';document.getElementById('user-modal-err').textContent='';var delC=document.getElementById('user-modal-delete');if(delC)delC.innerHTML='';document.getElementById('user-modal').classList.remove('hidden');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
-function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-email').value=u.email||'';document.getElementById('edit-phone').value=u.phone||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value=u.password_hint||'';document.getElementById('edit-role').value=u.role||'user';document.getElementById('edit-hourly-rate').value=u.hourly_rate||'';document.getElementById('pin-hint').textContent='(leave blank to keep current)';document.getElementById('user-modal-err').textContent='';var delC=document.getElementById('user-modal-delete');if(delC){if(u.username!==(window._userUsername||'')){delC.innerHTML='<button class="btn btn-sm" style="background:transparent;color:var(--red);border:1px solid var(--red);font-weight:600;" onclick="confirmDeleteUser('+u.id+',\''+esc(u.username)+'\')">Delete User</button>';}else{delC.innerHTML='';}}document.getElementById('user-modal').classList.remove('hidden');}
-function closeUserModal(){document.getElementById('user-modal').classList.add('hidden');_editingUserId=null;}
+function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-email').value='';document.getElementById('edit-phone').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value='';document.getElementById('edit-role').value='user';document.getElementById('edit-hourly-rate').value='';document.getElementById('pin-hint').textContent='(min 6 characters)';document.getElementById('user-modal-err').textContent='';var delC=document.getElementById('user-modal-delete');if(delC)delC.innerHTML='';openModalA11y('user-modal');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
+function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-email').value=u.email||'';document.getElementById('edit-phone').value=u.phone||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value=u.password_hint||'';document.getElementById('edit-role').value=u.role||'user';document.getElementById('edit-hourly-rate').value=u.hourly_rate||'';document.getElementById('pin-hint').textContent='(leave blank to keep current)';document.getElementById('user-modal-err').textContent='';var delC=document.getElementById('user-modal-delete');if(delC){if(u.username!==(window._userUsername||'')){delC.innerHTML='<button class="btn btn-sm" style="background:transparent;color:var(--red);border:1px solid var(--red);font-weight:600;" onclick="confirmDeleteUser('+u.id+',\''+esc(u.username)+'\')">Delete User</button>';}else{delC.innerHTML='';}}openModalA11y('user-modal');}
+function closeUserModal(){closeModalA11y('user-modal');_editingUserId=null;}
 async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var em=document.getElementById('edit-email').value.trim();var ph=document.getElementById('edit-phone').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pw=document.getElementById('edit-pin').value.trim();var hint=document.getElementById('edit-pw-hint').value.trim();var role=document.getElementById('edit-role').value;var hrate=document.getElementById('edit-hourly-rate').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,email:em,phone:ph,role:role,password_hint:hint,hourly_rate:parseFloat(hrate)||0};if(pw)upd.password=pw;var origUser=window._adminUsers&&window._adminUsers[_editingUserId];if(origUser&&un!==origUser.username)upd.username=un;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){if(upd.username&&origUser.username===window._userUsername){window._userUsername=un;}closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pw||pw.length<6){errEl.textContent='Password must be at least 6 characters.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,email:em,phone:ph,password:pw,password_hint:hint,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
 async function deactivateUser(uid,username,active){if(!confirm((active?'Deactivate':'Reactivate')+' "'+username+'"?'))return;var r=await fetch('/admin/users/'+uid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!active})});var d=await r.json();if(d.ok){loadUsers();toast('User '+(active?'deactivated':'reactivated'),'ok');}else toast('Error: '+(d.error||'failed'),'err');}
 async function confirmDeleteUser(uid,username){if(!confirm('Are you sure you want to delete "'+username+'"? This will deactivate the user account.'))return;if(!confirm('This cannot be undone. Type OK to confirm you want to delete "'+username+'".'))return;var r=await fetch('/admin/users/'+uid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:false})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User "'+username+'" deleted','ok');}else toast('Error: '+(d.error||'failed'),'err');}
@@ -11564,7 +11594,7 @@ function renderWorkOrderDetail(){
     var isPdf=spUrl.toLowerCase().indexOf('.pdf')>-1;
     spEl.innerHTML=(isPdf
       ?'<iframe src="'+esc(spUrl)+'" style="width:100%;height:280px;border:1px solid var(--bdr);border-radius:6px;" frameborder="0"></iframe>'
-      :'<img src="'+esc(spUrl)+'" style="max-width:100%;border-radius:6px;border:1px solid var(--bdr);"/>');
+      :'<img src="'+esc(spUrl)+'" alt="Site plan" style="max-width:100%;border-radius:6px;border:1px solid var(--bdr);"/>');
   } else {
     spEl.innerHTML='<p style="color:var(--dgray);font-size:12px;">No site plan uploaded for this project.</p>';
   }
@@ -14818,7 +14848,7 @@ function openRoadmapModal(id){
     document.getElementById('rm-status').value='Planned';
     document.getElementById('rm-version').value='';
   }
-  modal.classList.remove('hidden');
+  openModalA11y('roadmap-modal');
   document.getElementById('rm-title').focus();
 }
 
@@ -14839,7 +14869,7 @@ function saveRoadmapItem(){
   fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
   .then(function(r){return r.json();}).then(function(d){
     if(d.ok){
-      document.getElementById('roadmap-modal').classList.add('hidden');
+      closeModalA11y('roadmap-modal');
       if(typeof toast==='function')toast(_editingRoadmapId?'Item updated':'Item added','ok');
       loadRoadmapList();
     } else {
@@ -14935,7 +14965,7 @@ function openAddReminderModal(type,refId,refName){
       }
     },200);
   }
-  document.getElementById('reminder-modal').classList.remove('hidden');
+  openModalA11y('reminder-modal');
   setTimeout(function(){document.getElementById('rem-note').focus();},100);
 }
 
@@ -14964,7 +14994,7 @@ function toggleReminderRef(){
   }
 }
 
-function closeReminderModal(){document.getElementById('reminder-modal').classList.add('hidden');_editingReminderId=null;}
+function closeReminderModal(){closeModalA11y('reminder-modal');_editingReminderId=null;}
 
 function saveReminder(){
   var errEl=document.getElementById('reminder-modal-err');errEl.textContent='';
@@ -15222,11 +15252,11 @@ function openTaskModal(task){
       if(refSel){for(var i=0;i<refSel.options.length;i++){if(parseInt(refSel.options[i].value)===task.ref_id){refSel.selectedIndex=i;break;}}}
     },200);
   }
-  document.getElementById('task-modal').classList.remove('hidden');
+  openModalA11y('task-modal');
   setTimeout(function(){document.getElementById('task-title').focus();},100);
 }
 
-function closeTaskModal(){document.getElementById('task-modal').classList.add('hidden');_editingTaskId=null;}
+function closeTaskModal(){closeModalA11y('task-modal');_editingTaskId=null;}
 
 function toggleTaskRef(){
   var t=document.getElementById('task-ref-type').value;
