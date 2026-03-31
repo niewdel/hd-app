@@ -3406,7 +3406,7 @@ var DEFAULT_BID_LIBRARY=[
   {name:'Shrub (3 Gallon)',desc:'Furnish & plant 3-gallon shrub per plans',unit:'EA',rate:0,material:'Plant Material',mat_cost:25,prod_rate:30,category:'Landscaping',crew:'b-grading'},
   {name:'Ground Cover',desc:'Furnish & plant ground cover per plans',unit:'SF',rate:0,material:'Plant Material',mat_cost:3,prod_rate:500,category:'Landscaping',crew:'b-grading'},
   // ── GENERAL / MISC ──
-  {name:'Traffic Control',desc:'Lane closure / flagger setup',unit:'LS',rate:2500,material:'Labor',mat_cost:0,category:'General / Misc',crew:'b-general'},
+  {name:'Traffic Control',desc:'Lane closure / flagger setup per day',unit:'DAY',rate:0,material:'Labor',mat_cost:0,sub_cost:2500,markup_default:25,category:'General / Misc',crew:'b-general'},
   {name:'Mobilization',desc:'Project mobilization and equipment setup',unit:'LS',rate:0,material:'Labor',mat_cost:0,category:'General / Misc',crew:'b-general'},
   {name:'Surveying / Staking',desc:'Construction staking and layout per plans',unit:'LS',rate:0,material:'Labor',mat_cost:0,category:'General / Misc',crew:'b-general'},
   {name:'As-Built Survey',desc:'As-built survey and record drawings',unit:'LS',rate:0,material:'Labor',mat_cost:0,category:'General / Misc',crew:'b-general'},
@@ -3798,12 +3798,12 @@ function renderLibraryList(){
   }});
   c.appendChild(libBulkBar);
   var hdr=document.createElement("div");
-  hdr.style.cssText="display:grid;grid-template-columns:150px 1.2fr 1.5fr 60px 80px 120px 28px;gap:8px;padding:6px 0;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--bdr);margin-bottom:4px;";
-  hdr.innerHTML="<span>Category</span><span>Name</span><span>Description</span><span>Unit</span><span>$/Unit</span><span>Crew</span><span></span>";
+  hdr.style.cssText="display:grid;grid-template-columns:150px 1.2fr 1.5fr 60px 120px 28px;gap:8px;padding:6px 0;font-size:10px;font-weight:600;color:var(--dgray);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--bdr);margin-bottom:4px;";
+  hdr.innerHTML="<span>Category</span><span>Name</span><span>Description</span><span>Unit</span><span>Crew</span><span></span>";
   c.appendChild(hdr);
   filtered.forEach(function(item){
     var row=document.createElement("div");
-    row.style.cssText="display:grid;grid-template-columns:150px 1.2fr 1.5fr 60px 80px 120px 28px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);";
+    row.style.cssText="display:grid;grid-template-columns:150px 1.2fr 1.5fr 60px 120px 28px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);";
     // Category dropdown
     var cs=document.createElement("select");cs.style.cssText="font-size:12px;padding:4px 6px;width:100%;";
     LIB_CATEGORIES.forEach(function(cat){
@@ -3821,9 +3821,6 @@ function renderLibraryList(){
     var us=document.createElement("select");us.style.fontSize="12px";
     ["LS","EA","LF","SY","SF","TON","CY","HR","DAY","WK","MO","VF","AC","LOAD"].forEach(function(u){var o=document.createElement("option");o.value=u;o.textContent=u;if(u===item.unit)o.selected=true;us.appendChild(o);});
     us.addEventListener("change",(function(it){return function(){it.unit=this.value;};})(item));row.appendChild(us);
-    // Rate
-    var ri=document.createElement("input");ri.type="number";ri.value=item.rate||"";ri.min="0";ri.step="0.01";ri.style.fontSize="12px";
-    ri.addEventListener("change",(function(it){return function(){it.rate=parseFloat(this.value)||0;};})(item));row.appendChild(ri);
     // Crew dropdown
     var crewSel=document.createElement("select");crewSel.style.cssText="font-size:11px;padding:4px 6px;width:100%;";
     var crewNone=document.createElement("option");crewNone.value='';crewNone.textContent='— None —';crewSel.appendChild(crewNone);
@@ -3953,7 +3950,7 @@ function openLibraryPicker(target){
         var ins=document.createElement("button");ins.className="btn btn-red btn-sm";ins.textContent="Insert";
         ins.addEventListener("click",function(){
           var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
-          var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,mat_cost:item.mat_cost||0,sub_cost:item.sub_cost||0,crew:item.crew||'',prod_rate:item.prod_rate||0,markup:20,days_override:null,badge:tradeBadge,material:item.material||''};
+          var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,mat_cost:item.mat_cost||0,sub_cost:item.sub_cost||0,crew:item.crew||'',prod_rate:item.prod_rate||0,markup:item.markup_default||20,days_override:null,badge:tradeBadge,material:item.material||''};
           if(_libPickerTarget==='sitework'){newItem.id=swid++;siteWorkItems.push(newItem);renderSiteWork();}
           else if(_libPickerTarget==='pavement'){
             var _trade=item.crew||TRADE_BADGE_MAP[item.category]||'';
@@ -4000,7 +3997,7 @@ function renderExtra(){
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var ei=extraItems[i];ei.name=libItem.name;ei.desc=libItem.desc||'';ei.unit=libItem.unit;
       ei.material=libItem.material||'';ei.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
-      ei.crew=libItem.crew||'';ei.sub_cost=libItem.sub_cost||0;ei.prod_rate=libItem.prod_rate||0;ei.price=libItem.rate||0;ei.markup=20;ei.days_override=null;
+      ei.crew=libItem.crew||'';ei.sub_cost=libItem.sub_cost||0;ei.prod_rate=libItem.prod_rate||0;ei.price=libItem.rate||0;ei.markup=libItem.markup_default||20;ei.days_override=null;
       ei.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';
       renderExtra();recalc();
     });})(idx);
@@ -8391,7 +8388,7 @@ function renderPavementItems(){
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var pv=pavementItems[i];pv.name=libItem.name;pv.desc=libItem.desc||'';pv.unit=libItem.unit;
       pv.material=libItem.material||'';pv.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
-      pv.crew=libItem.crew||'';pv.sub_cost=libItem.sub_cost||0;pv.prod_rate=libItem.prod_rate||0;pv.markup=20;pv.days_override=null;
+      pv.crew=libItem.crew||'';pv.sub_cost=libItem.sub_cost||0;pv.prod_rate=libItem.prod_rate||0;pv.markup=libItem.markup_default||20;pv.days_override=null;
       pv.badge=TRADE_BADGE_MAP[libItem.category]||'b-asphalt';
       renderPavementItems();recalc();
     });})(idx);
@@ -8476,7 +8473,7 @@ function renderSiteWork(){
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var sw=siteWorkItems[i];sw.name=libItem.name;sw.desc=libItem.desc||'';sw.unit=libItem.unit;
       sw.material=libItem.material||'';sw.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
-      sw.crew=libItem.crew||'';sw.sub_cost=libItem.sub_cost||0;sw.prod_rate=libItem.prod_rate||0;sw.price=libItem.rate||0;sw.markup=20;sw.days_override=null;
+      sw.crew=libItem.crew||'';sw.sub_cost=libItem.sub_cost||0;sw.prod_rate=libItem.prod_rate||0;sw.price=libItem.rate||0;sw.markup=libItem.markup_default||20;sw.days_override=null;
       sw.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';
       renderSiteWork();recalc();
     });})(idx);
@@ -8613,8 +8610,10 @@ function calcLayerRate(tons, layer){
 // -- Item (site work / extra) calc functions -----------------------------------
 function _isConcreteItem(item){return item.crew==='b-general'&&item.material==='Concrete';}
 function _isStripingItem(item){return item.crew==='b-striping';}
+function _isSubCostItem(item){return !_isStripingItem(item)&&(item.sub_cost>0||(_isConcreteItem(item)));}
 function calcItemDays(item){
-  if(_isConcreteItem(item)||_isStripingItem(item))return 0;
+  if(_isStripingItem(item))return 0;
+  if(_isSubCostItem(item))return 0; // sub cost items: qty × sub_cost, no crew days
   if(item.days_override!==null&&item.days_override!==undefined)return item.days_override;
   var rate=item.prod_rate||0;
   if(!rate){var crew=getCrewForTrade(item.crew||'');rate=crew?crew.productivity:0;}
@@ -8622,8 +8621,8 @@ function calcItemDays(item){
   return Math.ceil(item.qty/rate*2)/2;
 }
 function calcItemLabor(item){
-  if(_isStripingItem(item))return 0; // lump sum, no labor calc
-  if(_isConcreteItem(item))return (item.sub_cost||0)*(item.qty||0);
+  if(_isStripingItem(item))return 0;
+  if(_isSubCostItem(item))return (item.sub_cost||0)*(item.qty||0);
   var days=calcItemDays(item);
   var crew=getCrewForTrade(item.crew||'');
   return days*(crew?crew.daily_rate:0);
