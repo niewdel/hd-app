@@ -593,9 +593,7 @@ def approval_page(data, st):
     auth_st = ParagraphStyle('auth', fontName='Helvetica-Oblique', fontSize=8,
                               textColor=DGRAY, leading=13, alignment=TA_CENTER)
     elems.append(Paragraph(
-        'By signing below, Client authorizes HD Hauling &amp; Grading to proceed with the work '
-        'described in this Proposal &amp; Contract and agrees to be bound by all terms and '
-        'conditions set forth herein.',
+        'By signing below, Client agrees to all terms and conditions of this Proposal &amp; Contract.',
         auth_st))
     elems.append(Spacer(1, 0.14*inch))
 
