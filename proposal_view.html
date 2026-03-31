@@ -110,7 +110,7 @@
         if(item.description) html += '<div class="desc-cell">' + esc(item.description) + '</div>';
         html += '</td>';
         html += '<td>' + (item.qty||'') + '</td><td>' + esc(item.unit||'') + '</td>';
-        html += '<td class="text-right">' + fmt(item.price||0) + '</td>';
+        html += '<td class="text-right">' + (item.is_lump_sum ? '-' : fmt(item.price||0)) + '</td>';
         html += '<td class="text-right">' + fmt(amt) + '</td></tr>';
       });
       html += '</tbody></table>';

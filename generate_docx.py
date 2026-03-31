@@ -610,8 +610,10 @@ def _build_bid_table(doc, data):
         unit  = item.get('unit', 'SY')
         price = item.get('price', 0)
         sub   = item.get('subtotal', 0)
+        is_lump_sum = item.get('is_lump_sum', False)
 
         qty_s = f'{int(qty):,}' if isinstance(qty, (int, float)) and qty == int(qty) else str(qty)
+        price_s = '-' if is_lump_sum else f'${price:,.2f}'
 
         # Column 0: Item name (bold) + description (smaller gray)
         cell = row.cells[0]
@@ -625,7 +627,7 @@ def _build_bid_table(doc, data):
         _set_para_spacing(p, before=3, after=1 if desc else 3)
 
         # Columns 1-4
-        vals = [qty_s, unit, f'${price:,.2f}', f'${sub:,.2f}']
+        vals = [qty_s, unit, price_s, f'${sub:,.2f}']
         for ci, (v, align) in enumerate(zip(vals, aligns[1:]), start=1):
             cell = row.cells[ci]
             _set_cell_bg(cell, bg)

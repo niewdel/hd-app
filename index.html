@@ -4442,6 +4442,15 @@ function boot(){
     if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))
       document.getElementById('client-sug').style.display='none';
   });
+  // Auto-match client details on blur if name matches a known client
+  document.getElementById('proj-client').addEventListener('blur',function(){
+    var v=this.value.trim();
+    if(!v){selectedClient={name:'',company:'',phone:'',email:''};return;}
+    if(selectedClient.name===v)return;
+    var mc=clients.find(function(c){return c.name.toLowerCase()===v.toLowerCase();});
+    if(mc){selectedClient={name:mc.name,company:mc.company||'',phone:mc.phone||'',email:mc.email||''};}
+    else{selectedClient={name:v,company:'',phone:'',email:''};}
+  });
   // Show admin-only elements if admin
   showAdminElements();
   // FAB removed
@@ -5804,6 +5813,13 @@ function createProposalFromProject(projectId){
   // Pre-fill the proposal builder
   document.getElementById('proj-name').value=proj.name||'';
   document.getElementById('proj-client').value=proj.client||'';
+  // Look up client details by name to populate selectedClient
+  var matchedClient=clients.find(function(c){return c.name===(proj.client||'');});
+  if(matchedClient){
+    selectedClient={name:matchedClient.name,company:matchedClient.company||'',phone:matchedClient.phone||'',email:matchedClient.email||''};
+  } else {
+    selectedClient={name:proj.client||'',company:'',phone:'',email:''};
+  }
   var fullA=snap.address||'';if(snap.city_state)fullA=fullA?(fullA+', '+snap.city_state):snap.city_state;
   document.getElementById('proj-addr').value=fullA;
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
@@ -9289,7 +9305,7 @@ function buildRawLineItems(){
       name:i.name,description:i.desc||'',
       qty:i.qty,unit:i.unit,
       price:parseFloat(ppu.toFixed(2)),subtotal:parseFloat(bid.toFixed(2)),
-      src:'pavement'
+      src:'pavement',crew:i.crew||''
     });
   });
   siteWorkItems.forEach(function(i){
@@ -9303,7 +9319,7 @@ function buildRawLineItems(){
       name:i.name,description:i.desc||'',
       qty:i.qty,unit:i.unit,
       price:parseFloat(ppu.toFixed(2)),subtotal:parseFloat(bid.toFixed(2)),
-      src:'sitework'
+      src:'sitework',crew:i.crew||''
     });
   });
   extraItems.forEach(function(i){
@@ -9317,7 +9333,7 @@ function buildRawLineItems(){
       name:i.name,description:i.desc||'',
       qty:i.qty,unit:i.unit,
       price:parseFloat(ppu.toFixed(2)),subtotal:parseFloat(bid.toFixed(2)),
-      src:'extra'
+      src:'extra',crew:i.crew||''
     });
   });
   var mobv2=mob();
@@ -9445,7 +9461,10 @@ function getLineItemsForPayload(){
     var unit=ov.unit!==undefined?ov.unit:item.unit;
     var price=ov.price!==undefined?ov.price:item.price;
     var divLabel=item.badgeCls&&BADGE_DEFS[item.badgeCls]?BADGE_DEFS[item.badgeCls].label:'';
-    return {name:nm,description:desc,qty:qty,unit:unit,price:price,subtotal:qty*price,division:divLabel,_isMob:item.key==='_mobilization'};
+    var isStriping=item.crew==='b-striping';
+    var finalSub=qty*price;
+    if(isStriping){qty=1;unit='LS';price=finalSub;finalSub=finalSub;}
+    return {name:nm,description:desc,qty:qty,unit:unit,price:price,subtotal:finalSub,division:divLabel,_isMob:item.key==='_mobilization',is_lump_sum:isStriping||undefined};
   });
   // Sort: Mobilization first (no division header), then group by division
   var mobItems=mapped.filter(function(x){return x._isMob;});
@@ -9472,8 +9491,9 @@ async function exportPDF(){
     var p=buildPayload();
     if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
     // Include project site plan URL if available
-    if(!p.site_plan_image&&window._pendingProjectLink){
-      var _proj=pipelineProposals.find(function(x){return x.id===window._pendingProjectLink;});
+    var _spProjId=window._pendingProjectLink||(lastSavedQuoteId?findParentProject(lastSavedQuoteId):null);
+    if(!p.site_plan_image&&_spProjId){
+      var _proj=pipelineProposals.find(function(x){return x.id===_spProjId;});
       if(_proj){var _sn=typeof _proj.snap==='string'?JSON.parse(_proj.snap):_proj.snap||{};if(_sn.site_plan_url)p.site_plan_url=_sn.site_plan_url;}
     }
     var r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
@@ -9499,8 +9519,9 @@ async function exportDOCX(){
   try{
     var p=buildPayload();
     if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
-    if(!p.site_plan_image&&window._pendingProjectLink){
-      var _proj=pipelineProposals.find(function(x){return x.id===window._pendingProjectLink;});
+    var _spProjId2=window._pendingProjectLink||(lastSavedQuoteId?findParentProject(lastSavedQuoteId):null);
+    if(!p.site_plan_image&&_spProjId2){
+      var _proj=pipelineProposals.find(function(x){return x.id===_spProjId2;});
       if(_proj){var _sn=typeof _proj.snap==='string'?JSON.parse(_proj.snap):_proj.snap||{};if(_sn.site_plan_url)p.site_plan_url=_sn.site_plan_url;}
     }
     var r=await fetch('/generate-docx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
@@ -9576,6 +9597,7 @@ async function saveQuote(quiet){
     cs:document.getElementById('proj-cs').value,notes:document.getElementById('proj-notes').value,
     waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,mob_cost:document.getElementById('mob-cost').value,contingency:document.getElementById('contingency').value,
     selectedClient:selectedClient,liOverrides:liOverrides,
+    site_plan_data:sitePlanDataUrl||undefined,
     sections:sections,concItems:concItems,extraItems:extraItems,siteWorkItems:siteWorkItems,pavementItems:pavementItems};
   if(document.getElementById('options-toggle').checked&&pricingOptions.length)snap.pricing_options=pricingOptions;
   var p=buildPayload();
@@ -9660,6 +9682,10 @@ function loadQuote(id){
   pavementItems=d.pavementItems||[];pvid=pavementItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
   lastSavedQuoteId=q.id;
   evaActuals=d.eva_actuals||{};
+  // Restore site plan data if saved
+  sitePlanDataUrl=d.site_plan_data||null;
+  var spBtn=document.getElementById('site-plan-btn');
+  if(spBtn){if(sitePlanDataUrl){spBtn.textContent='Plan Loaded';spBtn.style.borderColor='#27500A';}else{spBtn.textContent='Upload Site Plan';spBtn.style.borderColor='';}}
   // Set project link from parent project if not already set
   if(!window._pendingProjectLink){
     var parentId=findParentProject(q.id);
