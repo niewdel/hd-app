@@ -6584,27 +6584,24 @@ function renderProjectNotesFeed(snap){
         } else { when.textContent=n.date; }
       }
       meta.appendChild(when);
-      bubble.appendChild(meta);
-      var txt=document.createElement('div');
-      txt.style.cssText='font-size:12px;color:#333;line-height:1.5;white-space:pre-wrap;';
-      txt.textContent=n.text;
-      bubble.appendChild(txt);
-      // Delete button (not for initial note)
       if(!n.isInitial){
         var del=document.createElement('button');
-        del.style.cssText='position:absolute;top:6px;right:6px;background:none;border:none;color:#bbb;cursor:pointer;font-size:13px;padding:0 3px;line-height:1;';
+        del.style.cssText='background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:0 2px;line-height:1;flex-shrink:0;margin-left:6px;';
         del.textContent='\u00D7';
         del.title='Delete note';
-        del.addEventListener('mouseenter',function(){this.style.color='#CC0000';});
-        del.addEventListener('mouseleave',function(){this.style.color='#bbb';});
         (function(i){del.addEventListener('click',function(){
           if(!confirm('Delete this note?'))return;
           snap.work_notes.splice(i,1);
           fetch('/projects/update/'+_currentProjectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
             .then(function(){renderProjectSummary();});
         });})(n.idx);
-        bubble.appendChild(del);
+        meta.appendChild(del);
       }
+      bubble.appendChild(meta);
+      var txt=document.createElement('div');
+      txt.style.cssText='font-size:12px;color:var(--txt);line-height:1.5;white-space:pre-wrap;';
+      txt.textContent=n.text;
+      bubble.appendChild(txt);
       list.appendChild(bubble);
     });
     feed.appendChild(list);
