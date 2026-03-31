@@ -6134,6 +6134,8 @@ function _renderProjectSummaryInner(proj){
         ?'<iframe src="'+esc(spUrl)+'" style="width:100%;height:300px;border:1px solid var(--bdr);border-radius:6px;" frameborder="0"></iframe>'
         :'<img src="'+esc(spUrl)+'" alt="Site plan" style="max-width:100%;border-radius:6px;border:1px solid var(--bdr);"/>')
         +'<div style="margin-top:8px;"><label class="btn btn-sec btn-sm" style="cursor:pointer;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Replace</label></div>';
+    } else {
+      psSP.innerHTML='<label class="btn btn-sec btn-sm" style="cursor:pointer;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Upload Site Plan</label>';
     }
   }
 
