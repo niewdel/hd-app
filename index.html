@@ -4443,8 +4443,8 @@ function boot(){
       document.getElementById('client-sug').style.display='none';
   });
   // Auto-match client details when typing a client name
-  document.getElementById('proj-client').addEventListener('blur',function(){
-    var v=this.value.trim();
+  function _matchClientByName(){
+    var v=document.getElementById('proj-client').value.trim();
     var bar=document.getElementById('client-bar');
     if(!v){selectedClient={name:'',company:'',phone:'',email:''};if(bar)bar.style.display='none';return;}
     if(selectedClient.name===v&&(selectedClient.company||selectedClient.email||selectedClient.phone))return;
@@ -4458,7 +4458,9 @@ function boot(){
       selectedClient={name:v,company:'',phone:'',email:''};
       if(bar)bar.style.display='none';
     }
-  });
+  }
+  document.getElementById('proj-client').addEventListener('blur',_matchClientByName);
+  document.getElementById('proj-client').addEventListener('change',_matchClientByName);
   // Show admin-only elements if admin
   showAdminElements();
   // FAB removed
@@ -9549,7 +9551,7 @@ function onClientInput(v){
       div.style.cssText='padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);';
       div.addEventListener('mouseover',function(){this.style.background='#f5f5f5';});
       div.addEventListener('mouseout',function(){this.style.background='';});
-      div.addEventListener('click',function(){selectClientById(c.id);});
+      div.addEventListener('mousedown',function(e){e.preventDefault();selectClientById(c.id);});
       div.innerHTML='<div style="font-weight:600">'+esc(c.name)+'</div>'
         +'<div style="font-size:11px;color:var(--dgray)">'+(c.company?esc(c.company)+'  -  ':'')+esc(c.phone||c.email||'')+'</div>';
       sug.appendChild(div);
@@ -10629,8 +10631,11 @@ async function loadClientsForAutocomplete(){
     if(d.ok&&d.clients){
       clientsList=d.clients;
       clients=clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||'',address:c.address||'',city_state:c.city_state||''};});
+      console.log('[HD] Loaded '+clients.length+' clients for autocomplete');
+    } else {
+      console.warn('[HD] loadClientsForAutocomplete: no clients in response',d);
     }
-  }catch(e){}
+  }catch(e){console.warn('[HD] loadClientsForAutocomplete failed:',e);}
 }
 
 async function renderClients() {
