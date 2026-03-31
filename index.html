@@ -3157,6 +3157,7 @@ function _backfillLibMaterial(){
       if(!item.category&&def.category)item.category=def.category;
       if(!item.crew&&def.crew)item.crew=def.crew;
       if(item.sub_cost===undefined&&def.sub_cost)item.sub_cost=def.sub_cost;
+      if(item.depth===undefined&&def.depth)item.depth=def.depth;
     }
   });
 }
@@ -3247,17 +3248,17 @@ var BADGE_DEFS={
 var LIB_CATEGORIES=['Asphalt','Stone / Aggregate','Concrete','Striping / Signage','Grading / Earthwork','Storm Drain','Sanitary Sewer','Water','Erosion Control','Land Clearing','Landscaping','General / Misc'];
 var DEFAULT_BID_LIBRARY=[
   // ── ASPHALT ──
-  {name:'Heavy Duty Aggregate Base Course',desc:'Install 8" Aggregate Base Course',unit:'TON',rate:0,material:'ABC',mat_cost:30,category:'Asphalt',crew:'b-asphalt'},
-  {name:'Heavy Duty Asphalt Binder',desc:'Install 2.5" I19.0C Intermediate Course',unit:'SY',rate:0,material:'I19.0C',mat_cost:10,category:'Asphalt',crew:'b-asphalt'},
-  {name:'Heavy Duty Asphalt Surface',desc:'Install 1.5" S9.5C Surface Course',unit:'SY',rate:0,material:'S9.5C',mat_cost:6,category:'Asphalt',crew:'b-asphalt'},
-  {name:'Light Duty Aggregate Base Course',desc:'Install 6" Aggregate Base Course',unit:'TON',rate:0,material:'ABC',mat_cost:30,category:'Asphalt',crew:'b-asphalt'},
-  {name:'Light Duty Asphalt Surface',desc:'Install 2" S9.5C Surface Course',unit:'SY',rate:0,material:'S9.5C',mat_cost:8,category:'Asphalt',crew:'b-asphalt'},
-  {name:'NCDOT Asphalt Base',desc:'Install 5" B25.0C Base Course',unit:'SY',rate:0,material:'B25.0C',mat_cost:16,category:'Asphalt',crew:'b-asphalt'},
-  {name:'NCDOT Asphalt Intermediate',desc:'Install 4" I19.0C Intermediate Course',unit:'SY',rate:0,material:'I19.0C',mat_cost:13,category:'Asphalt',crew:'b-asphalt'},
-  {name:'NCDOT Asphalt Surface',desc:'Install 3" S9.5C Surface Course',unit:'SY',rate:0,material:'S9.5C',mat_cost:10,category:'Asphalt',crew:'b-asphalt'},
-  {name:'Mill Existing Asphalt (1.5")',desc:'Mill 1.5" existing asphalt surface',unit:'SY',rate:0,material:'Labor',mat_cost:0,category:'Asphalt',crew:'b-asphalt'},
-  {name:'Mill Existing Asphalt (2")',desc:'Mill 2" existing asphalt surface',unit:'SY',rate:0,material:'Labor',mat_cost:0,category:'Asphalt',crew:'b-asphalt'},
-  {name:'Mill Existing Asphalt (3")',desc:'Mill 3" existing asphalt full depth',unit:'SY',rate:0,material:'Labor',mat_cost:0,category:'Asphalt',crew:'b-asphalt'},
+  {name:'Heavy Duty Aggregate Base Course',desc:'Install 8" Aggregate Base Course',unit:'TON',rate:0,material:'ABC',mat_cost:30,depth:8,category:'Asphalt',crew:'b-asphalt'},
+  {name:'Heavy Duty Asphalt Binder',desc:'Install 2.5" I19.0C Intermediate Course',unit:'SY',rate:0,material:'I19.0C',mat_cost:10,depth:2.5,category:'Asphalt',crew:'b-asphalt'},
+  {name:'Heavy Duty Asphalt Surface',desc:'Install 1.5" S9.5C Surface Course',unit:'SY',rate:0,material:'S9.5C',mat_cost:6,depth:1.5,category:'Asphalt',crew:'b-asphalt'},
+  {name:'Light Duty Aggregate Base Course',desc:'Install 6" Aggregate Base Course',unit:'TON',rate:0,material:'ABC',mat_cost:30,depth:6,category:'Asphalt',crew:'b-asphalt'},
+  {name:'Light Duty Asphalt Surface',desc:'Install 2" S9.5C Surface Course',unit:'SY',rate:0,material:'S9.5C',mat_cost:8,depth:2,category:'Asphalt',crew:'b-asphalt'},
+  {name:'NCDOT Asphalt Base',desc:'Install 5" B25.0C Base Course',unit:'SY',rate:0,material:'B25.0C',mat_cost:16,depth:5,category:'Asphalt',crew:'b-asphalt'},
+  {name:'NCDOT Asphalt Intermediate',desc:'Install 4" I19.0C Intermediate Course',unit:'SY',rate:0,material:'I19.0C',mat_cost:13,depth:4,category:'Asphalt',crew:'b-asphalt'},
+  {name:'NCDOT Asphalt Surface',desc:'Install 3" S9.5C Surface Course',unit:'SY',rate:0,material:'S9.5C',mat_cost:10,depth:3,category:'Asphalt',crew:'b-asphalt'},
+  {name:'Mill Existing Asphalt (1.5")',desc:'Mill 1.5" existing asphalt surface',unit:'SY',rate:0,material:'Labor',mat_cost:0,depth:1.5,category:'Asphalt',crew:'b-asphalt'},
+  {name:'Mill Existing Asphalt (2")',desc:'Mill 2" existing asphalt surface',unit:'SY',rate:0,material:'Labor',mat_cost:0,depth:2,category:'Asphalt',crew:'b-asphalt'},
+  {name:'Mill Existing Asphalt (3")',desc:'Mill 3" existing asphalt full depth',unit:'SY',rate:0,material:'Labor',mat_cost:0,depth:3,category:'Asphalt',crew:'b-asphalt'},
   {name:'Asphalt Patching',desc:'Full depth asphalt patch repair',unit:'SY',rate:0,material:'S9.5C',mat_cost:15,category:'Asphalt',crew:'b-asphalt'},
   {name:'Tack Coat',desc:'Apply tack coat to existing surface',unit:'SY',rate:0,material:'Tack Coat',mat_cost:0.30,category:'Asphalt',crew:'b-asphalt'},
   {name:'Paving Fabric',desc:'Install paving fabric interlayer',unit:'SY',rate:0,material:'Paving Fabric',mat_cost:2,category:'Asphalt',crew:'b-asphalt'},
@@ -3265,9 +3266,9 @@ var DEFAULT_BID_LIBRARY=[
   {name:'Asphalt Speed Bump',desc:'Furnish & install asphalt speed bump',unit:'EA',rate:0,material:'S9.5C',mat_cost:150,category:'Asphalt',crew:'b-asphalt'},
   {name:'Pavement Removal',desc:'Remove and dispose of existing pavement',unit:'SY',rate:0,material:'Labor',mat_cost:0,category:'Asphalt',crew:'b-asphalt'},
   // ── STONE / AGGREGATE ──
-  {name:'ABC Stone Base (4")',desc:'Furnish & install 4" ABC aggregate base',unit:'TON',rate:0,material:'ABC',mat_cost:30,category:'Stone / Aggregate',crew:'b-stone'},
-  {name:'ABC Stone Base (6")',desc:'Furnish & install 6" ABC aggregate base',unit:'TON',rate:0,material:'ABC',mat_cost:30,category:'Stone / Aggregate',crew:'b-stone'},
-  {name:'ABC Stone Base (8")',desc:'Furnish & install 8" ABC aggregate base',unit:'TON',rate:0,material:'ABC',mat_cost:30,category:'Stone / Aggregate',crew:'b-stone'},
+  {name:'ABC Stone Base (4")',desc:'Furnish & install 4" ABC aggregate base',unit:'TON',rate:0,material:'ABC',mat_cost:30,depth:4,category:'Stone / Aggregate',crew:'b-stone'},
+  {name:'ABC Stone Base (6")',desc:'Furnish & install 6" ABC aggregate base',unit:'TON',rate:0,material:'ABC',mat_cost:30,depth:6,category:'Stone / Aggregate',crew:'b-stone'},
+  {name:'ABC Stone Base (8")',desc:'Furnish & install 8" ABC aggregate base',unit:'TON',rate:0,material:'ABC',mat_cost:30,depth:8,category:'Stone / Aggregate',crew:'b-stone'},
   {name:'#57 Stone',desc:'Furnish & install #57 stone',unit:'TON',rate:0,material:'#57 Stone',mat_cost:35,category:'Stone / Aggregate',crew:'b-stone'},
   {name:'#67 Stone',desc:'Furnish & install #67 stone',unit:'TON',rate:0,material:'#57 Stone',mat_cost:35,category:'Stone / Aggregate',crew:'b-stone'},
   {name:'#4 Stone (Rip Rap)',desc:'Furnish & install #4 stone rip rap',unit:'TON',rate:0,material:'Rip Rap',mat_cost:50,category:'Stone / Aggregate',crew:'b-stone'},
@@ -3958,7 +3959,7 @@ function openLibraryPicker(target){
             if(_trade==='b-asphalt'||_trade==='b-stone'){
               // Asphalt/stone: create full section with SF/tonnage/trucks calc
               var _matType=_resolveMatType(item.material||item.name);
-              addSection(null,[{type:_matType,depth:DDEPTH[_matType]||4,name:item.name,description:item.desc||''}]);
+              addSection(null,[{type:_matType,depth:item.depth||DDEPTH[_matType]||4,name:item.name,description:item.desc||''}]);
             } else {
               // Concrete/other: simple line item in pavement card
               newItem.id=pvid++;pavementItems.push(newItem);renderPavementItems();
@@ -4293,7 +4294,7 @@ function _attachLayerAutocomplete(input,sid2,lid2){
       if(item.name.toLowerCase().indexOf(q)>-1||(item.desc||'').toLowerCase().indexOf(q)>-1){
         seen[item.name]=1;
         var matType=item.material||item.name;
-        results.push({name:item.name,type:matType,depth:DDEPTH[matType]||4,desc:item.desc||'',source:'library',trade:MAT_TRADE[matType]||'',category:item.category||''});
+        results.push({name:item.name,type:matType,depth:item.depth||DDEPTH[matType]||4,desc:item.desc||'',source:'library',trade:MAT_TRADE[matType]||'',category:item.category||''});
       }
     });
     if(!results.length){dropdown.style.display='none';return;}
