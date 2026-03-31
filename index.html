@@ -4442,14 +4442,22 @@ function boot(){
     if(!e.target.closest('#proj-client')&&!e.target.closest('#client-sug'))
       document.getElementById('client-sug').style.display='none';
   });
-  // Auto-match client details on blur if name matches a known client
+  // Auto-match client details when typing a client name
   document.getElementById('proj-client').addEventListener('blur',function(){
     var v=this.value.trim();
-    if(!v){selectedClient={name:'',company:'',phone:'',email:''};return;}
-    if(selectedClient.name===v)return;
+    var bar=document.getElementById('client-bar');
+    if(!v){selectedClient={name:'',company:'',phone:'',email:''};if(bar)bar.style.display='none';return;}
+    if(selectedClient.name===v&&(selectedClient.company||selectedClient.email||selectedClient.phone))return;
     var mc=clients.find(function(c){return c.name.toLowerCase()===v.toLowerCase();});
-    if(mc){selectedClient={name:mc.name,company:mc.company||'',phone:mc.phone||'',email:mc.email||''};}
-    else{selectedClient={name:v,company:'',phone:'',email:''};}
+    if(mc){
+      selectedClient={name:mc.name,company:mc.company||'',phone:mc.phone||'',email:mc.email||''};
+      if(mc.address||mc.city_state){var addrEl=document.getElementById('proj-addr');if(addrEl&&!addrEl.value){var fa=mc.address||'';if(mc.city_state)fa=fa?(fa+', '+mc.city_state):mc.city_state;addrEl.value=fa;}}
+      var parts=[mc.company,mc.phone,mc.email].filter(Boolean);
+      if(parts.length&&bar){bar.style.display='block';bar.textContent=parts.join(' \u00b7 ');}
+    } else {
+      selectedClient={name:v,company:'',phone:'',email:''};
+      if(bar)bar.style.display='none';
+    }
   });
   // Show admin-only elements if admin
   showAdminElements();
@@ -9560,6 +9568,9 @@ function onClientInput(v){
   clientTimer=setTimeout(function(){
     var m=clients.filter(function(c){return c.name.toLowerCase().indexOf(v.toLowerCase())>=0;}).slice(0,6);
     if(!m.length){sug.style.display='none';return;}
+    // Auto-select if exact match
+    var exact=m.find(function(c){return c.name.toLowerCase()===v.toLowerCase();});
+    if(exact){selectClientById(exact.id);return;}
     sug.innerHTML='';
     m.forEach(function(c){
       var div=document.createElement('div');
