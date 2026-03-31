@@ -1730,7 +1730,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div style="display:flex;gap:6px;" onclick="event.stopPropagation();">
               <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('pavement')">From Library</button>
               <button class="btn btn-sec btn-sm" onclick="showPresetPicker('pavement')">Add Preset</button>
-              <button class="btn btn-sec btn-sm" onclick="addSection('',[{type:'ABC'}])">+ Add Item</button>
+              <button class="btn btn-sec btn-sm" onclick="addSection(null,[{type:'ABC'}])">+ Add Item</button>
             </div>
           </div>
           <div class="card-collapsible" style="padding:0;">
@@ -3958,7 +3958,7 @@ function openLibraryPicker(target){
             if(_trade==='b-asphalt'||_trade==='b-stone'){
               // Asphalt/stone: create full section with SF/tonnage/trucks calc
               var _matType=_resolveMatType(item.material||item.name);
-              addSection(item.name,[{type:_matType,depth:DDEPTH[_matType]||4,name:item.name,description:item.desc||''}]);
+              addSection(null,[{type:_matType,depth:DDEPTH[_matType]||4,name:item.name,description:item.desc||''}]);
             } else {
               // Concrete/other: simple line item in pavement card
               newItem.id=pvid++;pavementItems.push(newItem);renderPavementItems();
@@ -8050,7 +8050,8 @@ function mkLayer(l){
 }
 
 function addSection(name,lds){
-  var s={id:sid++,name:name||('Section '+(sid)),sf:0,layers:[]};
+  var isItem=name===null;
+  var s={id:sid++,name:isItem?'':name||('Section '+(sid)),sf:0,layers:[],singleItem:isItem};
   (lds||[{type:'ABC'},{type:'S9.5C'}]).forEach(function(l){s.layers.push(mkLayer(l));});
   sections.push(s);renderAll();
 }
@@ -8251,7 +8252,7 @@ function renderAll(){
         +'<div class="lyr-result"><span class="lres" data-lyr="'+s.id+'-'+l.id+'">'+resHTML+'</span></div>'
         +'</div>';
     });
-    var isSingleItem=s.layers.length===1&&!s.name;
+    var isSingleItem=s.singleItem||false;
     if(isSingleItem){
       // Compact single-item layout: SF inline with layer, no header/footer
       div.innerHTML='<div>'+lrows.replace(
