@@ -9536,6 +9536,7 @@ function setSitePlan(inp){
 
 var clientTimer=null;
 function onClientInput(v){
+  console.log('[HD] onClientInput called, value="'+v+'", clients.length='+clients.length);
   clearTimeout(clientTimer);
   var sug=document.getElementById('client-sug');
   if(!v||v.length<2){sug.style.display='none';return;}
