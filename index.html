@@ -4305,6 +4305,7 @@ function _attachLayerAutocomplete(input,sid2,lid2){
       opt.addEventListener('mouseleave',function(){this.style.background='';});
       opt.addEventListener('mousedown',function(e){
         e.preventDefault();
+        input.value=r.name;input._autoSelected=true;
         var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
         var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
         l.type=r.type;l.name=r.name;l.description=r.desc||r.name;
@@ -8125,7 +8126,8 @@ function updTrucks(sid2,lid2,v){
   l.trucks_override=(entered===autoTrucks)?null:entered;
   recalc();renderAll();
 }
-function updLyrName(sid2,lid2,v){
+function updLyrName(sid2,lid2,v,el){
+  if(el&&el._autoSelected){el._autoSelected=false;return;}
   var s=sections.find(function(x){return x.id===sid2;});if(!s)return;
   var l=s.layers.find(function(x){return x.id===lid2;});if(!l)return;
   l.name=v;
@@ -8233,7 +8235,7 @@ function renderAll(){
         // Top row: badge + name + delete
         +'<div class="lyr-top">'
         +'<span class="badge '+badgeCls+'" style="font-size:10px;flex-shrink:0;">'+esc(BADGE_DEFS[badgeCls]?BADGE_DEFS[badgeCls].label:l.type)+'</span>'
-        +'<input type="text" value="'+esc(l.name||l.type)+'" placeholder="Layer name — type to search" data-lyr-name="'+s.id+'-'+l.id+'" onchange="updLyrName('+s.id+','+l.id+',this.value)">'
+        +'<input type="text" value="'+esc(l.name||l.type)+'" placeholder="Layer name — type to search" data-lyr-name="'+s.id+'-'+l.id+'" onchange="updLyrName('+s.id+','+l.id+',this.value,this)">'
         +'<button class="btn-ico" onclick="remLyr('+s.id+','+l.id+')" title="Remove layer" style="flex-shrink:0;color:var(--red);opacity:.5;">×</button>'
         +'</div>'
         // Description
