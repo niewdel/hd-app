@@ -1811,7 +1811,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
         <div class="card-hdr"><span class="card-title">Site Work Breakdown</span></div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Mat Cost</th><th>Labor</th><th>Bid Price</th><th>MU%</th></tr></thead>
+              <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Mat Cost</th><th>Labor</th><th>Total</th><th>MU%</th></tr></thead>
               <tbody id="breakdown-sitework"></tbody>
             </table>
           </div>
@@ -1820,7 +1820,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
         <div class="card-hdr"><span class="card-title">Additional Items Breakdown</span></div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Mat Cost</th><th>Labor</th><th>Bid Price</th><th>MU%</th></tr></thead>
+              <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Mat Cost</th><th>Labor</th><th>Total</th><th>MU%</th></tr></thead>
               <tbody id="breakdown-extra"></tbody>
             </table>
           </div>
@@ -1988,12 +1988,12 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div class="card-body" id="ps-change-orders"><div class="empty-state"><div class="empty-state-desc">No change orders.</div></div></div>
             </div>
             <div class="mc-card" style="margin-bottom:var(--card-gap);">
-              <div class="card-hdr"><span class="card-title">Phases</span></div>
-              <div class="card-body" id="ps-phases"><div class="empty-state"><div class="empty-state-desc">No phases defined.</div></div></div>
-            </div>
-            <div class="mc-card" style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Work Orders</span></div>
               <div class="card-body" id="ps-work-orders-list"><div class="empty-state"><div class="empty-state-desc">No work orders yet.</div></div></div>
+            </div>
+            <div class="mc-card" style="margin-bottom:var(--card-gap);">
+              <div class="card-hdr"><span class="card-title">Phases</span></div>
+              <div class="card-body" id="ps-phases"><div class="empty-state"><div class="empty-state-desc">No phases defined.</div></div></div>
             </div>
             <!-- Invoices removed — using QuickBooks -->
           </div>
@@ -9234,7 +9234,7 @@ function buildRawLineItems(){
       if(sf>0)items.push({
         key:'sec-'+s.id+'-'+l.id,
         badge:s.name,badgeCls:LBADGE[l.type]||'b-misc',
-        name:s.name+' \u2014 '+(l.name||l.type),
+        name:s.name?(s.name+' \u2014 '+(l.name||l.type)):(l.name||l.type),
         description:l.description||autoDesc,
         qty:sy,unit:'SY',
         price:parseFloat(sy>0?(bC/sy).toFixed(2):'0'),
