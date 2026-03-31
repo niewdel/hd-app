@@ -9667,6 +9667,11 @@ function loadQuote(id){
   document.getElementById('mob-cost').value=d.mob_cost||5000;
   document.getElementById('contingency').value=d.contingency||0;
   selectedClient=d.selectedClient||{name:d.client||'',company:'',phone:'',email:''};
+  // If selectedClient has name but missing details, try to match from clients list
+  if(selectedClient.name&&!selectedClient.company&&!selectedClient.email&&!selectedClient.phone){
+    var _mc=clients.find(function(c){return c.name.toLowerCase()===selectedClient.name.toLowerCase();});
+    if(_mc){selectedClient={name:_mc.name,company:_mc.company||'',phone:_mc.phone||'',email:_mc.email||''};}
+  }
   liOverrides=d.liOverrides||{};
   // Show client bar if we have client info
   var bar=document.getElementById('client-bar');
