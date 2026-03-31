@@ -469,11 +469,8 @@ class SitePlanPage(Flowable):
         heading_h = 0.5*inch
         # Draw heading at top
         c.setFont('Helvetica-Bold', 16)
-        c.setFillColor(RED)
+        c.setFillColor(BLACK)
         c.drawCentredString(self._aw/2, self._ah - 0.25*inch, 'Exhibit A — Site Plan')
-        c.setStrokeColor(RED)
-        c.setLineWidth(1)
-        c.line(0, self._ah - heading_h, self._aw, self._ah - heading_h)
         img_top = self._ah - heading_h - 0.15*inch
 
         img_path = self._resolve_image()
