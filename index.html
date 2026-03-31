@@ -2446,7 +2446,6 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div class="card-hdr">
               <span class="card-title">Item Library</span>
               <div style="display:flex;gap:6px;">
-                <button class="btn btn-sec btn-sm" onclick="loadDefaultLibrary()">Load Defaults</button>
                 <button class="btn btn-sec btn-sm" onclick="addLibraryItem()">+ Add Item</button>
               </div>
             </div>
@@ -3791,7 +3790,7 @@ function renderLibraryList(){
   var filtered=filterCat?BID_LIBRARY.filter(function(x){return x.category===filterCat;}):BID_LIBRARY;
   var countEl=document.getElementById("lib-count");
   if(countEl)countEl.textContent=filtered.length+' of '+BID_LIBRARY.length+' items';
-  if(!filtered.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>"+(BID_LIBRARY.length?"No items in this category.":"No items yet. Click Load Defaults to populate the library.")+"</p>";return;}
+  if(!filtered.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>"+(BID_LIBRARY.length?"No items in this category.":"No items yet. Click + Add Item to create one.")+"</p>";return;}
   var libBulkBar=createBulkDeleteToolbar('library-list',{label:'library items',onDelete:function(ids){
     BID_LIBRARY=BID_LIBRARY.filter(function(x){return ids.indexOf(String(x.id))===-1;});
     renderLibraryList();toast(ids.length+' items deleted','ok');
@@ -3895,7 +3894,7 @@ function openLibraryPicker(target){
   var _libPickerTarget=target||'extra';
   var SITEWORK_CATS=['Grading / Earthwork','Storm Drain','Sanitary Sewer','Water','Erosion Control','Land Clearing','Landscaping'];
   var PAVEMENT_CATS=['Asphalt','Stone / Aggregate','Concrete','Striping / Signage'];
-  if(!BID_LIBRARY.length){toast("Library empty — go to Settings > Item Library and click Load Defaults","err");return;}
+  if(!BID_LIBRARY.length){toast("Library empty — go to Settings > Item Library and add items","err");return;}
   var ex=document.getElementById("lib-picker-modal");if(ex)ex.remove();
   var modal=document.createElement("div");modal.id="lib-picker-modal";
   modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;";
