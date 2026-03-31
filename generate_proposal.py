@@ -27,7 +27,7 @@ LOGO    = os.path.join(_DIR, 'hd_logo.png')
 if not os.path.exists(LOGO):
     LOGO = os.path.join(_DIR, 'hd_logo_cropped.png')
 LM = RM = 0.5 * inch
-TM = 1.05 * inch
+TM = 1.0 * inch
 BM = 0.6  * inch
 
 def S():
@@ -72,25 +72,18 @@ class HDCanvas(pdfcanvas.Canvas):
     def _draw_header(self):
         self.saveState()
         if os.path.exists(LOGO):
-            self.drawImage(LOGO, LM, H - 0.82*inch, width=1.25*inch, height=0.52*inch,
+            self.drawImage(LOGO, LM, H - 0.72*inch, width=1.05*inch, height=0.44*inch,
                            preserveAspectRatio=True, mask='auto')
-        self.setFont('Helvetica-Bold', 19)
+        self.setFont('Helvetica-Bold', 16)
         self.setFillColor(BLACK)
-        self.drawRightString(W - RM, H - 0.52*inch, 'PROPOSAL & CONTRACT')
-        self.setFont('Helvetica', 9)
-        self.setFillColor(DGRAY)
-        right_y = H - 0.70*inch
+        self.drawRightString(W - RM, H - 0.48*inch, 'PROPOSAL & CONTRACT')
         if self._doc_number:
             self.setFont('Helvetica-Bold', 9)
             self.setFillColor(RED)
-            self.drawRightString(W - RM, right_y, self._doc_number)
-            right_y -= 0.14*inch
-            self.setFont('Helvetica', 9)
-            self.setFillColor(DGRAY)
-        self.drawRightString(W - RM, right_y, self._date)
+            self.drawRightString(W - RM, H - 0.65*inch, self._doc_number)
         self.setStrokeColor(BLACK)
-        self.setLineWidth(1.0)
-        self.line(LM, H - 0.88*inch, W - RM, H - 0.88*inch)
+        self.setLineWidth(0.75)
+        self.line(LM, H - 0.80*inch, W - RM, H - 0.80*inch)
         # Page number bottom center
         total = len(self._pages)
         page_num = self._pages.index({k:v for k,v in self.__dict__.items()
