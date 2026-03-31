@@ -5525,10 +5525,12 @@ function calcPipelineValue(){
   var totalBid=0;var linkedIds={};
   if(typeof pipelineProposals!=='undefined'){
     pipelineProposals.forEach(function(p){
+      if(p.archived_at)return;
       var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
       if(snap.is_project&&snap.linked_proposals)snap.linked_proposals.forEach(function(id){linkedIds[id]=true;});
     });
     pipelineProposals.forEach(function(p){
+      if(p.archived_at)return;
       var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
       if(snap.is_project){totalBid+=parseFloat(p.total)||0;}
       else if(!linkedIds[p.id]){totalBid+=parseFloat(p.total)||0;}
@@ -6164,7 +6166,7 @@ function _renderProjectSummaryInner(proj){
           row.innerHTML='<span style="font-size:13px;">'+esc(q.name||'Proposal')+'</span>';
           var btn=document.createElement('button');btn.className='btn btn-sec btn-sm';btn.textContent='View Report';
           (function(id){btn.addEventListener('click',function(){
-            loadQuote(id);showPanel('jobcost',document.querySelector('[onclick*=jobcost]'));
+            loadQuote(id,true);showPanel('jobcost',document.querySelector('[onclick*=jobcost]'));
           });})(qid);
           row.appendChild(btn);psJC.appendChild(row);
         }
@@ -9663,7 +9665,7 @@ async function saveQuote(quiet){
     else{if(!quiet)toast('Save failed: '+(d.error||'unknown'),'err');}
   }catch(e){if(!quiet)toast('Save error: '+e.message,'err');}
 }
-function loadQuote(id){
+function loadQuote(id,skipNav){
   var q=savedQuotes.find(function(x){return x.id===id;})||pipelineProposals.find(function(x){return x.id===id;});
   if(!q){toast('Proposal not found','err');return;}
   var d=typeof q.snap==='string'?JSON.parse(q.snap):q.snap;
@@ -9718,7 +9720,7 @@ function loadQuote(id){
     document.getElementById('options-toggle').checked=false;
     document.getElementById('pricing-options-body').style.display='none';
   }
-  showPanel('build',document.querySelector('.nav-item'));
+  if(!skipNav)showPanel('build',document.querySelector('.nav-item'));
   updateProposalDocBadge();
   renderAll();renderConc();
   // Defer item renders to ensure DOM is ready after panel switch
@@ -9741,6 +9743,7 @@ async function delSaved(id){
     }
     await fetch('/quotes/delete/'+id,{method:'DELETE'});
     savedQuotes=savedQuotes.filter(function(x){return x.id!==id;});
+    pipelineProposals=pipelineProposals.filter(function(x){return x.id!==id;});
     renderSaved();
   }catch(e){toast('Delete error: '+e.message,'err');}
 }
@@ -10523,7 +10526,7 @@ function openProjectModal(existingData, editId){
       if(!confirm('Are you sure you want to delete this project? This cannot be undone.'))return;
       if(!confirm('This will archive the project. You can restore it from Admin > Archived.'))return;
       fetch('/quotes/delete/'+pid,{method:'DELETE'}).then(function(r){return r.json();}).then(function(rd){
-        if(rd.ok){toast('Project archived','ok');modal.remove();showPanel('projects',document.querySelector('[onclick*=projects]'));renderPipeline();renderProjectsList();}
+        if(rd.ok){pipelineProposals=pipelineProposals.filter(function(x){return x.id!==pid;});savedQuotes=savedQuotes.filter(function(x){return x.id!==pid;});toast('Project archived','ok');modal.remove();showPanel('projects',document.querySelector('[onclick*=projects]'));renderPipeline();renderProjectsList();}
         else toast('Archive failed','err');
       }).catch(function(e){toast('Error: '+e.message,'err');});
     });})(editId);
@@ -13873,7 +13876,7 @@ function getFilteredData(){
   var clientF=(document.getElementById('rpt-client')||{}).value||'';
   var spEl=document.getElementById('rpt-salesperson');var spF=spEl?spEl.value:'';
   var regionEl=document.getElementById('rpt-region');var regionF=regionEl?regionEl.value:'';
-  var all=(pipelineProposals||[]).map(function(p){
+  var all=(pipelineProposals||[]).filter(function(p){return !p.archived_at;}).map(function(p){
     var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
     return{id:p.id,name:p.name||snap.name||'',client:p.client||snap.client||'',total:parseFloat(p.total)||0,
       stage:p.pipeline_stages?p.pipeline_stages.name:'',stageColor:p.pipeline_stages?p.pipeline_stages.color:'#999',
