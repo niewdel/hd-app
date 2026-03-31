@@ -1998,9 +1998,19 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div class="card-hdr"><span class="card-title">Phases</span></div>
               <div class="card-body" id="ps-phases"><div class="empty-state"><div class="empty-state-desc">No phases defined.</div></div></div>
             </div>
-            <!-- Invoices removed — using QuickBooks -->
+            <div class="mc-card" data-field-hidden style="margin-bottom:var(--card-gap);">
+              <div class="card-hdr"><span class="card-title">Job Costing</span></div>
+              <div class="card-body" id="ps-job-costing"><div class="empty-state"><div class="empty-state-desc">Attach a proposal to view job costing.</div></div></div>
+            </div>
           </div>
           <div>
+            <div class="mc-card" style="margin-bottom:var(--card-gap);">
+              <div class="card-hdr"><span class="card-title">Notes</span></div>
+              <div class="card-body">
+                <div id="ps-notes-card-feed"></div>
+                <div id="ps-notes-card-input" style="margin-top:8px;display:flex;gap:8px;align-items:flex-end;"></div>
+              </div>
+            </div>
             <div class="mc-card" style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Site Plan</span></div>
               <div class="card-body" id="ps-site-plan">
@@ -2013,10 +2023,6 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div class="mc-card" style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Files</span></div>
               <div class="card-body" id="ps-files"><div class="empty-state"><div class="empty-state-desc">No files attached.</div></div></div>
-            </div>
-            <div class="mc-card" data-field-hidden style="margin-bottom:var(--card-gap);">
-              <div class="card-hdr"><span class="card-title">Job Costing</span></div>
-              <div class="card-body" id="ps-job-costing"><div class="empty-state"><div class="empty-state-desc">Attach a proposal to view job costing.</div></div></div>
             </div>
             <div class="mc-card" data-field-hidden style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Activity</span></div>
@@ -2365,6 +2371,29 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div style="margin-top:8px;display:flex;gap:8px;">
                 <button class="btn btn-primary btn-sm" onclick="saveDefaultNotes()">Save</button>
                 <button class="btn btn-sec btn-sm" onclick="resetDefaultNotes()">Reset to Default</button>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:var(--card-gap);">
+            <div class="card-hdr"><span class="card-title">Estimating Defaults</span></div>
+            <div class="card-body">
+              <p style="font-size:12px;color:var(--dgray);margin:0 0 10px;">Default values for new proposals. Saved proposals retain their own values.</p>
+              <div class="fg fg2" style="gap:10px;margin-bottom:10px;">
+                <div><label style="font-size:12px;">Mobilization — Bid ($)</label><input id="jc-default-mob-price" type="number" min="0" step="500" style="width:100%;"/></div>
+                <div><label style="font-size:12px;">Mobilization — Est. Cost ($)</label><input id="jc-default-mob-cost" type="number" min="0" step="500" style="width:100%;"/></div>
+              </div>
+              <div class="fg fg2" style="gap:10px;margin-bottom:10px;">
+                <div><label style="font-size:12px;">Truck Rate ($/hr)</label><input id="jc-default-truck-rate" type="number" min="0" step="10" style="width:100%;"/></div>
+                <div><label style="font-size:12px;">Truck Hours/Day</label><input id="jc-default-truck-hours" type="number" min="1" step="1" style="width:100%;"/></div>
+              </div>
+              <div class="fg fg2" style="gap:10px;margin-bottom:10px;">
+                <div><label style="font-size:12px;">Tons Per Truck</label><input id="jc-default-tons-per-truck" type="number" min="1" step="10" style="width:100%;"/></div>
+                <div><label style="font-size:12px;">Overhead %</label><input id="jc-default-overhead-pct" type="number" min="0" step="1" style="width:100%;"/></div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button class="btn btn-primary btn-sm" onclick="saveJCDefaults()">Save</button>
+                <button class="btn btn-sec btn-sm" onclick="resetJCDefaults()">Reset to Default</button>
+                <span id="jc-settings-indicator" style="font-size:12px;color:var(--dgray);"></span>
               </div>
             </div>
           </div>
@@ -3133,6 +3162,10 @@ var TONS_PER_TRUCK_DEFAULT = 100; // tons per truck per day
 var jcTruckRate = TRUCK_RATE_DEFAULT;
 var jcTruckHours = TRUCK_HOURS_DEFAULT;
 var jcTonsPerTruck = TONS_PER_TRUCK_DEFAULT;
+var MOB_PRICE_DEFAULT = 10000;
+var MOB_COST_DEFAULT = 5000;
+var jcMobPrice = MOB_PRICE_DEFAULT;
+var jcMobCost = MOB_COST_DEFAULT;
 
 // Crew list — simple name + daily rate, editable, stored in localStorage
 var CREWS_DEFAULT = [
@@ -4574,6 +4607,8 @@ function _applyJCDefaults(d){
   if(d.tons_per_truck)jcTonsPerTruck=d.tons_per_truck;
   if(d.truck_rate)jcTruckRate=d.truck_rate;
   if(d.truck_hours)jcTruckHours=d.truck_hours;
+  if(d.mob_price!==undefined)jcMobPrice=d.mob_price;
+  if(d.mob_cost!==undefined)jcMobCost=d.mob_cost;
 }
 
 function _loadFromSupabase(){
@@ -4715,7 +4750,9 @@ function saveJCDefaults(){
   var tpt=parseFloat(document.getElementById('jc-default-tons-per-truck')?document.getElementById('jc-default-tons-per-truck').value:jcTonsPerTruck)||jcTonsPerTruck;jcTonsPerTruck=tpt;
   var tr2=parseFloat(document.getElementById('jc-default-truck-rate')?document.getElementById('jc-default-truck-rate').value:jcTruckRate)||jcTruckRate;jcTruckRate=tr2;
   var th=parseFloat(document.getElementById('jc-default-truck-hours')?document.getElementById('jc-default-truck-hours').value:jcTruckHours)||jcTruckHours;jcTruckHours=th;
-  _saveSetting('hd_jc_defaults',{crew_rate:cr,overhead_pct:op,productivity:jcProductivity,tons_per_truck:jcTonsPerTruck,truck_rate:jcTruckRate,truck_hours:jcTruckHours});
+  var mobP=parseFloat(document.getElementById('jc-default-mob-price')?document.getElementById('jc-default-mob-price').value:jcMobPrice)||jcMobPrice;jcMobPrice=mobP;
+  var mobC=parseFloat(document.getElementById('jc-default-mob-cost')?document.getElementById('jc-default-mob-cost').value:jcMobCost)||jcMobCost;jcMobCost=mobC;
+  _saveSetting('hd_jc_defaults',{crew_rate:cr,overhead_pct:op,productivity:jcProductivity,tons_per_truck:jcTonsPerTruck,truck_rate:jcTruckRate,truck_hours:jcTruckHours,mob_price:jcMobPrice,mob_cost:jcMobCost});
   renderJCDefaults();
   var ind=document.getElementById('jc-settings-indicator');
   if(ind){ind.textContent='Saved.';setTimeout(function(){ind.textContent='';},2000);}
@@ -4724,6 +4761,7 @@ function saveJCDefaults(){
 function resetJCDefaults(){
   jcCrewRate=JC_CREW_RATE_DEFAULT; jcOverheadPct=JC_OVERHEAD_PCT_DEFAULT; jcProductivity=JC_PRODUCTIVITY_DEFAULT;
   jcTonsPerTruck=TONS_PER_TRUCK_DEFAULT; jcTruckRate=TRUCK_RATE_DEFAULT; jcTruckHours=TRUCK_HOURS_DEFAULT;
+  jcMobPrice=MOB_PRICE_DEFAULT; jcMobCost=MOB_COST_DEFAULT;
   _saveSetting('hd_jc_defaults',null);
   renderJCDefaults();
 }
@@ -4735,6 +4773,8 @@ function renderJCDefaults(){
   var tpt=document.getElementById('jc-default-tons-per-truck');if(tpt)tpt.value=jcTonsPerTruck;
   var tr2=document.getElementById('jc-default-truck-rate');if(tr2)tr2.value=jcTruckRate;
   var th=document.getElementById('jc-default-truck-hours');if(th)th.value=jcTruckHours;
+  var mp=document.getElementById('jc-default-mob-price');if(mp)mp.value=jcMobPrice;
+  var mc=document.getElementById('jc-default-mob-cost');if(mc)mc.value=jcMobCost;
   // Also update the build panel fields if they are at default
   var bcr=document.getElementById('jc-crew-rate');if(bcr)bcr.value=jcCrewRate;
   var bop=document.getElementById('jc-overhead-pct');if(bop)bop.value=jcOverheadPct;
@@ -5888,8 +5928,7 @@ function _renderProjectSummaryInner(proj){
       +(snap.address?' &middot; '+esc(snap.address):'')
       +(snap.assigned_to?' &middot; <span style="font-weight:600;">'+esc(_allUsers.reduce(function(a,u){return u.username===snap.assigned_to?u.full_name:a;},snap.assigned_to))+'</span>':'')
       +'</div>'
-      +'<div id="ps-notes-feed" style="margin-top:10px;"></div>'
-      +'<div id="ps-notes-input" style="margin-top:8px;display:flex;gap:8px;align-items:flex-end;"></div>';
+;
     var stageSel=document.getElementById('ps-stage-select');
     if(stageSel){
       stageSel.addEventListener('change',function(){
@@ -6508,8 +6547,8 @@ function renderMaterialTracking(proj,snap){
 }
 
 function renderProjectNotesFeed(snap){
-  var feed=document.getElementById('ps-notes-feed');
-  var inputArea=document.getElementById('ps-notes-input');
+  var feed=document.getElementById('ps-notes-card-feed')||document.getElementById('ps-notes-feed');
+  var inputArea=document.getElementById('ps-notes-card-input')||document.getElementById('ps-notes-input');
   if(!feed||!inputArea)return;
   feed.innerHTML='';inputArea.innerHTML='';
 
@@ -9676,8 +9715,8 @@ function loadQuote(id,skipNav){
   document.getElementById('proj-addr').value=fullAddr;
   document.getElementById('proj-notes').value=d.notes||'';
   document.getElementById('waste').value=d.waste||5;
-  document.getElementById('mob').value=d.mob||10000;
-  document.getElementById('mob-cost').value=d.mob_cost||5000;
+  document.getElementById('mob').value=d.mob||jcMobPrice;
+  document.getElementById('mob-cost').value=d.mob_cost||jcMobCost;
   document.getElementById('contingency').value=d.contingency||0;
   selectedClient=d.selectedClient||{name:d.client||'',company:'',phone:'',email:''};
   // If selectedClient has name but missing details, try to match from clients list
@@ -9999,7 +10038,7 @@ async function duplicateProposal(id){
 function resetAll(){
   sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;pavementItems=[];pvid=0;siteWorkItems=[];swid=0;lastSavedQuoteId=null;
   ['proj-name','proj-client','proj-addr','proj-cs'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('proj-notes').value=_defaultProjectNotes;
-  document.getElementById('waste').value=5;document.getElementById('mob').value=10000;document.getElementById('mob-cost').value=5000;document.getElementById('contingency').value=0;
+  document.getElementById('waste').value=5;document.getElementById('mob').value=jcMobPrice;document.getElementById('mob-cost').value=jcMobCost;document.getElementById('contingency').value=0;
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('client-bar').style.display='none';
   selectedClient={name:'',company:'',phone:'',email:''};
