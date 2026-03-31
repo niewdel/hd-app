@@ -3306,19 +3306,19 @@ var DEFAULT_BID_LIBRARY=[
   // ── GRADING / EARTHWORK ──
   {name:'Mass Grading (Cut)',desc:'Excavate and relocate on-site per grading plans',unit:'CY',rate:0,material:'Labor',mat_cost:0,prod_rate:400,category:'Grading / Earthwork',crew:'b-grading'},
   {name:'Mass Grading (Fill)',desc:'Place and compact fill material on-site per grading plans',unit:'CY',rate:0,material:'Labor',mat_cost:0,prod_rate:400,category:'Grading / Earthwork',crew:'b-grading'},
-  {name:'Import Select Fill',desc:'Furnish, deliver, place, and compact select fill material',unit:'CY',rate:0,material:'Select Fill',mat_cost:12,prod_rate:400,category:'Grading / Earthwork',crew:'b-grading'},
-  {name:'Export Spoil Material',desc:'Load, haul, and dispose of excess material off-site',unit:'CY',rate:0,material:'Labor',mat_cost:0,prod_rate:500,category:'Grading / Earthwork',crew:'b-grading'},
+  {name:'Import Select Fill',desc:'Furnish, deliver, place, and compact select fill material',unit:'CY',rate:0,material:'Select Fill',mat_cost:12,prod_rate:400,has_trucks:true,category:'Grading / Earthwork',crew:'b-grading'},
+  {name:'Export Spoil Material',desc:'Load, haul, and dispose of excess material off-site',unit:'CY',rate:0,material:'Labor',mat_cost:0,prod_rate:500,has_trucks:true,category:'Grading / Earthwork',crew:'b-grading'},
   {name:'Fine Grading / Subgrade Prep',desc:'Fine grade subgrade to plan elevation within ±0.1 ft tolerance',unit:'SY',rate:0,material:'Labor',mat_cost:0,prod_rate:3000,category:'Grading / Earthwork',crew:'b-grading'},
   {name:'Proof Rolling',desc:'Proof roll subgrade with loaded dump truck to identify soft spots',unit:'SY',rate:0,material:'Labor',mat_cost:0,prod_rate:8000,category:'Grading / Earthwork',crew:'b-grading'},
   {name:'Rock Excavation (Machine)',desc:'Machine excavate rock and dispose on-site',unit:'CY',rate:50,material:'Labor',mat_cost:0,prod_rate:75,category:'Grading / Earthwork',crew:'b-grading'},
   {name:'Rock Blasting & Waste On-Site',desc:'Drill, blast, and waste rock material on-site',unit:'CY',rate:28,material:'Labor',mat_cost:0,prod_rate:75,category:'Grading / Earthwork',crew:'b-grading'},
-  {name:'Rock Blasting & Export',desc:'Drill, blast, load, haul, and dispose of rock off-site',unit:'CY',rate:56,material:'Labor',mat_cost:0,prod_rate:75,category:'Grading / Earthwork',crew:'b-grading'},
-  {name:'Undercut Unsuitable (On-Site Disposal)',desc:'Excavate unsuitable soil and dispose on-site',unit:'CY',rate:10,material:'Labor',mat_cost:0,prod_rate:400,category:'Grading / Earthwork',crew:'b-grading'},
-  {name:'Undercut Unsuitable (Off-Site Disposal)',desc:'Excavate unsuitable soil, load, haul, and dispose off-site',unit:'CY',rate:26,material:'Labor',mat_cost:0,prod_rate:400,category:'Grading / Earthwork',crew:'b-grading'},
-  {name:'Replacement / Borrow Fill (On-Site)',desc:'Borrow suitable material from on-site source, place and compact',unit:'CY',rate:10,material:'Select Fill',mat_cost:10,prod_rate:400,category:'Grading / Earthwork',crew:'b-grading'},
+  {name:'Rock Blasting & Export',desc:'Drill, blast, load, haul, and dispose of rock off-site',unit:'CY',rate:56,material:'Labor',mat_cost:0,prod_rate:75,has_trucks:true,category:'Grading / Earthwork',crew:'b-grading'},
+  {name:'Undercut Unsuitable (On-Site Disposal)',desc:'Excavate unsuitable soil and dispose on-site',unit:'CY',rate:10,material:'Labor',mat_cost:0,prod_rate:400,has_trucks:true,category:'Grading / Earthwork',crew:'b-grading'},
+  {name:'Undercut Unsuitable (Off-Site Disposal)',desc:'Excavate unsuitable soil, load, haul, and dispose off-site',unit:'CY',rate:26,material:'Labor',mat_cost:0,prod_rate:400,has_trucks:true,category:'Grading / Earthwork',crew:'b-grading'},
+  {name:'Replacement / Borrow Fill (On-Site)',desc:'Borrow suitable material from on-site source, place and compact',unit:'CY',rate:10,material:'Select Fill',mat_cost:10,prod_rate:400,has_trucks:true,category:'Grading / Earthwork',crew:'b-grading'},
   {name:'Topsoil Strip & Stockpile',desc:'Strip topsoil and stockpile on-site for reuse',unit:'CY',rate:0,material:'Labor',mat_cost:0,prod_rate:500,category:'Grading / Earthwork',crew:'b-grading'},
   {name:'Pond Excavation',desc:'Excavate detention/retention pond per grading plans',unit:'CY',rate:0,material:'Labor',mat_cost:0,prod_rate:500,category:'Grading / Earthwork',crew:'b-grading'},
-  {name:'Structural Fill',desc:'Furnish, place, and compact structural fill material',unit:'CY',rate:0,material:'Structural Fill',mat_cost:15,prod_rate:400,category:'Grading / Earthwork',crew:'b-grading'},
+  {name:'Structural Fill',desc:'Furnish, place, and compact structural fill material',unit:'CY',rate:0,material:'Structural Fill',mat_cost:15,prod_rate:400,has_trucks:true,category:'Grading / Earthwork',crew:'b-grading'},
   {name:'Backfill (Utility Trench)',desc:'Backfill and compact utility trenches',unit:'CY',rate:0,material:'Select Fill',mat_cost:12,prod_rate:400,category:'Grading / Earthwork',crew:'b-grading'},
   {name:'Dewatering',desc:'Dewatering operations',unit:'DAY',rate:500,material:'Labor',mat_cost:0,prod_rate:1,category:'Grading / Earthwork',crew:'b-grading'},
   {name:'Street Washing',desc:'Street washing and sweeping operations',unit:'DAY',rate:500,material:'Labor',mat_cost:0,prod_rate:1,category:'Grading / Earthwork',crew:'b-grading'},
@@ -3392,7 +3392,7 @@ var DEFAULT_BID_LIBRARY=[
   {name:'Stump Grinding',desc:'Grind stump 6" below grade',unit:'EA',rate:0,material:'Labor',mat_cost:0,prod_rate:10,category:'Land Clearing',crew:'b-grading'},
   {name:'Structure Demolition',desc:'Demolish and remove existing structure',unit:'LS',rate:0,material:'Labor',mat_cost:0,prod_rate:1,category:'Land Clearing',crew:'b-grading'},
   {name:'Concrete Demolition',desc:'Demolish and remove existing concrete',unit:'CY',rate:0,material:'Labor',mat_cost:0,prod_rate:1,category:'Land Clearing',crew:'b-grading'},
-  {name:'Debris Hauling',desc:'Load and haul debris to approved disposal site',unit:'LOAD',rate:0,material:'Labor',mat_cost:0,prod_rate:1,category:'Land Clearing',crew:'b-grading'},
+  {name:'Debris Hauling',desc:'Load and haul debris to approved disposal site',unit:'LOAD',rate:0,material:'Labor',mat_cost:0,prod_rate:1,has_trucks:true,category:'Land Clearing',crew:'b-grading'},
   {name:'Fence Removal',desc:'Remove and dispose of existing fence',unit:'LF',rate:0,material:'Labor',mat_cost:0,prod_rate:500,category:'Land Clearing',crew:'b-grading'},
   // ── LANDSCAPING ──
   {name:'Topsoil (4" Depth)',desc:'Furnish & spread 4" topsoil',unit:'SY',rate:0,material:'Topsoil',mat_cost:3,prod_rate:400,category:'Landscaping',crew:'b-grading'},
@@ -3405,7 +3405,7 @@ var DEFAULT_BID_LIBRARY=[
   {name:'Shrub (3 Gallon)',desc:'Furnish & plant 3-gallon shrub per plans',unit:'EA',rate:0,material:'Plant Material',mat_cost:25,prod_rate:30,category:'Landscaping',crew:'b-grading'},
   {name:'Ground Cover',desc:'Furnish & plant ground cover per plans',unit:'SF',rate:0,material:'Plant Material',mat_cost:3,prod_rate:500,category:'Landscaping',crew:'b-grading'},
   // ── GENERAL / MISC ──
-  {name:'Traffic Control',desc:'Lane closure / flagger setup per day',unit:'DAY',rate:0,material:'Labor',mat_cost:0,sub_cost:2500,markup_default:25,category:'General / Misc',crew:'b-general'},
+  {name:'Traffic Control',desc:'Lane closure / flagger setup per day',unit:'DAY',rate:0,material:'Labor',mat_cost:0,sub_cost:2000,markup_default:25,category:'General / Misc',crew:'b-general'},
   {name:'Mobilization',desc:'Project mobilization and equipment setup',unit:'LS',rate:0,material:'Labor',mat_cost:0,category:'General / Misc',crew:'b-general'},
   {name:'Surveying / Staking',desc:'Construction staking and layout per plans',unit:'LS',rate:0,material:'Labor',mat_cost:0,category:'General / Misc',crew:'b-general'},
   {name:'As-Built Survey',desc:'As-built survey and record drawings',unit:'LS',rate:0,material:'Labor',mat_cost:0,category:'General / Misc',crew:'b-general'},
@@ -3949,7 +3949,7 @@ function openLibraryPicker(target){
         var ins=document.createElement("button");ins.className="btn btn-red btn-sm";ins.textContent="Insert";
         ins.addEventListener("click",function(){
           var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
-          var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,mat_cost:item.mat_cost||0,sub_cost:item.sub_cost||0,crew:item.crew||'',prod_rate:item.prod_rate||0,markup:item.markup_default||20,days_override:null,badge:tradeBadge,material:item.material||''};
+          var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,mat_cost:item.mat_cost||0,sub_cost:item.sub_cost||0,crew:item.crew||'',prod_rate:item.prod_rate||0,has_trucks:item.has_trucks||false,trucks:item.has_trucks?3:0,markup:item.markup_default||20,days_override:null,badge:tradeBadge,material:item.material||''};
           if(_libPickerTarget==='sitework'){newItem.id=swid++;siteWorkItems.push(newItem);renderSiteWork();}
           else if(_libPickerTarget==='pavement'){
             var _trade=item.crew||TRADE_BADGE_MAP[item.category]||'';
@@ -3996,7 +3996,7 @@ function renderExtra(){
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var ei=extraItems[i];ei.name=libItem.name;ei.desc=libItem.desc||'';ei.unit=libItem.unit;
       ei.material=libItem.material||'';ei.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
-      ei.crew=libItem.crew||'';ei.sub_cost=libItem.sub_cost||0;ei.prod_rate=libItem.prod_rate||0;ei.price=libItem.rate||0;ei.markup=libItem.markup_default||20;ei.days_override=null;
+      ei.crew=libItem.crew||'';ei.sub_cost=libItem.sub_cost||0;ei.prod_rate=libItem.prod_rate||0;ei.has_trucks=libItem.has_trucks||false;ei.trucks=libItem.has_trucks?3:0;ei.price=libItem.rate||0;ei.markup=libItem.markup_default||20;ei.days_override=null;
       ei.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';
       renderExtra();recalc();
     });})(idx);
@@ -4050,6 +4050,12 @@ function renderExtra(){
       var dIn=document.createElement("input");dIn.type="number";dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);dIn.title="Auto: "+calcItemDays({qty:item.qty,crew:item.crew,days_override:null}).toFixed(2)+"d";
       (function(i){dIn.addEventListener("change",function(){var v=parseFloat(this.value)||0;var auto=calcItemDays({qty:extraItems[i].qty,crew:extraItems[i].crew,days_override:null});extraItems[i].days_override=Math.abs(v-auto)<0.01?null:v;renderExtra();recalc();});})(idx);
       dF.appendChild(dIn);fields.appendChild(dF);
+      if(item.has_trucks){
+        var trkF=document.createElement("div");trkF.className="lyr-field";trkF.innerHTML="<label>Trucks</label>";
+        var trkIn=document.createElement("input");trkIn.type="number";trkIn.min=0;trkIn.step=1;trkIn.value=item.trucks||3;
+        (function(i){trkIn.addEventListener("change",function(){extraItems[i].trucks=parseInt(this.value)||0;renderExtra();recalc();});})(idx);
+        trkF.appendChild(trkIn);fields.appendChild(trkF);
+      }
     }
     // Markup %
     var muF=document.createElement("div");muF.className="lyr-field";muF.innerHTML="<label>Markup %</label>";
@@ -8387,7 +8393,7 @@ function renderPavementItems(){
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var pv=pavementItems[i];pv.name=libItem.name;pv.desc=libItem.desc||'';pv.unit=libItem.unit;
       pv.material=libItem.material||'';pv.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
-      pv.crew=libItem.crew||'';pv.sub_cost=libItem.sub_cost||0;pv.prod_rate=libItem.prod_rate||0;pv.markup=libItem.markup_default||20;pv.days_override=null;
+      pv.crew=libItem.crew||'';pv.sub_cost=libItem.sub_cost||0;pv.prod_rate=libItem.prod_rate||0;pv.has_trucks=libItem.has_trucks||false;pv.trucks=libItem.has_trucks?3:0;pv.markup=libItem.markup_default||20;pv.days_override=null;
       pv.badge=TRADE_BADGE_MAP[libItem.category]||'b-asphalt';
       renderPavementItems();recalc();
     });})(idx);
@@ -8422,6 +8428,12 @@ function renderPavementItems(){
       var dIn=document.createElement('input');dIn.type='number';dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);
       (function(i){dIn.addEventListener('change',function(){var v=parseFloat(this.value)||0;var auto=calcItemDays({qty:pavementItems[i].qty,crew:pavementItems[i].crew,days_override:null});pavementItems[i].days_override=Math.abs(v-auto)<0.01?null:v;renderPavementItems();recalc();});})(idx);
       dF.appendChild(dIn);fields.appendChild(dF);
+      if(item.has_trucks){
+        var trkF=document.createElement('div');trkF.className='lyr-field';trkF.innerHTML='<label>Trucks</label>';
+        var trkIn=document.createElement('input');trkIn.type='number';trkIn.min=0;trkIn.step=1;trkIn.value=item.trucks||3;
+        (function(i){trkIn.addEventListener('change',function(){pavementItems[i].trucks=parseInt(this.value)||0;renderPavementItems();recalc();});})(idx);
+        trkF.appendChild(trkIn);fields.appendChild(trkF);
+      }
     }
     // Markup %
     var muF=document.createElement('div');muF.className='lyr-field';muF.innerHTML='<label>Markup %</label>';
@@ -8434,7 +8446,7 @@ function renderPavementItems(){
     ppuVal.textContent=ppu>0?'$'+ppu.toFixed(2):'—';
     ppuEl.appendChild(ppuVal);fields.appendChild(ppuEl);
     // Margin
-    var matT=(item.mat_cost||0)*(item.qty||0);var costT=matT+labor;var mp=costT>0?((bid-costT)/costT*100):0;
+    var matT=(item.mat_cost||0)*(item.qty||0);var truckT=calcItemTrucking(item);var costT=matT+labor+truckT;var mp=costT>0?((bid-costT)/costT*100):0;
     var mub=document.createElement('span');mub.className='mubadge '+(mp>=0?'p':'n');mub.textContent=bid>0?mp.toFixed(1)+'%':'';
     fields.appendChild(mub);
     row.appendChild(fields);
@@ -8472,7 +8484,7 @@ function renderSiteWork(){
     (function(i){_attachLibAutocomplete(nameIn,function(libItem){
       var sw=siteWorkItems[i];sw.name=libItem.name;sw.desc=libItem.desc||'';sw.unit=libItem.unit;
       sw.material=libItem.material||'';sw.mat_cost=libItem.mat_cost||(MAT[libItem.material]||0);
-      sw.crew=libItem.crew||'';sw.sub_cost=libItem.sub_cost||0;sw.prod_rate=libItem.prod_rate||0;sw.price=libItem.rate||0;sw.markup=libItem.markup_default||20;sw.days_override=null;
+      sw.crew=libItem.crew||'';sw.sub_cost=libItem.sub_cost||0;sw.prod_rate=libItem.prod_rate||0;sw.has_trucks=libItem.has_trucks||false;sw.trucks=libItem.has_trucks?3:0;sw.price=libItem.rate||0;sw.markup=libItem.markup_default||20;sw.days_override=null;
       sw.badge=TRADE_BADGE_MAP[libItem.category]||'b-general';
       renderSiteWork();recalc();
     });})(idx);
@@ -8528,6 +8540,12 @@ function renderSiteWork(){
       var dIn=document.createElement('input');dIn.type='number';dIn.min=0;dIn.step=0.5;dIn.value=days.toFixed(1);dIn.title='Auto: '+calcItemDays({qty:item.qty,crew:item.crew,days_override:null}).toFixed(2)+'d';
       (function(i){dIn.addEventListener('change',function(){var v=parseFloat(this.value)||0;var auto=calcItemDays({qty:siteWorkItems[i].qty,crew:siteWorkItems[i].crew,days_override:null});siteWorkItems[i].days_override=Math.abs(v-auto)<0.01?null:v;renderSiteWork();recalc();});})(idx);
       dF.appendChild(dIn);fields.appendChild(dF);
+      if(item.has_trucks){
+        var trkF=document.createElement('div');trkF.className='lyr-field';trkF.innerHTML='<label>Trucks</label>';
+        var trkIn=document.createElement('input');trkIn.type='number';trkIn.min=0;trkIn.step=1;trkIn.value=item.trucks||3;
+        (function(i){trkIn.addEventListener('change',function(){siteWorkItems[i].trucks=parseInt(this.value)||0;renderSiteWork();recalc();});})(idx);
+        trkF.appendChild(trkIn);fields.appendChild(trkF);
+      }
     }
     // Markup %
     var muF=document.createElement('div');muF.className='lyr-field';muF.innerHTML='<label>Markup %</label>';
@@ -8540,7 +8558,7 @@ function renderSiteWork(){
     ppuVal.textContent=ppu>0?'$'+ppu.toFixed(2):'—';
     ppuEl.appendChild(ppuVal);fields.appendChild(ppuEl);
     // Margin badge
-    var matT=(item.mat_cost||0)*(item.qty||0);var costT=matT+labor;var mp=costT>0?((bid-costT)/costT*100):0;
+    var matT=(item.mat_cost||0)*(item.qty||0);var truckT=calcItemTrucking(item);var costT=matT+labor+truckT;var mp=costT>0?((bid-costT)/costT*100):0;
     var mub=document.createElement('span');mub.className='mubadge '+(mp>=0?'p':'n');mub.textContent=bid>0?mp.toFixed(1)+'%':'';
     fields.appendChild(mub);
     row.appendChild(fields);
@@ -8626,11 +8644,18 @@ function calcItemLabor(item){
   var crew=getCrewForTrade(item.crew||'');
   return days*(crew?crew.daily_rate:0);
 }
+function calcItemTrucking(item){
+  if(!item.trucks||!item.trucks)return 0;
+  var days=calcItemDays(item);
+  var truckRate=jcTruckRate*jcTruckHours; // daily rate per truck
+  return (item.trucks||0)*days*truckRate;
+}
 function calcItemBid(item){
   if(_isStripingItem(item))return (item.price||0)*(1+(item.markup||0)/100);
   var matTotal=(item.mat_cost||0)*(item.qty||0);
   var laborTotal=calcItemLabor(item);
-  var cost=matTotal+laborTotal;
+  var truckTotal=calcItemTrucking(item);
+  var cost=matTotal+laborTotal+truckTotal;
   return cost*(1+(item.markup||0)/100);
 }
 
