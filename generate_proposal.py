@@ -310,7 +310,7 @@ def bid_table(items, st):
         sub   = item.get('subtotal',0)
         is_lump_sum = item.get('is_lump_sum', False)
         qty_s = f'{int(qty):,}' if isinstance(qty,(int,float)) and qty==int(qty) else str(qty)
-        price_s = '-' if is_lump_sum else f'${price:,.2f}'
+        price_s = f'${sub:,.2f}' if is_lump_sum else f'${price:,.2f}'
         rows.append([
             Paragraph(f'<b>{name}</b><br/><font size="8" color="#777777">{desc}</font>', st['item_name']),
             Paragraph(qty_s, st['cell']),

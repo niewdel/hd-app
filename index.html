@@ -3669,7 +3669,7 @@ function clearAcctPhoto(){
 }
 function handleAcctPhoto(files){
   if(!files||!files[0])return;
-  compressImage(files[0],512,0.85,function(blob){
+  compressImage(files[0],256,0.7,function(blob){
     var reader=new FileReader();
     reader.onload=function(){
       var dataUrl=reader.result;
@@ -3751,7 +3751,7 @@ function handleProfilePhotoSelected(input){
   if(!input||!input.files||!input.files[0])return;
   var file=input.files[0];
   if((file.type||'').indexOf('image/')!==0){toast('Choose an image file','err');input.value='';return;}
-  compressImage(file,512,0.85,function(blob){
+  compressImage(file,256,0.7,function(blob){
     var reader=new FileReader();
     reader.onload=function(e){
       window._draftUserAvatar=e.target.result||'';
@@ -8855,14 +8855,21 @@ function recalc(){
     var bid=calcItemBid(i);
     if(!i.name||bid<=0)return;
     gB+=bid;
+    var pqty=i.qty||0;
+    var pMatT=_isStripingItem(i)?0:(i.mat_cost||0)*pqty;
+    var pLabT=_isStripingItem(i)?(i.price||0):calcItemLabor(i);
+    var pTrkT=calcItemTrucking(i);
+    gM+=pMatT;gCrew+=pLabT;gTruck+=pTrkT;
   });
   extraItems.forEach(function(i){
     var bid=calcItemBid(i);
     if(!i.name||bid<=0)return;
     hasExtra=true;
     gB+=bid;
-    var qty=i.qty||0;var matT=(i.mat_cost||0)*qty;var labT=calcItemLabor(i);
-    var costE=matT+labT;var mpE=costE>0?((bid-costE)/costE*100):0;
+    var qty=i.qty||0;var matT,labT,truckT,costE,mpE;
+    if(_isStripingItem(i)){matT=0;labT=i.price||0;truckT=0;costE=labT;mpE=i.markup||0;}
+    else{matT=(i.mat_cost||0)*qty;labT=calcItemLabor(i);truckT=calcItemTrucking(i);costE=matT+labT+truckT;mpE=costE>0?((bid-costE)/costE*100):0;}
+    gM+=matT;gCrew+=labT;gTruck+=truckT;
     var tr=document.createElement('tr');
     tr.innerHTML='<td>'+esc(i.name)+'</td>'
       +'<td>'+qty+'</td>'
@@ -8880,9 +8887,10 @@ function recalc(){
     var bid=calcItemBid(item);
     if(!item.name||bid<=0)return;
     hasSW=true;gB+=bid;
-    var qty=item.qty||0;var matT=(item.mat_cost||0)*qty;var labT=calcItemLabor(item);
-    var costSW=matT+labT;
-    var mpSW=costSW>0?((bid-costSW)/costSW*100):0;
+    var qty=item.qty||0;var matT,labT,truckT,costSW,mpSW;
+    if(_isStripingItem(item)){matT=0;labT=item.price||0;truckT=0;costSW=labT;mpSW=item.markup||0;}
+    else{matT=(item.mat_cost||0)*qty;labT=calcItemLabor(item);truckT=calcItemTrucking(item);costSW=matT+labT+truckT;mpSW=costSW>0?((bid-costSW)/costSW*100):0;}
+    gM+=matT;gCrew+=labT;gTruck+=truckT;
     if(bkSW){var tr=document.createElement('tr');tr.innerHTML='<td>'+esc(item.name)+'</td><td>'+qty+'</td><td>'+item.unit+'</td><td>'+(matT>0?'$'+fi(matT):'-')+'</td><td>'+(labT>0?'$'+fi(labT):'-')+'</td><td>$'+fi(bid)+'</td><td class="'+(mpSW>=0?'gp':'gn')+'">'+(costSW>0?mpSW.toFixed(1)+'%':'-')+'</td>';bkSW.appendChild(tr);}
   });
   // Show/hide breakdown cards
@@ -8926,7 +8934,11 @@ function buildPayload(){
   var _proposalIdx=1;
   if(_projNumber&&window._pendingProjectLink){
     var _pp2=pipelineProposals.find(function(x){return x.id===window._pendingProjectLink;});
-    if(_pp2){var _ps2=typeof _pp2.snap==='string'?JSON.parse(_pp2.snap):_pp2.snap||{};_proposalIdx=(_ps2.linked_proposals||[]).length+1;}
+    if(_pp2){var _ps2=typeof _pp2.snap==='string'?JSON.parse(_pp2.snap):_pp2.snap||{};
+      var _linked=_ps2.linked_proposals||[];
+      var _lidx=lastSavedQuoteId?_linked.indexOf(lastSavedQuoteId):-1;
+      _proposalIdx=_lidx>=0?_lidx+1:_linked.length+1;
+    }
   }
   var _docNumber=_projNumber?_projNumber+'-P'+_proposalIdx:'';
   return{
@@ -9562,10 +9574,8 @@ async function exportPDF(){
     if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
     var blob=await r.blob();
     var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.href=url;a.download=(p.document_number||'HD_Proposal')+'_'+p.project_name.replace(/\s+/g,'_')+'.pdf';
-    a.click();URL.revokeObjectURL(url);
-    toast('PDF downloaded','ok');
+    window.open(url,'_blank');
+    toast('PDF opened — use browser print/download to save','ok');
     // Auto-move to "Estimate Sent" in pipeline if we have a saved quote
     if(lastSavedQuoteId) autoMoveToStage(lastSavedQuoteId,'Estimate Sent');
   }catch(e){toast('PDF error: '+e.message,'err');}
@@ -9895,8 +9905,8 @@ async function exportPDFFromSaved(qid){
     var r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
     if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
     var blob=await r.blob();var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');a.href=url;a.download=(p.document_number||'HD_Proposal')+'_'+p.project_name.replace(/\s+/g,'_')+'.pdf';
-    a.click();URL.revokeObjectURL(url);toast('Proposal PDF downloaded','ok');
+    window.open(url,'_blank');
+    toast('PDF opened — use browser print/download to save','ok');
   }catch(e){toast('PDF error: '+e.message,'err');}
 }
 

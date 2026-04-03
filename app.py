@@ -71,7 +71,7 @@ def apply_user_session(user):
     session['role'] = user.get('role', 'user')
     session['email'] = user.get('email', '')
     session['phone'] = user.get('phone', '')
-    session['avatar_data'] = user.get('avatar_data', '')
+    # avatar_data stored in DB (hd_users.avatar_data), NOT in session — exceeds cookie size limit
     session.permanent = True
 
 def log_access(username, full_name, action='login', success=True):
@@ -131,7 +131,7 @@ def login():
             return jsonify({'ok': True, 'role': session['role'], 'username': session['username'],
                             'full_name': session['full_name'],
                             'email': session['email'], 'phone': session['phone'],
-                            'avatar_data': session.get('avatar_data', ''),
+                            'avatar_data': user.get('avatar_data', ''),
                             'password_hint': user.get('password_hint', '')})
         else:
             log_access(username, '', 'login', False)
@@ -194,9 +194,10 @@ def auth_update_profile():
     if not full_name:
         return jsonify({'ok': False, 'error': 'Full name is required.'}), 400
     try:
-        avatar_data = sanitize_avatar_data(data.get('avatar_data', session.get('avatar_data', '')))
         update = {'full_name': full_name, 'email': email, 'phone': phone}
-        # avatar_data stored in session only (column doesn't exist in hd_users)
+        if 'avatar_data' in data:
+            avatar_data = sanitize_avatar_data(data.get('avatar_data', ''))
+            update['avatar_data'] = avatar_data
         r = http.patch(
             sb_url('hd_users', f'?username=eq.{username}'),
             headers={**sb_headers(), 'Prefer': 'return=representation'},
@@ -209,7 +210,6 @@ def auth_update_profile():
         user = rows[0] if isinstance(rows, list) and rows else update
         user['username'] = user.get('username', username)
         user['role'] = user.get('role', session.get('role', 'user'))
-        user['avatar_data'] = avatar_data
         apply_user_session(user)
         return jsonify({'ok': True, 'profile': {
             'username': session.get('username', ''),
@@ -217,7 +217,7 @@ def auth_update_profile():
             'email': session.get('email', ''),
             'phone': session.get('phone', ''),
             'role': session.get('role', 'user'),
-            'avatar_data': session.get('avatar_data', '')
+            'avatar_data': user.get('avatar_data', '')
         }})
     except ValueError as e:
         return jsonify({'ok': False, 'error': str(e)}), 400
@@ -680,7 +680,7 @@ def generate_pdf():
         out = f.name
     try:
         build(data, out)
-        return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_Proposal.pdf')
+        return send_file(out, mimetype='application/pdf', as_attachment=False, download_name='HD_Proposal.pdf')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
