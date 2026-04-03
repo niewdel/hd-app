@@ -82,7 +82,7 @@ To update a record: `PATCH` to `...rest/v1/TABLE_NAME?id=eq.ID` with JSON body.
 **All tables have RLS DISABLED.**
 
 ### `hd_users`
-id, username (unique), full_name, email, phone, pin_hash (SHA256), role (`admin`/`user`/`field`), active, created_at, created_by. **Note**: `password_hint` column does NOT exist — do not include it in inserts/updates.
+id, username (unique), full_name, email, phone, pin_hash (SHA256), role (`admin`/`user`/`field`), active, created_at, created_by, avatar_data (TEXT, base64 profile photo). **Note**: `password_hint` column does NOT exist — do not include it in inserts/updates. Avatar is stored in DB, NOT in Flask session (session cookies have ~4KB limit).
 
 ### `hd_access_log`
 id, username, full_name, action (`login`/`logout`), success, ip_address, user_agent, logged_at.
@@ -171,7 +171,7 @@ id, proposal_id, number, date, description, snap (JSONB), add_total, deduct_tota
 ### PDF/Word Generation
 | Method | Route | Description |
 |---|---|---|
-| POST | `/generate-pdf` | Generate proposal PDF (supports pricing_options) |
+| POST | `/generate-pdf` | Generate proposal PDF (opens in browser tab for preview) |
 | POST | `/generate-docx` | Generate proposal Word doc |
 | POST | `/generate-co-pdf` | Generate change order PDF |
 | POST | `/generate-job-cost` | Generate job cost sheet |
@@ -417,6 +417,15 @@ Signage Crew    | b-signage | $1,000/day | 40 EA/day
 
 ### ⚠️ boot() Error Handling
 `boot()` is wrapped in `try/catch` in both the doLogin and auth/check paths because `renderJCDefaults()` can throw if called before the DOM is ready. `showAdminElements()` must always run AFTER boot(), even if boot throws.
+
+### ⚠️ Avatar Data — DB Not Session
+Avatar data (base64 profile photos) MUST be stored in `hd_users.avatar_data` column, NOT in Flask session. Session cookies have a ~4KB limit; base64 images are 40-110KB. Images are compressed to 256px max / 0.7 quality on the client side.
+
+### ⚠️ Proposal Number in buildPayload()
+`buildPayload()` must use `indexOf(lastSavedQuoteId)` in `linked_proposals` to find the correct proposal index (P1, P2, etc.). Do NOT use `linked_proposals.length + 1` — the current proposal is already in the array after saving.
+
+### ⚠️ Striping/Lump-Sum Items in Breakdown
+For striping items (`crew === 'b-striping'`), the breakdown markup % must use `item.markup` directly, NOT `(bid-cost)/cost`. The latter produces astronomical numbers because `mat_cost` and `calcItemLabor()` both return 0 for striping items.
 
 ### ⚠️ Variable Name: `jcProductivity`
 The productivity variable is `jcProductivity` — NOT `productivity`. Using `productivity` causes a ReferenceError that crashes `boot()`.
