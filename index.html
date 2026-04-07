@@ -246,7 +246,22 @@ body.dark [style*="color:#1A1A1A"]{color:#E4E4E7 !important;}
 body.dark [style*="color:#141416"]{color:#E4E4E7 !important;}
 body.dark [style*="color:#333"]{color:#D4D4D8 !important;}
 body.dark [style*="color:#555"]{color:#A1A1AA !important;}
+body.dark [style*="color:#555555"]{color:#A1A1AA !important;}
 body.dark [style*="color:#aaa"]{color:#A1A1AA !important;}
+body.dark [style*="color:#666"]{color:#A1A1AA !important;}
+body.dark [style*="color:#777"]{color:#A1A1AA !important;}
+body.dark [style*="color:#999"]{color:#A1A1AA !important;}
+body.dark [style*="color:#bbb"]{color:#A1A1AA !important;}
+body.dark [style*="color:#ccc"]{color:#71717A !important;}
+body.dark [style*="color:#8B6914"]{color:#D4A524 !important;}
+body.dark [style*="color:#1a73e8"]{color:#6EA8FE !important;}
+body.dark [style*="color:#2B5FA6"]{color:#6EA8FE !important;}
+body.dark [style*="color:#1565C0"]{color:#6EA8FE !important;}
+body.dark [style*="color:#795548"]{color:#A1887F !important;}
+body.dark [style*="color:#F57F17"]{color:#FFB74D !important;}
+body.dark [style*="background:#e8f0fe"]{background:#1C2234 !important;}
+body.dark [style*="background:#E3F2FD"]{background:#1C2234 !important;}
+body.dark [style*="background:#F3E5F5"]{background:#2A1C2E !important;}
 body.dark [style*="color:var(--dgray)"]{color:#A1A1A6 !important;}
 /* Inline border overrides */
 body.dark [style*="border-bottom:1px solid #eee"]{border-bottom-color:rgba(255,255,255,0.06) !important;}
@@ -5924,7 +5939,7 @@ function _renderProjectSummaryInner(proj){
       +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
       +'<h2 style="margin:0;font-size:22px;font-weight:800;">'+esc(proj.name||'Untitled Project')+'</h2>'
       +'<select id="ps-stage-select" style="font-size:10px;font-weight:700;color:#fff;background:'+stageColor+';padding:4px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;border:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url(\'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22><path d=%22M0 0l5 6 5-6z%22 fill=%22white%22/></svg>\');background-repeat:no-repeat;background-position:right 6px center;padding-right:20px;">'
-      +(_pipelineStages||[]).map(function(s){return '<option value="'+s.id+'" style="background:#fff;color:#333;text-transform:none;"'+(s.id===proj.stage_id?' selected':'')+'>'+esc(s.name)+'</option>';}).join('')
+      +(_pipelineStages||[]).map(function(s){return '<option value="'+s.id+'" style="text-transform:none;"'+(s.id===proj.stage_id?' selected':'')+'>'+esc(s.name)+'</option>';}).join('')
       +'</select>'
       +'</div>'
       +(dueStr?'<span style="font-size:11px;font-weight:700;color:var(--red);">'+dueStr+'</span>':'')
@@ -6179,7 +6194,7 @@ function _renderProjectSummaryInner(proj){
           card.appendChild(detEl);
         }
         if(wo.description){
-          var descEl=document.createElement('div');descEl.style.cssText='font-size:12px;color:#555;line-height:1.5;margin-bottom:6px;';
+          var descEl=document.createElement('div');descEl.style.cssText='font-size:12px;color:var(--dgray);line-height:1.5;margin-bottom:6px;';
           descEl.textContent=wo.description;
           card.appendChild(descEl);
         }
@@ -7170,10 +7185,10 @@ function renderProjectFiles(snap){
       row.appendChild(info);
       // Delete button
       var del=document.createElement('button');
-      del.style.cssText='background:none;border:none;color:#bbb;cursor:pointer;font-size:14px;padding:0 3px;flex-shrink:0;';
+      del.style.cssText='background:none;border:none;color:var(--dgray);cursor:pointer;font-size:14px;padding:0 3px;flex-shrink:0;';
       del.textContent='\u00D7';del.title='Remove file';
-      del.addEventListener('mouseenter',function(){this.style.color='#CC0000';});
-      del.addEventListener('mouseleave',function(){this.style.color='#bbb';});
+      del.addEventListener('mouseenter',function(){this.style.color='var(--red,#CC0000)';});
+      del.addEventListener('mouseleave',function(){this.style.color='var(--dgray)';});
       (function(filePath){del.addEventListener('click',function(){
         if(!confirm('Delete this file?'))return;
         fetch('/upload/project-file/'+_currentProjectId+'/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:filePath})})
@@ -8048,10 +8063,10 @@ function renderMatTable(){
     var td4=document.createElement('td');td4.style.cssText='padding:8px 4px;text-align:center;';
     var del=document.createElement('button');
     del.textContent='\u00D7';
-    del.style.cssText='background:none;border:none;color:#999;font-size:16px;cursor:pointer;padding:2px 6px;border-radius:4px;';
+    del.style.cssText='background:none;border:none;color:var(--dgray);font-size:16px;cursor:pointer;padding:2px 6px;border-radius:4px;';
     del.title='Remove '+k;
-    del.addEventListener('mouseenter',function(){this.style.color='#CC0000';this.style.background='#FEE';});
-    del.addEventListener('mouseleave',function(){this.style.color='#999';this.style.background='none';});
+    del.addEventListener('mouseenter',function(){this.style.color='var(--red,#CC0000)';this.style.background='var(--red-soft,#FEE)';});
+    del.addEventListener('mouseleave',function(){this.style.color='var(--dgray)';this.style.background='none';});
     (function(kk){del.addEventListener('click',function(){deleteMaterial(kk);});})(k);
     td4.appendChild(del);tr.appendChild(td4);
     tbody.appendChild(tr);
@@ -14027,7 +14042,8 @@ function openCalSyncModal(){
   var modal=document.createElement('div');modal.id='cal-sync-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
   var box=document.createElement('div');
-  box.style.cssText='background:#fff;border-radius:10px;padding:28px;width:560px;max-width:94vw;max-height:90vh;overflow-y:auto;';
+  box.className='dk-card';
+  box.style.cssText='border-radius:10px;padding:28px;width:560px;max-width:94vw;max-height:90vh;overflow-y:auto;';
   box.innerHTML='<h3 style="margin:0 0 6px;font-size:16px;font-weight:800;">Sync to Google Calendar</h3>'
     +'<p style="font-size:12px;color:var(--dgray);margin-bottom:16px;">Subscribe to the live HD Work Orders calendar feed. Google Calendar will auto-refresh this every few hours so your schedule stays up to date.</p>'
     +'<div style="margin-bottom:16px;">'
