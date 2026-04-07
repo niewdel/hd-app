@@ -11016,7 +11016,7 @@ async function renderClients() {
       card.innerHTML = '<div class="client-avatar" onclick="openClientSummary('+c.id+')">'+initials+'</div>'
         +'<div class="client-info" onclick="openClientSummary('+c.id+')">'
         +'<div class="client-name">'+esc(c.name)+(c.company?' <span style="font-weight:400;color:var(--dgray);">- '+esc(c.company)+'</span>':'')+'</div>'
-        +'<div class="client-sub">'+[c.phone,c.email,c.city_state].filter(Boolean).map(esc).join(' | ')+'</div>'
+        +'<div class="client-sub">'+[c.phone,c.email].filter(Boolean).map(esc).join(' | ')+'</div>'
         +'</div>'
         +'<button class="btn btn-sec btn-sm" onclick="event.stopPropagation();editClient('+c.id+')">Edit</button>'
         +'<button class="btn-ico" onclick="event.stopPropagation();deleteClient('+c.id+')" style="color:var(--red);">×</button>';
@@ -11319,7 +11319,7 @@ function editClientFromSummary(){if(_currentClientId)editClient(_currentClientId
 function openClientModal(prefill) {
   editingClientId = null;
   document.getElementById('client-modal-title').textContent = 'New Client';
-  ['name','company','phone','email','address','city','notes'].forEach(function(f){
+  ['name','company','phone','email','notes'].forEach(function(f){
     var el = document.getElementById('cm-'+f); if(el) el.value = (prefill&&prefill[f])||'';
   });
   document.getElementById('client-modal').classList.remove('hidden');
@@ -11333,8 +11333,6 @@ function editClient(id) {
   document.getElementById('cm-company').value = c.company||'';
   document.getElementById('cm-phone').value   = c.phone||'';
   document.getElementById('cm-email').value   = c.email||'';
-  document.getElementById('cm-address').value = c.address||'';
-  document.getElementById('cm-city').value    = c.city_state||'';
   document.getElementById('cm-notes').value   = c.notes||'';
   document.getElementById('client-modal').classList.remove('hidden');
 }
@@ -11352,8 +11350,6 @@ async function saveClient() {
     company:    document.getElementById('cm-company').value.trim(),
     phone:      document.getElementById('cm-phone').value.trim(),
     email:      document.getElementById('cm-email').value.trim(),
-    address:    document.getElementById('cm-address').value.trim(),
-    city_state: document.getElementById('cm-city').value.trim(),
     notes:      document.getElementById('cm-notes').value.trim(),
   };
   try {
@@ -15827,8 +15823,6 @@ function addReminderFromProject(){
       <label>Company</label><input id="cm-company" type="text" placeholder="Company name"/>
       <label>Phone</label><input id="cm-phone" type="tel" placeholder="(555) 000-0000"/>
       <label>Email</label><input id="cm-email" type="email" placeholder="email@example.com"/>
-      <label>Address</label><input id="cm-address" type="text" placeholder="Street address"/>
-      <label>City, State</label><input id="cm-city" type="text" placeholder="Charlotte, NC"/>
       <label>Notes</label><textarea id="cm-notes" style="min-height:70px;"></textarea>
     </div>
     <div class="modal-foot">
