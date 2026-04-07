@@ -10520,9 +10520,9 @@ function initAddrAutocomplete(inputId, sugId){
             var parts=[street,city,state,zip].filter(Boolean);
             var shortAddr=parts.join(', ');
             var div=document.createElement('div');
-            div.style.cssText='padding:8px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--bdr);';
+            div.style.cssText='padding:8px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--bdr);color:var(--txt);';
             div.textContent=shortAddr||r.display_name;
-            div.addEventListener('mouseenter',function(){div.style.background='#F0F0F0';});
+            div.addEventListener('mouseenter',function(){div.style.background='var(--bg-el)';});
             div.addEventListener('mouseleave',function(){div.style.background='';});
             (function(addr){div.addEventListener('mousedown',function(ev){
               ev.preventDefault();
