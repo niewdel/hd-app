@@ -587,37 +587,67 @@ def approval_page(data, st):
     elems.append(Spacer(1, 0.14*inch))
 
     # ── Bilateral signature block ─────────────────────────────────────────────
+    from reportlab.platypus import Drawing
+    from reportlab.graphics.shapes import Line as RLLine
+
     body_st   = ParagraphStyle('sb',  fontName='Helvetica',      fontSize=9,
-                                textColor=BLACK, leading=14)
-    body_b_st = ParagraphStyle('sbb', fontName='Helvetica-Bold', fontSize=9,
-                                textColor=BLACK, leading=14)
+                                textColor=BLACK, leading=12)
+    body_b_st = ParagraphStyle('sbb', fontName='Helvetica-Bold', fontSize=10,
+                                textColor=BLACK, leading=13)
 
-    # 4 columns: left-label, left-line, right-label, right-line
-    lbl_w = 1.42 * inch
-    line_w = (cw / 2) - lbl_w
+    # Two equal columns with a gutter
+    gutter = 0.3 * inch
+    col_w = (cw - gutter) / 2
+
+    def _sig_line(width):
+        """Return a thin horizontal line drawing."""
+        d = Drawing(width, 1)
+        d.add(RLLine(0, 0, width, 0, strokeColor=BLACK, strokeWidth=0.5))
+        return d
+
     sig_data = [
-        [Paragraph('<b>HD Hauling &amp; Grading</b>', body_b_st), '',
-         Paragraph('<b>Client / Authorized Representative</b>', body_b_st), ''],
+        [Paragraph('<b>HD Hauling &amp; Grading</b>', body_b_st),
+         Paragraph('<b>Client / Authorized Representative</b>', body_b_st)],
+        ['', ''],  # spacer row
     ]
-    for label in ['Authorized Signature:', 'Printed Name:', 'Title:', 'Date:']:
-        sig_data.append([Paragraph(label, body_st), '', Paragraph(label, body_st), ''])
+    for label in ['Signature:', 'Printed Name:', 'Title:', 'Date:']:
+        sig_data.append([_sig_line(col_w - 8), _sig_line(col_w - 8)])
+        sig_data.append([Paragraph(label, body_st), Paragraph(label, body_st)])
 
-    sig_tbl = Table(sig_data, colWidths=[lbl_w, line_w, lbl_w, line_w])
+    sig_tbl = Table(sig_data, colWidths=[col_w, col_w], spaceBefore=0)
     sig_styles = [
         ('VALIGN',        (0,0),(-1,-1), 'BOTTOM'),
-        ('TOPPADDING',    (0,0),(-1,0),  7),
-        ('BOTTOMPADDING', (0,0),(-1,0),  7),
-        ('TOPPADDING',    (0,1),(-1,-1), 12),
-        ('BOTTOMPADDING', (0,1),(-1,-1), 4),
+        ('TOPPADDING',    (0,0),(-1,0),  8),
+        ('BOTTOMPADDING', (0,0),(-1,0),  2),
+        ('TOPPADDING',    (0,1),(-1,1),  4),   # spacer
+        ('BOTTOMPADDING', (0,1),(-1,1),  0),
+        # Line rows (even rows 2,4,6,8) — tight spacing
+        ('TOPPADDING',    (0,2),(-1,2),  18),  # first sig line gets more space
+        ('BOTTOMPADDING', (0,2),(-1,2),  0),
+        ('TOPPADDING',    (0,4),(-1,4),  14),
+        ('BOTTOMPADDING', (0,4),(-1,4),  0),
+        ('TOPPADDING',    (0,6),(-1,6),  14),
+        ('BOTTOMPADDING', (0,6),(-1,6),  0),
+        ('TOPPADDING',    (0,8),(-1,8),  14),
+        ('BOTTOMPADDING', (0,8),(-1,8),  0),
+        # Label rows (odd rows 3,5,7,9) — minimal top pad
+        ('TOPPADDING',    (0,3),(-1,3),  1),
+        ('BOTTOMPADDING', (0,3),(-1,3),  0),
+        ('TOPPADDING',    (0,5),(-1,5),  1),
+        ('BOTTOMPADDING', (0,5),(-1,5),  0),
+        ('TOPPADDING',    (0,7),(-1,7),  1),
+        ('BOTTOMPADDING', (0,7),(-1,7),  0),
+        ('TOPPADDING',    (0,9),(-1,9),  1),
+        ('BOTTOMPADDING', (0,9),(-1,9),  0),
         ('LEFTPADDING',   (0,0),(-1,-1), 4),
         ('RIGHTPADDING',  (0,0),(-1,-1), 4),
+        # Left column right-padding acts as half-gutter
+        ('RIGHTPADDING',  (0,0),(0,-1),  gutter / 2),
+        ('LEFTPADDING',   (1,0),(1,-1),  gutter / 2),
+        # Top and bottom borders
         ('LINEABOVE',     (0,0),(-1,0),  1,   TBLBORD),
         ('LINEBELOW',     (0,-1),(-1,-1),1,   TBLBORD),
     ]
-    # Draw signature lines under label+line spanning both columns per side
-    for row_idx in range(1, 5):
-        sig_styles.append(('LINEBELOW', (0, row_idx), (1, row_idx), 0.75, BLACK))
-        sig_styles.append(('LINEBELOW', (2, row_idx), (3, row_idx), 0.75, BLACK))
     sig_tbl.setStyle(TableStyle(sig_styles))
     elems.append(sig_tbl)
 
