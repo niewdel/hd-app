@@ -9654,11 +9654,11 @@ function _showClientSuggestions(v){
   sug.innerHTML='';
   m.forEach(function(c){
     var div=document.createElement('div');
-    div.style.cssText='padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);';
-    div.addEventListener('mouseover',function(){this.style.background='#f5f5f5';});
+    div.style.cssText='padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);color:var(--blk);';
+    div.addEventListener('mouseover',function(){this.style.background='var(--lgray)';});
     div.addEventListener('mouseout',function(){this.style.background='';});
     div.addEventListener('mousedown',function(e){e.preventDefault();selectClientById(c.id);});
-    div.innerHTML='<div style="font-weight:600">'+esc(c.name)+'</div>'
+    div.innerHTML='<div style="font-weight:600;color:var(--blk);">'+esc(c.name)+'</div>'
       +'<div style="font-size:11px;color:var(--dgray)">'+(c.company?esc(c.company)+'  -  ':'')+esc(c.phone||c.email||'')+'</div>';
     sug.appendChild(div);
   });
@@ -10798,15 +10798,15 @@ function openProjectModal(existingData, editId){
     _gcSug.innerHTML='';
     m.forEach(function(c){
       var div=document.createElement('div');
-      div.style.cssText='padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);color:var(--txt);';
-      div.addEventListener('mouseover',function(){this.style.background='var(--hover,#f5f5f5)';});
+      div.style.cssText='padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);color:var(--blk);';
+      div.addEventListener('mouseover',function(){this.style.background='var(--lgray)';});
       div.addEventListener('mouseout',function(){this.style.background='';});
       div.addEventListener('mousedown',function(e){
         e.preventDefault();
         _modalGCs.push({id:c.id,name:c.name,company:c.company||'',phone:c.phone||'',email:c.email||'',address:c.address||'',city_state:c.city_state||''});
         _renderModalGCChips();_gcInput.value='';_gcSug.style.display='none';
       });
-      div.innerHTML='<div style="font-weight:600">'+esc(c.name)+'</div>'
+      div.innerHTML='<div style="font-weight:600;color:var(--blk);">'+esc(c.name)+'</div>'
         +'<div style="font-size:11px;color:var(--dgray)">'+(c.company?esc(c.company)+' \u00b7 ':'')+esc(c.phone||c.email||'')+'</div>';
       _gcSug.appendChild(div);
     });
