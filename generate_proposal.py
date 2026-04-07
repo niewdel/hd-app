@@ -587,57 +587,38 @@ def approval_page(data, st):
     elems.append(Spacer(1, 0.14*inch))
 
     # ── Bilateral signature block ─────────────────────────────────────────────
-    lbl_st = ParagraphStyle('slbl', fontName='Helvetica', fontSize=9,
-                             textColor=DGRAY, leading=12)
-    hdr_st = ParagraphStyle('shdr', fontName='Helvetica-Bold', fontSize=9,
-                             textColor=BLACK, leading=14)
+    body_st   = ParagraphStyle('sb',  fontName='Helvetica',      fontSize=9,
+                                textColor=BLACK, leading=14)
+    body_b_st = ParagraphStyle('sbb', fontName='Helvetica-Bold', fontSize=9,
+                                textColor=BLACK, leading=14)
 
-    half = cw / 2
-    lbl_w = 1.45 * inch  # fixed label column
-    line_w = half - lbl_w - 0.08 * inch  # remaining space for the line
-
-    def _sig_row(label):
-        """Build one signature row: label | drawn line, repeated for both columns."""
-        left = Table([[Paragraph(label, lbl_st), '']], colWidths=[lbl_w, line_w])
-        left.setStyle(TableStyle([
-            ('LINEBELOW', (1, 0), (1, 0), 0.75, BLACK),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
-            ('TOPPADDING', (0, 0), (-1, -1), 0),
-            ('LEFTPADDING', (0, 0), (-1, -1), 0),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-            ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
-        ]))
-        right = Table([[Paragraph(label, lbl_st), '']], colWidths=[lbl_w, line_w])
-        right.setStyle(TableStyle([
-            ('LINEBELOW', (1, 0), (1, 0), 0.75, BLACK),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
-            ('TOPPADDING', (0, 0), (-1, -1), 0),
-            ('LEFTPADDING', (0, 0), (-1, -1), 0),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-            ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
-        ]))
-        return [left, right]
-
+    # 4 columns: left-label, left-line, right-label, right-line
+    lbl_w = 1.42 * inch
+    line_w = (cw / 2) - lbl_w
     sig_data = [
-        [Paragraph('<b>HD Hauling &amp; Grading</b>', hdr_st),
-         Paragraph('<b>Client / Authorized Representative</b>', hdr_st)],
-        _sig_row('Authorized Signature:'),
-        _sig_row('Printed Name:'),
-        _sig_row('Title:'),
-        _sig_row('Date:'),
+        [Paragraph('<b>HD Hauling &amp; Grading</b>', body_b_st), '',
+         Paragraph('<b>Client / Authorized Representative</b>', body_b_st), ''],
     ]
-    sig_tbl = Table(sig_data, colWidths=[half, half])
-    sig_tbl.setStyle(TableStyle([
+    for label in ['Authorized Signature:', 'Printed Name:', 'Title:', 'Date:']:
+        sig_data.append([Paragraph(label, body_st), '', Paragraph(label, body_st), ''])
+
+    sig_tbl = Table(sig_data, colWidths=[lbl_w, line_w, lbl_w, line_w])
+    sig_styles = [
         ('VALIGN',        (0,0),(-1,-1), 'BOTTOM'),
         ('TOPPADDING',    (0,0),(-1,0),  7),
         ('BOTTOMPADDING', (0,0),(-1,0),  7),
-        ('TOPPADDING',    (0,1),(-1,-1), 10),
+        ('TOPPADDING',    (0,1),(-1,-1), 12),
         ('BOTTOMPADDING', (0,1),(-1,-1), 4),
         ('LEFTPADDING',   (0,0),(-1,-1), 4),
-        ('RIGHTPADDING',  (-1,0),(-1,-1),4),
+        ('RIGHTPADDING',  (0,0),(-1,-1), 4),
         ('LINEABOVE',     (0,0),(-1,0),  1,   TBLBORD),
         ('LINEBELOW',     (0,-1),(-1,-1),1,   TBLBORD),
-    ]))
+    ]
+    # Draw signature lines under label+line spanning both columns per side
+    for row_idx in range(1, 5):
+        sig_styles.append(('LINEBELOW', (0, row_idx), (1, row_idx), 0.75, BLACK))
+        sig_styles.append(('LINEBELOW', (2, row_idx), (3, row_idx), 0.75, BLACK))
+    sig_tbl.setStyle(TableStyle(sig_styles))
     elems.append(sig_tbl)
 
     return [KeepTogether(elems)]
