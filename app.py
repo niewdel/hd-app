@@ -322,6 +322,15 @@ def quotes_delete(qid):
             headers=sb_headers(), timeout=10
         )
         r.raise_for_status()
+        # Cascade delete associated data (change orders, time entries)
+        try:
+            http.delete(sb_url('change_orders', f'?proposal_id=eq.{qid}'), headers=sb_headers(), timeout=10)
+        except Exception:
+            pass
+        try:
+            http.delete(sb_url('hd_time_entries', f'?project_id=eq.{qid}'), headers=sb_headers(), timeout=10)
+        except Exception:
+            pass
         log_access(session.get('username',''), session.get('full_name',''), f'archived proposal "{name}"')
         return jsonify({'ok': True})
     except Exception as e:

@@ -616,7 +616,7 @@ def approval_page(data, st):
     ]))
     elems.append(sig_tbl)
 
-    return elems
+    return [KeepTogether(elems)]
 
 def unit_prices_block(data):
     """Renders the Additional Unit Prices table as a list of flowables."""
@@ -905,8 +905,12 @@ def build(data, out_path):
         story.append(PageBreak())
 
     story += tc_pages(st)
-    story += unit_prices_block(data)
-    story.append(PageBreak())
+    up_block = unit_prices_block(data)
+    if up_block:
+        story += up_block
+        story.append(Spacer(1, 0.25*inch))
+    else:
+        story.append(PageBreak())
 
     story += approval_page(data, st)
 
