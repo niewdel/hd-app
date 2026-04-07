@@ -5929,10 +5929,10 @@ function _renderProjectSummaryInner(proj){
       +'</div>'
       +(dueStr?'<span style="font-size:11px;font-weight:700;color:var(--red);">'+dueStr+'</span>':'')
       +'</div>'
+      +'<div id="ps-gc-row" style="font-size:13px;color:var(--dgray);display:flex;align-items:center;flex-wrap:wrap;gap:4px;"></div>'
       +'<div style="font-size:13px;color:var(--dgray);">'
-      +'<span onclick="editCurrentProject()" style="cursor:pointer;border-bottom:1px dashed var(--dgray);" title="Click to change client">'+(proj.client?esc(proj.client):'No client assigned')+'</span>'
-      +(snap.address?' &middot; '+esc(snap.address):'')
-      +(snap.assigned_to?' &middot; <span style="font-weight:600;">'+esc(_allUsers.reduce(function(a,u){return u.username===snap.assigned_to?u.full_name:a;},snap.assigned_to))+'</span>':'')
+      +(snap.address?esc(snap.address):'')
+      +(snap.assigned_to?(snap.address?' &middot; ':'')+' <span style="font-weight:600;">'+esc(_allUsers.reduce(function(a,u){return u.username===snap.assigned_to?u.full_name:a;},snap.assigned_to))+'</span>':'')
       +'</div>'
 ;
     var stageSel=document.getElementById('ps-stage-select');
@@ -5944,6 +5944,46 @@ function _renderProjectSummaryInner(proj){
         moveCard(proj.id,newId);
         setTimeout(function(){renderProjectSummary();},300);
       });
+    }
+    // Render GC chips in header
+    var gcRow=document.getElementById('ps-gc-row');
+    if(gcRow){
+      var bcs=snap.bidding_clients||[];
+      if(bcs.length){
+        bcs.forEach(function(gc){
+          var chip=document.createElement('span');
+          chip.style.cssText='display:inline-flex;align-items:center;gap:4px;background:var(--red-soft,#fde8e8);color:var(--red,#CC0000);padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;cursor:default;';
+          chip.textContent=gc.company?(gc.name+' ('+gc.company+')'):gc.name;
+          chip.title=(gc.phone?gc.phone+' ':'')+( gc.email||'');
+          // PDF icon per GC
+          var pdfBtn=document.createElement('span');
+          pdfBtn.innerHTML='&#128196;';pdfBtn.title='Export PDF for '+gc.name;
+          pdfBtn.style.cssText='cursor:pointer;font-size:13px;line-height:1;opacity:.7;';
+          pdfBtn.addEventListener('mouseover',function(){this.style.opacity='1';});
+          pdfBtn.addEventListener('mouseout',function(){this.style.opacity='.7';});
+          (function(g){pdfBtn.addEventListener('click',function(e){e.stopPropagation();_showGCPdfPicker(proj.id,g);});})(gc);
+          chip.appendChild(pdfBtn);
+          gcRow.appendChild(chip);
+        });
+      } else if(proj.client){
+        var span=document.createElement('span');
+        span.style.cssText='cursor:pointer;border-bottom:1px dashed var(--dgray);';
+        span.title='Click to edit GCs';span.textContent=proj.client;
+        span.addEventListener('click',function(){editCurrentProject();});
+        gcRow.appendChild(span);
+      } else {
+        var span=document.createElement('span');
+        span.style.cssText='cursor:pointer;border-bottom:1px dashed var(--dgray);color:var(--dgray);';
+        span.title='Click to add GCs';span.textContent='No GC assigned';
+        span.addEventListener('click',function(){editCurrentProject();});
+        gcRow.appendChild(span);
+      }
+      // Add "+" button to add more GCs
+      var addBtn=document.createElement('span');
+      addBtn.textContent='+';addBtn.title='Add / Edit GCs';
+      addBtn.style.cssText='display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--bdr);color:var(--dgray);font-size:14px;font-weight:700;cursor:pointer;line-height:1;';
+      addBtn.addEventListener('click',function(){editCurrentProject();});
+      gcRow.appendChild(addBtn);
     }
   }
   // Render notes feed
@@ -9901,6 +9941,63 @@ async function exportPricingBreakdown(){
   }catch(e){toast('Export error: '+e.message,'err');}
 }
 
+// -- Per-GC PDF Export -----------------------------------------------------------
+async function exportPDFForGC(qid,gcClient){
+  var q=savedQuotes.find(function(x){return x.id===qid;})||pipelineProposals.find(function(x){return x.id===qid;});
+  if(!q){toast('Proposal not found','err');return;}
+  loadQuote(qid);
+  await new Promise(function(r){setTimeout(r,200);});
+  try{
+    var p=buildPayload();
+    p.client_name=gcClient.name||'';
+    p.client_email=gcClient.email||'';
+    p.client_phone=gcClient.phone||'';
+    p.client_company=gcClient.company||'';
+    var r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+    if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
+    var blob=await r.blob();var url=URL.createObjectURL(blob);
+    window.open(url,'_blank');
+    toast('PDF for '+gcClient.name+' opened','ok');
+  }catch(e){toast('PDF error: '+e.message,'err');}
+}
+
+function _showGCPdfPicker(projectId,gc){
+  // Find linked proposals for this project
+  var proj=pipelineProposals.find(function(x){return x.id===projectId;});
+  if(!proj)return;
+  var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+  var linked=snap.linked_proposals||[];
+  if(linked.length===0){
+    // Project itself is the only proposal
+    exportPDFForGC(projectId,gc);
+    return;
+  }
+  if(linked.length===1){
+    exportPDFForGC(linked[0],gc);
+    return;
+  }
+  // Multiple proposals — show picker popup
+  var existing=document.getElementById('gc-pdf-picker');if(existing)existing.remove();
+  var overlay=document.createElement('div');overlay.id='gc-pdf-picker';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:999;display:flex;align-items:center;justify-content:center;';
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
+  var box=document.createElement('div');box.className='dk-card';
+  box.style.cssText='padding:20px;border-radius:10px;min-width:280px;max-width:400px;';
+  var h=document.createElement('h3');h.style.cssText='margin:0 0 12px;font-size:15px;';
+  h.textContent='Export PDF for '+gc.name;box.appendChild(h);
+  var sub=document.createElement('p');sub.style.cssText='margin:0 0 12px;font-size:12px;color:var(--dgray);';
+  sub.textContent='Select which proposal to export:';box.appendChild(sub);
+  linked.forEach(function(qid,idx){
+    var q=savedQuotes.find(function(x){return x.id===qid;})||pipelineProposals.find(function(x){return x.id===qid;});
+    var btn=document.createElement('button');btn.className='btn btn-sec btn-sm';
+    btn.style.cssText='display:block;width:100%;margin-bottom:6px;text-align:left;';
+    btn.textContent='P'+(idx+1)+(q?' — '+esc(q.name||'Untitled'):'');
+    (function(id){btn.addEventListener('click',function(){overlay.remove();exportPDFForGC(id,gc);});})(qid);
+    box.appendChild(btn);
+  });
+  overlay.appendChild(box);document.body.appendChild(overlay);
+}
+
 async function exportPDFFromSaved(qid){
   var q=savedQuotes.find(function(x){return x.id===qid;})||pipelineProposals.find(function(x){return x.id===qid;});
   if(!q){toast('Proposal not found','err');return;}
@@ -10469,6 +10566,23 @@ async function renderPipeline() {
 
 async function moveCard(proposalId, stageId) {
   try {
+    // Check if moving to Approved with multiple GCs
+    var approvedStage=(_pipelineStages||pipelineStages||[]).find(function(s){return s.name==='Approved';});
+    if(approvedStage&&stageId===approvedStage.id){
+      var proj=pipelineProposals.find(function(x){return x.id===proposalId;});
+      if(proj){
+        var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+        if(snap.bidding_clients&&snap.bidding_clients.length>1){
+          _showWinningGCModal(proposalId,stageId,snap);
+          return;
+        }
+      }
+    }
+    await _executeMoveCard(proposalId,stageId);
+  } catch(e){toast('Move failed: '+e.message,'err');}
+}
+
+async function _executeMoveCard(proposalId,stageId){
     await fetch('/pipeline/move/'+proposalId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage_id:stageId})});
     await renderPipeline();
     autoCreateWorkOrder(proposalId,stageId);
@@ -10476,13 +10590,63 @@ async function moveCard(proposalId, stageId) {
     if(shouldNotify('stage_change')){
       var stage=pipelineStages.find(function(s){return s.id===stageId;});
       var stageName=stage?stage.name:'Unknown';
-      // Find project name from pipeline data
       var projName='Project #'+proposalId;
       try{var pCards=document.querySelectorAll('[data-proposal-id="'+proposalId+'"]');if(pCards.length)projName=pCards[0].querySelector('.pipe-card-title')?.textContent||projName;}catch(e){}
       sendStageChangeNotification(proposalId,projName,stageName);
     }
     toast('Moved','ok');
-  } catch(e){toast('Move failed: '+e.message,'err');}
+}
+
+function _showWinningGCModal(proposalId,stageId,snap){
+  var existing=document.getElementById('gc-winner-modal');if(existing)existing.remove();
+  var overlay=document.createElement('div');overlay.id='gc-winner-modal';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
+  var box=document.createElement('div');box.className='dk-card';
+  box.style.cssText='padding:24px;border-radius:10px;width:420px;max-width:92vw;max-height:80vh;overflow-y:auto;';
+  var h=document.createElement('h3');h.style.cssText='margin:0 0 6px;font-size:17px;font-weight:700;';
+  h.textContent='Select Winning GC';box.appendChild(h);
+  var sub=document.createElement('p');sub.style.cssText='margin:0 0 16px;font-size:13px;color:var(--dgray);';
+  sub.textContent='This project has multiple GCs. Select the one that awarded the work.';box.appendChild(sub);
+
+  snap.bidding_clients.forEach(function(gc){
+    var card=document.createElement('div');
+    card.style.cssText='padding:12px 14px;border:1px solid var(--bdr);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s;';
+    card.addEventListener('mouseover',function(){this.style.borderColor='var(--red,#CC0000)';this.style.background='var(--red-soft,#fde8e8)';});
+    card.addEventListener('mouseout',function(){this.style.borderColor='var(--bdr)';this.style.background='';});
+
+    var nameEl=document.createElement('div');nameEl.style.cssText='font-weight:700;font-size:14px;';
+    nameEl.textContent=gc.name;card.appendChild(nameEl);
+    if(gc.company){var comp=document.createElement('div');comp.style.cssText='font-size:12px;color:var(--dgray);';comp.textContent=gc.company;card.appendChild(comp);}
+    var details=[];if(gc.phone)details.push(gc.phone);if(gc.email)details.push(gc.email);
+    if(details.length){var det=document.createElement('div');det.style.cssText='font-size:11px;color:var(--dgray);margin-top:2px;';det.textContent=details.join(' \u00b7 ');card.appendChild(det);}
+
+    (function(winGC){card.addEventListener('click',function(){
+      // Update snap: keep only the winning GC
+      snap.bidding_clients=[winGC];
+      snap.client=winGC.name;
+      snap.selectedClient={name:winGC.name,company:winGC.company||'',phone:winGC.phone||'',email:winGC.email||''};
+      var updateBody={name:undefined,client:winGC.name,snap:snap};
+      fetch('/projects/update/'+proposalId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(updateBody)})
+        .then(function(r){return r.json();}).then(function(rd){
+          if(rd.ok){
+            // Update local data
+            var lp=pipelineProposals.find(function(x){return x.id===proposalId;});
+            if(lp){lp.client=winGC.name;lp.snap=snap;}
+            overlay.remove();
+            toast(winGC.name+' selected as winning GC','ok');
+            _executeMoveCard(proposalId,stageId);
+          } else {toast(rd.error||'Failed to update','err');}
+        }).catch(function(e){toast('Error: '+e.message,'err');});
+    });})(gc);
+    box.appendChild(card);
+  });
+
+  var cancelBtn=document.createElement('button');cancelBtn.className='btn btn-sec btn-sm';
+  cancelBtn.style.cssText='margin-top:8px;width:100%;';cancelBtn.textContent='Cancel';
+  cancelBtn.addEventListener('click',function(){overlay.remove();});
+  box.appendChild(cancelBtn);
+  overlay.appendChild(box);document.body.appendChild(overlay);
 }
 
 function loadProposalFromPipeline(id) {
@@ -10550,15 +10714,41 @@ function openProjectModal(existingData, editId){
   // Build stage options
   var stageOpts='<option value="">Select stage...</option>';
   pipelineStages.forEach(function(s){stageOpts+='<option value="'+s.id+'"'+(d.stage_id&&d.stage_id===s.id?' selected':'')+'>'+esc(s.name)+'</option>';});
-  // Build client datalist
-  var clientDL='';
-  if(typeof clientsList!=='undefined')clientsList.forEach(function(c){clientDL+='<option value="'+esc(c.name)+'">'+(c.company?esc(c.company):'')+'</option>';});
+  // -- Multi-GC state for this modal --
+  var rawSnap=d._rawSnap||{};
+  var _modalGCs=(rawSnap.bidding_clients||[]).slice();
+  // Seed from existing single client if no bidding_clients
+  if(!_modalGCs.length&&d.client){
+    var _seedClient=null;
+    if(typeof clients!=='undefined'&&clients.length){_seedClient=clients.find(function(c){return c.name.toLowerCase()===d.client.toLowerCase();});}
+    if(!_seedClient&&typeof clientsList!=='undefined'&&clientsList.length){var _sc=clientsList.find(function(c){return c.name.toLowerCase()===d.client.toLowerCase();});if(_sc)_seedClient={id:_sc.id,name:_sc.name,company:_sc.company||'',phone:_sc.phone||'',email:_sc.email||'',address:_sc.address||'',city_state:_sc.city_state||''};}
+    if(_seedClient)_modalGCs.push({id:_seedClient.id,name:_seedClient.name,company:_seedClient.company||'',phone:_seedClient.phone||'',email:_seedClient.email||'',address:_seedClient.address||'',city_state:_seedClient.city_state||''});
+    else _modalGCs.push({id:0,name:d.client,company:'',phone:'',email:'',address:'',city_state:''});
+  }
+  function _renderModalGCChips(){
+    var con=document.getElementById('pm-gc-chips');if(!con)return;
+    con.innerHTML='';
+    _modalGCs.forEach(function(gc,i){
+      var chip=document.createElement('span');
+      chip.style.cssText='display:inline-flex;align-items:center;gap:5px;background:var(--red-soft,#fde8e8);color:var(--red,#CC0000);padding:5px 10px;border-radius:16px;font-size:12px;font-weight:600;margin:3px 4px 3px 0;';
+      chip.textContent=gc.company?gc.name+' ('+gc.company+')':gc.name;
+      var xBtn=document.createElement('span');
+      xBtn.textContent='\u00d7';xBtn.style.cssText='cursor:pointer;font-size:15px;line-height:1;margin-left:2px;opacity:.7;';
+      xBtn.title='Remove';
+      (function(idx){xBtn.addEventListener('click',function(){_modalGCs.splice(idx,1);_renderModalGCChips();});})(i);
+      chip.appendChild(xBtn);
+      con.appendChild(chip);
+    });
+    if(!_modalGCs.length){con.innerHTML='<span style="font-size:12px;color:var(--dgray);">No GCs added yet</span>';}
+  }
   // Combine address + city_state into one field for existing data
   var fullAddr=d.address||'';
   if(d.city_state)fullAddr=fullAddr?(fullAddr+', '+d.city_state):d.city_state;
   box.innerHTML='<h3 style="margin:0 0 16px;font-size:16px;">'+title+'</h3>'
     +'<label>Project Name *</label><input id="pm-proj-name" type="text" value="'+esc(d.name||'')+'" placeholder="e.g. Main St Repaving" style="width:100%;margin-bottom:10px;"/>'
-    +'<label>Client</label><div style="position:relative;margin-bottom:10px;"><input id="pm-proj-client" type="text" list="pm-client-dl" value="'+esc(d.client||'')+'" placeholder="Start typing client name..." autocomplete="off" style="width:100%;"/><datalist id="pm-client-dl">'+clientDL+'</datalist></div>'
+    +'<label>General Contractors</label>'
+    +'<div id="pm-gc-chips" style="min-height:28px;margin-bottom:6px;"></div>'
+    +'<div style="position:relative;margin-bottom:10px;"><input id="pm-gc-input" type="text" placeholder="Type to add a GC..." autocomplete="off" style="width:100%;font-size:13px;"/><div id="pm-gc-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--wht);border:1px solid var(--bdr);border-radius:0 0 var(--rad-s) var(--rad-s);box-shadow:var(--shadow-m);max-height:200px;overflow-y:auto;z-index:10;"></div></div>'
     +'<label>Job Site Address</label><div style="position:relative;margin-bottom:10px;"><input id="pm-proj-addr" type="text" value="'+esc(fullAddr)+'" placeholder="Start typing address..." autocomplete="off" style="width:100%;"/><div id="pm-addr-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--wht);border:1px solid var(--bdr);border-radius:0 0 var(--rad-s) var(--rad-s);box-shadow:var(--shadow-m);max-height:200px;overflow-y:auto;z-index:10;"></div></div>'
     +'<div class="fg fg2" style="margin-bottom:10px;"><div><label>Bid Due Date</label><input id="pm-proj-due-date" type="date" value="'+(d.bid_due_date||'')+'" style="width:100%;"/></div>'
     +'<div><label>Bid Due Time</label><input id="pm-proj-due-time" type="time" value="'+(d.bid_due_time||'')+'" style="width:100%;"/></div></div>'
@@ -10586,6 +10776,50 @@ function openProjectModal(existingData, editId){
   }
   // Init address autocomplete
   initAddrAutocomplete('pm-proj-addr','pm-addr-sug');
+  // Render initial GC chips
+  _renderModalGCChips();
+  // GC autocomplete input
+  var _gcInput=document.getElementById('pm-gc-input');
+  var _gcSug=document.getElementById('pm-gc-sug');
+  var _gcTimer=null;
+  function _ensureClientsLoaded(cb){
+    if(typeof clients!=='undefined'&&clients.length){cb();return;}
+    fetch('/clients/list').then(function(r){return r.json();}).then(function(dd){
+      if(dd.ok&&dd.clients){clientsList=dd.clients;clients=clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||'',address:c.address||'',city_state:c.city_state||''};});}
+      cb();
+    }).catch(function(){cb();});
+  }
+  function _showGCSuggestions(v){
+    var m=clients.filter(function(c){
+      var q=v.toLowerCase();
+      return (c.name.toLowerCase().indexOf(q)>=0||(c.company||'').toLowerCase().indexOf(q)>=0)&&!_modalGCs.some(function(g){return g.id===c.id;});
+    }).slice(0,6);
+    if(!m.length){_gcSug.style.display='none';return;}
+    _gcSug.innerHTML='';
+    m.forEach(function(c){
+      var div=document.createElement('div');
+      div.style.cssText='padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);color:var(--txt);';
+      div.addEventListener('mouseover',function(){this.style.background='var(--hover,#f5f5f5)';});
+      div.addEventListener('mouseout',function(){this.style.background='';});
+      div.addEventListener('mousedown',function(e){
+        e.preventDefault();
+        _modalGCs.push({id:c.id,name:c.name,company:c.company||'',phone:c.phone||'',email:c.email||'',address:c.address||'',city_state:c.city_state||''});
+        _renderModalGCChips();_gcInput.value='';_gcSug.style.display='none';
+      });
+      div.innerHTML='<div style="font-weight:600">'+esc(c.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--dgray)">'+(c.company?esc(c.company)+' \u00b7 ':'')+esc(c.phone||c.email||'')+'</div>';
+      _gcSug.appendChild(div);
+    });
+    _gcSug.style.display='block';
+  }
+  _gcInput.addEventListener('input',function(){
+    var v=this.value.trim();
+    clearTimeout(_gcTimer);
+    if(!v||v.length<2){_gcSug.style.display='none';return;}
+    _gcTimer=setTimeout(function(){_ensureClientsLoaded(function(){_showGCSuggestions(v);});},200);
+  });
+  _gcInput.addEventListener('blur',function(){setTimeout(function(){_gcSug.style.display='none';},200);});
+  _gcInput.addEventListener('focus',function(){var v=this.value.trim();if(v.length>=2)_ensureClientsLoaded(function(){_showGCSuggestions(v);});});
   // Populate assigned-to dropdown with users
   var assignSel=document.getElementById('pm-proj-assigned');
   if(assignSel){
@@ -10599,9 +10833,10 @@ function openProjectModal(existingData, editId){
     var name=document.getElementById('pm-proj-name').value.trim();
     if(!name){toast('Enter a project name','err');return;}
     var addrFull=document.getElementById('pm-proj-addr').value.trim();
+    var primaryClient=_modalGCs.length?_modalGCs[0].name:'';
     var payload={
       name:name,
-      client:document.getElementById('pm-proj-client').value.trim(),
+      client:primaryClient,
       address:addrFull,
       city_state:'',
       bid_due_date:document.getElementById('pm-proj-due-date').value,
@@ -10618,6 +10853,8 @@ function openProjectModal(existingData, editId){
       snap.is_project=true;snap.client=payload.client;snap.address=payload.address;snap.city_state='';
       snap.bid_due_date=payload.bid_due_date;snap.bid_due_time=payload.bid_due_time;
       snap.notes=payload.notes;snap.assigned_to=payload.assigned_to;
+      snap.bidding_clients=_modalGCs;
+      if(_modalGCs.length===1){snap.selectedClient={name:_modalGCs[0].name,company:_modalGCs[0].company||'',phone:_modalGCs[0].phone||'',email:_modalGCs[0].email||''};}
       var updateBody={name:payload.name,client:payload.client,snap:snap};
       fetch('/projects/update/'+editId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(updateBody)})
         .then(function(r){return r.json();}).then(function(rd){
@@ -10632,6 +10869,8 @@ function openProjectModal(existingData, editId){
         }).catch(function(e){toast('Error: '+e.message,'err');});
     } else {
       payload.activity_log=[{type:'created',text:'Project created',date:new Date().toISOString(),user:window._userUsername||''}];
+      payload.bidding_clients=_modalGCs;
+      if(_modalGCs.length===1){payload.selectedClient={name:_modalGCs[0].name,company:_modalGCs[0].company||'',phone:_modalGCs[0].phone||'',email:_modalGCs[0].email||''};}
       fetch('/projects/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
         .then(function(r){return r.json();}).then(function(rd){
           if(rd.ok){

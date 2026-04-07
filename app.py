@@ -426,7 +426,11 @@ def project_create():
             'notes': data.get('notes', ''),
             'linked_proposals': [],
             'activity_log': data.get('activity_log', []),
+            'assigned_to': data.get('assigned_to', ''),
+            'bidding_clients': data.get('bidding_clients', []),
         }
+        if data.get('selectedClient'):
+            snap['selectedClient'] = data['selectedClient']
         payload = {
             'name': data.get('name', 'Unnamed Project'),
             'client': data.get('client', ''),
