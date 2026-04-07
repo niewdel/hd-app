@@ -5929,7 +5929,7 @@ function _renderProjectSummaryInner(proj){
       +(dueStr?'<span style="font-size:11px;font-weight:700;color:var(--red);">'+dueStr+'</span>':'')
       +'</div>'
       +'<div style="font-size:13px;color:var(--dgray);">'
-      +(proj.client?esc(proj.client):'No client assigned')
+      +'<span onclick="editCurrentProject()" style="cursor:pointer;border-bottom:1px dashed var(--dgray);" title="Click to change client">'+(proj.client?esc(proj.client):'No client assigned')+'</span>'
       +(snap.address?' &middot; '+esc(snap.address):'')
       +(snap.assigned_to?' &middot; <span style="font-weight:600;">'+esc(_allUsers.reduce(function(a,u){return u.username===snap.assigned_to?u.full_name:a;},snap.assigned_to))+'</span>':'')
       +'</div>'
@@ -6383,7 +6383,7 @@ function editCurrentProject(){
   openProjectModal({
     name:p.name,client:p.client,address:snap.address||'',city_state:snap.city_state||'',
     bid_due_date:snap.bid_due_date||'',bid_due_time:snap.bid_due_time||'',
-    stage_id:p.stage_id,notes:snap.notes||'',_rawSnap:snap
+    stage_id:p.stage_id,notes:snap.notes||'',assigned_to:snap.assigned_to||'',_rawSnap:snap
   },_currentProjectId);
 }
 
@@ -10613,7 +10613,7 @@ function openProjectModal(existingData, editId){
       // Update existing project
       var snap=d._rawSnap||{};
       var prevAssigned=snap.assigned_to||'';
-      snap.is_project=true;snap.address=payload.address;snap.city_state='';
+      snap.is_project=true;snap.client=payload.client;snap.address=payload.address;snap.city_state='';
       snap.bid_due_date=payload.bid_due_date;snap.bid_due_time=payload.bid_due_time;
       snap.notes=payload.notes;snap.assigned_to=payload.assigned_to;
       var updateBody={name:payload.name,client:payload.client,snap:snap};
