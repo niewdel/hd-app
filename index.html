@@ -1697,7 +1697,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               </div>
             </div>
             <div class="fg fg2">
-              <div><label for="proj-addr">Job Site Address</label><input id="proj-addr" type="text" placeholder="123 Main St, Greensboro, NC"/></div>
+              <div><label for="proj-addr">Job Site Address</label><div style="position:relative;"><input id="proj-addr" type="text" placeholder="123 Main St, Greensboro, NC" autocomplete="off"/><div id="proj-addr-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--wht);border:1px solid var(--bdr);border-radius:0 0 var(--rad-s) var(--rad-s);box-shadow:var(--shadow-m);max-height:200px;overflow-y:auto;z-index:10;"></div></div></div>
               <div><label for="proj-date">Date</label><input id="proj-date" type="date"/></div>
             </div>
             <input id="proj-cs" type="hidden" value=""/>
@@ -4469,6 +4469,7 @@ function boot(){
   } else {renderAll();}
   renderConc();renderExtra();renderPavementItems();
   loadClientsForAutocomplete();
+  initAddrAutocomplete('proj-addr','proj-addr-sug');
   loadAllUsers();
   startNotifPolling();
   updateMatIndicator();
@@ -8931,14 +8932,15 @@ function buildPayload(){
   var total=line_items.reduce(function(s,x){return s+x.subtotal;},0);
   // Get project number if we're in a project context
   var _projNumber='';
-  if(window._pendingProjectLink){
-    var _pp=pipelineProposals.find(function(x){return x.id===window._pendingProjectLink;});
+  var _projLinkId=window._pendingProjectLink||(lastSavedQuoteId?findParentProject(lastSavedQuoteId):null);
+  if(_projLinkId){
+    var _pp=pipelineProposals.find(function(x){return x.id===_projLinkId;});
     if(_pp){var _ps=typeof _pp.snap==='string'?JSON.parse(_pp.snap):_pp.snap||{};_projNumber=_ps.project_number||'';}
   }
   // Build proposal document number (P suffix)
   var _proposalIdx=1;
-  if(_projNumber&&window._pendingProjectLink){
-    var _pp2=pipelineProposals.find(function(x){return x.id===window._pendingProjectLink;});
+  if(_projNumber&&_projLinkId){
+    var _pp2=pipelineProposals.find(function(x){return x.id===_projLinkId;});
     if(_pp2){var _ps2=typeof _pp2.snap==='string'?JSON.parse(_pp2.snap):_pp2.snap||{};
       var _linked=_ps2.linked_proposals||[];
       var _lidx=lastSavedQuoteId?_linked.indexOf(lastSavedQuoteId):-1;
