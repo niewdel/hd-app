@@ -592,17 +592,18 @@ def approval_page(data, st):
     body_b_st = ParagraphStyle('sbb', fontName='Helvetica-Bold', fontSize=9,
                                 textColor=BLACK, leading=14)
 
+    _line = '_' * 30
     sig_data = [
         [Paragraph('<b>HD Hauling &amp; Grading</b>', body_b_st),
          Paragraph('<b>Client / Authorized Representative</b>', body_b_st)],
-        [Paragraph('Authorized Signature: ___________________________', body_st),
-         Paragraph('Authorized Signature: ___________________________', body_st)],
-        [Paragraph('Printed Name: _________________________________', body_st),
-         Paragraph('Printed Name: _________________________________', body_st)],
-        [Paragraph('Title: _________________________________________', body_st),
-         Paragraph('Title: _________________________________________', body_st)],
-        [Paragraph('Date: __________________________________________', body_st),
-         Paragraph('Date: __________________________________________', body_st)],
+        [Paragraph('Authorized Signature: ' + _line, body_st),
+         Paragraph('Authorized Signature: ' + _line, body_st)],
+        [Paragraph('Printed Name: ' + _line, body_st),
+         Paragraph('Printed Name: ' + _line, body_st)],
+        [Paragraph('Title: ' + _line, body_st),
+         Paragraph('Title: ' + _line, body_st)],
+        [Paragraph('Date: ' + _line, body_st),
+         Paragraph('Date: ' + _line, body_st)],
     ]
     sig_tbl = Table(sig_data, colWidths=[cw/2, cw/2])
     sig_tbl.setStyle(TableStyle([
@@ -700,8 +701,7 @@ def tc_pages(st):
 
     elems.append(Paragraph('Terms & Conditions',
         ParagraphStyle('tch', fontName='Helvetica-Bold', fontSize=14,
-                       alignment=TA_CENTER, spaceAfter=6)))
-    elems.append(HRFlowable(width='100%', thickness=1, color=RED, spaceAfter=10))
+                       alignment=TA_CENTER, spaceAfter=10)))
 
     sections = [
         ('1. Contract Formation & Binding Agreement', [
