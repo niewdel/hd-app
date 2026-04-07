@@ -257,6 +257,78 @@ def build(data, out_path):
         story.append(_make_table(rows, cols, cw))
         story.append(Spacer(1, 0.15*inch))
 
+    # ── Pavement Items (Single Items — Striping, etc.) ──
+    pav_items = data.get('pavement_items', [])
+    if pav_items:
+        story.append(_section_banner('PAVEMENT ITEMS BREAKDOWN', cw))
+
+        cols = [cw*0.22, cw*0.07, cw*0.06, cw*0.06, cw*0.11, cw*0.11, cw*0.11, cw*0.11, cw*0.07, cw*0.08]
+        rows = [[
+            Paragraph('ITEM', hdr_s), Paragraph('QTY', hdr_r), Paragraph('UNIT', hdr_r),
+            Paragraph('DAYS', hdr_r), Paragraph('MATERIAL', hdr_r),
+            Paragraph('LABOR', hdr_r), Paragraph('TRUCKING', hdr_r),
+            Paragraph('BID', hdr_r), Paragraph('MU%', hdr_r), Paragraph('$/UNIT', hdr_r)
+        ]]
+        for item in pav_items:
+            cost = item.get('material', 0) + item.get('labor', 0) + item.get('trucking', 0)
+            bid = item.get('bid', 0)
+            if item.get('is_striping'):
+                mu = item.get('markup', 0)
+            else:
+                mu = ((bid - cost) / cost * 100) if cost > 0 else 0
+            ppu = bid / item.get('qty', 1) if item.get('qty', 0) > 0 else bid
+            rows.append([
+                Paragraph(item.get('name', ''), name_s),
+                Paragraph(str(item.get('qty', 0)), cell_s),
+                Paragraph(item.get('unit', ''), cell_s),
+                Paragraph(str(item.get('days', 0)), cell_s),
+                Paragraph('$' + _fi(item.get('material', 0)) if item.get('material', 0) > 0 else '-', cell_s),
+                Paragraph('$' + _fi(item.get('labor', 0)) if item.get('labor', 0) > 0 else '-', cell_s),
+                Paragraph('$' + _fi(item.get('trucking', 0)) if item.get('trucking', 0) > 0 else '-', cell_s),
+                Paragraph('$' + _fi(bid), cell_b),
+                Paragraph(f"{mu:.1f}%", cell_s),
+                Paragraph('$' + f"{ppu:,.0f}", cell_s),
+            ])
+
+        story.append(_make_table(rows, cols, cw))
+        story.append(Spacer(1, 0.15*inch))
+
+    # ── Site Work Breakdown ──
+    sw_items = data.get('sitework_items', [])
+    if sw_items:
+        story.append(_section_banner('SITE WORK BREAKDOWN', cw))
+
+        cols = [cw*0.22, cw*0.07, cw*0.06, cw*0.06, cw*0.11, cw*0.11, cw*0.11, cw*0.11, cw*0.07, cw*0.08]
+        rows = [[
+            Paragraph('ITEM', hdr_s), Paragraph('QTY', hdr_r), Paragraph('UNIT', hdr_r),
+            Paragraph('DAYS', hdr_r), Paragraph('MATERIAL', hdr_r),
+            Paragraph('LABOR', hdr_r), Paragraph('TRUCKING', hdr_r),
+            Paragraph('BID', hdr_r), Paragraph('MU%', hdr_r), Paragraph('$/UNIT', hdr_r)
+        ]]
+        for item in sw_items:
+            cost = item.get('material', 0) + item.get('labor', 0) + item.get('trucking', 0)
+            bid = item.get('bid', 0)
+            if item.get('is_striping'):
+                mu = item.get('markup', 0)
+            else:
+                mu = ((bid - cost) / cost * 100) if cost > 0 else 0
+            ppu = bid / item.get('qty', 1) if item.get('qty', 0) > 0 else bid
+            rows.append([
+                Paragraph(item.get('name', ''), name_s),
+                Paragraph(str(item.get('qty', 0)), cell_s),
+                Paragraph(item.get('unit', ''), cell_s),
+                Paragraph(str(item.get('days', 0)), cell_s),
+                Paragraph('$' + _fi(item.get('material', 0)) if item.get('material', 0) > 0 else '-', cell_s),
+                Paragraph('$' + _fi(item.get('labor', 0)) if item.get('labor', 0) > 0 else '-', cell_s),
+                Paragraph('$' + _fi(item.get('trucking', 0)) if item.get('trucking', 0) > 0 else '-', cell_s),
+                Paragraph('$' + _fi(bid), cell_b),
+                Paragraph(f"{mu:.1f}%", cell_s),
+                Paragraph('$' + f"{ppu:,.0f}", cell_s),
+            ])
+
+        story.append(_make_table(rows, cols, cw))
+        story.append(Spacer(1, 0.15*inch))
+
     # ── Additional Items Breakdown ──
     extra_items = data.get('extra_items', [])
     if extra_items:
