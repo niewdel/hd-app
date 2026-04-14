@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#111111"/>
 <meta name="color-scheme" content="light dark"/>
 <title>HD Hauling &amp; Grading - Proposal Generator</title>
-<link rel="icon" type="image/png" href="/hd_logo_cropped.png"/>
+<link rel="icon" type="image/png" href="/hd-no-background.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -775,10 +775,7 @@ body.dark .mc-queue-card:hover{border-color:rgba(204,0,0,0.3);}
 .login-body{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;}
 .login-card{width:540px;max-width:90vw;text-align:center;}
 .login-eyebrow{margin-bottom:18px;display:flex;flex-direction:column;align-items:center;gap:4px;}
-.login-mono{display:flex;align-items:center;gap:2px;}
-.login-mono-h{font-size:72px;font-weight:900;color:var(--red);line-height:1;font-family:var(--font);letter-spacing:-2px;}
-.login-mono-d{font-size:72px;font-weight:900;color:#666;line-height:1;font-family:var(--font);letter-spacing:-2px;}
-.login-brand{font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:4px;}
+.login-logo-img{width:180px;height:auto;}
 .login-heading{font-family:var(--font-display);font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;margin-bottom:6px;}
 .login-sub{font-family:'Poppins',sans-serif;font-size:14px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;margin-bottom:36px;}
 .login-rule{width:32px;height:2px;background:var(--red);margin:0 auto 36px;border-radius:2px;}
@@ -802,12 +799,7 @@ body.dark .mc-queue-card:hover{border-color:rgba(204,0,0,0.3);}
 #app.on.sb-expanded .main{margin-left:var(--sidebar-w);}
 .bg-canvas{position:fixed;inset:0;z-index:-1;pointer-events:none;width:100vw;height:100dvh;}
 .sb-logo{position:relative;z-index:1;padding:16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);height:var(--topbar-h);min-height:var(--topbar-h);}
-.sb-monogram{display:flex;align-items:center;gap:0;flex-shrink:0;}
-.sb-monogram-h{font-size:24px;font-weight:800;color:var(--red);line-height:1;font-family:var(--font);letter-spacing:-0.5px;}
-.sb-monogram-d{font-size:24px;font-weight:800;color:#888;line-height:1;font-family:var(--font);letter-spacing:-0.5px;}
-.sb-monogram-arc{display:none;}
-.sb-brand{font-size:10px;font-weight:700;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;opacity:0;transition:opacity .15s;margin-top:0;text-transform:uppercase;letter-spacing:0.12em;}
-.sb:hover .sb-brand,.sb.pinned .sb-brand{opacity:1;}
+.sb-logo-img{width:48px;height:auto;}
 .sb nav{position:relative;z-index:1;flex:1;padding:8px 8px;overflow-y:auto;overflow-x:hidden;}
 .nav-grp{font-size:9px;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:1.2px;padding:16px 6px 6px;white-space:nowrap;overflow:hidden;opacity:0;height:0;transition:opacity .15s;}
 .sb:hover .nav-grp,.sb.pinned .nav-grp{opacity:1;height:auto;}
@@ -1391,8 +1383,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
   <div class="login-body">
     <div class="login-card">
       <div class="login-eyebrow">
-        <div class="login-mono"><span class="login-mono-h">H</span><span class="login-mono-d">D</span></div>
-        <div class="login-brand">Hauling &amp; Grading</div>
+        <img src="/hd-no-background.png" alt="HD Hauling &amp; Grading" class="login-logo-img"/>
       </div>
       <div class="login-sub">Internal use only &nbsp;&middot;&nbsp; Authorized access required</div>
       <div class="login-rule"></div>
@@ -1456,10 +1447,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
   <aside class="sb">
     <div class="sb-logo">
-      <div class="sb-monogram">
-        <span class="sb-monogram-h">H</span><span class="sb-monogram-d">D</span>
-      </div>
-      <div class="sb-brand">Hauling &amp; Grading</div>
+      <img src="/hd-no-background.png" alt="HD Hauling &amp; Grading" class="sb-logo-img"/>
     </div>
     <nav>
       <div class="nav-item on" role="button" tabindex="0" aria-label="Dashboard" onclick="showPanel('dashboard',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('dashboard',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg><span class="nav-label">Dashboard</span></div>
