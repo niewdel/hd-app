@@ -10686,12 +10686,11 @@ async function renderPipeline() {
         card.addEventListener('dragend',function(){this.classList.remove('dragging');document.querySelectorAll('.kb-cards.drag-over').forEach(function(el){el.classList.remove('drag-over');});});
         var projNumStr=snap.project_number?'<div style="font-size:9px;font-weight:700;color:var(--red);font-family:monospace;margin-bottom:2px;">'+esc(snap.project_number)+'</div>':'';
         var woCount=(snap.work_orders||[]).filter(function(w){return w.status!=='complete';}).length;
-        var addr=snap.address||'';
-        if(addr.length>35)addr=addr.substring(0,35)+'...';
+        var bidDateStr='';
+        if(snap.bid_due_date){var bdp=snap.bid_due_date.split('-');bidDateStr='Bid '+bdp[1]+'/'+bdp[2]+'/'+bdp[0];}
         card.innerHTML=projNumStr
           +'<div class="kb-card-name" style="cursor:pointer;" onclick="openProjectSummary('+p.id+')">'+esc(p.name||'Untitled')+'</div>'
-          +'<div class="kb-card-client">'+esc(p.client||'')+'</div>'
-          +(addr?'<div style="font-size:10px;color:var(--dgray);margin-top:2px;">'+esc(addr)+'</div>':'')
+          +(bidDateStr?'<div style="font-size:10px;font-weight:600;color:var(--red);margin-top:2px;">'+bidDateStr+'</div>':'')
           +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">'
           +(canSeePricing()?'<span class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'')+'</span>':'<span></span>')
           +(woCount?'<span style="font-size:10px;color:var(--dgray);background:var(--bg-sub);padding:1px 6px;border-radius:4px;">'+woCount+' WO</span>':'')
