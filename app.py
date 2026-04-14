@@ -644,6 +644,44 @@ def _cascade_username(old, new):
     except Exception:
         pass  # Best-effort — don't fail the user update
 
+
+@app.route('/admin/users/<int:uid>', methods=['DELETE'])
+@require_admin
+def delete_user(uid):
+    """Permanently delete a user and all their related data."""
+    try:
+        # Look up user first
+        r = http.get(sb_url('hd_users', f'?id=eq.{uid}&select=username'), headers=sb_headers(), timeout=5)
+        if r.status_code != 200 or not r.json():
+            return jsonify({'ok': False, 'error': 'User not found'}), 404
+        username = r.json()[0]['username']
+
+        # Don't allow deleting yourself
+        if username == session.get('username'):
+            return jsonify({'ok': False, 'error': 'Cannot delete your own account'}), 400
+
+        h = {**sb_headers(), 'Prefer': 'return=minimal'}
+
+        # Delete related data across all tables
+        http.delete(sb_url('hd_access_log', f'?username=eq.{username}'), headers=h, timeout=5)
+        http.delete(sb_url('hd_notifications', f'?recipient=eq.{username}'), headers=h, timeout=5)
+        http.delete(sb_url('hd_reminders', f'?assigned_to=eq.{username}'), headers=h, timeout=5)
+        http.delete(sb_url('hd_reminders', f'?created_by=eq.{username}'), headers=h, timeout=5)
+        http.delete(sb_url('hd_tasks', f'?assigned_to=eq.{username}'), headers=h, timeout=5)
+        http.delete(sb_url('hd_tasks', f'?created_by=eq.{username}'), headers=h, timeout=5)
+        http.delete(sb_url('hd_time_entries', f'?username=eq.{username}'), headers=h, timeout=5)
+        http.delete(sb_url('hd_bug_reports', f'?submitted_by=eq.{username}'), headers=h, timeout=5)
+
+        # Delete the user record
+        r2 = http.delete(sb_url('hd_users', f'?id=eq.{uid}'), headers=h, timeout=5)
+        if r2.status_code not in (200, 204):
+            return jsonify({'ok': False, 'error': r2.text}), 400
+
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
 @app.route('/admin/logs', methods=['GET'])
 @require_admin
 def get_logs():
