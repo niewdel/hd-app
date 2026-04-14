@@ -9615,6 +9615,8 @@ async function exportPDF(){
   if(btn){btn.disabled=true;btn.textContent='Generating...';}
   try{
     var p=buildPayload();
+    // Always use today's date on exported PDFs
+    p.date=new Date().toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
     if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
     // Include project site plan URL if available
     var _spProjId=window._pendingProjectLink||(lastSavedQuoteId?findParentProject(lastSavedQuoteId):null);
@@ -10011,6 +10013,7 @@ async function _exportProjectPDFForId(qid){
   await new Promise(function(r){setTimeout(r,200);});
   try{
     var p=buildPayload();
+    p.date=new Date().toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
     // Blank out client info for master export
     p.client_name='';p.client_email='';p.client_phone='';p.client_company='';
     var r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
@@ -10029,6 +10032,7 @@ async function exportPDFForGC(qid,gcClient){
   await new Promise(function(r){setTimeout(r,200);});
   try{
     var p=buildPayload();
+    p.date=new Date().toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
     p.client_name=gcClient.name||'';
     p.client_email=gcClient.email||'';
     p.client_phone=gcClient.phone||'';
@@ -10086,6 +10090,7 @@ async function exportPDFFromSaved(qid){
   await new Promise(function(r){setTimeout(r,200);});
   try{
     var p=buildPayload();
+    p.date=new Date().toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
     var r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
     if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
     var blob=await r.blob();var url=URL.createObjectURL(blob);
