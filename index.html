@@ -2040,46 +2040,46 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       <!-- PROJECTS LIST PANEL -->
       <div class="panel" id="panel-projects"><div class="content mc-stagger" style="padding:4px 16px;max-width:none;">
 
-        <div class="ops-project-layout">
-          <div class="ops-project-main">
-            <div id="proj-stats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;">
-              <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
-              <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
-              <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
-              <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
-              <div class="mc-card mc-kpi"><div class="skeleton skeleton-text" style="width:50%;"></div><div class="skeleton skeleton-text sm" style="margin-top:6px;"></div></div>
+        <div class="mc-card">
+          <div class="mc-toolbar">
+            <input id="projects-search" type="text" placeholder="Search projects, clients, or addresses..." oninput="filterProjects(this.value)"/>
+            <div class="mc-seg" id="proj-view-toggle">
+              <button class="mc-seg-btn on" data-view="pipeline" onclick="setProjView('pipeline')">Pipeline</button>
+              <button class="mc-seg-btn" data-view="list" onclick="setProjView('list')">List</button>
+              <button class="mc-seg-btn" data-view="calendar" onclick="setProjView('calendar')">Bid Calendar</button>
+              <button class="mc-seg-btn" data-view="map" onclick="setProjView('map')">Map</button>
             </div>
-
-            <div class="mc-card">
-              <div class="mc-toolbar">
-                <input id="projects-search" type="text" placeholder="Search projects, clients, or addresses..." oninput="filterProjects(this.value)"/>
-                <div class="mc-seg" id="proj-view-toggle">
-                  <button class="mc-seg-btn on" data-view="pipeline" onclick="setProjView('pipeline')">Pipeline</button>
-                  <button class="mc-seg-btn" data-view="list" onclick="setProjView('list')">List</button>
-                  <button class="mc-seg-btn" data-view="map" onclick="setProjView('map')">Map</button>
-                </div>
-                <div style="margin-left:auto;display:flex;gap:8px;">
-                  <button class="btn btn-sec btn-sm" onclick="showPanel('saved',null)">Saved Documents</button>
-                  <button class="btn btn-primary btn-sm" onclick="openProjectModal()">New Project</button>
-                </div>
-                <select id="proj-stage-filter" onchange="filterProjects(document.getElementById('projects-search').value)" style="padding:7px 12px;border:1px solid var(--bdr);border-radius:8px;font-size:12px;background:var(--bg-sub);font-family:var(--font);">
-                  <option value="">All Stages</option>
-                </select>
-              </div>
-              <div id="proj-pipeline-view" style="overflow-x:auto;">
-                <div id="pipeline-board">
-                  <div style="color:var(--dgray);font-size:13px;padding:20px;">Loading pipeline...</div>
-                </div>
-              </div>
-              <div id="proj-list-view" style="display:none;">
-                <div id="projects-list"></div>
-              </div>
-              <div id="proj-map-view" style="display:none;padding:16px;">
-                <div id="proj-map" style="width:100%;height:500px;border-radius:14px;border:1px solid var(--bdr);overflow:hidden;"></div>
-              </div>
+            <div style="margin-left:auto;display:flex;gap:8px;">
+              <button class="btn btn-sec btn-sm" onclick="showPanel('saved',null)">Saved Documents</button>
+              <button class="btn btn-primary btn-sm" onclick="openProjectModal()">New Project</button>
+            </div>
+            <select id="proj-stage-filter" onchange="filterProjects(document.getElementById('projects-search').value)" style="padding:7px 12px;border:1px solid var(--bdr);border-radius:8px;font-size:12px;background:var(--bg-sub);font-family:var(--font);">
+              <option value="">All Stages</option>
+            </select>
+          </div>
+          <div id="proj-pipeline-view" style="overflow-x:auto;">
+            <div id="pipeline-board">
+              <div style="color:var(--dgray);font-size:13px;padding:20px;">Loading pipeline...</div>
             </div>
           </div>
-
+          <div id="proj-list-view" style="display:none;">
+            <div id="projects-list"></div>
+          </div>
+          <div id="proj-calendar-view" style="display:none;padding:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <button class="btn btn-sec btn-sm" onclick="projCalNav(-1)">&larr;</button>
+              <span id="proj-cal-month" style="font-weight:700;font-size:15px;"></span>
+              <button class="btn btn-sec btn-sm" onclick="projCalNav(1)">&rarr;</button>
+            </div>
+            <div id="proj-cal-grid"></div>
+            <div id="proj-cal-selected-label" style="display:none;margin-top:12px;">
+              <div style="font-weight:600;font-size:13px;margin-bottom:6px;" id="proj-cal-selected-date"></div>
+            </div>
+            <div id="proj-cal-day-entries"></div>
+          </div>
+          <div id="proj-map-view" style="display:none;padding:16px;">
+            <div id="proj-map" style="width:100%;height:500px;border-radius:14px;border:1px solid var(--bdr);overflow:hidden;"></div>
+          </div>
         </div>
       </div></div>
 
@@ -7895,7 +7895,7 @@ function showPanel(id,el){
   if(!window._popNav){try{history.pushState({panel:id},'','#'+id);}catch(e){}}
   window._popNav=false;
   if(id==='saved'){renderSaved();loadCOList();loadWOList();}
-  if(id==='projects'){renderPipeline().then(function(){renderProjectStats();}).catch(function(){renderProjectStats();});renderProjectsList();}
+  if(id==='projects'){renderPipeline();renderProjectsList();}
   if(id==='lineitems')renderLineItems();
   if(id==='crewcosts')renderCrewCosts();
   if(id==='dashboard'){
@@ -10508,19 +10508,102 @@ async function autoMoveToStage(proposalId, stageName){
 
 // Project view toggle
 var _projView='pipeline';
+var _projCalDate=new Date();
+var _projCalSelected='';
 function setProjView(view){
   _projView=view;
   var btns=document.querySelectorAll('#proj-view-toggle .mc-seg-btn,#proj-view-toggle .sched-view-btn');
   btns.forEach(function(b){b.classList.remove('on','sched-view-active');if(b.dataset.view===view){b.classList.add('on');b.classList.add('sched-view-active');}});
   var pv=document.getElementById('proj-pipeline-view');
   var lv=document.getElementById('proj-list-view');
+  var cv=document.getElementById('proj-calendar-view');
   var mv=document.getElementById('proj-map-view');
   if(pv)pv.style.display=view==='pipeline'?'':'none';
   if(lv)lv.style.display=view==='list'?'':'none';
+  if(cv)cv.style.display=view==='calendar'?'':'none';
   if(mv)mv.style.display=view==='map'?'':'none';
   if(view==='pipeline')renderPipeline();
   else if(view==='list')renderProjectsList();
+  else if(view==='calendar')renderProjCal();
   else if(view==='map'){if(typeof initProjectMap==='function')initProjectMap();}
+}
+function projCalNav(dir){_projCalDate.setMonth(_projCalDate.getMonth()+dir);renderProjCal();}
+function renderProjCal(){
+  var grid=document.getElementById('proj-cal-grid');
+  var monthEl=document.getElementById('proj-cal-month');
+  if(!grid||!monthEl)return;
+  // Build bid date map from pipeline
+  var bidMap={};
+  (pipelineProposals||[]).forEach(function(p){
+    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
+    if(!snap.is_project||!snap.bid_due_date)return;
+    var key=snap.bid_due_date;
+    if(!bidMap[key])bidMap[key]=[];
+    bidMap[key].push({id:p.id,name:p.name||'Untitled',client:p.client||'',total:p.total||0,time:snap.bid_due_time||''});
+  });
+  var y=_projCalDate.getFullYear(),m=_projCalDate.getMonth();
+  monthEl.textContent=new Date(y,m).toLocaleString('en-US',{month:'long',year:'numeric'});
+  var first=new Date(y,m,1).getDay();
+  var daysInMonth=new Date(y,m+1,0).getDate();
+  var today=new Date();
+  grid.innerHTML='';
+  var hdr=document.createElement('div');
+  hdr.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:10px;font-weight:600;color:var(--dgray);margin-bottom:4px;';
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(function(d){var s=document.createElement('span');s.textContent=d;hdr.appendChild(s);});
+  grid.appendChild(hdr);
+  var body=document.createElement('div');
+  body.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:2px;';
+  for(var i=0;i<first;i++){var blank=document.createElement('div');blank.style.padding='8px';body.appendChild(blank);}
+  for(var d=1;d<=daysInMonth;d++){
+    var cell=document.createElement('div');
+    var dateKey=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var isToday=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
+    var hasBids=bidMap[dateKey]&&bidMap[dateKey].length>0;
+    var isSelected=_projCalSelected===dateKey;
+    cell.className='mc-cal-cell'+(isSelected?' mc-cal-selected':(isToday?' mc-cal-today':(hasBids?' mc-cal-bid':'')));
+    cell.textContent=d;
+    cell.setAttribute('tabindex','0');
+    cell.setAttribute('role','button');
+    if(hasBids){var dots=document.createElement('div');dots.style.cssText='display:flex;gap:3px;justify-content:center;margin-top:2px;';
+      var bdot=document.createElement('div');bdot.style.cssText='width:5px;height:5px;border-radius:50%;background:'+(isSelected?'#fff':'#E6A800')+';';dots.appendChild(bdot);
+      cell.appendChild(dots);}
+    (function(dk){cell.addEventListener('click',function(){_projCalSelected=dk;renderProjCal();renderProjCalDay(dk,bidMap);});})(dateKey);
+    body.appendChild(cell);
+  }
+  grid.appendChild(body);
+  if(_projCalSelected)renderProjCalDay(_projCalSelected,bidMap);
+}
+function renderProjCalDay(dateKey,bidMap){
+  var c=document.getElementById('proj-cal-day-entries');
+  var dateLabel=document.getElementById('proj-cal-selected-date');
+  var labelWrap=document.getElementById('proj-cal-selected-label');
+  if(!c)return;
+  var d=new Date(dateKey+'T12:00:00');
+  if(dateLabel)dateLabel.textContent=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  if(labelWrap)labelWrap.style.display='block';
+  var bids=bidMap[dateKey]||[];
+  c.innerHTML='';
+  if(bids.length){
+    bids.forEach(function(b){
+      var row=document.createElement('div');
+      row.className='mc-list-item';
+      var dot=document.createElement('span');dot.className='mc-dot';dot.style.background='#E6A800';
+      row.appendChild(dot);
+      var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+      var details=[];
+      if(b.time)details.push('Due '+fmt12(b.time));
+      if(b.total>0&&canSeePricing())details.push('$'+Math.round(b.total).toLocaleString());
+      info.innerHTML='<div style="font-weight:600;font-size:13px;">'+esc(b.name)+'</div>'
+        +(details.length?'<div style="font-size:11px;color:var(--dgray);">'+details.join(' \u00b7 ')+'</div>':'');
+      row.appendChild(info);
+      var arrow=document.createElement('span');arrow.style.cssText='font-size:12px;color:var(--dgray);';arrow.innerHTML='&#8250;';
+      row.appendChild(arrow);
+      (function(bid){row.addEventListener('click',function(){openProjectSummary(bid.id);});})(b);
+      c.appendChild(row);
+    });
+  } else {
+    c.innerHTML='<div class="empty-state" style="padding:16px;"><div class="empty-state-desc">No bids due on this date</div></div>';
+  }
 }
 function populateStageFilter(){
   var sel=document.getElementById('proj-stage-filter');if(!sel||!_pipelineStages)return;
