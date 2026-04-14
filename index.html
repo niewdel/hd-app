@@ -1654,12 +1654,6 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             </div>
           </div>
 
-          <div class="dash-section">
-            <div class="dash-section-hdr">
-              <span class="dash-section-title">Recent Activity</span>
-            </div>
-            <div id="dash-recent-activity" style="max-height:360px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div></div></div>
-          </div>
         </div>
       </div>
 
@@ -4501,10 +4495,10 @@ function _fetchBootData(){
     // Re-render dashboard with full data
     _setDashGreeting();
     renderDashTodaySchedule();
+    loadDashBidDates();
     renderDashCal();
     updateNavBadges();
     renderDashWeatherMini();
-    renderDashRecentActivity();
     loadDashLeads();
   }).catch(function(e){console.warn('boot/data fetch failed:',e);});
 }
@@ -5239,7 +5233,6 @@ function renderDashboard(){
   // Deferred — load async widgets after main render
   setTimeout(function(){
     renderDashWeatherMini();
-    renderDashRecentActivity();
     loadDashLeads();
   },50);
 }
