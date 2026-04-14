@@ -5782,36 +5782,13 @@ async function renderProjectsList(){
       var nameEl=document.createElement('span');nameEl.style.cssText='font-family:var(--font-display);font-weight:700;font-size:14px;';nameEl.textContent=p.name||'Untitled';
       var badge=document.createElement('span');badge.className='mc-stage-badge';badge.style.background=stage.color;badge.textContent=stage.name;
       nameRow.appendChild(nameEl);nameRow.appendChild(badge);left.appendChild(nameRow);
-      var sub=document.createElement('div');sub.style.cssText='font-size:12px;color:var(--dgray);';
-      var parts=[];
-      if(p.client)parts.push(esc(p.client));
-      if(snap.address)parts.push(esc(snap.address));
-      sub.innerHTML=parts.join(' &middot; ')||'No client';
+      var sub=document.createElement('div');sub.style.cssText='font-size:12px;color:var(--dgray);display:flex;gap:10px;align-items:center;margin-top:2px;';
+      var subParts=[];
+      if(snap.bid_due_date){var dp=snap.bid_due_date.split('-');subParts.push('Bid '+dp[1]+'/'+dp[2]+'/'+dp[0]);}
+      if(p.total>0&&canSeePricing())subParts.push('$'+Math.round(p.total).toLocaleString());
+      sub.textContent=subParts.join(' \u00b7 ');
       left.appendChild(sub);
       card.appendChild(left);
-      // Middle: counts
-      var mid=document.createElement('div');mid.style.cssText='display:flex;gap:14px;font-size:11px;color:var(--dgray);flex-shrink:0;';
-      mid.innerHTML='<span title="Proposals">'+linked.length+' proposal'+(linked.length!==1?'s':'')+'</span>'
-        +'<span title="Change Orders">'+coCount+' CO'+(coCount!==1?'s':'')+'</span>'
-        +'<span title="Notes">'+noteCount+' note'+(noteCount!==1?'s':'')+'</span>';
-      card.appendChild(mid);
-      // Right: bid due + total
-      var right=document.createElement('div');right.style.cssText='text-align:right;flex-shrink:0;min-width:100px;';
-      if(snap.bid_due_date){
-        var dp=snap.bid_due_date.split('-');
-        var dueEl=document.createElement('div');dueEl.style.cssText='font-size:11px;font-weight:600;color:var(--red);';
-        dueEl.textContent='Due '+dp[1]+'/'+dp[2]+'/'+dp[0];
-        right.appendChild(dueEl);
-      }
-      if(p.total>0&&canSeePricing()){
-        var totEl=document.createElement('div');totEl.style.cssText='font-size:13px;font-weight:600;margin-top:2px;';
-        totEl.textContent='$'+Math.round(p.total).toLocaleString();
-        right.appendChild(totEl);
-      }
-      var created=document.createElement('div');created.style.cssText='font-size:10px;color:var(--dgray);margin-top:2px;';
-      created.textContent=p.created_by?'by '+p.created_by:'';
-      right.appendChild(created);
-      card.appendChild(right);
       c.appendChild(card);
     });
   }catch(e){c.innerHTML='<p style="color:var(--red);font-size:13px;">Error loading projects: '+esc(e.message)+'</p>';}
