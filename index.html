@@ -10688,9 +10688,8 @@ async function renderPipeline() {
         var woCount=(snap.work_orders||[]).filter(function(w){return w.status!=='complete';}).length;
         var bidDateStr='';
         if(snap.bid_due_date){var bdp=snap.bid_due_date.split('-');bidDateStr='Bid '+bdp[1]+'/'+bdp[2]+'/'+bdp[0];}
-        card.innerHTML=projNumStr
+        card.innerHTML=(bidDateStr?'<div style="font-size:9px;font-weight:700;color:var(--red);font-family:monospace;margin-bottom:2px;">'+bidDateStr+'</div>':'')
           +'<div class="kb-card-name" style="cursor:pointer;" onclick="openProjectSummary('+p.id+')">'+esc(p.name||'Untitled')+'</div>'
-          +(bidDateStr?'<div style="font-size:10px;font-weight:600;color:var(--red);margin-top:2px;">'+bidDateStr+'</div>':'')
           +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">'
           +(canSeePricing()?'<span class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'')+'</span>':'<span></span>')
           +(woCount?'<span style="font-size:10px;color:var(--dgray);background:var(--bg-sub);padding:1px 6px;border-radius:4px;">'+woCount+' WO</span>':'')
