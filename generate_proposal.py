@@ -587,8 +587,7 @@ def approval_page(data, st):
     elems.append(Spacer(1, 0.14*inch))
 
     # ── Bilateral signature block ─────────────────────────────────────────────
-    from reportlab.platypus import Drawing
-    from reportlab.graphics.shapes import Line as RLLine
+    from reportlab.graphics.shapes import Drawing, Line as RLLine
 
     body_st   = ParagraphStyle('sb',  fontName='Helvetica',      fontSize=9,
                                 textColor=BLACK, leading=12)
