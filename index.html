@@ -1623,12 +1623,6 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                 </div>
               </div>
 
-              <div class="dash-section" style="flex:1;display:flex;flex-direction:column;">
-                <div class="dash-section-hdr">
-                  <span class="dash-section-title">This Week</span>
-                </div>
-                <div id="dash-upcoming-wo" style="flex:1;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><div class="empty-state-title">No upcoming orders</div><div class="empty-state-desc">Scheduled work will show here</div></div></div>
-              </div>
             </div>
 
             <div class="ops-stack" id="dash-pipeline-col">
@@ -1660,23 +1654,11 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             </div>
           </div>
 
-          <div class="ops-grid-dashboard-bottom">
-            <div class="dash-section">
-              <div class="dash-section-hdr">
-                <span class="dash-section-title">Recent Activity</span>
-              </div>
-              <div id="dash-recent-activity" style="max-height:360px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div></div></div>
+          <div class="dash-section">
+            <div class="dash-section-hdr">
+              <span class="dash-section-title">Recent Activity</span>
             </div>
-            <div class="dash-section">
-              <div class="dash-section-hdr">
-                <span class="dash-section-title">Pipeline Snapshot</span>
-                <button class="btn btn-sec btn-sm" onclick="showPanel('projects',document.querySelector('[onclick*=projects]'))">View Pipeline</button>
-              </div>
-              <div id="dash-pipeline-snapshot" class="ops-mini-grid">
-                <div class="mc-card"><div class="skeleton skeleton-text" style="width:45%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
-                <div class="mc-card"><div class="skeleton skeleton-text" style="width:45%;"></div><div class="skeleton skeleton-text sm" style="margin-top:8px;"></div></div>
-              </div>
-            </div>
+            <div id="dash-recent-activity" style="max-height:360px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="empty-state-title">No recent activity</div><div class="empty-state-desc">Project updates will appear here</div></div></div>
           </div>
         </div>
       </div>
@@ -4519,8 +4501,6 @@ function _fetchBootData(){
     // Re-render dashboard with full data
     _setDashGreeting();
     renderDashTodaySchedule();
-    renderDashUpcomingWO();
-    renderDashPipelineSnapshot();
     renderDashCal();
     updateNavBadges();
     renderDashWeatherMini();
@@ -5246,15 +5226,6 @@ function renderDashboard(){
   _setDashGreeting();
   loadDashBidDates();
   renderDashTodaySchedule();
-  renderDashUpcomingWO();
-  renderDashPipelineSnapshot();
-  // Field users: hide pipeline column, expand left to full width
-  var pipeCol=document.getElementById('dash-pipeline-col');
-  var topGrid=document.querySelector('.ops-grid-dashboard-top');
-  if(pipeCol&&topGrid){
-    if(typeof isFieldUser==='function'&&isFieldUser()){pipeCol.style.display='none';topGrid.classList.add('dash-grid-full');}
-    else{pipeCol.style.display='';topGrid.classList.remove('dash-grid-full');}
-  }
   if(!dashSelectedDate){
     var today=new Date();
     dashSelectedDate=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
