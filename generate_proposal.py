@@ -27,7 +27,7 @@ LOGO    = os.path.join(_DIR, 'hd_logo.png')
 if not os.path.exists(LOGO):
     LOGO = os.path.join(_DIR, 'hd_logo_cropped.png')
 LM = RM = 0.5 * inch
-TM = 1.0 * inch
+TM = 0.85 * inch
 BM = 0.6  * inch
 
 def S():
