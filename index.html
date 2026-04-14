@@ -798,8 +798,9 @@ body.dark .mc-queue-card:hover{border-color:rgba(204,0,0,0.3);}
 .main{margin-left:var(--rail-w);flex:1;min-width:0;transition:margin-left .25s cubic-bezier(0.4, 0, 0.2, 1);}
 #app.on.sb-expanded .main{margin-left:var(--sidebar-w);}
 .bg-canvas{position:fixed;inset:0;z-index:-1;pointer-events:none;width:100vw;height:100dvh;}
-.sb-logo{position:relative;z-index:1;padding:16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);height:var(--topbar-h);min-height:var(--topbar-h);}
-.sb-logo-img{width:48px;height:auto;}
+.sb-logo{position:relative;z-index:1;padding:10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);height:var(--topbar-h);min-height:var(--topbar-h);overflow:visible;}
+.sb-logo-img{width:36px;height:auto;flex-shrink:0;transition:width .25s cubic-bezier(0.4, 0, 0.2, 1);}
+.sb:hover .sb-logo-img,.sb.pinned .sb-logo-img{width:48px;}
 .sb nav{position:relative;z-index:1;flex:1;padding:8px 8px;overflow-y:auto;overflow-x:hidden;}
 .nav-grp{font-size:9px;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:1.2px;padding:16px 6px 6px;white-space:nowrap;overflow:hidden;opacity:0;height:0;transition:opacity .15s;}
 .sb:hover .nav-grp,.sb.pinned .nav-grp{opacity:1;height:auto;}
