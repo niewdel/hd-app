@@ -21,9 +21,12 @@ SUPABASE_KEY        = os.environ.get('SUPABASE_KEY', '')
 SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
 
 def sb_headers():
+    # Backend is trusted; use service_role so RLS-enabled tables stay reachable.
+    # Falls back to SUPABASE_KEY if the service key env is missing (preserves prior behavior).
+    key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
     return {
-        'apikey': SUPABASE_KEY,
-        'Authorization': f'Bearer {SUPABASE_KEY}',
+        'apikey': key,
+        'Authorization': f'Bearer {key}',
         'Content-Type': 'application/json',
         'Prefer': 'return=representation'
     }
