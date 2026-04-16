@@ -4285,7 +4285,7 @@ function _renderCmdKResults(q){
       var iconSvg='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
       if(item.type==='nav')iconSvg='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
       else if(item.type==='action')iconSvg='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>';
-      row.innerHTML=iconSvg+'<span class="cmdk-item-label">'+item.label+'</span>'+(item.hint?'<span class="cmdk-item-hint">'+item.hint+'</span>':'');
+      row.innerHTML=iconSvg+'<span class="cmdk-item-label">'+esc(item.label||'')+'</span>'+(item.hint?'<span class="cmdk-item-hint">'+esc(item.hint)+'</span>':'');
       row.addEventListener('click',function(){item.action();});
       container.appendChild(row);
       idx++;

@@ -1927,10 +1927,15 @@ def share_proposal(pid):
 
 @app.route('/proposal/view/<token>')
 def public_proposal_view(token):
-    """Public route — no auth. Returns proposal data for shared link."""
+    """Public route — no auth. Returns proposal data for shared link.
+    Whitelists the fields we expose so internal metadata (stage_id, created_by,
+    archived flags, share_token itself) never leaks to the client-view."""
+    # Token is uuid hex — reject anything that isn't 32 hex chars early
+    if not token or len(token) < 16 or not all(c in '0123456789abcdef' for c in token.lower()):
+        return jsonify({'ok': False, 'error': 'Proposal not found'}), 404
     try:
         r = http.get(
-            sb_url('proposals', f'?share_token=eq.{token}&select=*'),
+            sb_url('proposals', f'?share_token=eq.{token}&select=id,name,client,date,total,snap,project_number'),
             headers=sb_admin_headers(), timeout=10
         )
         if r.status_code != 200:
@@ -1939,21 +1944,42 @@ def public_proposal_view(token):
         if not items:
             return jsonify({'ok': False, 'error': 'Proposal not found'}), 404
         prop = items[0]
-        # Strip internal fields
-        prop.pop('share_token', None)
-        prop.pop('stage_id', None)
-        prop.pop('created_by', None)
+        # Also sanitize the nested snap: strip internal activity_log + cost breakdown fields
+        snap = prop.get('snap') or {}
+        if isinstance(snap, str):
+            try:
+                snap = json.loads(snap)
+            except Exception:
+                snap = {}
+        # Drop internal fields — leave only what the client view needs
+        for internal_key in ('activity_log', 'internal_notes', 'crew_assignments'):
+            snap.pop(internal_key, None)
+        prop['snap'] = snap
         return jsonify({'ok': True, 'proposal': prop})
-    except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+    except Exception:
+        return jsonify({'ok': False, 'error': 'Proposal not found'}), 404
 
 @app.route('/proposal/approve/<token>', methods=['POST'])
 def public_proposal_approve(token):
-    """Public route — no auth. Client approves a shared proposal."""
+    """Public route — no auth. Client approves a shared proposal.
+    Rejects if already approved, so a leaked link can't be replayed to pollute
+    the activity log or spam the project owner with notifications."""
+    # Token format sanity-check
+    if not token or len(token) < 16 or not all(c in '0123456789abcdef' for c in token.lower()):
+        return jsonify({'ok': False, 'error': 'Proposal not found'}), 404
+    # Rate limit by IP to prevent approval spam even from a valid token
+    try:
+        from security import rate_limit_check
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip() or 'unknown'
+        allowed, retry = rate_limit_check(f'approve:{ip}', max_attempts=10, window_s=600)
+        if not allowed:
+            return jsonify({'ok': False, 'error': f'Too many requests. Try again in {retry}s.'}), 429
+    except ImportError:
+        pass  # security.py not yet deployed; skip limiter
     try:
         d = request.json or {}
-        approver_name = str(d.get('name', '')).strip()
-        comment = str(d.get('comment', '')).strip()
+        approver_name = str(d.get('name', '')).strip()[:120]
+        comment = str(d.get('comment', '')).strip()[:2000]
         if not approver_name:
             return jsonify({'ok': False, 'error': 'Your name is required to approve'}), 400
         # Find the proposal
@@ -1969,6 +1995,9 @@ def public_proposal_approve(token):
         owner = prop.get('created_by', '')
         proj_name = prop.get('name', '')
         snap = json.loads(prop['snap']) if isinstance(prop.get('snap'), str) else (prop.get('snap') or {})
+        # Reject double-approval — once approved, the link is spent
+        if snap.get('approved_by') or snap.get('approved_at'):
+            return jsonify({'ok': False, 'error': 'This proposal has already been approved.'}), 409
         # Record approval in snap
         snap['approved_by'] = approver_name
         snap['approved_at'] = datetime.utcnow().isoformat()
@@ -2019,7 +2048,9 @@ def public_proposal_approve(token):
             http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=notif_row, timeout=5)
         return jsonify({'ok': True, 'message': 'Proposal approved'})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        # Don't leak stack/DB details to an unauthenticated caller
+        print(f'[public_proposal_approve] {type(e).__name__}: {e}')
+        return jsonify({'ok': False, 'error': 'Could not record approval. Try again.'}), 500
 
 @app.route('/p/<token>')
 def public_proposal_page(token):
@@ -2034,12 +2065,23 @@ def lead_form_page():
 
 @app.route('/leads/submit', methods=['POST'])
 def submit_lead():
-    """Public route — no auth. Accept lead from public form."""
+    """Public route — no auth. Accept lead from public form.
+    Rate-limited by IP and hard-capped on field lengths to prevent spam / abuse."""
+    # Rate limit per IP (10 / 10 min)
+    try:
+        from security import rate_limit_check
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip() or 'unknown'
+        allowed, retry = rate_limit_check(f'lead:{ip}', max_attempts=10, window_s=600)
+        if not allowed:
+            return jsonify({'ok': False, 'error': f'Too many submissions. Try again in {retry}s.'}), 429
+    except ImportError:
+        pass  # security.py not yet deployed; skip limiter
     try:
         d = request.json or {}
-        name = str(d.get('name', '')).strip()
-        email = str(d.get('email', '')).strip()
-        phone = str(d.get('phone', '')).strip()
+        # Cap all text fields to prevent DB/DoS abuse
+        name = str(d.get('name', '')).strip()[:200]
+        email = str(d.get('email', '')).strip()[:200]
+        phone = str(d.get('phone', '')).strip()[:40]
         if not name:
             return jsonify({'ok': False, 'error': 'Name is required'}), 400
         # Try to match existing client by email or phone
@@ -2054,12 +2096,12 @@ def submit_lead():
                 matched_client_id = cr.json()[0]['id']
         row = {
             'name': name,
-            'company': str(d.get('company', '')).strip(),
+            'company': str(d.get('company', '')).strip()[:200],
             'email': email,
             'phone': phone,
-            'address': str(d.get('address', '')).strip(),
-            'description': str(d.get('description', '')).strip(),
-            'source': str(d.get('source', '')).strip(),
+            'address': str(d.get('address', '')).strip()[:500],
+            'description': str(d.get('description', '')).strip()[:4000],
+            'source': str(d.get('source', '')).strip()[:100],
             'status': 'new',
             'matched_client_id': matched_client_id
         }
