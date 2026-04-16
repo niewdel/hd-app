@@ -13,6 +13,13 @@ except ImportError:
 import generate_report
 import requests as http
 
+from security import (
+    hash_password as bcrypt_hash_password,
+    verify_password,
+    rate_limit_check, rate_limit_record_failure,
+    validate_hd_email, mask_email,
+)
+
 app = Flask(__name__, static_folder='.', static_url_path='')
 app.secret_key = os.environ.get('SECRET_KEY', 'hd-hauling-dev-key')
 app.permanent_session_lifetime = timedelta(hours=8)
@@ -45,6 +52,21 @@ def set_security_headers(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'geolocation=(self), camera=(), microphone=(), payment=()'
+    # CSP: keeps 'unsafe-inline' because the single-file SPA has many inline scripts/styles.
+    # Still a significant improvement over no CSP (blocks external-script injection, frames, form-action).
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: blob: https:; "
+        "font-src 'self' data:; "
+        "connect-src 'self' https://azznfkboiwayifhhcguz.supabase.co; "
+        "frame-ancestors 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self'"
+    )
     if request.is_secure:
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     return response
@@ -53,7 +75,9 @@ def sb_url(table, params=''):
     return f'{SUPABASE_URL}/rest/v1/{table}{params}'
 
 def hash_password(pw):
-    return hashlib.sha256(str(pw).encode()).hexdigest()
+    """Shim: legacy name kept so existing callers (user-creation routes) still work.
+    Now produces a bcrypt hash via security.hash_password."""
+    return bcrypt_hash_password(pw)
 
 MAX_AVATAR_DATA_LEN = 2_500_000
 
@@ -124,36 +148,91 @@ def index():
 @app.route('/auth/login', methods=['POST'])
 def login():
     data = request.get_json() or {}
-    username = str(data.get('username', '')).strip().lower()
+    email = str(data.get('username', data.get('email', ''))).strip().lower()
     password = str(data.get('password', data.get('pin', ''))).strip()
+
+    # Enforce @hdgrading.com domain
+    if not validate_hd_email(email):
+        return jsonify({'error': 'Please use your @hdgrading.com email'}), 401
+
+    # Rate limit: 5 attempts per IP+email per 10 min
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip() or 'unknown'
+    rl_key = f'login:{ip}:{email}'
+    allowed, retry = rate_limit_check(rl_key, max_attempts=5, window_s=600)
+    if not allowed:
+        return jsonify({'error': f'Too many attempts. Try again in {retry} seconds.'}), 429
+
     try:
-        r = http.get(sb_url('hd_users', f'?username=eq.{username}&active=eq.true&limit=1'),
+        r = http.get(sb_url('hd_users', f'?username=eq.{email}&active=eq.true&limit=1'),
                      headers=sb_headers(), timeout=5)
         if r.status_code != 200:
             return jsonify({'error': 'Database connection error. Please try again.'}), 503
         rows = r.json()
         if not rows:
-            return jsonify({'error': 'Incorrect username or password'}), 401
+            # Generic error — no user enumeration
+            log_access(email, '', 'login', False)
+            return jsonify({'error': 'Incorrect email or password'}), 401
         user = rows[0]
-        pw_hash = hash_password(password)
-        if user.get('pin_hash') == pw_hash:
+
+        # Account lockout check
+        locked_until = user.get('locked_until')
+        if locked_until:
+            try:
+                lu = datetime.fromisoformat(locked_until.replace('Z', '+00:00')).replace(tzinfo=None)
+                if lu > datetime.utcnow():
+                    return jsonify({'error': 'Account temporarily locked. Contact admin.'}), 423
+            except Exception:
+                pass
+
+        valid, needs_rehash = verify_password(password, user.get('pin_hash', ''))
+        if valid:
+            # Seamless migration: legacy SHA-256 hashes get upgraded to bcrypt on successful login
+            if needs_rehash:
+                try:
+                    http.patch(sb_url('hd_users', f'?id=eq.{user["id"]}'),
+                               headers={**sb_headers(), 'Prefer': 'return=minimal'},
+                               json={'pin_hash': bcrypt_hash_password(password),
+                                     'password_updated_at': datetime.utcnow().isoformat()},
+                               timeout=5)
+                except Exception:
+                    pass
+            # Reset failed-login counter + stamp last_login_at
+            try:
+                http.patch(sb_url('hd_users', f'?id=eq.{user["id"]}'),
+                           headers={**sb_headers(), 'Prefer': 'return=minimal'},
+                           json={'failed_login_count': 0, 'locked_until': None,
+                                 'last_login_at': datetime.utcnow().isoformat()},
+                           timeout=5)
+            except Exception:
+                pass
+
             apply_user_session(user)
-            # Fire-and-forget: log access asynchronously
             import threading
             threading.Thread(target=log_access, args=(user['username'], user.get('full_name',''), 'login', True), daemon=True).start()
             return jsonify({'ok': True, 'role': session['role'], 'username': session['username'],
                             'full_name': session['full_name'],
                             'email': session['email'], 'phone': session['phone'],
-                            'avatar_data': user.get('avatar_data', ''),
-                            'password_hint': user.get('password_hint', '')})
+                            'avatar_data': user.get('avatar_data', '')})
         else:
-            log_access(username, '', 'login', False)
-            hint = user.get('password_hint', '')
-            return jsonify({'error': 'Incorrect username or password', 'hint': hint}), 401
+            # Increment failure counter; lock account at 10 cumulative failures
+            try:
+                new_count = int(user.get('failed_login_count') or 0) + 1
+                update = {'failed_login_count': new_count}
+                if new_count >= 10:
+                    update['locked_until'] = (datetime.utcnow() + timedelta(minutes=15)).isoformat()
+                http.patch(sb_url('hd_users', f'?id=eq.{user["id"]}'),
+                           headers={**sb_headers(), 'Prefer': 'return=minimal'},
+                           json=update, timeout=5)
+            except Exception:
+                pass
+            rate_limit_record_failure(rl_key, window_s=600)
+            log_access(email, '', 'login', False)
+            return jsonify({'error': 'Incorrect email or password'}), 401
     except http.exceptions.ConnectionError:
         return jsonify({'error': 'Cannot reach database. Check your connection.'}), 503
     except Exception as e:
-        return jsonify({'error': f'Login error: {str(e)}'}), 500
+        print(f'[login] {type(e).__name__}: {e}')
+        return jsonify({'error': 'Login error. Try again.'}), 500
 
 @app.route('/auth/logout', methods=['POST'])
 def logout():
@@ -168,26 +247,26 @@ def change_password():
     data = request.get_json() or {}
     current = str(data.get('current_password', '')).strip()
     new_pw = str(data.get('new_password', '')).strip()
-    hint = str(data.get('hint', '')).strip()
     if not current or not new_pw:
         return jsonify({'ok': False, 'error': 'Current and new password required'}), 400
-    if len(new_pw) < 6:
-        return jsonify({'ok': False, 'error': 'Password must be at least 6 characters'}), 400
+    if len(new_pw) < 8:
+        return jsonify({'ok': False, 'error': 'Password must be at least 8 characters'}), 400
     username = session.get('username', '')
     try:
         r = http.get(sb_url('hd_users', f'?username=eq.{username}&limit=1'), headers=sb_headers(), timeout=5)
         if r.status_code != 200 or not r.json():
             return jsonify({'ok': False, 'error': 'User not found'}), 404
         user = r.json()[0]
-        pw_ok = user.get('pin_hash') == hash_password(current)
-        if not pw_ok:
+        valid, _ = verify_password(current, user.get('pin_hash', ''))
+        if not valid:
             return jsonify({'ok': False, 'error': 'Current password is incorrect'}), 401
-        update = {'pin_hash': hash_password(new_pw)}
-        if hint: update['password_hint'] = hint
+        update = {'pin_hash': bcrypt_hash_password(new_pw),
+                  'password_updated_at': datetime.utcnow().isoformat()}
         http.patch(sb_url('hd_users', f'?username=eq.{username}'), headers={**sb_headers(), 'Prefer': 'return=minimal'}, json=update, timeout=5)
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        print(f'[change-password] {type(e).__name__}: {e}')
+        return jsonify({'ok': False, 'error': 'Could not update password. Try again.'}), 500
 
 @app.route('/auth/check')
 def auth_check():

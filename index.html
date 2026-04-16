@@ -1389,13 +1389,17 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       </div>
       <div class="login-sub">Internal use only &nbsp;&middot;&nbsp; Authorized access required</div>
       <div class="login-rule"></div>
-      <label for="login-username" class="sr-only">Username</label>
-      <input class="pin-input" id="login-username" type="text" placeholder="Username&hellip;" style="text-transform:lowercase;" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="username" spellcheck="false"/>
+      <label for="login-username" class="sr-only">Email address</label>
+      <input class="pin-input" id="login-username" type="email" placeholder="you@hdgrading.com" autocomplete="username" inputmode="email" spellcheck="false" onkeydown="if(event.key==='Enter')doLogin()"/>
       <label for="pin-inp" class="sr-only">Password</label>
-      <input class="pin-input" id="pin-inp" type="password" placeholder="Password&hellip;" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password"/>
-      <div id="pin-hint-display" style="display:none;font-size:11px;color:rgba(255,255,255,.4);margin:-6px 0 10px;text-align:center;"></div>
+      <div style="position:relative;">
+        <input class="pin-input" id="pin-inp" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:44px;"/>
+        <button type="button" id="pin-toggle" onclick="togglePinVisibility()" aria-label="Show password" aria-pressed="false" tabindex="0" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:rgba(255,255,255,.55);cursor:pointer;padding:6px;border-radius:4px;">
+          <svg id="pin-toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
       <button class="pin-btn" onclick="doLogin()">Access Tool</button>
-      <div class="pin-err" id="pin-err"></div>
+      <div class="pin-err" id="pin-err" role="alert" aria-live="assertive"></div>
     </div>
   </div>
   <div class="login-footer">Confidential &nbsp;&middot;&nbsp; Not for distribution</div>
@@ -3792,20 +3796,34 @@ function handleProfilePhotoSelected(input){
 }
 
 // -- Auth ----------------------------------------------------------------------
+function togglePinVisibility(){
+  var inp=document.getElementById('pin-inp');
+  var btn=document.getElementById('pin-toggle');
+  if(!inp||!btn)return;
+  var showing=inp.type==='text';
+  inp.type=showing?'password':'text';
+  btn.setAttribute('aria-pressed', showing?'false':'true');
+  btn.setAttribute('aria-label', showing?'Show password':'Hide password');
+}
+
 async function doLogin(){
-  document.getElementById('pin-err').textContent='';
-  var username=(document.getElementById('login-username')?document.getElementById('login-username').value.trim().toLowerCase():'');
+  var errEl=document.getElementById('pin-err');
+  if(errEl)errEl.textContent='';
+  var email=(document.getElementById('login-username')?document.getElementById('login-username').value.trim().toLowerCase():'');
   var pin=document.getElementById('pin-inp').value;
   var btn=document.querySelector('.pin-btn');
   if(btn){btn.disabled=true;btn.textContent='Checking...';}
-  if(!username){document.getElementById('pin-err').textContent='Please enter your username.';if(btn){btn.disabled=false;btn.textContent='Access Tool';}return;}
+  function done(){if(btn){btn.disabled=false;btn.textContent='Access Tool';}}
+  if(!email){if(errEl)errEl.textContent='Please enter your email.';done();return;}
+  if(!pin){if(errEl)errEl.textContent='Please enter your password.';done();return;}
+  if(!/@hdgrading\.com$/.test(email)){if(errEl)errEl.textContent='Please use your @hdgrading.com email.';done();return;}
   try{
-    var r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:username,password:pin})});
+    var r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:email,password:pin})});
     var d=await r.json();
     if(d.ok){
       window._userRole=d.role||'user';
-      window._userName=d.full_name||username;
-      window._userUsername=d.username||username;
+      window._userName=d.full_name||email;
+      window._userUsername=d.username||email;
       window._lastLogin=d.last_login||null;
       window._userEmail=d.email||'';
       window._userPhone=d.phone||'';
@@ -3823,14 +3841,11 @@ async function doLogin(){
       initAutoLogout();
       _fetchBootData();
     } else {
-      var errMsg=d.error||'Incorrect username or password.';
-      if(d.hint){errMsg+='\nHint: '+d.hint;}
-      document.getElementById('pin-err').textContent=errMsg;
-      if(d.hint){var hintEl=document.getElementById('pin-hint-display');if(hintEl){hintEl.textContent='Hint: '+d.hint;hintEl.style.display='block';}}
+      if(errEl)errEl.textContent=d.error||'Incorrect email or password.';
       document.getElementById('pin-inp').value='';
     }
-  }catch(e){document.getElementById('pin-err').textContent='Connection error. Try again.';}
-  finally{if(btn){btn.disabled=false;btn.textContent='Access Tool';}}
+  }catch(e){if(errEl)errEl.textContent='Connection error. Try again.';}
+  finally{done();}
 }
 
 
