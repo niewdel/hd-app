@@ -897,8 +897,7 @@ def build(data, out_path):
     story += notes_block(data.get('notes',''), st)
     story.append(Spacer(1, 0.12*inch))
     story.append(bid_table(data.get('line_items',[]), st))
-    story.append(Spacer(1, 0.1*inch))
-    story.append(total_line(data.get('total',0)))
+    story.append(KeepTogether([Spacer(1, 0.1*inch), total_line(data.get('total',0))]))
 
     # Pricing options comparison table (if multi-option proposal)
     pricing_opts = data.get('pricing_options', [])

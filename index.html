@@ -1361,6 +1361,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 .log-row-fail td{color:#cc4444;}
 .log-ip{font-family:monospace;font-size:11px;color:var(--dgray);}
 [data-admin-hidden]{display:none}
+[data-dev-hidden]{display:none}
 [data-field-hidden]{display:none}
 .role-price-hidden .role-price{display:none !important;}
 .settings-tab-bar{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--bdr);padding-bottom:0;}
@@ -1442,6 +1443,11 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
 <div id="app">
 
+  <!-- Beta banner -->
+  <div id="beta-banner" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#CC0000;color:#fff;text-align:center;padding:6px 16px;font-size:12px;font-weight:600;letter-spacing:.3px;">
+    This app is in early beta. Please submit any bugs or feedback via the <span style="text-decoration:underline;cursor:pointer;" onclick="showPanel('feedback',document.querySelector('[aria-label=Feedback]'));if(typeof loadFeedback==='function')loadFeedback();">Feedback</span> tab.
+  </div>
+  <style>#app.on{padding-top:30px;} #app.on .sb{top:30px;height:calc(100vh - 30px);} #app.on .topbar{top:30px;} @media(max-width:768px){#app.on .mob-bnav{bottom:0;}}</style>
 
   <!-- Full-page background animation canvas -->
   <canvas id="bg-canvas" class="bg-canvas"></canvas>
@@ -1460,9 +1466,10 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       <div class="nav-item" data-field-hidden role="button" tabindex="0" aria-label="Reports" onclick="showPanel('reports',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('reports',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2h3v12H2zm4.5 3h3v9h-3zM11 7h3v7h-3z"/></svg><span class="nav-label">Reports</span></div>
       <div class="nav-sep" role="separator"></div>
       <div class="nav-item" data-admin-hidden role="button" tabindex="0" aria-label="App Settings" onclick="showPanel('settings',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('settings',this);}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.7m0 9.6v1.7m-4.6-2.6l1.2-1.2m6.8-6.8l1.2-1.2M1.5 8h1.7m9.6 0h1.7M3.4 12.6l1.2-1.2m6.8-6.8l1.2-1.2"/></svg><span class="nav-label">App Settings</span></div>
-      <div class="nav-item admin-only" id="nav-admin" data-admin-hidden role="button" tabindex="0" aria-label="Admin" onclick="showPanel('admin',this);loadUsers();showAdminTab('company');" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('admin',this);loadUsers();showAdminTab('company');}">
+      <div class="nav-item" data-field-hidden role="button" tabindex="0" aria-label="Feedback" onclick="showPanel('feedback',this);loadFeedback();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('feedback',this);loadFeedback();}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 1a1 1 0 00-1 1v8a1 1 0 001 1h2v3l3-3h7a1 1 0 001-1V2a1 1 0 00-1-1H2z"/></svg><span class="nav-label">Feedback</span></div>
+      <div class="nav-item admin-only" id="nav-admin" data-dev-hidden role="button" tabindex="0" aria-label="Admin" onclick="showPanel('admin',this);loadUsers();showAdminTab('company');" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('admin',this);loadUsers();showAdminTab('company');}">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M8 1L2 4v3c0 3.9 2.5 7.1 6 8 3.5-.9 6-4.1 6-8V4L8 1z"/><path d="M6 8l1.5 1.5L10 6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nav-label">Admin</span></div>
-      <div class="nav-item" role="button" tabindex="0" aria-label="Bug Report" onclick="showPanel('bugs',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('bugs',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a1 1 0 011 1v1.07a5 5 0 013.61 2.64L14 5l1 1-1.68 1.68A5 5 0 0113 10h2v1.5h-2a5 5 0 01-.68 1.82L14 15l-1 1-1.39-1.39A5 5 0 018 16a5 5 0 01-3.61-1.39L3 16l-1-1 1.68-1.68A5 5 0 013 11.5H1V10h2a5 5 0 01.32-2.32L1.64 6 3 5l1.39 1.71A5 5 0 017 3.07V2a1 1 0 011-1zm0 4a3 3 0 100 6 3 3 0 000-6z"/></svg><span class="nav-label">Bug Report</span></div>
+      <div class="nav-item" data-dev-hidden role="button" tabindex="0" aria-label="Bug Report" onclick="showPanel('bugs',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('bugs',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a1 1 0 011 1v1.07a5 5 0 013.61 2.64L14 5l1 1-1.68 1.68A5 5 0 0113 10h2v1.5h-2a5 5 0 01-.68 1.82L14 15l-1 1-1.39-1.39A5 5 0 018 16a5 5 0 01-3.61-1.39L3 16l-1-1 1.68-1.68A5 5 0 013 11.5H1V10h2a5 5 0 01.32-2.32L1.64 6 3 5l1.39 1.71A5 5 0 017 3.07V2a1 1 0 011-1zm0 4a3 3 0 100 6 3 3 0 000-6z"/></svg><span class="nav-label">Bug Report</span></div>
     </nav>
     <div class="sb-foot">
       <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -1975,7 +1982,8 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div class="card-hdr"><span class="card-title">Work Orders</span></div>
               <div class="card-body" id="ps-work-orders-list"><div class="empty-state"><div class="empty-state-desc">No work orders yet.</div></div></div>
             </div>
-            <div class="mc-card" style="margin-bottom:var(--card-gap);">
+            <!-- Phases card hidden — feature not ready for launch -->
+            <div class="mc-card" style="margin-bottom:var(--card-gap);display:none;" id="phases-card-wrapper">
               <div class="card-hdr"><span class="card-title">Phases</span></div>
               <div class="card-body" id="ps-phases"><div class="empty-state"><div class="empty-state-desc">No phases defined.</div></div></div>
             </div>
@@ -2232,6 +2240,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           <button class="stab on" data-admin-hidden id="stab-estimating" onclick="showSettingsTab('estimating')">Estimating</button>
           <button class="stab" data-admin-hidden id="stab-library" onclick="showSettingsTab('library')">Item Library</button>
           <button class="stab" data-admin-hidden id="stab-crewequip" onclick="showSettingsTab('crewequip')">Crew &amp; Equipment</button>
+          <button class="stab" data-dev-hidden id="stab-approvalgrp" onclick="showSettingsTab('approvalgrp')">Approval Group</button>
         </div>
 
         <!-- General Tab (hidden — moved to account modal, kept for DOM refs) -->
@@ -2480,6 +2489,17 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
         <!-- Crew & Equipment Tab (merges Crews + Equipment) -->
         <div id="stab-content-crewequip" style="display:none;"></div>
+
+        <div id="stab-content-approvalgrp" style="display:none;">
+          <div class="mc-card" style="margin-bottom:var(--card-gap);">
+            <div class="card-hdr"><span class="card-title">Approval Group</span></div>
+            <div class="card-body">
+              <p style="font-size:13px;color:var(--dgray);margin:0 0 12px;">Select users who can approve proposals in the "Waiting for Approval" pipeline stage. Approvers can lock/unlock proposals.</p>
+              <div id="approval-group-list" style="margin-bottom:12px;"><div style="font-size:12px;color:var(--dgray);">Loading...</div></div>
+              <div style="display:flex;justify-content:flex-end;"><button class="btn btn-pri" onclick="saveApprovalGroup()">Save Approval Group</button></div>
+            </div>
+          </div>
+        </div>
 
         <div id="stab-content-crews" style="display:none;">
           <div class="card">
@@ -2863,6 +2883,25 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
     </div>
   </div>
 </div>
+
+<!-- Feedback Panel -->
+<div class="panel" id="panel-feedback" data-field-hidden><div class="content" style="">
+  <div class="mc-card" style="margin-bottom:var(--card-gap);">
+    <div class="card-hdr"><span class="card-title">Submit Feedback</span></div>
+    <div class="card-body">
+      <p style="font-size:13px;color:var(--dgray);margin:0 0 12px;">Share feedback, report issues, or request new features. Everything you submit is tracked.</p>
+      <textarea id="feedback-msg" placeholder="Type your feedback here..." style="width:100%;min-height:100px;border:1px solid var(--bdr);border-radius:6px;padding:10px;font-size:14px;resize:vertical;box-sizing:border-box;background:var(--bg-sub);color:var(--fg);"></textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+        <button class="btn btn-pri" onclick="submitFeedback()">Submit Feedback</button>
+      </div>
+      <div id="feedback-msg-status" style="font-size:12px;margin-top:6px;"></div>
+    </div>
+  </div>
+  <div class="mc-card">
+    <div class="card-hdr"><span class="card-title">Previous Feedback</span></div>
+    <div class="card-body" id="feedback-list"><div class="empty-state"><div class="empty-state-desc">No feedback submitted yet.</div></div></div>
+  </div>
+</div></div>
 
 <!-- Bug Report Panel -->
 <div class="panel" id="panel-bugs"><div class="content" style="">
@@ -3525,6 +3564,7 @@ var _proposalDirty=false;
 var _autoSaveTimer=null;
 var _autoSaving=false;
 function _scheduleAutoSave(){
+  if(window._proposalLocked)return;
   if(_autoSaveTimer)clearTimeout(_autoSaveTimer);
   _autoSaveTimer=setTimeout(function(){
     _autoSaveTimer=null;
@@ -3581,6 +3621,7 @@ function renderAvatarShell(elId,sizeCls){
 }
 
 function roleLabel(role){
+  if(role==='dev')return 'Developer';
   if(role==='admin')return 'Administrator';
   if(role==='field')return 'Field';
   return 'User';
@@ -3794,6 +3835,11 @@ async function doLogin(){
 
 
 function showAdminElements(){
+  if(window._userRole==='dev'){
+    document.querySelectorAll('[data-admin-hidden]').forEach(function(el){el.removeAttribute('data-admin-hidden');});
+    document.querySelectorAll('[data-dev-hidden]').forEach(function(el){el.removeAttribute('data-dev-hidden');});
+    document.querySelectorAll('[data-field-hidden]').forEach(function(el){el.removeAttribute('data-field-hidden');});
+  }
   if(window._userRole==='admin'){
     document.querySelectorAll('[data-admin-hidden]').forEach(function(el){el.removeAttribute('data-admin-hidden');});
     document.querySelectorAll('[data-field-hidden]').forEach(function(el){el.removeAttribute('data-field-hidden');});
@@ -3807,7 +3853,8 @@ function showAdminElements(){
   }
 }
 function isFieldUser(){return window._userRole==='field';}
-function canSeePricing(){return window._userRole==='admin'||window._userRole==='user';}
+function isDevUser(){return window._userRole==='dev';}
+function canSeePricing(){return window._userRole==='admin'||window._userRole==='user'||window._userRole==='dev';}
 function renderBadgeList(){var c=document.getElementById("badge-list");if(!c)return;c.innerHTML="";var keys=Object.keys(BADGE_DEFS);if(!keys.length){c.innerHTML="<p style='font-size:12px;color:var(--dgray);'>No badges yet.</p>";return;}keys.forEach(function(cls){var b=BADGE_DEFS[cls];var row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr);";var ci=document.createElement("input");ci.type="color";ci.value=b.color;ci.style.cssText="width:40px;height:28px;cursor:pointer;border:1px solid var(--bdr);border-radius:4px;flex-shrink:0;";ci.addEventListener("input",(function(cc){return function(){BADGE_DEFS[cc].color=this.value;applyBadgeStyles();};})(cls));ci.addEventListener("change",(function(cc){return function(){BADGE_DEFS[cc].color=this.value;applyBadgeStyles();renderBadgeList();};})(cls));row.appendChild(ci);var li=document.createElement("input");li.type="text";li.value=b.label;li.placeholder="Label";li.style.cssText="width:140px;font-size:13px;padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;";li.addEventListener("change",(function(cc){return function(){BADGE_DEFS[cc].label=this.value;applyBadgeStyles();renderBadgeList();};})(cls));row.appendChild(li);var prev=document.createElement("span");prev.className="badge "+cls;prev.style.minWidth="70px";prev.textContent=b.label;row.appendChild(prev);var spacer=document.createElement("span");spacer.style.flex="1";row.appendChild(spacer);var del=document.createElement("button");del.className="btn-ico";del.style.color="var(--red)";del.textContent="×";del.addEventListener("click",(function(cc){return function(){delete BADGE_DEFS[cc];renderBadgeList();renderMatTable();};})(cls));row.appendChild(del);c.appendChild(row);});}
 function addBadge(){var label=prompt("Badge label:");if(!label)return;var cls="b-"+label.toLowerCase().replace(/[^a-z0-9]/g,"-");if(BADGE_DEFS[cls]){alert("Badge already exists.");return;}BADGE_DEFS[cls]={label:label,color:"#444"};renderBadgeList();renderMatTable();}
 function saveBadges(){_saveSetting('hd_badge_defs',BADGE_DEFS);applyBadgeStyles();renderMatTable();renderAll();renderConc();toast("Badges saved","ok");}
@@ -4501,6 +4548,8 @@ function _fetchBootData(){
     renderDashWeatherMini();
     loadDashLeads();
   }).catch(function(e){console.warn('boot/data fetch failed:',e);});
+  // Load approval group for proposal locking
+  loadApprovalGroup();
 }
 
 // -- Storage (Supabase-backed, localStorage fallback) --------------------------
@@ -5930,6 +5979,39 @@ function _renderProjectSummaryInner(proj){
       addBtn.addEventListener('click',function(){editCurrentProject();});
       gcRow.appendChild(addBtn);
     }
+  }
+  // Approval banner for "Waiting for Approval" stage
+  var existingApprovalBanner=document.getElementById('ps-approval-banner');
+  if(existingApprovalBanner)existingApprovalBanner.remove();
+  if(stageName==='Waiting for Approval'&&isApprover()){
+    var abanner=document.createElement('div');abanner.id='ps-approval-banner';
+    abanner.style.cssText='background:#FFF3CD;border:1px solid #FFECB5;border-radius:8px;padding:12px 16px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;';
+    var albl=document.createElement('span');albl.style.cssText='font-weight:600;color:#856404;font-size:13px;';
+    albl.textContent='This project is waiting for approval.';abanner.appendChild(albl);
+    var abtn=document.createElement('button');abtn.className='btn btn-pri btn-sm';
+    abtn.textContent='Approve';abtn.style.cssText='background:#27500A;border-color:#27500A;';
+    (function(pid){abtn.addEventListener('click',function(){approveProposal(pid);});})(proj.id);
+    abanner.appendChild(abtn);
+    hdr.appendChild(abanner);
+  }
+  // Lock banner for approved/locked proposals
+  var existingLockBanner=document.getElementById('ps-lock-banner');
+  if(existingLockBanner)existingLockBanner.remove();
+  if(snap.locked){
+    var lbanner=document.createElement('div');lbanner.id='ps-lock-banner';
+    lbanner.style.cssText='background:#D4EDDA;border:1px solid #C3E6CB;border-radius:8px;padding:12px 16px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;';
+    var llbl=document.createElement('span');llbl.style.cssText='font-weight:600;color:#155724;font-size:13px;';
+    var lockMsg='This proposal is locked.';
+    if(snap.approved_by)lockMsg+=' Approved by '+snap.approved_by;
+    if(snap.approved_at){try{lockMsg+=' on '+new Date(snap.approved_at).toLocaleDateString();}catch(e){}}
+    llbl.textContent=lockMsg;lbanner.appendChild(llbl);
+    if(isApprover()){
+      var pbBtn=document.createElement('button');pbBtn.className='btn btn-sec btn-sm';
+      pbBtn.textContent='Pull Back for Edits';
+      (function(pid){pbBtn.addEventListener('click',function(){pullBackProposal(pid);});})(proj.id);
+      lbanner.appendChild(pbBtn);
+    }
+    hdr.appendChild(lbanner);
   }
   // Render notes feed
   renderProjectNotesFeed(snap);
@@ -9650,6 +9732,7 @@ function selectClientById(id){
 
 // -- Save / Load ---------------------------------------------------------------
 async function saveQuote(quiet){
+  if(window._proposalLocked){if(!quiet)toast('This proposal is locked','err');return;}
   var name=document.getElementById('proj-name').value||('Quote '+(savedQuotes.length+1));
   var snap={name:name,client:document.getElementById('proj-client').value,
     date:document.getElementById('proj-date').value,addr:document.getElementById('proj-addr').value,
@@ -9776,6 +9859,8 @@ function loadQuote(id,skipNav){
     _proposalDirty=false;
     if(_autoSaveTimer){clearTimeout(_autoSaveTimer);_autoSaveTimer=null;}
   },50);
+  // Check lock state
+  if(d.locked){_lockProposal(d.approved_by,d.approved_at);}else{_unlockProposal();}
   toast('Quote loaded');
 }
 async function delSaved(id){
@@ -9864,23 +9949,29 @@ async function exportPricingBreakdown(){
   var pavItems2=[];
   pavementItems.forEach(function(i){
     if(!i.name)return;
-    var bid=calcItemBid(i);var days=calcItemDays(i);var labor=calcItemLabor(i);
-    var matT=(i.mat_cost||0)*(i.qty||0);var truckT=calcItemTrucking(i);
+    var bid=calcItemBid(i);var days=calcItemDays(i);
+    var isStrip=_isStripingItem(i);
+    var labor=isStrip?(i.price||0):calcItemLabor(i);
+    var matT=isStrip?0:(i.mat_cost||0)*(i.qty||0);
+    var truckT=isStrip?0:calcItemTrucking(i);
     gM+=matT;gCrew+=labor;gTruck+=truckT;gBid+=bid;
     pavItems2.push({name:i.name,desc:i.desc||'',qty:i.qty||0,unit:i.unit||'EA',days:parseFloat(days.toFixed(1)),
       material:matT,labor:labor,trucking:truckT,bid:bid,crew:i.crew||'',
-      is_striping:_isStripingItem(i),lump_price:i.price||0,markup:i.markup||0});
+      is_striping:isStrip,lump_price:i.price||0,markup:i.markup||0});
   });
   // Site work items
   var swItems2=[];
   siteWorkItems.forEach(function(i){
     if(!i.name)return;
-    var bid=calcItemBid(i);var days=calcItemDays(i);var labor=calcItemLabor(i);
-    var matT=(i.mat_cost||0)*(i.qty||0);var truckT=calcItemTrucking(i);
+    var bid=calcItemBid(i);var days=calcItemDays(i);
+    var isStrip=_isStripingItem(i);
+    var labor=isStrip?(i.price||0):calcItemLabor(i);
+    var matT=isStrip?0:(i.mat_cost||0)*(i.qty||0);
+    var truckT=isStrip?0:calcItemTrucking(i);
     gM+=matT;gCrew+=labor;gTruck+=truckT;gBid+=bid;
     swItems2.push({name:i.name,desc:i.desc||'',qty:i.qty||0,unit:i.unit||'EA',days:parseFloat(days.toFixed(1)),
       material:matT,labor:labor,trucking:truckT,bid:bid,crew:i.crew||'',
-      is_striping:_isStripingItem(i),lump_price:i.price||0,markup:i.markup||0});
+      is_striping:isStrip,lump_price:i.price||0,markup:i.markup||0});
   });
   // Extra / additional items
   var extraItems2=[];
@@ -10268,7 +10359,7 @@ function resetDefaultNotes(){
 }
 function showSettingsTab(tab){
   // Map merged tabs to their child tabs
-  var allTabs=['general','estimating','badges','presets','library','materials','crews','equipment','crewequip','bugreport'];
+  var allTabs=['general','estimating','badges','presets','library','materials','crews','equipment','crewequip','bugreport','approvalgrp'];
   allTabs.forEach(function(t){
     var el=document.getElementById('stab-content-'+t);if(el)el.style.display='none';
     var btn=document.getElementById('stab-'+t);if(btn)btn.classList.remove('on');
@@ -10288,7 +10379,8 @@ function showSettingsTab(tab){
     renderCrewsList();_snapshotEquipment();renderEquipmentList();
   }
   if(tab==='library'){_snapshotLibrary();renderLibraryList();}
-  if(tab==='bugreport'&&window._userRole==='admin')loadSettingsBugList();
+  if(tab==='bugreport'&&window._userRole==='dev')loadSettingsBugList();
+  if(tab==='approvalgrp')loadApprovalGroupSettings();
 }
 
 function applyBadgeStyles(){
@@ -10678,6 +10770,12 @@ async function renderPipeline() {
 
 async function moveCard(proposalId, stageId) {
   try {
+    // Block moving locked proposals unless user is approver
+    var proj=pipelineProposals.find(function(x){return x.id===proposalId;});
+    if(proj){
+      var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+      if(snap.locked&&!isApprover()){toast('This proposal is locked. Only approvers can move it.','err');return;}
+    }
     // Check if moving to Approved with multiple GCs
     var approvedStage=(_pipelineStages||pipelineStages||[]).find(function(s){return s.name==='Approved';});
     if(approvedStage&&stageId===approvedStage.id){
@@ -10695,16 +10793,16 @@ async function moveCard(proposalId, stageId) {
 }
 
 async function _executeMoveCard(proposalId,stageId){
-    await fetch('/pipeline/move/'+proposalId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage_id:stageId})});
+    var stage=pipelineStages.find(function(s){return s.id===stageId;});
+    var stageName=stage?stage.name:'';
+    var projName='Project #'+proposalId;
+    try{var pCards=document.querySelectorAll('[data-proposal-id="'+proposalId+'"]');if(pCards.length)projName=pCards[0].querySelector('.pipe-card-title')?.textContent||projName;}catch(e){}
+    await fetch('/pipeline/move/'+proposalId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage_id:stageId,stage_name:stageName,proposal_name:projName})});
     await renderPipeline();
     autoCreateWorkOrder(proposalId,stageId);
     // Send stage change notification
     if(shouldNotify('stage_change')){
-      var stage=pipelineStages.find(function(s){return s.id===stageId;});
-      var stageName=stage?stage.name:'Unknown';
-      var projName='Project #'+proposalId;
-      try{var pCards=document.querySelectorAll('[data-proposal-id="'+proposalId+'"]');if(pCards.length)projName=pCards[0].querySelector('.pipe-card-title')?.textContent||projName;}catch(e){}
-      sendStageChangeNotification(proposalId,projName,stageName);
+      sendStageChangeNotification(proposalId,projName,stageName||'Unknown');
     }
     toast('Moved','ok');
 }
@@ -11796,7 +11894,7 @@ function loadWOTimeLog(){
   fetch('/time/entries?work_order_id='+woId).then(function(r){return r.json();}).then(function(d){
     if(!d.ok||!d.entries||!d.entries.length){c.innerHTML='<div style="padding:12px 16px;font-size:12px;color:var(--dgray);">No time entries yet.</div>';return;}
     var html='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:var(--bg-sub);"><th style="padding:8px 12px;text-align:left;font-weight:600;">User</th><th style="padding:8px 12px;text-align:left;">Date</th><th style="padding:8px 12px;text-align:left;">In</th><th style="padding:8px 12px;text-align:left;">Out</th><th style="padding:8px 12px;text-align:right;">Hours</th>';
-    if(window._userRole==='admin')html+='<th style="padding:8px 12px;text-align:right;">Cost</th><th style="padding:8px 12px;"></th>';
+    if(window._userRole==='admin'||window._userRole==='dev')html+='<th style="padding:8px 12px;text-align:right;">Cost</th><th style="padding:8px 12px;"></th>';
     html+='</tr></thead><tbody>';
     d.entries.forEach(function(e){
       var inD=new Date(e.clock_in);
@@ -11807,7 +11905,7 @@ function loadWOTimeLog(){
       html+='<td style="padding:8px 12px;">'+inD.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+'</td>';
       html+='<td style="padding:8px 12px;">'+(outD?outD.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'<span style="color:var(--red);">Active</span>')+'</td>';
       html+='<td style="padding:8px 12px;text-align:right;">'+(e.hours_worked?e.hours_worked.toFixed(1)+'h':'—')+'</td>';
-      if(window._userRole==='admin'){
+      if(window._userRole==='admin'||window._userRole==='dev'){
         html+='<td style="padding:8px 12px;text-align:right;">'+(e.labor_cost?'$'+e.labor_cost.toFixed(2):'—')+'</td>';
         html+='<td style="padding:8px 12px;text-align:right;"><button class="btn-ico" onclick="deleteTimeEntry('+e.id+')" title="Delete" style="color:var(--red);font-size:12px;">&#10005;</button></td>';
       }
@@ -14968,6 +15066,146 @@ var BUILD_ID=(function(){var m=document.documentElement.outerHTML.match(/build:(
 var _bugReports=[];
 var _editingBugId=null;
 
+// ── Proposal Approval & Locking ────────────────────────────────
+window._proposalLocked=false;
+function _lockProposal(approvedBy,approvedAt){
+  window._proposalLocked=true;
+  var existing=document.getElementById('proposal-lock-banner');
+  if(existing)existing.remove();
+  var banner=document.createElement('div');
+  banner.id='proposal-lock-banner';
+  banner.style.cssText='background:#FFF3CD;border:1px solid #FFECB5;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;';
+  var msg='This proposal is locked.';
+  if(approvedBy)msg+=' Approved by '+approvedBy;
+  if(approvedAt){try{msg+=' on '+new Date(approvedAt).toLocaleDateString();}catch(e){}}
+  var span=document.createElement('span');span.style.cssText='font-weight:600;color:#856404;font-size:13px;';
+  span.textContent=msg;banner.appendChild(span);
+  if(isApprover()){
+    var pbBtn=document.createElement('button');pbBtn.className='btn btn-sec btn-sm';
+    pbBtn.textContent='Pull Back for Edits';
+    pbBtn.onclick=function(){pullBackProposal(lastSavedQuoteId);};
+    banner.appendChild(pbBtn);
+  }
+  var buildContent=document.querySelector('#panel-build .content');
+  if(buildContent)buildContent.prepend(banner);
+  document.querySelectorAll('#panel-build input:not([type="hidden"]),#panel-build textarea,#panel-build select').forEach(function(el){
+    el.setAttribute('disabled','true');el.classList.add('locked-input');
+  });
+  document.querySelectorAll('#panel-build .btn-pri').forEach(function(el){
+    if(el.textContent.indexOf('Save')>-1||el.onclick&&String(el.onclick).indexOf('saveQuote')>-1){el.style.display='none';el.classList.add('locked-hidden');}
+  });
+}
+function _unlockProposal(){
+  window._proposalLocked=false;
+  var banner=document.getElementById('proposal-lock-banner');if(banner)banner.remove();
+  document.querySelectorAll('#panel-build .locked-input').forEach(function(el){
+    el.removeAttribute('disabled');el.classList.remove('locked-input');
+  });
+  document.querySelectorAll('#panel-build .locked-hidden').forEach(function(el){
+    el.style.display='';el.classList.remove('locked-hidden');
+  });
+}
+async function approveProposal(proposalId){
+  if(!confirm('Approve this proposal? It will be locked and moved to Approved.'))return;
+  try{
+    var r=await fetch('/proposals/approve/'+proposalId,{method:'POST',headers:{'Content-Type':'application/json'}});
+    var d=await r.json();
+    if(d.ok){toast('Proposal approved','ok');renderPipeline();if(typeof renderProjectSummary==='function')renderProjectSummary();}
+    else toast('Error: '+(d.error||'failed'),'err');
+  }catch(e){toast('Network error','err');}
+}
+async function pullBackProposal(proposalId){
+  if(!confirm('Pull this proposal back for edits? It will be unlocked.'))return;
+  try{
+    var r=await fetch('/proposals/pull-back/'+proposalId,{method:'POST',headers:{'Content-Type':'application/json'}});
+    var d=await r.json();
+    if(d.ok){toast('Proposal pulled back for edits','ok');_unlockProposal();renderPipeline();if(typeof renderProjectSummary==='function')renderProjectSummary();}
+    else toast('Error: '+(d.error||'failed'),'err');
+  }catch(e){toast('Network error','err');}
+}
+
+// ── Approval Group ─────────────────────────────────────────────
+window._approvalGroup=[];
+function isApprover(){return window._approvalGroup&&window._approvalGroup.includes(window._userUsername);}
+function loadApprovalGroup(){
+  fetch('/settings/approval-group').then(function(r){return r.json();}).then(function(d){
+    window._approvalGroup=d.ok&&Array.isArray(d.approvers)?d.approvers:[];
+  }).catch(function(){window._approvalGroup=[];});
+}
+function loadApprovalGroupSettings(){
+  var c=document.getElementById('approval-group-list');if(!c)return;
+  c.innerHTML='<div style="font-size:12px;color:var(--dgray);">Loading...</div>';
+  Promise.all([
+    fetch('/settings/approval-group').then(function(r){return r.json();}),
+    fetch('/users/list-basic').then(function(r){return r.json();})
+  ]).then(function(results){
+    var ag=results[0].ok&&Array.isArray(results[0].approvers)?results[0].approvers:[];
+    var users=results[1].ok?results[1].users:[];
+    c.innerHTML='';
+    if(!users.length){c.innerHTML='<div style="font-size:12px;color:var(--dgray);">No users found.</div>';return;}
+    users.forEach(function(u){
+      var row=document.createElement('label');
+      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);cursor:pointer;';
+      var cb=document.createElement('input');cb.type='checkbox';cb.value=u.username;cb.dataset.approver='1';
+      if(ag.includes(u.username))cb.checked=true;
+      row.appendChild(cb);
+      var name=document.createElement('span');name.style.cssText='font-size:14px;';
+      name.textContent=u.full_name+' ('+u.username+')';
+      row.appendChild(name);
+      var role=document.createElement('span');role.style.cssText='font-size:11px;color:var(--dgray);margin-left:auto;';
+      role.textContent=roleLabel(u.role);
+      row.appendChild(role);
+      c.appendChild(row);
+    });
+  }).catch(function(){c.innerHTML='<div style="font-size:12px;color:var(--red);">Failed to load users.</div>';});
+}
+function saveApprovalGroup(){
+  var checks=document.querySelectorAll('#approval-group-list input[data-approver]');
+  var selected=[];
+  checks.forEach(function(cb){if(cb.checked)selected.push(cb.value);});
+  fetch('/settings/approval-group',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({approvers:selected})}).then(function(r){return r.json();}).then(function(d){
+    if(d.ok){toast('Approval group saved','ok');window._approvalGroup=selected;}
+    else toast('Error: '+(d.error||'failed'),'err');
+  }).catch(function(){toast('Network error','err');});
+}
+
+// ── Feedback ───────────────────────────────────────────────────
+function submitFeedback(){
+  var ta=document.getElementById('feedback-msg');
+  var msg=document.getElementById('feedback-msg-status');
+  var text=(ta?ta.value:'').trim();
+  if(!text){msg.textContent='Please enter a message.';msg.style.color='var(--red)';return;}
+  msg.textContent='Submitting...';msg.style.color='var(--dgray)';
+  fetch('/feedback/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})}).then(function(r){return r.json();}).then(function(d){
+    if(d.ok){
+      ta.value='';msg.textContent='Feedback submitted. Thank you!';msg.style.color='#2E7D32';
+      toast('Feedback submitted','ok');
+      setTimeout(function(){msg.textContent='';},4000);
+      loadFeedback();
+    } else {
+      msg.textContent=d.error||'Failed to submit.';msg.style.color='var(--red)';
+    }
+  }).catch(function(){msg.textContent='Network error.';msg.style.color='var(--red)';});
+}
+function loadFeedback(){
+  var c=document.getElementById('feedback-list');if(!c)return;
+  c.innerHTML='<div style="padding:12px;font-size:12px;color:var(--dgray);">Loading...</div>';
+  fetch('/feedback/list').then(function(r){return r.json();}).then(function(d){
+    if(!d.ok||!d.items||!d.items.length){c.innerHTML='<div class="empty-state"><div class="empty-state-desc">No feedback submitted yet.</div></div>';return;}
+    var html='';
+    d.items.forEach(function(f){
+      var dt=new Date(f.submitted_at);
+      var dateStr=dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' at '+dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      var byStr=isDevUser()&&f.submitted_by?('<span style="font-weight:600;">'+esc(f.submitted_by)+'</span> &middot; '):'';
+      html+='<div style="padding:12px 16px;border-bottom:1px solid var(--bdr);">';
+      html+='<div style="font-size:11px;color:var(--dgray);margin-bottom:4px;">'+byStr+dateStr+'</div>';
+      html+='<div style="font-size:14px;white-space:pre-wrap;">'+esc(f.message)+'</div>';
+      html+='</div>';
+    });
+    c.innerHTML=html;
+  }).catch(function(){c.innerHTML='<div class="empty-state"><div class="empty-state-desc">Failed to load feedback.</div></div>';});
+}
+
 function submitBug(){
   var title=document.getElementById('bug-title').value.trim();
   var desc=document.getElementById('bug-desc').value.trim();
@@ -15115,7 +15353,7 @@ function submitSettingsBug(){
       document.getElementById('settings-bug-panel').value='';
       if(typeof toast==='function')toast('Bug report submitted','ok');
       setTimeout(function(){msg.textContent='';},4000);
-      if(window._userRole==='admin')loadSettingsBugList();
+      if(window._userRole==='dev')loadSettingsBugList();
     } else {
       msg.textContent=d.error||'Failed to submit.';msg.style.color='var(--red)';
     }

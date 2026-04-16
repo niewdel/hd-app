@@ -99,8 +99,18 @@ def require_admin(f):
     def decorated(*args, **kwargs):
         if not session.get('authenticated'):
             return jsonify({'error': 'Unauthorized'}), 401
-        if session.get('role') != 'admin':
+        if session.get('role') not in ('admin', 'dev'):
             return jsonify({'error': 'Admin access required'}), 403
+        return f(*args, **kwargs)
+    return decorated
+
+def require_dev(f):
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('authenticated'):
+            return jsonify({'error': 'Unauthorized'}), 401
+        if session.get('role') != 'dev':
+            return jsonify({'error': 'Dev access required'}), 403
         return f(*args, **kwargs)
     return decorated
 
@@ -375,6 +385,113 @@ def pipeline_move(proposal_id):
         r.raise_for_status()
         stage_name = data.get('stage_name', '')
         log_access(session.get('username',''), session.get('full_name',''), f'moved project to "{stage_name}"' if stage_name else 'moved project stage')
+        # Notify approvers when proposal enters "Waiting for Approval"
+        if stage_name == 'Waiting for Approval':
+            try:
+                ag = http.get(sb_url('hd_settings', '?key=eq.approval_group&select=value'), headers=sb_headers(), timeout=5)
+                approvers = ag.json()[0]['value'] if ag.status_code == 200 and ag.json() else []
+                proposal_name = data.get('proposal_name', f'Project #{proposal_id}')
+                username = session.get('username', '')
+                notif_rows = [{'recipient': u, 'type': 'approval', 'title': f'Approval Needed: {proposal_name}',
+                              'body': f'{session.get("full_name", username)} submitted "{proposal_name}" for approval',
+                              'project_id': proposal_id, 'project_name': proposal_name, 'created_by': username} for u in approvers if u != username]
+                if notif_rows:
+                    http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=notif_rows, timeout=10)
+                    # Email approvers
+                    _send_notif_emails(
+                        [u for u in approvers if u != username],
+                        username,
+                        f'Approval Needed: {proposal_name}',
+                        f'{session.get("full_name", username)} submitted "{proposal_name}" for your approval. Please review and approve in the HD app.',
+                        proposal_name
+                    )
+            except Exception:
+                pass
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/proposals/approve/<int:proposal_id>', methods=['POST'])
+@require_auth
+def approve_proposal(proposal_id):
+    username = session.get('username', '')
+    try:
+        ag = http.get(sb_url('hd_settings', '?key=eq.approval_group&select=value'), headers=sb_headers(), timeout=5)
+        approvers = ag.json()[0]['value'] if ag.status_code == 200 and ag.json() else []
+        if username not in approvers:
+            return jsonify({'ok': False, 'error': 'Not authorized to approve'}), 403
+        r = http.get(sb_url('proposals', f'?id=eq.{proposal_id}&select=snap,name'), headers=sb_headers(), timeout=5)
+        rows = r.json() if r.status_code == 200 else []
+        if not rows:
+            return jsonify({'ok': False, 'error': 'Not found'}), 404
+        snap = rows[0].get('snap', {})
+        if isinstance(snap, str):
+            snap = json.loads(snap)
+        snap['approved'] = True
+        snap['approved_by'] = session.get('full_name', username)
+        snap['approved_at'] = datetime.utcnow().isoformat()
+        snap['locked'] = True
+        # Find Approved stage to auto-advance
+        stages_r = http.get(sb_url('pipeline_stages', '?name=eq.Approved&select=id'), headers=sb_headers(), timeout=5)
+        approved_stage_id = stages_r.json()[0]['id'] if stages_r.status_code == 200 and stages_r.json() else None
+        update = {'snap': json.dumps(snap) if isinstance(snap, dict) else snap}
+        if approved_stage_id:
+            update['stage_id'] = approved_stage_id
+        http.patch(sb_url('proposals', f'?id=eq.{proposal_id}'), headers=sb_headers(), json=update, timeout=10)
+        # Notify all users
+        proposal_name = rows[0].get('name', f'Project #{proposal_id}')
+        try:
+            all_users_r = http.get(sb_url('hd_users', '?active=eq.true&select=username'), headers=sb_headers(), timeout=5)
+            all_users = [u['username'] for u in all_users_r.json()] if all_users_r.status_code == 200 else []
+            notif_rows = [{'recipient': u, 'type': 'approval', 'title': f'Approved: {proposal_name}',
+                          'body': f'{session.get("full_name", username)} approved "{proposal_name}"',
+                          'project_id': proposal_id, 'project_name': proposal_name, 'created_by': username} for u in all_users if u != username]
+            if notif_rows:
+                http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=notif_rows, timeout=10)
+                # Email all users about approval
+                _send_notif_emails(
+                    [u for u in all_users if u != username],
+                    username,
+                    f'Proposal Approved: {proposal_name}',
+                    f'{session.get("full_name", username)} approved "{proposal_name}". The proposal is now locked.',
+                    proposal_name
+                )
+        except Exception:
+            pass
+        log_access(username, session.get('full_name',''), f'approved proposal "{proposal_name}"')
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/proposals/pull-back/<int:proposal_id>', methods=['POST'])
+@require_auth
+def pull_back_proposal(proposal_id):
+    username = session.get('username', '')
+    try:
+        ag = http.get(sb_url('hd_settings', '?key=eq.approval_group&select=value'), headers=sb_headers(), timeout=5)
+        approvers = ag.json()[0]['value'] if ag.status_code == 200 and ag.json() else []
+        if username not in approvers:
+            return jsonify({'ok': False, 'error': 'Not authorized'}), 403
+        r = http.get(sb_url('proposals', f'?id=eq.{proposal_id}&select=snap,name'), headers=sb_headers(), timeout=5)
+        rows = r.json() if r.status_code == 200 else []
+        if not rows:
+            return jsonify({'ok': False, 'error': 'Not found'}), 404
+        snap = rows[0].get('snap', {})
+        if isinstance(snap, str):
+            snap = json.loads(snap)
+        snap['approved'] = False
+        snap['locked'] = False
+        snap.pop('approved_by', None)
+        snap.pop('approved_at', None)
+        # Move back to "Waiting for Approval" stage
+        stages_r = http.get(sb_url('pipeline_stages', '?name=eq.Waiting for Approval&select=id'), headers=sb_headers(), timeout=5)
+        wfa_stage_id = stages_r.json()[0]['id'] if stages_r.status_code == 200 and stages_r.json() else None
+        update = {'snap': json.dumps(snap) if isinstance(snap, dict) else snap}
+        if wfa_stage_id:
+            update['stage_id'] = wfa_stage_id
+        http.patch(sb_url('proposals', f'?id=eq.{proposal_id}'), headers=sb_headers(), json=update, timeout=10)
+        proposal_name = rows[0].get('name', f'Project #{proposal_id}')
+        log_access(username, session.get('full_name',''), f'pulled back proposal "{proposal_name}" for edits')
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
@@ -536,7 +653,7 @@ def list_users_basic():
 
 
 @app.route('/admin/users', methods=['GET'])
-@require_admin
+@require_dev
 def get_users():
     try:
         r = http.get(sb_url('hd_users', '?order=created_at.asc'), headers=sb_headers(), timeout=5)
@@ -549,7 +666,7 @@ def get_users():
         return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/admin/users', methods=['POST'])
-@require_admin
+@require_dev
 def create_user():
     data = request.get_json() or {}
     username = str(data.get('username','')).strip().lower()
@@ -559,7 +676,7 @@ def create_user():
     phone = str(data.get('phone','')).strip()
     role = data.get('role','user')
     if not full_name or not username or not pin: return jsonify({'ok':False,'error':'Full name, username, and password are required'}), 400
-    if role not in ('admin','user','field'): role = 'user'
+    if role not in ('admin','user','field','dev'): role = 'user'
     try:
         row = {'username':username,'full_name':full_name,'pin_hash':hash_password(pin),'role':role,'active':True,'created_by':session.get('username','admin')}
         if email: row['email'] = email
@@ -574,7 +691,7 @@ def create_user():
         return jsonify({'ok':False,'error':str(e)}), 500
 
 @app.route('/admin/users/<int:uid>', methods=['PATCH'])
-@require_admin
+@require_dev
 def update_user(uid):
     data = request.get_json() or {}
     update = {}
@@ -584,7 +701,7 @@ def update_user(uid):
     if 'username' in data and data['username']:
         new_un = str(data['username']).strip().lower()
         if new_un: update['username'] = new_un
-    if 'role' in data and data['role'] in ('admin','user','field'): update['role'] = data['role']
+    if 'role' in data and data['role'] in ('admin','user','field','dev'): update['role'] = data['role']
     if 'active' in data: update['active'] = bool(data['active'])
     if 'password' in data and data['password']:
         update['pin_hash'] = hash_password(data['password'])
@@ -646,7 +763,7 @@ def _cascade_username(old, new):
 
 
 @app.route('/admin/users/<int:uid>', methods=['DELETE'])
-@require_admin
+@require_dev
 def delete_user(uid):
     """Permanently delete a user and all their related data."""
     try:
@@ -683,7 +800,7 @@ def delete_user(uid):
 
 
 @app.route('/admin/logs', methods=['GET'])
-@require_admin
+@require_dev
 def get_logs():
     try:
         limit = int(request.args.get('limit',100))
@@ -696,7 +813,7 @@ def get_logs():
         return jsonify({'ok':False,'error':str(e)}), 500
 
 @app.route('/admin/archived')
-@require_admin
+@require_dev
 def admin_archived():
     try:
         r = http.get(
@@ -709,7 +826,7 @@ def admin_archived():
         return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/admin/restore/<int:qid>', methods=['POST'])
-@require_admin
+@require_dev
 def admin_restore(qid):
     try:
         r = http.patch(
@@ -1157,7 +1274,7 @@ def delete_project_file(project_id):
 # ── Setup: create hd_settings table if needed ───────────────────────────────
 
 @app.route('/setup/settings-table', methods=['POST'])
-@require_admin
+@require_dev
 def setup_settings_table():
     """Create hd_settings table via Supabase SQL. Run once."""
     sql = """
@@ -1190,7 +1307,7 @@ def setup_settings_table():
         return jsonify({'ok': False, 'error': str(e)})
 
 @app.route('/setup/user-fields', methods=['POST'])
-@require_admin
+@require_dev
 def setup_user_fields():
     """Add profile fields and update role constraint to include 'field'."""
     sql = """
@@ -1198,7 +1315,7 @@ def setup_user_fields():
     ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT '';
     ALTER TABLE hd_users ADD COLUMN IF NOT EXISTS avatar_data TEXT DEFAULT '';
     ALTER TABLE hd_users DROP CONSTRAINT IF EXISTS hd_users_role_check;
-    ALTER TABLE hd_users ADD CONSTRAINT hd_users_role_check CHECK (role IN ('admin', 'user', 'field'));
+    ALTER TABLE hd_users ADD CONSTRAINT hd_users_role_check CHECK (role IN ('admin', 'user', 'field', 'dev'));
     """
     try:
         svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
@@ -1275,12 +1392,45 @@ def ensure_notif_table():
     return False
 
 @app.route('/setup/notifications-table', methods=['POST'])
-@require_admin
+@require_dev
 def setup_notifications_table():
     """Create hd_notifications table. Run once."""
     if ensure_notif_table():
         return jsonify({'ok': True})
     return jsonify({'ok': False, 'error': 'Run this SQL manually in Supabase dashboard.', 'sql': _NOTIF_SQL.strip()})
+
+@app.route('/setup/migrate-roles', methods=['POST'])
+@require_dev
+def setup_migrate_roles():
+    """Update role constraint, set justin.ledwein to dev, create new tables, add pipeline stage."""
+    sql = """
+    ALTER TABLE hd_users DROP CONSTRAINT IF EXISTS hd_users_role_check;
+    ALTER TABLE hd_users ADD CONSTRAINT hd_users_role_check CHECK (role IN ('admin', 'user', 'field', 'dev'));
+    UPDATE hd_users SET role = 'dev' WHERE username = 'justin.ledwein';
+    CREATE TABLE IF NOT EXISTS hd_feedback (
+        id BIGSERIAL PRIMARY KEY,
+        message TEXT NOT NULL,
+        submitted_by TEXT NOT NULL,
+        submitted_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    ALTER TABLE hd_feedback DISABLE ROW LEVEL SECURITY;
+    UPDATE pipeline_stages SET position = position + 1 WHERE position >= 4;
+    INSERT INTO pipeline_stages (name, color, position, counts_in_ratio, is_closed)
+    SELECT 'Waiting for Approval', '#FF8C00', 4, false, false
+    WHERE NOT EXISTS (SELECT 1 FROM pipeline_stages WHERE name = 'Waiting for Approval');
+    """
+    try:
+        svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+        r = http.post(
+            f'{SUPABASE_URL}/rest/v1/rpc/exec_sql',
+            headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}', 'Content-Type': 'application/json'},
+            json={'query': sql}, timeout=10
+        )
+        if r.status_code == 200:
+            return jsonify({'ok': True, 'method': 'exec_sql'})
+        return jsonify({'ok': False, 'error': 'exec_sql RPC not available. Run this SQL manually in Supabase dashboard.', 'sql': sql.strip()})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)})
 
 
 @app.route('/notifications/list')
@@ -1482,7 +1632,7 @@ def settings_save():
     # Client notes are dynamic keys (hd_client_notes_*)
     is_personal = key in personal_keys or key.startswith('hd_client_notes_')
     # Shared business settings require admin role
-    if not is_personal and session.get('role') != 'admin':
+    if not is_personal and session.get('role') not in ('admin', 'dev'):
         return jsonify({'ok': False, 'error': 'Admin access required to change app settings'}), 403
     try:
         # Upsert: try to update, if not found insert
@@ -1492,6 +1642,29 @@ def settings_save():
         if r.status_code in (200, 201):
             return jsonify({'ok': True})
         return jsonify({'ok': False, 'error': f'Supabase returned {r.status_code}: {r.text}'}), 500
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/settings/approval-group', methods=['GET'])
+@require_auth
+def get_approval_group():
+    try:
+        r = http.get(sb_url('hd_settings', '?key=eq.approval_group&select=value'), headers=sb_headers(), timeout=5)
+        rows = r.json() if r.status_code == 200 else []
+        return jsonify({'ok': True, 'approvers': rows[0]['value'] if rows else []})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/settings/approval-group', methods=['POST'])
+@require_dev
+def save_approval_group():
+    data = request.get_json() or {}
+    approvers = data.get('approvers', [])
+    try:
+        h = sb_headers()
+        h['Prefer'] = 'return=representation,resolution=merge-duplicates'
+        r = http.post(sb_url('hd_settings'), headers=h, json={'key': 'approval_group', 'value': approvers}, timeout=5)
+        return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
@@ -1607,7 +1780,7 @@ def submit_bug():
         return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/bugs/list')
-@require_admin
+@require_dev
 def list_bugs():
     try:
         r = http.get(f"{SUPABASE_URL}/rest/v1/hd_bug_reports?select=*&order=submitted_at.desc", headers=sb_admin_headers(), timeout=10)
@@ -1618,7 +1791,7 @@ def list_bugs():
         return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/bugs/<int:bug_id>', methods=['PATCH'])
-@require_admin
+@require_dev
 def update_bug(bug_id):
     try:
         d = request.json or {}
@@ -1638,9 +1811,40 @@ def update_bug(bug_id):
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
+# ── Feedback ─────────────────────────────────────────────
+@app.route('/feedback/submit', methods=['POST'])
+@require_auth
+def submit_feedback():
+    d = request.get_json() or {}
+    message = d.get('message', '').strip()
+    if not message:
+        return jsonify({'ok': False, 'error': 'Message required'}), 400
+    row = {'message': message, 'submitted_by': session.get('username', '')}
+    try:
+        r = http.post(sb_url('hd_feedback', ''), headers=sb_headers(), json=row, timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': 'Failed to save feedback'}), 500
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/feedback/list')
+@require_auth
+def list_feedback():
+    username = session.get('username', '')
+    role = session.get('role', 'user')
+    try:
+        if role == 'dev':
+            r = http.get(sb_url('hd_feedback', '?select=*&order=submitted_at.desc&limit=200'), headers=sb_headers(), timeout=10)
+        else:
+            r = http.get(sb_url('hd_feedback', f'?submitted_by=eq.{username}&select=*&order=submitted_at.desc&limit=200'), headers=sb_headers(), timeout=10)
+        return jsonify({'ok': True, 'items': r.json() if r.status_code == 200 else []})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 # ── Roadmap ──────────────────────────────────────────────
 @app.route('/roadmap/list')
-@require_admin
+@require_dev
 def list_roadmap():
     try:
         r = http.get(f"{SUPABASE_URL}/rest/v1/hd_roadmap?select=*&order=sort_order.asc,created_at.desc", headers=sb_admin_headers(), timeout=10)
@@ -1651,7 +1855,7 @@ def list_roadmap():
         return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/roadmap/save', methods=['POST'])
-@require_admin
+@require_dev
 def save_roadmap():
     try:
         d = request.json or {}
@@ -1675,7 +1879,7 @@ def save_roadmap():
         return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/roadmap/<int:item_id>', methods=['PATCH'])
-@require_admin
+@require_dev
 def update_roadmap(item_id):
     try:
         d = request.json or {}
@@ -1692,7 +1896,7 @@ def update_roadmap(item_id):
         return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/roadmap/<int:item_id>', methods=['DELETE'])
-@require_admin
+@require_dev
 def delete_roadmap(item_id):
     try:
         r = http.delete(f"{SUPABASE_URL}/rest/v1/hd_roadmap?id=eq.{item_id}", headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
@@ -2070,7 +2274,7 @@ def time_entries():
             return jsonify({'ok': False, 'error': r.text[:500]}), r.status_code
         entries = r.json()
         # Strip cost data for non-admin users
-        if session.get('role') != 'admin':
+        if session.get('role') not in ('admin', 'dev'):
             for e in entries:
                 e.pop('hourly_rate', None)
                 e.pop('labor_cost', None)
