@@ -779,7 +779,7 @@ body.dark .mc-queue-card:hover{border-color:rgba(204,0,0,0.3);}
 .login-heading{font-family:var(--font-display);font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;margin-bottom:6px;}
 .login-sub{font-family:'Poppins',sans-serif;font-size:14px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;margin-bottom:36px;}
 .login-rule{width:32px;height:2px;background:var(--red);margin:0 auto 36px;border-radius:2px;}
-.pin-input{width:100%;height:48px;padding:0 20px;text-align:center;font-size:14px;font-weight:700;letter-spacing:2px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:#fff;margin-bottom:12px;font-family:var(--font);box-sizing:border-box;transition:border-color .2s,background .2s;}
+.pin-input{width:100%;height:48px;padding:0 20px;text-align:center;font-size:16px;font-weight:700;letter-spacing:1.5px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:#fff;margin-bottom:12px;font-family:var(--font);box-sizing:border-box;transition:border-color .2s,background .2s;}
 .pin-input:focus{border-color:var(--red);background:rgba(204,0,0,0.04);}.pin-input:focus:not(:focus-visible){outline:none;}.pin-input:focus-visible{outline:2px solid var(--red);outline-offset:2px;}
 .pin-input::placeholder{color:rgba(255,255,255,0.12);letter-spacing:2px;font-size:14px;}
 .pin-btn{width:100%;height:48px;padding:0 20px;background:var(--red);color:#fff;border:none;border-radius:3px;font-size:14px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-family:var(--font);transition:background .2s,opacity .2s;}
@@ -1717,7 +1717,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
         <!-- PAVEMENT (Asphalt Sections + Concrete + Library items) -->
         <div class="mc-card" style="margin-bottom:var(--card-gap);">
-          <div class="card-hdr" style="cursor:pointer;" onclick="toggleCardCollapse(this)">
+          <div class="card-hdr" role="button" tabindex="0" aria-label="Toggle section" style="cursor:pointer;" onclick="toggleCardCollapse(this)">
             <div style="display:flex;align-items:center;gap:8px;">
               <svg class="collapse-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
               <span class="card-title">Pavement</span>
@@ -1738,7 +1738,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
         <!-- SITE WORK (Line items from library) -->
         <div class="mc-card" style="margin-bottom:var(--card-gap);">
-          <div class="card-hdr" style="cursor:pointer;" onclick="toggleCardCollapse(this)">
+          <div class="card-hdr" role="button" tabindex="0" aria-label="Toggle section" style="cursor:pointer;" onclick="toggleCardCollapse(this)">
             <div style="display:flex;align-items:center;gap:8px;">
               <svg class="collapse-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
               <span class="card-title">Site Work</span>
@@ -1757,7 +1757,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
         <!-- ADDITIONAL ITEMS (Custom manual items only) -->
         <div class="mc-card" style="margin-bottom:var(--card-gap);">
-          <div class="card-hdr" style="cursor:pointer;" onclick="toggleCardCollapse(this)">
+          <div class="card-hdr" role="button" tabindex="0" aria-label="Toggle section" style="cursor:pointer;" onclick="toggleCardCollapse(this)">
             <div style="display:flex;align-items:center;gap:8px;">
               <svg class="collapse-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
               <span class="card-title">Additional Items</span>
@@ -2774,11 +2774,11 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       <div class="panel" id="panel-reports" data-field-hidden><div class="content" style="">
         <div style="display:flex;gap:14px;align-items:flex-start;">
           <div id="rpt-sidebar" class="mc-card" style="width:200px;flex-shrink:0;overflow:hidden;">
-            <div class="rpt-nav-item rpt-nav-active" onclick="selectReport('estimate-perf',this)">Estimate Performance</div>
-            <div class="rpt-nav-item" onclick="selectReport('job-perf',this)">Job Performance</div>
-            <div class="rpt-nav-item" onclick="selectReport('materials-costs',this)">Materials &amp; Costs</div>
-            <div class="rpt-nav-item" onclick="selectReport('executive',this)">Executive Summary</div>
-            <div class="rpt-nav-item" onclick="selectReport('pipeline-health',this)">Pipeline Health</div>
+            <div class="rpt-nav-item rpt-nav-active" role="button" tabindex="0" onclick="selectReport('estimate-perf',this)">Estimate Performance</div>
+            <div class="rpt-nav-item" role="button" tabindex="0" onclick="selectReport('job-perf',this)">Job Performance</div>
+            <div class="rpt-nav-item" role="button" tabindex="0" onclick="selectReport('materials-costs',this)">Materials &amp; Costs</div>
+            <div class="rpt-nav-item" role="button" tabindex="0" onclick="selectReport('executive',this)">Executive Summary</div>
+            <div class="rpt-nav-item" role="button" tabindex="0" onclick="selectReport('pipeline-health',this)">Pipeline Health</div>
           </div>
           <div style="flex:1;min-width:0;">
             <div class="mc-card" style="margin-bottom:14px;">
@@ -4707,6 +4707,35 @@ function tons(sf,d,lbs,matType){
   return Math.ceil((sf*(d/12)*(lbs||150))/2000);
 }
 function calcSY(sf){return Math.ceil(sf/9);}
+
+// --- A11y: keyboard activation + Escape-to-close ---
+// Non-button elements that have role="button" + tabindex + onclick but no
+// explicit onkeydown handler get Enter/Space activation for free.
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape'){
+    // Dismiss top-most visible backdrop/overlay
+    var overlays=['cmdk-overlay','detail-backdrop','notif-backdrop','sb-backdrop'];
+    for(var i=0;i<overlays.length;i++){
+      var el=document.getElementById(overlays[i]);
+      if(el && el.offsetParent!==null && typeof el.onclick==='function'){
+        el.click();
+        return;
+      }
+    }
+    return;
+  }
+  if(e.key!=='Enter' && e.key!==' ')return;
+  var t=document.activeElement;
+  if(!t)return;
+  var tag=t.tagName;
+  if(tag==='BUTTON'||tag==='A'||tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+  if(t.getAttribute('role')!=='button')return;
+  if(!t.hasAttribute('tabindex'))return;
+  if(typeof t.onclick!=='function')return;
+  if(t.onkeydown)return; // element has its own handler
+  e.preventDefault();
+  t.click();
+});
 function wf(){return 1+(parseFloat(document.getElementById('waste').value)||0)/100;}
 function mob(){return parseFloat(document.getElementById('mob').value)||0;}
 function mobCost(){return parseFloat(document.getElementById('mob-cost').value)||0;}
@@ -10760,7 +10789,7 @@ async function renderPipeline() {
         var bidDateStr='';
         if(snap.bid_due_date){var bdp=snap.bid_due_date.split('-');bidDateStr='Bid '+bdp[1]+'/'+bdp[2]+'/'+bdp[0];}
         card.innerHTML=(bidDateStr?'<div style="font-size:9px;font-weight:700;color:var(--red);font-family:monospace;margin-bottom:2px;">'+bidDateStr+'</div>':'')
-          +'<div class="kb-card-name" style="cursor:pointer;" onclick="openProjectSummary('+p.id+')">'+esc(p.name||'Untitled')+'</div>'
+          +'<div class="kb-card-name" role="button" tabindex="0" aria-label="Open project '+esc(p.name||'Untitled')+'" style="cursor:pointer;" onclick="openProjectSummary('+p.id+')">'+esc(p.name||'Untitled')+'</div>'
           +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">'
           +(canSeePricing()?'<span class="kb-card-total">'+(p.total?'$'+Math.round(p.total).toLocaleString():'')+'</span>':'<span></span>')
           +(woCount?'<span style="font-size:10px;color:var(--dgray);background:var(--bg-sub);padding:1px 6px;border-radius:4px;">'+woCount+' WO</span>':'')
@@ -11214,8 +11243,8 @@ async function renderClients() {
       card.dataset.company=(c.company||'').toLowerCase();
       card.dataset.email=(c.email||'').toLowerCase();
       var initials = (c.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
-      card.innerHTML = '<div class="client-avatar" onclick="openClientSummary('+c.id+')">'+initials+'</div>'
-        +'<div class="client-info" onclick="openClientSummary('+c.id+')">'
+      card.innerHTML = '<div class="client-avatar" role="button" tabindex="0" aria-label="Open client '+esc(c.name||'')+'" onclick="openClientSummary('+c.id+')">'+initials+'</div>'
+        +'<div class="client-info" role="button" tabindex="0" aria-label="Open client '+esc(c.name||'')+'" onclick="openClientSummary('+c.id+')">'
         +'<div class="client-name">'+esc(c.name)+(c.company?' <span style="font-weight:400;color:var(--dgray);">- '+esc(c.company)+'</span>':'')+'</div>'
         +'<div class="client-sub">'+[c.phone,c.email].filter(Boolean).map(esc).join(' | ')+'</div>'
         +'</div>'
