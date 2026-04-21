@@ -9833,8 +9833,12 @@ async function saveQuote(quiet){
         addProjectActivity(psnap,'proposal','Proposal "'+name+'" created ($'+Math.round(p.total).toLocaleString()+')');
         proj.snap=psnap;
         var newTotals=calcProjectTotal(proj);proj.total=newTotals.grandTotal;
-        fetch('/projects/update/'+pid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:psnap,total:newTotals.grandTotal})});
-        toast('Proposal linked to project','ok');
+        try{
+          await _safeFetch('/projects/update/'+pid,{method:'PATCH',body:JSON.stringify({snap:psnap,total:newTotals.grandTotal})});
+          if(!quiet)toast('Proposal linked to project','ok');
+        }catch(e){
+          if(!quiet)toast('Linked locally — server sync failed: '+(e.message||''),'err');
+        }
       }
     } else {
       _proposalDirty=false;
@@ -9912,19 +9916,19 @@ function loadQuote(id,skipNav){
   toast('Quote loaded');
 }
 async function delSaved(id){
+  var q=savedQuotes.find(function(x){return x.id===id;});
+  if(q){
+    var snap=typeof q.snap==='string'?JSON.parse(q.snap||'{}'):q.snap||{};
+    // Block deletion of projects from Saved Documents
+    if(snap.is_project){toast('Projects can only be deleted from the Project page','err');return;}
+    if(!confirm('Archive "'+esc(q.name||'this document')+'"? You can restore it from Admin > Archived.'))return;
+  }
   try{
-    var q=savedQuotes.find(function(x){return x.id===id;});
-    if(q){
-      var snap=typeof q.snap==='string'?JSON.parse(q.snap||'{}'):q.snap||{};
-      // Block deletion of projects from Saved Documents
-      if(snap.is_project){toast('Projects can only be deleted from the Project page','err');return;}
-      if(!confirm('Archive "'+esc(q.name||'this document')+'"? You can restore it from Admin > Archived.'))return;
-    }
-    await fetch('/quotes/delete/'+id,{method:'DELETE'});
+    await _safeFetch('/quotes/delete/'+id,{method:'DELETE'});
     savedQuotes=savedQuotes.filter(function(x){return x.id!==id;});
     pipelineProposals=pipelineProposals.filter(function(x){return x.id!==id;});
     renderSaved();
-  }catch(e){toast('Delete error: '+e.message,'err');}
+  }catch(e){toast(e.message||'Failed to archive proposal','err');}
 }
 
 function exportAllQuotes(){
@@ -10270,8 +10274,15 @@ async function renderSaved(){
     });
     if(!docs.length){c.innerHTML='<p style="color:var(--dgray);font-size:13px;">No saved proposals yet.</p>';return;}
     var bulkBar=createBulkDeleteToolbar('saved-list',{label:'proposals',onDelete:async function(ids){
-      for(var i=0;i<ids.length;i++){try{await fetch('/quotes/delete/'+ids[i],{method:'DELETE'});}catch(e){}}
-      toast(ids.length+' proposals deleted','ok');renderSaved();
+      var succeeded=0,failed=0;
+      for(var i=0;i<ids.length;i++){
+        try{await _safeFetch('/quotes/delete/'+ids[i],{method:'DELETE'});succeeded++;}
+        catch(e){failed++;}
+      }
+      if(failed===0){toast(succeeded+' proposals deleted','ok');}
+      else if(succeeded===0){toast('Failed to delete '+failed+' proposals','err');}
+      else{toast('Deleted '+succeeded+' of '+ids.length+' ('+failed+' failed)','err');}
+      renderSaved();
     }});
     c.appendChild(bulkBar);
     docs.forEach(function(q){
@@ -11234,8 +11245,15 @@ async function renderClients() {
       return;
     }
     var clientBulkBar=createBulkDeleteToolbar('contacts-clients-list',{label:'clients',onDelete:async function(ids){
-      for(var i=0;i<ids.length;i++){try{await fetch('/clients/delete/'+ids[i],{method:'DELETE'});}catch(e){}}
-      toast(ids.length+' clients deleted','ok');renderClients();
+      var succeeded=0,failed=0;
+      for(var i=0;i<ids.length;i++){
+        try{await _safeFetch('/clients/delete/'+ids[i],{method:'DELETE'});succeeded++;}
+        catch(e){failed++;}
+      }
+      if(failed===0){toast(succeeded+' clients deleted','ok');}
+      else if(succeeded===0){toast('Failed to delete '+failed+' clients','err');}
+      else{toast('Deleted '+succeeded+' of '+ids.length+' ('+failed+' failed)','err');}
+      renderClients();
     }});
     container.appendChild(clientBulkBar);
     clientsList.forEach(function(c){
