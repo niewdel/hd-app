@@ -15016,8 +15016,6 @@ function _tourStepsForRole(role){
     'Pipeline (Kanban), list, bid calendar, and map views of every job. Move proposals through stages &mdash; New Lead &rarr; Estimate Sent &rarr; Approved &rarr; Scheduled.');
   var schedule=step('[aria-label="Schedule"]','Schedule',
     'Day, week, and month views of all crew assignments. Drag work orders onto days to assign. Weather is pinned at the top so you can see what\'s coming.');
-  var tasks=step('[aria-label="Tasks"]','Tasks',
-    'Personal and shared task list. Tag teammates with @username. Link tasks to projects or clients for context.');
   var contacts=step('[aria-label="Contacts"]','Contacts',
     'Clients and subcontractors. Each record stores their full history of proposals, projects, and notes.');
   var reports=step('[aria-label="Reports"]','Reports & Analytics',
@@ -15034,16 +15032,16 @@ function _tourStepsForRole(role){
     'Open this menu anytime to access your profile, change your password, toggle theme, re-launch this tour, or sign out.','left');
 
   if(role==='dev'){
-    return [dashboard,projects,schedule,tasks,contacts,reports,settings,admin,bugs,roadmap,account];
+    return [dashboard,projects,schedule,contacts,reports,settings,admin,bugs,roadmap,account];
   }
   if(role==='admin'){
-    return [dashboard,projects,schedule,tasks,contacts,reports,settings,admin,bugs,account];
+    return [dashboard,projects,schedule,contacts,reports,settings,admin,bugs,account];
   }
   if(role==='field'){
-    return [dashboard,schedule,tasks,bugs,account];
+    return [dashboard,schedule,bugs,account];
   }
   // 'user' default
-  return [dashboard,projects,schedule,tasks,contacts,reports,bugs,account];
+  return [dashboard,projects,schedule,contacts,reports,bugs,account];
 }
 function startHelpTour(){
   closeHelpModal();
@@ -15055,7 +15053,11 @@ function startHelpTour(){
   var role=window._userRole||'user';
   var steps=_tourStepsForRole(role);
   // Defensive filter: drop steps whose target element isn't in the DOM
-  steps=steps.filter(function(s){return !!document.querySelector(s.element);});
+  // OR is hidden (display:none keeps it in the DOM but invisible).
+  steps=steps.filter(function(s){
+    var el=document.querySelector(s.element);
+    return !!el && el.offsetParent!==null;
+  });
   if(!steps.length){if(typeof toast==='function')toast('No tour targets visible','err');return;}
   var tour=driverFn({
     showProgress:true,
