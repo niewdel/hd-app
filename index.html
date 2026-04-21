@@ -5407,7 +5407,8 @@ function _renderWxHero(el,data,idx){
   desc=WEATHER_DESC[code]||'\u2014';
   var uvL=uvLabel(uv);
   var windD=isToday?windDir(cur.wind_direction_10m||0):'';
-  var bgHtml=_wxBgHtml(code);
+  var tod=_wxTimeOfDay(data);
+  var bgHtml=_wxBgHtml(code,tod);
   // Rain pill — uses selected day's precip prob
   var rain=daily.precipitation_probability_max?(daily.precipitation_probability_max[idx]||0):0;
   var rainPill='';
@@ -12974,9 +12975,35 @@ function _wxCodeToCat(code){
   if(code>=95)return 'storm';
   return 'clear';
 }
-function _wxBgHtml(code){
+function _wxTimeOfDay(data){
+  // Returns one of 'dawn','day','dusk','night' for the SELECTED day's date.
+  // For today, uses the current local time. For future days, defaults to 'day'.
+  // If sunrise/sunset are available in data.daily for the selected day, uses them
+  // for accurate dawn/dusk windows; otherwise falls back to clock heuristics.
+  var idx=(typeof _wxSelectedDay==='number')?_wxSelectedDay:0;
+  var now=new Date();
+  var isToday=(idx===0);
+  if(!isToday)return 'day';
+  var hr=now.getHours()+now.getMinutes()/60;
+  if(data&&data.daily&&data.daily.sunrise&&data.daily.sunset){
+    var sr=new Date(data.daily.sunrise[0]);
+    var ss=new Date(data.daily.sunset[0]);
+    var srH=sr.getHours()+sr.getMinutes()/60;
+    var ssH=ss.getHours()+ss.getMinutes()/60;
+    if(hr<srH-0.5)return 'night';
+    if(hr<srH+1)return 'dawn';
+    if(hr<ssH-1)return 'day';
+    if(hr<ssH+0.5)return 'dusk';
+    return 'night';
+  }
+  if(hr<5||hr>=19)return 'night';
+  if(hr<7)return 'dawn';
+  if(hr<17)return 'day';
+  return 'dusk';
+}
+function _wxBgHtml(code,tod){
   var id='wx-cv-'+(++_wxIdCounter);
-  return '<div class="wx-bg"><canvas id="'+id+'" data-wx-code="'+code+'"></canvas></div>';
+  return '<div class="wx-bg"><canvas id="'+id+'" data-wx-code="'+code+'" data-wx-tod="'+(tod||'day')+'"></canvas></div>';
 }
 function _initWxCanvases(parentEl){
   if(!parentEl)return;
@@ -12985,11 +13012,13 @@ function _initWxCanvases(parentEl){
     if(cv._wxStarted)return;
     cv._wxStarted=true;
     var code=parseInt(cv.getAttribute('data-wx-code'))||0;
-    _startWxCanvas(cv,code);
+    var tod=cv.getAttribute('data-wx-tod')||'day';
+    _startWxCanvas(cv,code,tod);
   });
 }
-function _startWxCanvas(cv,code){
+function _startWxCanvas(cv,code,tod){
   var cat=_wxCodeToCat(code);
+  if(!tod)tod='day';
   var ctx=cv.getContext('2d');
   var dpr=window.devicePixelRatio||1;
   var W,H;
@@ -13049,13 +13078,45 @@ function _startWxCanvas(cv,code){
       cx.putImageData(img,0,0);
       return c;
     }
+    // Cloud rgb base tints with time-of-day (Improvement A + C)
+    var cloudRgb=(tod==='night')?[40,45,65]:(tod==='dawn')?[150,110,120]:(tod==='dusk')?[150,100,90]:[110,118,132];
+    var cloudRgb2=(tod==='night')?[55,60,80]:(tod==='dawn')?[170,130,135]:(tod==='dusk')?[170,118,100]:[125,132,148];
     if(cat==='overcast'){
       // Two layers at different noise scales for depth
-      _ocCloud=_makeCloudTex(320,160,42,8,4,110,118,132,35,65);
-      _ocCloud2=_makeCloudTex(320,160,137,14,7,125,132,148,20,45);
+      _ocCloud=_makeCloudTex(320,160,42,8,4,cloudRgb[0],cloudRgb[1],cloudRgb[2],35,65);
+      _ocCloud2=_makeCloudTex(320,160,137,14,7,cloudRgb2[0],cloudRgb2[1],cloudRgb2[2],20,45);
     } else {
-      // Partly: thinner, sparser clouds
-      _ocCloud=_makeCloudTex(256,128,42,7,3.5,145,152,168,15,35);
+      // Partly: TWO layers — primary + wispier secondary for variety (Improvement C)
+      var partlyRgb=(tod==='night')?[60,68,90]:(tod==='dawn')?[185,140,140]:(tod==='dusk')?[180,130,115]:[145,152,168];
+      var partlyRgb2=(tod==='night')?[75,82,105]:(tod==='dawn')?[200,158,150]:(tod==='dusk')?[195,148,128]:[160,168,182];
+      _ocCloud=_makeCloudTex(256,128,42,7,3.5,partlyRgb[0],partlyRgb[1],partlyRgb[2],15,35);
+      _ocCloud2=_makeCloudTex(280,140,89,18,9,partlyRgb2[0],partlyRgb2[1],partlyRgb2[2],8,22);
+    }
+  }
+
+  // ── Stars (night + clear only) ──
+  var stars=[];
+  if(tod==='night'&&cat==='clear'){
+    for(var si=0;si<35;si++){
+      stars.push({x:Math.random(),y:Math.random()*0.55,r:0.5+Math.random()*1.5,baseA:0.3+Math.random()*0.5,twinklePhase:Math.random()*Math.PI*2});
+    }
+  }
+
+  // ── Wet-glass droplets (Improvement B) ──
+  var droplets=[];
+  if(cat==='rain'||cat==='heavyrain'||cat==='storm'||cat==='drizzle'){
+    var dropCount=cat==='drizzle'?25:cat==='rain'?55:75;
+    for(var di=0;di<dropCount;di++){
+      droplets.push({
+        x:Math.random(),
+        y:Math.random(),
+        r:1.5+Math.random()*4,
+        growth:0.001+Math.random()*0.003,
+        streakThreshold:6+Math.random()*4,
+        streaking:false,
+        streakSpeed:0,
+        age:Math.random()*200
+      });
     }
   }
 
@@ -13101,52 +13162,104 @@ function _startWxCanvas(cv,code){
   }
 
   // ── Atmospheric sky palettes ──
-  // Each weather type gets a layered gradient that looks like a real photograph
+  // Each weather type gets a layered gradient that looks like a real photograph.
+  // Palette also shifts with time-of-day (Improvement A).
   function drawSky(){
     // Base sky gradient (full canvas)
     var g=ctx.createLinearGradient(0,0,0,H);
-    if(cat==='clear'){
-      // Golden hour warm sky
-      g.addColorStop(0,'rgba(50,35,15,0.35)');
-      g.addColorStop(0.3,'rgba(60,40,18,0.2)');
-      g.addColorStop(0.6,'rgba(45,30,12,0.1)');
-      g.addColorStop(1,'rgba(25,18,8,0.05)');
-    } else if(cat==='partly'){
-      g.addColorStop(0,'rgba(45,40,30,0.2)');
-      g.addColorStop(0.4,'rgba(35,35,28,0.12)');
-      g.addColorStop(1,'rgba(20,20,18,0.04)');
-    } else if(cat==='overcast'){
-      // Flat gray wash — the noise texture provides all the detail
-      g.addColorStop(0,'rgba(62,66,78,0.22)');
-      g.addColorStop(0.35,'rgba(55,60,72,0.16)');
-      g.addColorStop(0.7,'rgba(48,52,62,0.1)');
-      g.addColorStop(1,'rgba(42,46,55,0.05)');
-    } else if(cat==='fog'){
-      g.addColorStop(0,'rgba(140,148,160,0.15)');
-      g.addColorStop(0.4,'rgba(130,138,152,0.12)');
-      g.addColorStop(0.7,'rgba(125,132,145,0.08)');
-      g.addColorStop(1,'rgba(118,125,138,0.05)');
-    } else if(cat==='drizzle'){
-      g.addColorStop(0,'rgba(45,52,68,0.15)');
-      g.addColorStop(0.5,'rgba(38,45,58,0.08)');
-      g.addColorStop(1,'rgba(30,36,48,0.04)');
-    } else if(cat==='rain'){
-      g.addColorStop(0,'rgba(32,40,58,0.22)');
-      g.addColorStop(0.4,'rgba(28,35,52,0.14)');
-      g.addColorStop(1,'rgba(22,28,42,0.06)');
-    } else if(cat==='heavyrain'){
-      g.addColorStop(0,'rgba(18,22,38,0.35)');
-      g.addColorStop(0.4,'rgba(15,18,32,0.25)');
-      g.addColorStop(1,'rgba(10,12,22,0.12)');
-    } else if(cat==='snow'){
-      g.addColorStop(0,'rgba(160,170,190,0.08)');
-      g.addColorStop(0.5,'rgba(150,160,180,0.05)');
-      g.addColorStop(1,'rgba(140,150,170,0.02)');
-    } else if(cat==='storm'){
-      g.addColorStop(0,'rgba(12,14,25,0.4)');
-      g.addColorStop(0.3,'rgba(10,12,22,0.3)');
-      g.addColorStop(0.6,'rgba(8,10,18,0.2)');
-      g.addColorStop(1,'rgba(6,8,14,0.1)');
+    if(tod==='night'){
+      if(cat==='clear'){
+        g.addColorStop(0,'rgba(8,12,28,0.65)');
+        g.addColorStop(0.5,'rgba(15,20,40,0.5)');
+        g.addColorStop(1,'rgba(25,30,55,0.35)');
+      } else if(cat==='partly'||cat==='overcast'){
+        g.addColorStop(0,'rgba(15,18,30,0.55)');
+        g.addColorStop(0.5,'rgba(20,24,38,0.4)');
+        g.addColorStop(1,'rgba(25,30,45,0.25)');
+      } else if(cat==='rain'||cat==='drizzle'||cat==='heavyrain'||cat==='storm'){
+        g.addColorStop(0,'rgba(8,10,20,0.7)');
+        g.addColorStop(0.5,'rgba(12,14,24,0.55)');
+        g.addColorStop(1,'rgba(18,20,32,0.4)');
+      } else if(cat==='snow'||cat==='fog'){
+        g.addColorStop(0,'rgba(40,48,68,0.5)');
+        g.addColorStop(0.5,'rgba(50,58,78,0.35)');
+        g.addColorStop(1,'rgba(60,68,88,0.2)');
+      }
+    } else if(tod==='dawn'){
+      if(cat==='clear'||cat==='partly'){
+        g.addColorStop(0,'rgba(180,80,90,0.35)');
+        g.addColorStop(0.3,'rgba(220,130,80,0.25)');
+        g.addColorStop(0.6,'rgba(245,180,100,0.15)');
+        g.addColorStop(1,'rgba(255,210,140,0.08)');
+      } else if(cat==='overcast'){
+        g.addColorStop(0,'rgba(120,90,100,0.3)');
+        g.addColorStop(0.5,'rgba(110,90,95,0.2)');
+        g.addColorStop(1,'rgba(100,85,90,0.12)');
+      } else {
+        g.addColorStop(0,'rgba(60,50,55,0.3)');
+        g.addColorStop(0.5,'rgba(50,45,55,0.18)');
+        g.addColorStop(1,'rgba(40,38,48,0.08)');
+      }
+    } else if(tod==='dusk'){
+      if(cat==='clear'||cat==='partly'){
+        g.addColorStop(0,'rgba(80,40,80,0.35)');
+        g.addColorStop(0.3,'rgba(180,80,60,0.25)');
+        g.addColorStop(0.6,'rgba(230,140,70,0.18)');
+        g.addColorStop(1,'rgba(245,170,90,0.1)');
+      } else if(cat==='overcast'){
+        g.addColorStop(0,'rgba(90,75,90,0.3)');
+        g.addColorStop(0.5,'rgba(95,75,80,0.2)');
+        g.addColorStop(1,'rgba(85,65,70,0.12)');
+      } else {
+        g.addColorStop(0,'rgba(55,45,60,0.3)');
+        g.addColorStop(0.5,'rgba(48,40,55,0.18)');
+        g.addColorStop(1,'rgba(40,35,48,0.08)');
+      }
+    } else {
+      // 'day' — original palettes preserved
+      if(cat==='clear'){
+        // Golden hour warm sky
+        g.addColorStop(0,'rgba(50,35,15,0.35)');
+        g.addColorStop(0.3,'rgba(60,40,18,0.2)');
+        g.addColorStop(0.6,'rgba(45,30,12,0.1)');
+        g.addColorStop(1,'rgba(25,18,8,0.05)');
+      } else if(cat==='partly'){
+        g.addColorStop(0,'rgba(45,40,30,0.2)');
+        g.addColorStop(0.4,'rgba(35,35,28,0.12)');
+        g.addColorStop(1,'rgba(20,20,18,0.04)');
+      } else if(cat==='overcast'){
+        // Flat gray wash — the noise texture provides all the detail
+        g.addColorStop(0,'rgba(62,66,78,0.22)');
+        g.addColorStop(0.35,'rgba(55,60,72,0.16)');
+        g.addColorStop(0.7,'rgba(48,52,62,0.1)');
+        g.addColorStop(1,'rgba(42,46,55,0.05)');
+      } else if(cat==='fog'){
+        g.addColorStop(0,'rgba(140,148,160,0.15)');
+        g.addColorStop(0.4,'rgba(130,138,152,0.12)');
+        g.addColorStop(0.7,'rgba(125,132,145,0.08)');
+        g.addColorStop(1,'rgba(118,125,138,0.05)');
+      } else if(cat==='drizzle'){
+        g.addColorStop(0,'rgba(45,52,68,0.15)');
+        g.addColorStop(0.5,'rgba(38,45,58,0.08)');
+        g.addColorStop(1,'rgba(30,36,48,0.04)');
+      } else if(cat==='rain'){
+        g.addColorStop(0,'rgba(32,40,58,0.22)');
+        g.addColorStop(0.4,'rgba(28,35,52,0.14)');
+        g.addColorStop(1,'rgba(22,28,42,0.06)');
+      } else if(cat==='heavyrain'){
+        g.addColorStop(0,'rgba(18,22,38,0.35)');
+        g.addColorStop(0.4,'rgba(15,18,32,0.25)');
+        g.addColorStop(1,'rgba(10,12,22,0.12)');
+      } else if(cat==='snow'){
+        g.addColorStop(0,'rgba(160,170,190,0.08)');
+        g.addColorStop(0.5,'rgba(150,160,180,0.05)');
+        g.addColorStop(1,'rgba(140,150,170,0.02)');
+      } else if(cat==='storm'){
+        g.addColorStop(0,'rgba(12,14,25,0.4)');
+        g.addColorStop(0.3,'rgba(10,12,22,0.3)');
+        g.addColorStop(0.6,'rgba(8,10,18,0.2)');
+        g.addColorStop(1,'rgba(6,8,14,0.1)');
+      }
     }
     ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   }
@@ -13156,71 +13269,152 @@ function _startWxCanvas(cv,code){
     var slowDrift=t*0.0003;
 
     if(cat==='clear'){
-      // Bright sun — white-hot core with warm corona
-      var sx=W*0.82,sy=H*0.1;
-      // Wide atmospheric scattering
-      var atmo=ctx.createRadialGradient(sx,sy,0,sx,sy,Math.max(W,H)*0.7);
-      atmo.addColorStop(0,'rgba(255,195,70,0.08)');
-      atmo.addColorStop(0.3,'rgba(255,165,50,0.03)');
-      atmo.addColorStop(1,'transparent');
-      ctx.fillStyle=atmo;ctx.fillRect(0,0,W,H);
-      // Sun corona — outer warm glow
-      var c1=ctx.createRadialGradient(sx,sy,0,sx,sy,100*breathe);
-      c1.addColorStop(0,'rgba(255,210,100,0.25)');
-      c1.addColorStop(0.25,'rgba(255,185,70,0.12)');
-      c1.addColorStop(0.5,'rgba(255,160,50,0.04)');
-      c1.addColorStop(1,'transparent');
-      ctx.fillStyle=c1;ctx.beginPath();ctx.arc(sx,sy,100*breathe,0,Math.PI*2);ctx.fill();
-      // Inner corona
-      var c2=ctx.createRadialGradient(sx,sy,0,sx,sy,42*breathe);
-      c2.addColorStop(0,'rgba(255,240,190,0.55)');
-      c2.addColorStop(0.35,'rgba(255,220,140,0.25)');
-      c2.addColorStop(0.7,'rgba(255,195,90,0.08)');
-      c2.addColorStop(1,'transparent');
-      ctx.fillStyle=c2;ctx.beginPath();ctx.arc(sx,sy,42*breathe,0,Math.PI*2);ctx.fill();
-      // White disc
-      var disc=ctx.createRadialGradient(sx,sy,0,sx,sy,12*breathe);
-      disc.addColorStop(0,'rgba(255,255,250,0.95)');
-      disc.addColorStop(0.5,'rgba(255,250,230,0.6)');
-      disc.addColorStop(1,'rgba(255,240,200,0)');
-      ctx.fillStyle=disc;ctx.beginPath();ctx.arc(sx,sy,12*breathe,0,Math.PI*2);ctx.fill();
-      // Subtle god rays — very faint, slow rotation
-      ctx.save();ctx.translate(sx,sy);ctx.globalAlpha=0.03+0.015*Math.sin(t*0.006);
-      for(var i=0;i<12;i++){
-        var ang=(i*30+t*0.02)*Math.PI/180;
-        ctx.save();ctx.rotate(ang);
-        var rg=ctx.createLinearGradient(0,0,0,H*0.5);
-        rg.addColorStop(0,'rgba(255,210,100,1)');rg.addColorStop(0.4,'rgba(255,190,70,0.5)');rg.addColorStop(1,'transparent');
-        ctx.fillStyle=rg;
-        ctx.beginPath();ctx.moveTo(-4,5);ctx.lineTo(4,5);ctx.lineTo(12,H*0.5);ctx.lineTo(-12,H*0.5);ctx.closePath();ctx.fill();
-        ctx.restore();
+      if(tod==='night'){
+        // Moon + stars + faint city glow (Improvement A — night clear)
+        var mx=W*0.78,my=H*0.18;
+        // Soft moon halo
+        var mh=ctx.createRadialGradient(mx,my,0,mx,my,80*breathe);
+        mh.addColorStop(0,'rgba(220,230,255,0.15)');
+        mh.addColorStop(0.4,'rgba(200,215,245,0.06)');
+        mh.addColorStop(1,'transparent');
+        ctx.fillStyle=mh;ctx.fillRect(0,0,W,H);
+        // Moon disc
+        var md=ctx.createRadialGradient(mx-3,my-3,0,mx,my,22*breathe);
+        md.addColorStop(0,'rgba(245,248,255,0.95)');
+        md.addColorStop(0.5,'rgba(225,232,250,0.75)');
+        md.addColorStop(1,'rgba(200,212,238,0.4)');
+        ctx.fillStyle=md;ctx.beginPath();ctx.arc(mx,my,22*breathe,0,Math.PI*2);ctx.fill();
+        // Stars (positions captured at init; twinkle via sin wave)
+        ctx.save();
+        for(var sti=0;sti<stars.length;sti++){
+          var st=stars[sti];
+          var alpha=st.baseA*(0.7+0.3*Math.sin(t*0.02+st.twinklePhase));
+          ctx.globalAlpha=alpha;
+          ctx.fillStyle='rgba(255,255,245,1)';
+          ctx.beginPath();ctx.arc(st.x*W,st.y*H,st.r,0,Math.PI*2);ctx.fill();
+        }
+        ctx.globalAlpha=1;ctx.restore();
+        // Faint city-light glow at the bottom
+        var cityG=ctx.createLinearGradient(0,H,0,H*0.85);
+        cityG.addColorStop(0,'rgba(255,180,80,0.04)');
+        cityG.addColorStop(1,'transparent');
+        ctx.fillStyle=cityG;ctx.fillRect(0,0,W,H);
+      } else {
+        // Sun position + tint vary with tod
+        var sx,sy,coronaTint,discTint,washTint,godRayTint;
+        if(tod==='dawn'){
+          sx=W*0.78;sy=H*0.5; // low on right (rising)
+          coronaTint='rgba(255,170,110,';
+          discTint='rgba(255,235,200,';
+          washTint='rgba(255,140,90,0.08)';
+          godRayTint='rgba(255,180,120,';
+        } else if(tod==='dusk'){
+          sx=W*0.18;sy=H*0.55; // low on left (setting)
+          coronaTint='rgba(255,140,80,';
+          discTint='rgba(255,225,180,';
+          washTint='rgba(255,110,60,0.1)';
+          godRayTint='rgba(255,150,80,';
+        } else {
+          sx=W*0.82;sy=H*0.1; // high right (day)
+          coronaTint='rgba(255,210,100,';
+          discTint='rgba(255,255,250,';
+          washTint='rgba(255,150,50,0.05)';
+          godRayTint='rgba(255,210,100,';
+        }
+        // Wide atmospheric scattering
+        var atmo=ctx.createRadialGradient(sx,sy,0,sx,sy,Math.max(W,H)*0.7);
+        atmo.addColorStop(0,coronaTint+'0.08)');
+        atmo.addColorStop(0.3,coronaTint+'0.03)');
+        atmo.addColorStop(1,'transparent');
+        ctx.fillStyle=atmo;ctx.fillRect(0,0,W,H);
+        // Sun corona — outer warm glow
+        var c1=ctx.createRadialGradient(sx,sy,0,sx,sy,100*breathe);
+        c1.addColorStop(0,coronaTint+'0.25)');
+        c1.addColorStop(0.25,coronaTint+'0.12)');
+        c1.addColorStop(0.5,coronaTint+'0.04)');
+        c1.addColorStop(1,'transparent');
+        ctx.fillStyle=c1;ctx.beginPath();ctx.arc(sx,sy,100*breathe,0,Math.PI*2);ctx.fill();
+        // Inner corona
+        var c2=ctx.createRadialGradient(sx,sy,0,sx,sy,42*breathe);
+        c2.addColorStop(0,discTint+'0.55)');
+        c2.addColorStop(0.35,coronaTint+'0.25)');
+        c2.addColorStop(0.7,coronaTint+'0.08)');
+        c2.addColorStop(1,'transparent');
+        ctx.fillStyle=c2;ctx.beginPath();ctx.arc(sx,sy,42*breathe,0,Math.PI*2);ctx.fill();
+        // White disc
+        var disc=ctx.createRadialGradient(sx,sy,0,sx,sy,12*breathe);
+        disc.addColorStop(0,discTint+'0.95)');
+        disc.addColorStop(0.5,discTint+'0.6)');
+        disc.addColorStop(1,coronaTint+'0)');
+        ctx.fillStyle=disc;ctx.beginPath();ctx.arc(sx,sy,12*breathe,0,Math.PI*2);ctx.fill();
+        // Subtle god rays — very faint, slow rotation
+        ctx.save();ctx.translate(sx,sy);ctx.globalAlpha=0.03+0.015*Math.sin(t*0.006);
+        for(var i=0;i<12;i++){
+          var ang=(i*30+t*0.02)*Math.PI/180;
+          ctx.save();ctx.rotate(ang);
+          var rg=ctx.createLinearGradient(0,0,0,H*0.5);
+          rg.addColorStop(0,godRayTint+'1)');rg.addColorStop(0.4,godRayTint+'0.5)');rg.addColorStop(1,'transparent');
+          ctx.fillStyle=rg;
+          ctx.beginPath();ctx.moveTo(-4,5);ctx.lineTo(4,5);ctx.lineTo(12,H*0.5);ctx.lineTo(-12,H*0.5);ctx.closePath();ctx.fill();
+          ctx.restore();
+        }
+        ctx.globalAlpha=1;ctx.restore();
+        // Warm bottom wash
+        var wash=ctx.createLinearGradient(0,H,0,H*0.4);
+        wash.addColorStop(0,washTint);wash.addColorStop(1,'transparent');
+        ctx.fillStyle=wash;ctx.fillRect(0,0,W,H);
       }
-      ctx.globalAlpha=1;ctx.restore();
-      // Warm bottom wash
-      var wash=ctx.createLinearGradient(0,H,0,H*0.4);
-      wash.addColorStop(0,'rgba(255,150,50,0.05)');wash.addColorStop(1,'transparent');
-      ctx.fillStyle=wash;ctx.fillRect(0,0,W,H);
 
     } else if(cat==='partly'){
-      // Dimmed sun visible through cloud gaps
-      var sx=W*0.8,sy=H*0.12;
-      // Sun corona
-      var s1=ctx.createRadialGradient(sx,sy,0,sx,sy,65*breathe);
-      s1.addColorStop(0,'rgba(255,220,130,0.2)');
-      s1.addColorStop(0.3,'rgba(255,195,90,0.1)');
-      s1.addColorStop(0.6,'rgba(255,175,65,0.04)');
-      s1.addColorStop(1,'transparent');
-      ctx.fillStyle=s1;ctx.beginPath();ctx.arc(sx,sy,65*breathe,0,Math.PI*2);ctx.fill();
-      // Sun disc (dimmer)
-      var sd=ctx.createRadialGradient(sx,sy,0,sx,sy,9);
-      sd.addColorStop(0,'rgba(255,250,230,0.45)');sd.addColorStop(0.6,'rgba(255,242,210,0.15)');sd.addColorStop(1,'rgba(255,240,200,0)');
-      ctx.fillStyle=sd;ctx.beginPath();ctx.arc(sx,sy,9,0,Math.PI*2);ctx.fill();
-      // Noise cloud texture — thinner than overcast, drifting across
+      // Dim moon behind clouds at night
+      if(tod==='night'){
+        var mxp=W*0.75,myp=H*0.2;
+        var mhp=ctx.createRadialGradient(mxp,myp,0,mxp,myp,60*breathe);
+        mhp.addColorStop(0,'rgba(200,212,238,0.18)');
+        mhp.addColorStop(0.5,'rgba(180,195,225,0.06)');
+        mhp.addColorStop(1,'transparent');
+        ctx.fillStyle=mhp;ctx.fillRect(0,0,W,H);
+        var mdp=ctx.createRadialGradient(mxp,myp,0,mxp,myp,16*breathe);
+        mdp.addColorStop(0,'rgba(225,232,250,0.5)');
+        mdp.addColorStop(1,'rgba(200,212,238,0)');
+        ctx.fillStyle=mdp;ctx.beginPath();ctx.arc(mxp,myp,16*breathe,0,Math.PI*2);ctx.fill();
+      } else {
+        // Sun visible through cloud gaps — position/tint per tod
+        var psx,psy,sCoronaTint,sDiscTint;
+        if(tod==='dawn'){
+          psx=W*0.78;psy=H*0.45;
+          sCoronaTint='rgba(255,180,120,';
+          sDiscTint='rgba(255,235,200,';
+        } else if(tod==='dusk'){
+          psx=W*0.2;psy=H*0.5;
+          sCoronaTint='rgba(255,150,80,';
+          sDiscTint='rgba(255,225,180,';
+        } else {
+          psx=W*0.8;psy=H*0.12;
+          sCoronaTint='rgba(255,195,90,';
+          sDiscTint='rgba(255,250,230,';
+        }
+        var s1=ctx.createRadialGradient(psx,psy,0,psx,psy,65*breathe);
+        s1.addColorStop(0,sCoronaTint+'0.2)');
+        s1.addColorStop(0.3,sCoronaTint+'0.1)');
+        s1.addColorStop(0.6,sCoronaTint+'0.04)');
+        s1.addColorStop(1,'transparent');
+        ctx.fillStyle=s1;ctx.beginPath();ctx.arc(psx,psy,65*breathe,0,Math.PI*2);ctx.fill();
+        var sd=ctx.createRadialGradient(psx,psy,0,psx,psy,9);
+        sd.addColorStop(0,sDiscTint+'0.45)');sd.addColorStop(0.6,sDiscTint+'0.15)');sd.addColorStop(1,sDiscTint+'0)');
+        ctx.fillStyle=sd;ctx.beginPath();ctx.arc(psx,psy,9,0,Math.PI*2);ctx.fill();
+      }
+      // Two cloud layers for variety (Improvement C)
       ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
       if(_ocCloud){
         var off1=(t*0.025)%(W*2);
         ctx.drawImage(_ocCloud,-off1,-H*0.05,W*2,H*0.85);
         ctx.drawImage(_ocCloud,W*2-off1,-H*0.05,W*2,H*0.85);
+      }
+      if(_ocCloud2){
+        // Wispier secondary layer drifting opposite direction
+        var off2=(t*0.014)%(W*2);
+        ctx.drawImage(_ocCloud2,off2-W*0.3,-H*0.1,W*2,H*0.6);
       }
 
     } else if(cat==='overcast'){
@@ -13399,6 +13593,57 @@ function _startWxCanvas(cv,code){
     }
   }
 
+  function drawDroplets(){
+    // Wet-glass droplets — render last so they sit on top of rain (Improvement B)
+    ctx.save();
+    for(var i=0;i<droplets.length;i++){
+      var d=droplets[i];
+      // Grow until threshold, then start streaking
+      if(!d.streaking){
+        d.r+=d.growth;
+        if(d.r>=d.streakThreshold){
+          d.streaking=true;
+          d.streakSpeed=0.5+Math.random()*1.5;
+        }
+      } else {
+        d.y+=d.streakSpeed/H;
+        d.streakSpeed+=0.05; // gravity acceleration
+        if(d.y>1.05){
+          // Reset
+          d.x=Math.random();
+          d.y=Math.random()*0.7;
+          d.r=1.5+Math.random()*2;
+          d.streaking=false;
+          d.streakSpeed=0;
+        }
+      }
+      var px=d.x*W;
+      var py=d.y*H;
+      // Streak trail behind streaking droplets (drawn first so droplet sits on top)
+      if(d.streaking){
+        var trailG=ctx.createLinearGradient(px,py-d.r*4,px,py);
+        trailG.addColorStop(0,'rgba(220,235,250,0)');
+        trailG.addColorStop(1,'rgba(220,235,250,0.2)');
+        ctx.fillStyle=trailG;
+        ctx.beginPath();
+        ctx.ellipse(px,py-d.r*2,d.r*0.6,d.r*2,0,0,Math.PI*2);
+        ctx.fill();
+      }
+      // Droplet body — small radial highlight to look like a water bead
+      var dg=ctx.createRadialGradient(px-d.r*0.3,py-d.r*0.3,0,px,py,d.r);
+      dg.addColorStop(0,'rgba(255,255,255,0.4)');
+      dg.addColorStop(0.4,'rgba(220,235,250,0.25)');
+      dg.addColorStop(0.85,'rgba(180,210,235,0.15)');
+      dg.addColorStop(1,'rgba(160,190,220,0)');
+      ctx.fillStyle=dg;
+      ctx.beginPath();
+      ctx.arc(px,py,d.r,0,Math.PI*2);
+      ctx.fill();
+      d.age++;
+    }
+    ctx.restore();
+  }
+
   function drawLightning(){
     lightning.timer--;
     if(lightning.timer<=0&&!lightning.active&&Math.random()<0.008){
@@ -13457,6 +13702,7 @@ function _startWxCanvas(cv,code){
     if(drops.length)drawRain();
     if(flakes.length)drawSnow();
     if(cat==='storm')drawLightning();
+    if(droplets.length)drawDroplets();
 
     _wxAnimations[cv.id]=requestAnimationFrame(frame);
   }
