@@ -100,6 +100,8 @@ def build(data, out_path):
     margin_pct = data.get('margin_pct')
     if margin_dollar is not None: margin_dollar = float(margin_dollar)
     if margin_pct is not None: margin_pct = float(margin_pct)
+    if margin_pct is None or not (margin_pct == margin_pct):  # NaN check
+        margin_pct = 0.0
 
     mc = margin_color(margin_pct)
 

@@ -1471,9 +1471,10 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       <div class="nav-sep" role="separator"></div>
       <div class="nav-item" data-admin-hidden role="button" tabindex="0" aria-label="App Settings" onclick="showPanel('settings',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('settings',this);}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v1.7m0 9.6v1.7m-4.6-2.6l1.2-1.2m6.8-6.8l1.2-1.2M1.5 8h1.7m9.6 0h1.7M3.4 12.6l1.2-1.2m6.8-6.8l1.2-1.2"/></svg><span class="nav-label">App Settings</span></div>
       <div class="nav-item" data-field-hidden role="button" tabindex="0" aria-label="Feedback" onclick="showPanel('feedback',this);loadFeedback();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('feedback',this);loadFeedback();}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 1a1 1 0 00-1 1v8a1 1 0 001 1h2v3l3-3h7a1 1 0 001-1V2a1 1 0 00-1-1H2z"/></svg><span class="nav-label">Feedback</span></div>
-      <div class="nav-item admin-only" id="nav-admin" data-dev-hidden role="button" tabindex="0" aria-label="Admin" onclick="showPanel('admin',this);loadUsers();showAdminTab('company');" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('admin',this);loadUsers();showAdminTab('company');}">
+      <div class="nav-item admin-only" id="nav-admin" data-admin-hidden role="button" tabindex="0" aria-label="Admin" onclick="showPanel('admin',this);loadUsers();showAdminTab('company');" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('admin',this);loadUsers();showAdminTab('company');}">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M8 1L2 4v3c0 3.9 2.5 7.1 6 8 3.5-.9 6-4.1 6-8V4L8 1z"/><path d="M6 8l1.5 1.5L10 6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nav-label">Admin</span></div>
       <div class="nav-item" data-dev-hidden role="button" tabindex="0" aria-label="Bug Report" onclick="showPanel('bugs',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('bugs',this);}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a1 1 0 011 1v1.07a5 5 0 013.61 2.64L14 5l1 1-1.68 1.68A5 5 0 0113 10h2v1.5h-2a5 5 0 01-.68 1.82L14 15l-1 1-1.39-1.39A5 5 0 018 16a5 5 0 01-3.61-1.39L3 16l-1-1 1.68-1.68A5 5 0 013 11.5H1V10h2a5 5 0 01.32-2.32L1.64 6 3 5l1.39 1.71A5 5 0 017 3.07V2a1 1 0 011-1zm0 4a3 3 0 100 6 3 3 0 000-6z"/></svg><span class="nav-label">Bug Report</span></div>
+      <div class="nav-item" data-dev-hidden role="button" tabindex="0" aria-label="Roadmap" onclick="showPanel('roadmap',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showPanel('roadmap',this);}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h8"/><circle cx="13" cy="12" r="1.5" fill="currentColor"/></svg><span class="nav-label">Roadmap</span></div>
     </nav>
     <div class="sb-foot">
       <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -2553,7 +2554,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                 </div>
               </div>
             </div>
-            <div data-admin-hidden>
+            <div data-dev-hidden>
               <div class="card">
                 <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                   <span class="card-title">All Bug Reports</span>
@@ -2802,10 +2803,9 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
   <!-- Admin tabs -->
   <div class="settings-tab-bar">
     <button class="stab on" id="admin-tab-company" onclick="showAdminTab('company')">Company</button>
-    <button class="stab" id="admin-tab-users" onclick="showAdminTab('users')">Users</button>
-    <button class="stab" id="admin-tab-activity" onclick="showAdminTab('activity')">Activity Log</button>
-    <button class="stab" id="admin-tab-deleted" onclick="showAdminTab('deleted')">Archived</button>
-    <button class="stab" id="admin-tab-roadmap" onclick="showAdminTab('roadmap')">Roadmap</button>
+    <button class="stab" id="admin-tab-users" data-dev-hidden onclick="showAdminTab('users')">Users</button>
+    <button class="stab" id="admin-tab-activity" data-dev-hidden onclick="showAdminTab('activity')">Activity Log</button>
+    <button class="stab" id="admin-tab-deleted" data-dev-hidden onclick="showAdminTab('deleted')">Archived</button>
   </div>
   <!-- Company tab -->
   <div id="admin-pane-company">
@@ -2840,14 +2840,14 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
     </div>
   </div>
   <!-- Users tab -->
-  <div id="admin-pane-users">
+  <div id="admin-pane-users" data-dev-hidden>
     <div class="card">
       <div class="card-hdr" style="display:flex;align-items:center;gap:16px;"><span class="card-title">User Management</span><button class="btn btn-red btn-sm" onclick="openAddUserModal()">+ Add User</button></div>
       <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="users-tbody"><tr><td colspan="6" style="padding:0;"><div class="skeleton skeleton-block" style="height:40px;margin:8px 12px;"></div><div class="skeleton skeleton-block" style="height:40px;margin:8px 12px;"></div><div class="skeleton skeleton-block" style="height:40px;margin:8px 12px;"></div></td></tr></tbody></table></div></div>
     </div>
   </div>
   <!-- Activity Log tab -->
-  <div id="admin-pane-activity" style="display:none;">
+  <div id="admin-pane-activity" data-dev-hidden style="display:none;">
     <div class="card">
       <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <span class="card-title">Activity Log</span>
@@ -2863,7 +2863,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
     </div>
   </div>
   <!-- Archived tab -->
-  <div id="admin-pane-deleted" style="display:none;">
+  <div id="admin-pane-deleted" data-dev-hidden style="display:none;">
     <div class="card">
       <div class="card-hdr" style="display:flex;align-items:center;gap:16px;">
         <span class="card-title">Archived Projects</span>
@@ -2871,21 +2871,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       <div class="card-body" id="archived-list"><p style="color:var(--dgray);font-size:12px;">No archived items.</p></div>
     </div>
   </div>
-  <!-- Roadmap tab (moved from standalone panel) -->
-  <div id="admin-pane-roadmap" style="display:none;">
-    <div class="content" style="">
-      <div class="card">
-        <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <span class="card-title">Roadmap & Feature Requests</span>
-          <button class="btn btn-red btn-sm" onclick="openRoadmapModal()">+ Add Item</button>
-          <select id="admin-rm-filter-status" onchange="renderAdminRoadmapList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Statuses</option><option>Planned</option><option>In Progress</option><option>Done</option></select>
-          <select id="admin-rm-filter-priority" onchange="renderAdminRoadmapList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Priorities</option><option>High</option><option>Medium</option><option>Low</option><option>Wish List</option></select>
-          <select id="admin-rm-filter-cat" onchange="renderAdminRoadmapList()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;"><option value="">All Categories</option><option>Feature</option><option>Enhancement</option><option>Fix</option><option>Cleanup</option></select>
-        </div>
-        <div class="card-body" style="padding:0;"><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Title</th><th>Category</th><th>Priority</th><th>Effort</th><th>Status</th><th>Version</th><th style="width:90px;"></th></tr></thead><tbody id="admin-roadmap-tbody"></tbody></table></div></div>
-      </div>
-    </div>
-  </div>
+
 </div>
 
 <!-- Feedback Panel -->
@@ -2925,7 +2911,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       </div>
     </div>
   </div>
-  <div data-admin-hidden>
+  <div data-dev-hidden>
     <div class="card">
       <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <span class="card-title">All Bug Reports</span>
@@ -7958,7 +7944,7 @@ function renderTopbar(panelId){
 function showPanel(id,el){
   // Redirect removed nav items into their new parent panels
   // bugs panel is now standalone — no redirect needed
-  if(id==='roadmap'){showPanel('admin',document.querySelector('[onclick*=admin]'));setTimeout(function(){showAdminTab('roadmap');},60);return;}
+  // roadmap is now a standalone dev-only panel — no redirect needed
   // Proposals, COs, and work orders require a project context
   if(id==='build'&&!window._pendingProjectLink&&!lastSavedQuoteId){
     showPanel('projects',document.querySelector('[onclick*=projects]'));
@@ -11206,7 +11192,6 @@ async function loadClientsForAutocomplete(){
     if(d.ok&&d.clients){
       clientsList=d.clients;
       clients=clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||'',address:c.address||'',city_state:c.city_state||''};});
-      console.log('[HD] Loaded '+clients.length+' clients for autocomplete');
     } else {
       console.warn('[HD] loadClientsForAutocomplete: no clients in response',d);
     }
@@ -11649,14 +11634,13 @@ function initSidebarCanvas(){
 var _editingUserId=null;
 async function loadUsers(){var tbody=document.getElementById('users-tbody');if(!tbody)return;try{var r=await fetch('/admin/users');if(r.status===403){tbody.innerHTML='<tr><td colspan="6" style="padding:16px;color:var(--dgray);">Admin access required.</td></tr>';return;}var d=await r.json();if(!d.ok)throw new Error(d.error);tbody.innerHTML='';window._adminUsers={};d.users.forEach(function(u){window._adminUsers[u.id]=u;var tr=document.createElement('tr');var created=u.created_at?new Date(u.created_at).toLocaleDateString():'-';tr.innerHTML='<td><b>'+esc(u.full_name||u.username)+'</b></td><td style="font-family:monospace;font-size:12px;">'+esc(u.username)+'</td><td><span class="role-badge role-'+u.role+'">'+u.role+'</span></td><td><span class="'+(u.active?'status-active':'status-inactive')+'">'+( u.active?'Active':'Inactive')+'</span></td><td style="font-size:12px;color:var(--dgray);">'+created+'</td><td><button class="btn btn-sec btn-sm" onclick="openEditUserModal('+u.id+')">Edit</button></td>';tbody.appendChild(tr);});var sel=document.getElementById('log-user-filter');if(sel){sel.innerHTML='<option value="">All Users</option>';d.users.forEach(function(u){var o=document.createElement('option');o.value=u.username;o.textContent=u.full_name||u.username;sel.appendChild(o);});}}catch(e){tbody.innerHTML='<tr><td colspan="6" style="color:var(--red);padding:16px;">Error: '+e.message+'</td></tr>';}}
 function showAdminTab(tab){
-  ['company','users','activity','deleted','roadmap'].forEach(function(t){
+  ['company','users','activity','deleted'].forEach(function(t){
     var pane=document.getElementById('admin-pane-'+t);if(pane)pane.style.display=t===tab?'':'none';
     var btn=document.getElementById('admin-tab-'+t);if(btn){if(t===tab){btn.classList.add('on');}else{btn.classList.remove('on');}}
   });
   if(tab==='company')loadCompanyInfo();
   if(tab==='activity')loadLogs();
   if(tab==='deleted')renderArchived();
-  if(tab==='roadmap')loadAdminRoadmapList();
 }
 // -- Company Info (Admin) -------------------------------------------------
 window._companyInfo={name:'',address:'',city:'',state:'',zip:'',phone:'',email:'',website:'',license:'',tagline:''};
@@ -12632,13 +12616,23 @@ var WEATHER_ICONS={0:'\u2600\uFE0F',1:'\uD83C\uDF24',2:'\u26C5',3:'\u2601\uFE0F'
 var WEATHER_DESC={0:'Clear Sky',1:'Mostly Clear',2:'Partly Cloudy',3:'Overcast',45:'Foggy',48:'Freezing Fog',51:'Light Drizzle',53:'Drizzle',55:'Heavy Drizzle',61:'Light Rain',63:'Rain',65:'Heavy Rain',71:'Light Snow',73:'Snow',75:'Heavy Snow',80:'Light Showers',81:'Showers',82:'Heavy Showers',95:'Thunderstorm',96:'Thunderstorm w/ Hail',99:'Severe Thunderstorm'};
 function fetchWeather(cb){
   if(_weatherCache&&Date.now()-_weatherCacheTime<1800000){cb(_weatherCache);return;}
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=35.4088&longitude=-80.5795'
+  var url='https://api.open-meteo.com/v1/forecast?latitude=35.4088&longitude=-80.5795'
     +'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,uv_index'
     +'&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,wind_speed_10m_max,wind_gusts_10m_max,uv_index_max,sunrise,sunset,precipitation_sum,relative_humidity_2m_mean'
-    +'&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York')
-    .then(function(r){return r.json();}).then(function(d){
-      _weatherCache={daily:d.daily||null,current:d.current||null};_weatherCacheTime=Date.now();cb(_weatherCache);
-    }).catch(function(){cb(null);});
+    +'&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York';
+  var controller=new AbortController();
+  var timeoutId=setTimeout(function(){controller.abort();},5000);
+  fetch(url,{signal:controller.signal})
+    .then(function(r){clearTimeout(timeoutId);return r.json();})
+    .then(function(d){
+      _weatherCache={daily:d.daily||null,current:d.current||null};_weatherCacheTime=Date.now();if(cb)cb(_weatherCache);
+    })
+    .catch(function(err){
+      clearTimeout(timeoutId);
+      var el=document.getElementById('dash-weather-strip');
+      if(el)el.innerHTML='<div style="padding:12px;color:var(--muted);font-size:12px;">Weather unavailable</div>';
+      if(cb)cb(null);
+    });
 }
 
 function windDir(deg){

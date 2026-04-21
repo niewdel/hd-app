@@ -21,7 +21,10 @@ from security import (
 )
 
 app = Flask(__name__, static_folder='.', static_url_path='')
-app.secret_key = os.environ.get('SECRET_KEY', 'hd-hauling-dev-key')
+_SECRET_KEY = os.environ.get('SECRET_KEY', '')
+if not _SECRET_KEY or _SECRET_KEY == 'hd-hauling-dev-key':
+    raise RuntimeError('SECRET_KEY env var must be set to a non-default value. Refusing to start.')
+app.secret_key = _SECRET_KEY
 app.permanent_session_lifetime = timedelta(hours=8)
 SUPABASE_URL        = os.environ.get('SUPABASE_URL', '')
 SUPABASE_KEY        = os.environ.get('SUPABASE_KEY', '')
