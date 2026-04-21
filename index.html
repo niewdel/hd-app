@@ -304,6 +304,21 @@ body.dark #sched-cal-grid .dk-today-hdr{background:var(--red) !important;}
   0%   { transform: scale(1.00); }
   100% { transform: scale(1.06); }
 }
+/* Animated rain overlay — tiled SVG of rain streaks scrolled vertically */
+.wx-rain-fx{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='200' viewBox='0 0 100 200'%3E%3Cg stroke='rgba(255,255,255,0.55)' stroke-linecap='round'%3E%3Cline x1='10' y1='-5' x2='5' y2='35' stroke-width='1.2'/%3E%3Cline x1='32' y1='25' x2='27' y2='65' stroke-width='1'/%3E%3Cline x1='55' y1='-10' x2='50' y2='30' stroke-width='1.5'/%3E%3Cline x1='78' y1='42' x2='73' y2='82' stroke-width='1.1'/%3E%3Cline x1='15' y1='95' x2='10' y2='135' stroke-width='1.2'/%3E%3Cline x1='44' y1='112' x2='39' y2='152' stroke-width='1'/%3E%3Cline x1='68' y1='140' x2='63' y2='180' stroke-width='1.3'/%3E%3Cline x1='88' y1='105' x2='83' y2='145' stroke-width='1.1'/%3E%3Cline x1='22' y1='160' x2='17' y2='200' stroke-width='1'/%3E%3Cline x1='92' y1='165' x2='87' y2='205' stroke-width='1.2'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat:repeat;
+  animation:wxRainFall 0.7s linear infinite;
+  opacity:0.55;
+  mix-blend-mode:screen;
+}
+.wx-rain-fx.wx-rain-heavy{ animation-duration:0.45s; opacity:0.75; }
+.wx-rain-fx.wx-rain-drizzle{ animation-duration:1.1s; opacity:0.35; }
+@keyframes wxRainFall {
+  from { background-position: 0 0; }
+  to   { background-position: 0 200px; }
+}
 /* Weather widget — dark banner is already dark, forecast cards need dark overrides */
 body.dark [data-weather-day]{background:#2C2C2E !important;border-color:#48484A !important;color:#F5F5F7 !important;}
 body.dark [data-weather-day][data-weather-selected]{background:#3C1C1C !important;border-color:#CC0000 !important;}
@@ -5414,6 +5429,13 @@ function _renderWxHero(el,data,idx){
   var tod=_wxTimeOfDay(data);
   var photoUrl=_wxPhotoUrl(code,tod);
   var bgHtml='<div style="position:absolute;inset:0;z-index:0;background-image:url(\''+photoUrl+'\');background-size:cover;background-position:center;background-repeat:no-repeat;animation:wxKenBurns 30s ease-in-out infinite alternate;"></div>';
+  var heroCat=_wxCodeToCat(code);
+  if(heroCat==='rain'||heroCat==='heavyrain'||heroCat==='drizzle'||heroCat==='storm'){
+    var rainCls='wx-rain-fx';
+    if(heroCat==='heavyrain'||heroCat==='storm')rainCls+=' wx-rain-heavy';
+    else if(heroCat==='drizzle')rainCls+=' wx-rain-drizzle';
+    bgHtml+='<div class="'+rainCls+'" aria-hidden="true"></div>';
+  }
   // Rain pill — uses selected day's precip prob
   var rain=daily.precipitation_probability_max?(daily.precipitation_probability_max[idx]||0):0;
   var rainPill='';
@@ -12987,7 +13009,7 @@ var WX_PHOTOS = {
   'overcast':    'https://images.unsplash.com/photo-1499956827185-0d63ee78a910?w=1600&h=600&fit=crop&q=80&auto=format',
   'fog':         'https://images.unsplash.com/photo-1543968996-ee822b8176ba?w=1600&h=600&fit=crop&q=80&auto=format',
   'drizzle':     'https://images.unsplash.com/photo-1428592953211-077101b2021b?w=1600&h=600&fit=crop&q=80&auto=format',
-  'rain':        'https://images.unsplash.com/photo-1438449805896-28a666819a20?w=1600&h=600&fit=crop&q=80&auto=format',
+  'rain':        'https://images.unsplash.com/photo-1493314894560-5c412a56c17c?w=1600&h=600&fit=crop&q=80&auto=format',
   'heavy-rain':  'https://images.unsplash.com/photo-1429552077091-836152271555?w=1600&h=600&fit=crop&q=80&auto=format',
   'snow':        'https://images.unsplash.com/photo-1457269449834-928af64c684d?w=1600&h=600&fit=crop&q=80&auto=format',
   'storm':       'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=1600&h=600&fit=crop&q=80&auto=format'
