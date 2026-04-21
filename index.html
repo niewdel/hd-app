@@ -3008,7 +3008,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       <label for="edit-full-name">Full Name</label><input type="text" id="edit-full-name" placeholder="e.g. John Smith"/>
       <label for="edit-email">Email</label><input type="email" id="edit-email" placeholder="e.g. john@hdgrading.com"/>
       <label for="edit-phone">Phone</label><input type="tel" id="edit-phone" placeholder="e.g. 704-555-0000"/>
-      <label for="edit-username">Username <span style="font-size:11px;color:var(--dgray);">(lowercase, no spaces)</span></label><input type="text" id="edit-username" placeholder="e.g. jsmith" style="text-transform:lowercase;"/>
+      <label for="edit-username">Username <span style="font-size:11px;color:var(--dgray);">(lowercase, format firstname.lastname)</span></label><input type="text" id="edit-username" placeholder="e.g. john.smith" style="text-transform:lowercase;"/>
       <label for="edit-pin">Password <span id="pin-hint" style="font-size:11px;color:var(--dgray);">(min 6 characters)</span></label><input type="password" id="edit-pin" placeholder="Enter password"/>
       <label for="edit-pw-hint">Password Hint <span style="font-size:11px;color:var(--dgray);">(optional)</span></label><input type="text" id="edit-pw-hint" placeholder="e.g. My dog's name"/>
       <label for="edit-role">Role</label><select id="edit-role"><option value="user">Standard User</option><option value="field">Field User</option><option value="admin">Admin</option></select>
@@ -3155,6 +3155,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       <button class="btn-ico" onclick="closeHelpModal()" aria-label="Close" style="font-size:18px;">&#10005;</button>
     </div>
     <div class="modal-body" style="padding:18px 22px;overflow-y:auto;flex:1;line-height:1.6;font-size:13.5px;">
+      <div id="welcome-role-line" style="font-size:13px;color:var(--muted);margin-bottom:12px;"></div>
       <p style="margin-bottom:14px;color:var(--txt-secondary);">
         HD Hauling &amp; Grading's internal operations platform. Everything used to run the business &mdash; proposals, CRM, project pipeline, scheduling, work orders, job costing, exports, reporting, admin. Every panel you see is live production data.
       </p>
@@ -12142,8 +12143,18 @@ async function renderArchived(){
     });
   }catch(e){c.innerHTML='<p style="color:var(--dgray);font-size:12px;">Error loading archived items.</p>';}
 }
-function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-email').value='';document.getElementById('edit-phone').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value='';document.getElementById('edit-role').value='user';document.getElementById('edit-hourly-rate').value='';document.getElementById('pin-hint').textContent='(min 6 characters)';document.getElementById('user-modal-err').textContent='';var delC=document.getElementById('user-modal-delete');if(delC)delC.innerHTML='';openModalA11y('user-modal');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
-function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-email').value=u.email||'';document.getElementById('edit-phone').value=u.phone||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value=u.password_hint||'';document.getElementById('edit-role').value=u.role||'user';document.getElementById('edit-hourly-rate').value=u.hourly_rate||'';document.getElementById('pin-hint').textContent='(leave blank to keep current)';document.getElementById('user-modal-err').textContent='';var delC=document.getElementById('user-modal-delete');if(delC){if(u.username!==(window._userUsername||'')){delC.innerHTML='<button class="btn btn-sm" style="background:transparent;color:var(--red);border:1px solid var(--red);font-weight:600;" onclick="confirmDeleteUser('+u.id+',\''+esc(u.username)+'\')">Delete User</button>';}else{delC.innerHTML='';}}openModalA11y('user-modal');}
+function _suggestUsername(fullName){
+  var s=(fullName||'').toLowerCase().trim();
+  if(!s)return '';
+  // Take first and last token, separate by dot. Drop middle names.
+  var parts=s.split(/\s+/);
+  if(parts.length===1)return parts[0].replace(/[^a-z0-9.]/g,'');
+  var first=parts[0];
+  var last=parts[parts.length-1];
+  return (first+'.'+last).replace(/[^a-z0-9.]/g,'');
+}
+function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-email').value='';document.getElementById('edit-phone').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value='';document.getElementById('edit-role').value='user';document.getElementById('edit-hourly-rate').value='';document.getElementById('pin-hint').textContent='(min 6 characters)';document.getElementById('user-modal-err').textContent='';var delC=document.getElementById('user-modal-delete');if(delC)delC.innerHTML='';var fnEl=document.getElementById('edit-full-name');var unEl=document.getElementById('edit-username');if(fnEl&&unEl){unEl._userTouched=false;unEl.oninput=function(){unEl._userTouched=true;};fnEl.oninput=function(){if(!unEl._userTouched){unEl.value=_suggestUsername(fnEl.value);}};}openModalA11y('user-modal');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
+function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-email').value=u.email||'';document.getElementById('edit-phone').value=u.phone||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value=u.password_hint||'';document.getElementById('edit-role').value=u.role||'user';document.getElementById('edit-hourly-rate').value=u.hourly_rate||'';document.getElementById('pin-hint').textContent='(leave blank to keep current)';document.getElementById('user-modal-err').textContent='';var delC=document.getElementById('user-modal-delete');if(delC){if(u.username!==(window._userUsername||'')){delC.innerHTML='<button class="btn btn-sm" style="background:transparent;color:var(--red);border:1px solid var(--red);font-weight:600;" onclick="confirmDeleteUser('+u.id+',\''+esc(u.username)+'\')">Delete User</button>';}else{delC.innerHTML='';}}var fnEl2=document.getElementById('edit-full-name');var unEl2=document.getElementById('edit-username');if(fnEl2&&unEl2){unEl2._userTouched=true;unEl2.oninput=function(){unEl2._userTouched=true;};fnEl2.oninput=null;}openModalA11y('user-modal');}
 function closeUserModal(){closeModalA11y('user-modal');_editingUserId=null;}
 async function saveUser(){
   var errEl=document.getElementById('user-modal-err');errEl.textContent='';
@@ -14966,6 +14977,16 @@ function copyCalFeedUrl(){
 function openHelpModal(){
   var m=document.getElementById('help-modal');
   if(m)m.classList.remove('hidden');
+  var rl=document.getElementById('welcome-role-line');
+  if(rl){
+    var nameLine=window._userName?('Welcome, '+window._userName+'. '):'Welcome. ';
+    var roleLine='';
+    if(window._userRole==='dev')        roleLine='You have full developer access.';
+    else if(window._userRole==='admin') roleLine='You have admin access — every panel except Users.';
+    else if(window._userRole==='field') roleLine='You have field access — schedule, tasks, and time tracking.';
+    else                                roleLine='You have standard access — proposals, pipeline, contacts, and reports.';
+    rl.textContent=nameLine+roleLine;
+  }
 }
 function closeHelpModal(){
   var m=document.getElementById('help-modal');
@@ -14979,6 +15000,47 @@ function _maybeShowWelcomeOnFirstLogin(){
     }
   }catch(_){}
 }
+function _tourStepsForRole(role){
+  // Master step library — only what the user can act on appears in the tour
+  var step=function(selector,title,description,side){
+    return {element:selector,popover:{title:title,description:description,side:side||'right'}};
+  };
+
+  var dashboard=step('[aria-label="Dashboard"]','Dashboard',
+    'Your operations command center. Today\'s weather, scheduled jobs, the bid calendar, and incoming leads &mdash; all in one view.');
+  var projects=step('[aria-label="Projects"]','Projects',
+    'Pipeline (Kanban), list, bid calendar, and map views of every job. Move proposals through stages &mdash; New Lead &rarr; Estimate Sent &rarr; Approved &rarr; Scheduled.');
+  var schedule=step('[aria-label="Schedule"]','Schedule',
+    'Day, week, and month views of all crew assignments. Drag work orders onto days to assign. Weather is pinned at the top so you can see what\'s coming.');
+  var tasks=step('[aria-label="Tasks"]','Tasks',
+    'Personal and shared task list. Tag teammates with @username. Link tasks to projects or clients for context.');
+  var contacts=step('[aria-label="Contacts"]','Contacts',
+    'Clients and subcontractors. Each record stores their full history of proposals, projects, and notes.');
+  var reports=step('[aria-label="Reports"]','Reports & Analytics',
+    'Operational, financial, and crew reports. Job costing, sales pipeline, time-tracked hours, win/loss ratios.');
+  var settings=step('[aria-label="App Settings"]','Settings',
+    'Material prices, crew rates, item library, company info &mdash; the operational config that powers proposals and reports.');
+  var admin=step('[aria-label="Admin"]','Admin',
+    'Company-level controls. Owners and admins can update business info here.');
+  var bugs=step('[aria-label="Bug Report"]','Spotted something?',
+    'Send Justin a screenshot + description here. Faster than texting &mdash; he can triage and fix from one queue.');
+  var roadmap=step('[aria-label="Roadmap"]','Roadmap',
+    'Track upcoming features and product direction. Dev-only.');
+  var account=step('.topbar-account-btn','Your Account',
+    'Open this menu anytime to access your profile, change your password, toggle theme, re-launch this tour, or sign out.','left');
+
+  if(role==='dev'){
+    return [dashboard,projects,schedule,tasks,contacts,reports,settings,admin,bugs,roadmap,account];
+  }
+  if(role==='admin'){
+    return [dashboard,projects,schedule,tasks,contacts,reports,settings,admin,bugs,account];
+  }
+  if(role==='field'){
+    return [dashboard,schedule,tasks,bugs,account];
+  }
+  // 'user' default
+  return [dashboard,projects,schedule,tasks,contacts,reports,bugs,account];
+}
 function startHelpTour(){
   closeHelpModal();
   if(typeof window.driver==='undefined'||!window.driver.js){
@@ -14986,18 +15048,9 @@ function startHelpTour(){
     return;
   }
   var driverFn=window.driver.js.driver;
-  var steps=[
-    {element:'[aria-label="Dashboard"]',popover:{title:'Dashboard',description:'Your operations command center. Weather, today\'s scheduled jobs, the bid calendar, and incoming leads &mdash; all in one view.',side:'right'}},
-    {element:'[aria-label="Projects"]',popover:{title:'Projects',description:'Pipeline (Kanban), list, bid calendar, and map views of every job. Move proposals through stages &mdash; New Lead &rarr; Estimate Sent &rarr; Approved &rarr; Scheduled.',side:'right'}},
-    {element:'[aria-label="Schedule"]',popover:{title:'Schedule',description:'Day, week, and month views of all crew assignments. Drag work orders onto days to assign. Weather is pinned at the top so you can see what\'s coming.',side:'right'}},
-    {element:'[aria-label="Contacts"]',popover:{title:'Contacts',description:'Clients and subcontractors. Each record stores their full history of proposals, projects, and notes.',side:'right'}},
-    {element:'[aria-label="Reports"]',popover:{title:'Reports & Analytics',description:'Operational, financial, and crew reports. Job costing, sales pipeline, time-tracked hours, win/loss ratios.',side:'right'}},
-    {element:'[aria-label="App Settings"]',popover:{title:'Settings',description:'Material prices, crew rates, item library, company info &mdash; the operational config that powers proposals and reports.',side:'right'}},
-    {element:'[aria-label="Admin"]',popover:{title:'Admin',description:'Company info and other admin-level controls.',side:'right'}},
-    {element:'[aria-label="Bug Report"]',popover:{title:'Spotted something?',description:'Use Bug Report to send Justin a screenshot + description. Faster than texting &mdash; he can triage and fix from one queue.',side:'right'}},
-    {element:'.topbar-account-btn',popover:{title:'Your Account',description:'Open this menu anytime to access your profile, change your password, toggle theme, re-launch this tour, or sign out.',side:'left'}}
-  ];
-  // Filter out steps whose target isn't in the DOM (e.g. role-hidden nav items)
+  var role=window._userRole||'user';
+  var steps=_tourStepsForRole(role);
+  // Defensive filter: drop steps whose target element isn't in the DOM
   steps=steps.filter(function(s){return !!document.querySelector(s.element);});
   if(!steps.length){if(typeof toast==='function')toast('No tour targets visible','err');return;}
   var tour=driverFn({
