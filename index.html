@@ -1627,8 +1627,8 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                     <div style="flex:1;display:flex;flex-direction:column;gap:8px;"><div class="skeleton skeleton-text" style="width:80px;"></div><div class="skeleton skeleton-text" style="width:140px;"></div><div class="skeleton skeleton-text" style="width:100px;"></div></div>
                   </div>
                 </div>
-                <div id="dash-wx-hourly" style="padding:14px 16px;border-top:1px solid var(--bdr);overflow-x:auto;display:flex;gap:8px;background:var(--bg-el);"></div>
                 <div id="dash-wx-daily" style="padding:14px 16px;border-top:1px solid var(--bdr);display:grid;grid-template-columns:repeat(7,1fr);gap:6px;background:var(--bg-el);"></div>
+                <div id="dash-wx-detail" style="padding:14px 16px;border-top:1px solid var(--bdr);background:var(--bg-el);"></div>
                 <div id="dash-wx-current" style="display:none;"></div>
               </div>
 
@@ -5352,19 +5352,19 @@ function renderDashboard(){
 
 function renderDashWeatherMini(){
   var heroEl=document.getElementById('dash-wx-hero');
-  var hourlyEl=document.getElementById('dash-wx-hourly');
   var dailyEl=document.getElementById('dash-wx-daily');
+  var detailEl=document.getElementById('dash-wx-detail');
   if(!heroEl)return;
   fetchWeather(function(data){
     if(!data||!data.current){
       heroEl.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px;">Weather unavailable</div>';
-      if(hourlyEl)hourlyEl.innerHTML='';
       if(dailyEl)dailyEl.innerHTML='';
+      if(detailEl)detailEl.innerHTML='';
       return;
     }
     _renderWxHero(heroEl,data);
-    if(hourlyEl)_renderWxHourly(hourlyEl,data);
     if(dailyEl)_renderWxDaily(dailyEl,data);
+    if(detailEl)_renderWxDayDetail(detailEl,data,_wxSelectedDay);
   });
 }
 
@@ -5427,50 +5427,13 @@ function _renderWxHero(el,data){
   _initWxCanvases(el);
 }
 
-function _renderWxHourly(el,data){
-  var hr=data.hourly;
-  if(!hr||!hr.time||!hr.temperature_2m){el.innerHTML='';return;}
-  var now=new Date();
-  var nowH=new Date(now.getFullYear(),now.getMonth(),now.getDate(),now.getHours(),0,0).getTime();
-  // Find first index >= current hour
-  var startIdx=0;
-  for(var i=0;i<hr.time.length;i++){
-    var t=new Date(hr.time[i]).getTime();
-    if(t>=nowH){startIdx=i;break;}
-  }
-  var max=Math.min(startIdx+12,hr.time.length);
-  var html='';
-  for(var j=startIdx;j<max;j++){
-    var iso=hr.time[j];
-    var d=new Date(iso);
-    var hh=d.getHours();
-    var label;
-    if(j===startIdx){label='Now';}
-    else {
-      var ampm=hh>=12?'PM':'AM';
-      var h12=hh%12;if(!h12)h12=12;
-      label=h12+' '+ampm;
-    }
-    var c=hr.weather_code?(hr.weather_code[j]||0):0;
-    var icon=WEATHER_ICONS[c]||'';
-    var tt=Math.round(hr.temperature_2m[j]||0);
-    var pp=hr.precipitation_probability?(hr.precipitation_probability[j]||0):0;
-    var ppHtml=(pp>=30)?('<div style="font-size:10px;color:#3B82F6;font-weight:600;line-height:1;">\uD83D\uDCA7 '+pp+'%</div>'):'<div style="font-size:10px;line-height:1;opacity:0;">.</div>';
-    html+=''
-      +'<div style="flex:0 0 auto;min-width:54px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 6px;border:1px solid var(--bdr);border-radius:10px;background:var(--bg);">'
-        +'<div style="font-size:11px;font-weight:600;color:var(--txt);letter-spacing:0.2px;">'+label+'</div>'
-        +'<div style="font-size:18px;line-height:1;">'+icon+'</div>'
-        +'<div style="font-size:13px;font-weight:600;color:var(--txt);font-variant-numeric:tabular-nums;">'+tt+'\u00B0</div>'
-        +ppHtml
-      +'</div>';
-  }
-  el.innerHTML=html;
-}
-
 function _renderWxDaily(el,data){
   var dy=data.daily;
   if(!dy||!dy.time||!dy.temperature_2m_max){el.innerHTML='';return;}
   var n=Math.min(7,dy.time.length);
+  // Clamp selected day to range
+  if(_wxSelectedDay<0)_wxSelectedDay=0;
+  if(_wxSelectedDay>=n)_wxSelectedDay=n-1;
   // Compute week's overall min and max for the range bar
   var weekMin=Infinity,weekMax=-Infinity;
   for(var i=0;i<n;i++){
@@ -5495,9 +5458,14 @@ function _renderWxDaily(el,data){
     var rightPct=((dy.temperature_2m_max[k]-weekMin)/weekRange)*100;
     var widthPct=Math.max(8,rightPct-leftPct);
     var ppHtml=(pp>0)?('<div style="font-size:10px;color:#3B82F6;font-weight:600;line-height:1;margin-top:2px;">'+pp+'%</div>'):'<div style="height:12px;"></div>';
-    var todayBg=(k===0)?'background:rgba(204,0,0,0.06);border-color:rgba(204,0,0,0.25);':'';
+    // Selection state is the primary visual; today's red tint is secondary.
+    var isSel=(k===_wxSelectedDay);
+    var isToday=(k===0);
+    var tileStyle='border:1px solid var(--bdr);background:var(--bg);';
+    if(isToday)tileStyle='border:1px solid rgba(204,0,0,0.25);background:rgba(204,0,0,0.06);';
+    if(isSel)tileStyle='border:1.5px solid var(--red);background:rgba(204,0,0,0.10);box-shadow:0 0 0 2px rgba(204,0,0,0.15);';
     html+=''
-      +'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:1px solid var(--bdr);border-radius:10px;background:var(--bg);'+todayBg+'">'
+      +'<div onclick="_selectWxDay('+k+')" role="button" tabindex="0" aria-pressed="'+(isSel?'true':'false')+'" style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:10px;'+tileStyle+'transition:background 0.15s,border-color 0.15s;">'
         +'<div style="font-size:11px;font-weight:600;color:var(--txt);letter-spacing:0.2px;">'+dayName+'</div>'
         +'<div style="font-size:18px;line-height:1;">'+icon+'</div>'
         +'<div style="display:flex;align-items:center;gap:4px;font-size:11px;font-variant-numeric:tabular-nums;width:100%;">'
@@ -5510,6 +5478,76 @@ function _renderWxDaily(el,data){
         +ppHtml
       +'</div>';
   }
+  el.innerHTML=html;
+}
+
+function _selectWxDay(idx){
+  if(!_weatherCache||!_weatherCache.daily||!_weatherCache.daily.time)return;
+  var n=Math.min(7,_weatherCache.daily.time.length);
+  if(idx<0)idx=0;
+  if(idx>=n)idx=n-1;
+  _wxSelectedDay=idx;
+  var dailyEl=document.getElementById('dash-wx-daily');
+  var detailEl=document.getElementById('dash-wx-detail');
+  if(dailyEl)_renderWxDaily(dailyEl,_weatherCache);
+  if(detailEl)_renderWxDayDetail(detailEl,_weatherCache,idx);
+}
+
+function _renderWxDayDetail(el,data,idx){
+  var dy=data&&data.daily;
+  if(!dy||!dy.time||!dy.temperature_2m_max){el.innerHTML='';return;}
+  var n=Math.min(7,dy.time.length);
+  if(idx<0)idx=0;
+  if(idx>=n)idx=n-1;
+  var iso=dy.time[idx];
+  var d=new Date(iso+'T12:00:00');
+  var dayLabel=(idx===0?'Today \u2014 ':'')+d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  var code=dy.weathercode?(dy.weathercode[idx]||0):0;
+  var desc=WEATHER_DESC[code]||'\u2014';
+  var icon=WEATHER_ICONS[code]||'';
+  var hi=Math.round(dy.temperature_2m_max[idx]||0);
+  var lo=Math.round(dy.temperature_2m_min[idx]||0);
+  var pp=dy.precipitation_probability_max?(dy.precipitation_probability_max[idx]||0):0;
+  var psum=dy.precipitation_sum?(dy.precipitation_sum[idx]||0):0;
+  var wind=dy.wind_speed_10m_max?Math.round(dy.wind_speed_10m_max[idx]||0):0;
+  var gust=dy.wind_gusts_10m_max?Math.round(dy.wind_gusts_10m_max[idx]||0):0;
+  var uv=dy.uv_index_max?(dy.uv_index_max[idx]||0):0;
+  var uvL=uvLabel(uv);
+  var hum=dy.relative_humidity_2m_mean?Math.round(dy.relative_humidity_2m_mean[idx]||0):null;
+  var sr=dy.sunrise?dy.sunrise[idx]:null;
+  var ss=dy.sunset?dy.sunset[idx]:null;
+  // Wind text — show gust if higher than wind speed
+  var windTxt=wind+' mph'+((gust>wind)?(' \u00B7 gust '+gust):'');
+  // Precip text — show probability and sum
+  var precipTxt=pp+'%'+((psum>0)?(' \u00B7 '+psum.toFixed(2)+'\u201D'):'');
+  // Sunrise / sunset combined
+  var sunTxt=(sr&&ss)?(fmtTime12(sr)+' \u2192 '+fmtTime12(ss)):'\u2014';
+  // Tile builder helper string
+  function tile(label,value,valColor){
+    var col=valColor||'var(--txt)';
+    return '<div style="padding:10px 12px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg);">'
+      +'<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">'+label+'</div>'
+      +'<div style="font-size:13px;color:'+col+';font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums;">'+value+'</div>'
+    +'</div>';
+  }
+  var tiles=''
+    +tile('High / Low',hi+'\u00B0 / '+lo+'\u00B0')
+    +tile('Precipitation',precipTxt)
+    +tile('Wind',windTxt)
+    +tile('UV Index',Math.round(uv)+' \u00B7 '+uvL.text,uvL.color);
+  if(hum!==null)tiles+=tile('Humidity',hum+'%');
+  tiles+=tile('Sunrise / Sunset',sunTxt);
+  var html=''
+    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">'
+      +'<div style="display:flex;align-items:center;gap:8px;min-width:0;">'
+        +'<span style="font-size:18px;line-height:1;">'+icon+'</span>'
+        +'<div style="min-width:0;">'
+          +'<div style="font-size:13px;font-weight:600;color:var(--txt);">'+dayLabel+'</div>'
+          +'<div style="font-size:11px;color:var(--muted);margin-top:1px;">'+desc+'</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;">'+tiles+'</div>';
   el.innerHTML=html;
 }
 
@@ -12904,21 +12942,21 @@ function schedCalNav(dir){
 
 // Weather cache & config
 var _weatherCache=null;var _weatherCacheTime=0;
+var _wxSelectedDay=0;
 var WEATHER_ICONS={0:'\u2600\uFE0F',1:'\uD83C\uDF24',2:'\u26C5',3:'\u2601\uFE0F',45:'\uD83C\uDF2B',48:'\uD83C\uDF2B',51:'\uD83C\uDF27',53:'\uD83C\uDF27',55:'\uD83C\uDF27',61:'\uD83C\uDF27',63:'\uD83C\uDF27\uFE0F',65:'\uD83C\uDF27\uFE0F',71:'\u2744\uFE0F',73:'\u2744\uFE0F',75:'\u2744\uFE0F',80:'\uD83C\uDF26',81:'\uD83C\uDF27',82:'\uD83C\uDF27\uFE0F',95:'\u26A1',96:'\u26A1',99:'\u26A1'};
 var WEATHER_DESC={0:'Clear Sky',1:'Mostly Clear',2:'Partly Cloudy',3:'Overcast',45:'Foggy',48:'Freezing Fog',51:'Light Drizzle',53:'Drizzle',55:'Heavy Drizzle',61:'Light Rain',63:'Rain',65:'Heavy Rain',71:'Light Snow',73:'Snow',75:'Heavy Snow',80:'Light Showers',81:'Showers',82:'Heavy Showers',95:'Thunderstorm',96:'Thunderstorm w/ Hail',99:'Severe Thunderstorm'};
 function fetchWeather(cb){
   if(_weatherCache&&Date.now()-_weatherCacheTime<1800000){cb(_weatherCache);return;}
   var url='https://api.open-meteo.com/v1/forecast?latitude=35.4088&longitude=-80.5795'
     +'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,uv_index'
-    +'&hourly=temperature_2m,weather_code,precipitation_probability'
     +'&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,wind_speed_10m_max,wind_gusts_10m_max,uv_index_max,sunrise,sunset,precipitation_sum,relative_humidity_2m_mean'
-    +'&forecast_hours=24&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York';
+    +'&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York';
   var controller=new AbortController();
   var timeoutId=setTimeout(function(){controller.abort();},5000);
   fetch(url,{signal:controller.signal})
     .then(function(r){clearTimeout(timeoutId);return r.json();})
     .then(function(d){
-      _weatherCache={daily:d.daily||null,current:d.current||null,hourly:d.hourly||null};_weatherCacheTime=Date.now();if(cb)cb(_weatherCache);
+      _weatherCache={daily:d.daily||null,current:d.current||null};_weatherCacheTime=Date.now();if(cb)cb(_weatherCache);
     })
     .catch(function(err){
       clearTimeout(timeoutId);
