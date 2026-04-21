@@ -3835,6 +3835,32 @@ async function doLogin(){
 }
 
 
+/**
+ * Fetch wrapper that:
+ *  - throws on non-2xx,
+ *  - preserves server-sent JSON {error} messages,
+ *  - always returns parsed JSON on success (or null on 204).
+ * Use in any save/delete/update handler instead of raw fetch().
+ */
+async function _safeFetch(url, opts){
+  opts = opts || {};
+  opts.headers = opts.headers || {};
+  if(opts.body && !opts.headers['Content-Type']){
+    opts.headers['Content-Type'] = 'application/json';
+  }
+  const r = await fetch(url, opts);
+  let body = null;
+  try { body = await r.json(); } catch(_) {}
+  if(!r.ok){
+    const msg = (body && body.error) || ('Request failed ('+r.status+')');
+    const err = new Error(msg);
+    err.status = r.status;
+    err.body = body;
+    throw err;
+  }
+  return body;
+}
+
 function showAdminElements(){
   if(window._userRole==='dev'){
     document.querySelectorAll('[data-admin-hidden]').forEach(function(el){el.removeAttribute('data-admin-hidden');});
@@ -7607,31 +7633,27 @@ async function saveCO(){
     if(_coProj){var _coSnap=typeof _coProj.snap==='string'?JSON.parse(_coProj.snap):_coProj.snap||{};body.project_number=_coSnap.project_number||'';}
   }
   try{
-    var r=await fetch('/change-orders/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    var d=await r.json();
-    if(d.ok){
-      // Auto-link to project if created from project context
-      if(window._pendingCOProjectLink){
-        var pid=window._pendingCOProjectLink;window._pendingCOProjectLink=null;
-        var proj=pipelineProposals.find(function(x){return x.id===pid;});
-        if(proj){
-          var psnap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
-          if(!psnap.change_orders)psnap.change_orders=[];
-          var coNet=p.add_total-p.deduct_total;
-          psnap.change_orders.push({id:d.id,name:'CO #'+p.co_number,total:coNet,date:p.date});
-          addProjectActivity(psnap,'co','Change Order #'+p.co_number+' added ('+(coNet>=0?'+':'')+' $'+Math.round(Math.abs(coNet)).toLocaleString()+')');
-          proj.snap=psnap;
-          var newTotals=calcProjectTotal(proj);proj.total=newTotals.grandTotal;
-          fetch('/projects/update/'+pid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:psnap,total:newTotals.grandTotal})});
-          toast('Change order linked to project','ok');
-        }
-      } else {
-        toast('Change order saved','ok');
+    var d=await _safeFetch('/change-orders/save',{method:'POST',body:JSON.stringify(body)});
+    // Auto-link to project if created from project context
+    if(window._pendingCOProjectLink){
+      var pid=window._pendingCOProjectLink;window._pendingCOProjectLink=null;
+      var proj=pipelineProposals.find(function(x){return x.id===pid;});
+      if(proj){
+        var psnap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+        if(!psnap.change_orders)psnap.change_orders=[];
+        var coNet=p.add_total-p.deduct_total;
+        psnap.change_orders.push({id:d.id,name:'CO #'+p.co_number,total:coNet,date:p.date});
+        addProjectActivity(psnap,'co','Change Order #'+p.co_number+' added ('+(coNet>=0?'+':'')+' $'+Math.round(Math.abs(coNet)).toLocaleString()+')');
+        proj.snap=psnap;
+        var newTotals=calcProjectTotal(proj);proj.total=newTotals.grandTotal;
+        fetch('/projects/update/'+pid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:psnap,total:newTotals.grandTotal})});
+        toast('Change order linked to project','ok');
       }
-      loadCOList();
+    } else {
+      toast('Change order saved','ok');
     }
-    else toast('Save failed: '+(d.error||'unknown'),'err');
-  }catch(e){toast('Save error: '+e.message,'err');}
+    loadCOList();
+  }catch(e){toast(e.message||'Save error','err');}
 }
 
 async function exportCO(){
@@ -7830,10 +7852,10 @@ async function generateJCFromCO(id){
 async function delCO(id){
   if(!confirm('Delete this change order?'))return;
   try{
-    await fetch('/change-orders/delete/'+id,{method:'DELETE'});
-    loadCOList();
+    await _safeFetch('/change-orders/delete/'+id,{method:'DELETE'});
     toast('Change order deleted','ok');
-  }catch(e){toast('Delete error: '+e.message,'err');}
+    loadCOList();
+  }catch(e){toast(e.message||'Delete error','err');}
 }
 
 var TOPBAR_MENU = {
@@ -9793,36 +9815,32 @@ async function saveQuote(quiet){
       url='/quotes/save';method='POST';
       if(pipelineStages.length)body.stage_id=pipelineStages[0].id;
     }
-    var r=await fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    var d=await r.json();
-    if(d.ok){
-      lastSavedQuoteId=d.id;
-      updateProposalDocBadge();
-      // Update local cache
-      var existing=savedQuotes.find(function(q){return q.id===d.id;});
-      if(existing){existing.name=name;existing.client=snap.client;existing.date=snap.date;existing.total=p.total;existing.snap=JSON.stringify(snap);}
-      else{savedQuotes.push({id:d.id,name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});}
-      // Auto-link to project if created from project context
-      if(window._pendingProjectLink){
-        var pid=window._pendingProjectLink;window._pendingProjectLink=null;
-        var proj=pipelineProposals.find(function(x){return x.id===pid;});
-        if(proj){
-          var psnap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
-          if(!psnap.linked_proposals)psnap.linked_proposals=[];
-          if(psnap.linked_proposals.indexOf(d.id)<0)psnap.linked_proposals.push(d.id);
-          addProjectActivity(psnap,'proposal','Proposal "'+name+'" created ($'+Math.round(p.total).toLocaleString()+')');
-          proj.snap=psnap;
-          var newTotals=calcProjectTotal(proj);proj.total=newTotals.grandTotal;
-          fetch('/projects/update/'+pid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:psnap,total:newTotals.grandTotal})});
-          toast('Proposal linked to project','ok');
-        }
-      } else {
-        _proposalDirty=false;
-        if(!quiet)toast(method==='PATCH'?'Quote updated':'Quote saved','ok');
+    var d=await _safeFetch(url,{method:method,body:JSON.stringify(body)});
+    lastSavedQuoteId=d.id;
+    updateProposalDocBadge();
+    // Update local cache
+    var existing=savedQuotes.find(function(q){return q.id===d.id;});
+    if(existing){existing.name=name;existing.client=snap.client;existing.date=snap.date;existing.total=p.total;existing.snap=JSON.stringify(snap);}
+    else{savedQuotes.push({id:d.id,name:name,client:snap.client,date:snap.date,total:p.total,snap:JSON.stringify(snap)});}
+    // Auto-link to project if created from project context
+    if(window._pendingProjectLink){
+      var pid=window._pendingProjectLink;window._pendingProjectLink=null;
+      var proj=pipelineProposals.find(function(x){return x.id===pid;});
+      if(proj){
+        var psnap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+        if(!psnap.linked_proposals)psnap.linked_proposals=[];
+        if(psnap.linked_proposals.indexOf(d.id)<0)psnap.linked_proposals.push(d.id);
+        addProjectActivity(psnap,'proposal','Proposal "'+name+'" created ($'+Math.round(p.total).toLocaleString()+')');
+        proj.snap=psnap;
+        var newTotals=calcProjectTotal(proj);proj.total=newTotals.grandTotal;
+        fetch('/projects/update/'+pid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:psnap,total:newTotals.grandTotal})});
+        toast('Proposal linked to project','ok');
       }
+    } else {
+      _proposalDirty=false;
+      if(!quiet)toast(method==='PATCH'?'Quote updated':'Quote saved','ok');
     }
-    else{if(!quiet)toast('Save failed: '+(d.error||'unknown'),'err');}
-  }catch(e){if(!quiet)toast('Save error: '+e.message,'err');}
+  }catch(e){if(!quiet)toast(e.message||'Save error','err');}
 }
 function loadQuote(id,skipNav){
   var q=savedQuotes.find(function(x){return x.id===id;})||pipelineProposals.find(function(x){return x.id===id;});
@@ -11569,24 +11587,29 @@ async function saveClient() {
   };
   try {
     if (editingClientId) {
-      await fetch('/clients/update/'+editingClientId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      await _safeFetch('/clients/update/'+editingClientId,{method:'PATCH',body:JSON.stringify(data)});
       toast('Client updated','ok');
     } else {
-      await fetch('/clients/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      await _safeFetch('/clients/save',{method:'POST',body:JSON.stringify(data)});
       toast('Client saved','ok');
     }
     closeClientModal();
     renderClients();
-  } catch(e){toast('Error: '+e.message,'err');}
+  } catch(e){
+    toast(e.message||'Failed to save client','err');
+    // Intentionally keep the modal open so user can retry.
+  }
 }
 
 async function deleteClient(id) {
   if(!confirm('Delete this client?')) return;
   try {
-    await fetch('/clients/delete/'+id,{method:'DELETE'});
+    await _safeFetch('/clients/delete/'+id,{method:'DELETE'});
     toast('Client deleted','ok');
     renderClients();
-  } catch(e){toast('Error: '+e.message,'err');}
+  } catch(e){
+    toast(e.message||'Failed to delete client','err');
+  }
 }
 
 document.addEventListener('click',function(e){if(e.target.id==='client-modal')closeClientModal();});
@@ -11656,17 +11679,20 @@ function loadCompanyInfo(){
     }
   }).catch(function(){});
 }
-function saveCompanyInfo(){
+async function saveCompanyInfo(){
   var g=function(id){var el=document.getElementById(id);return el?el.value.trim():'';};
   var ci={name:g('co-name'),address:g('co-address'),city:g('co-city'),state:g('co-state'),zip:g('co-zip'),phone:g('co-phone'),email:g('co-email'),website:g('co-website'),license:g('co-license'),tagline:g('co-tagline')};
   window._companyInfo=ci;
-  fetch('/settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'hd_company_info',value:ci})})
-    .then(function(r){return r.json();}).then(function(d){
-      var st=document.getElementById('co-save-status');
-      if(d.ok){if(st){st.textContent='Saved!';st.style.color='#27500A';}toast('Company info saved','ok');}
-      else{if(st){st.textContent='Error saving';st.style.color='var(--red)';}toast('Failed to save','err');}
-      setTimeout(function(){if(st)st.textContent='';},3000);
-    }).catch(function(){toast('Save error','err');});
+  var st=document.getElementById('co-save-status');
+  try {
+    await _safeFetch('/settings/save',{method:'POST',body:JSON.stringify({key:'hd_company_info',value:ci})});
+    if(st){st.textContent='Saved!';st.style.color='#27500A';}
+    toast('Company info saved','ok');
+  } catch(e) {
+    if(st){st.textContent='Error saving';st.style.color='var(--red)';}
+    toast(e.message||'Failed to save','err');
+  }
+  setTimeout(function(){if(st)st.textContent='';},3000);
 }
 
 // -- Session & Security ---------------------------------------------------
@@ -11804,9 +11830,70 @@ async function renderArchived(){
 function openAddUserModal(){_editingUserId=null;document.getElementById('user-modal-title').textContent='Add User';document.getElementById('edit-full-name').value='';document.getElementById('edit-email').value='';document.getElementById('edit-phone').value='';document.getElementById('edit-username').value='';document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value='';document.getElementById('edit-role').value='user';document.getElementById('edit-hourly-rate').value='';document.getElementById('pin-hint').textContent='(min 6 characters)';document.getElementById('user-modal-err').textContent='';var delC=document.getElementById('user-modal-delete');if(delC)delC.innerHTML='';openModalA11y('user-modal');setTimeout(function(){document.getElementById('edit-full-name').focus();},100);}
 function openEditUserModal(id){var u=window._adminUsers&&window._adminUsers[id];if(!u){toast('User not found','err');return;}_editingUserId=u.id;document.getElementById('user-modal-title').textContent='Edit User';document.getElementById('edit-full-name').value=u.full_name||'';document.getElementById('edit-email').value=u.email||'';document.getElementById('edit-phone').value=u.phone||'';document.getElementById('edit-username').value=u.username;document.getElementById('edit-username').disabled=false;document.getElementById('edit-pin').value='';document.getElementById('edit-pw-hint').value=u.password_hint||'';document.getElementById('edit-role').value=u.role||'user';document.getElementById('edit-hourly-rate').value=u.hourly_rate||'';document.getElementById('pin-hint').textContent='(leave blank to keep current)';document.getElementById('user-modal-err').textContent='';var delC=document.getElementById('user-modal-delete');if(delC){if(u.username!==(window._userUsername||'')){delC.innerHTML='<button class="btn btn-sm" style="background:transparent;color:var(--red);border:1px solid var(--red);font-weight:600;" onclick="confirmDeleteUser('+u.id+',\''+esc(u.username)+'\')">Delete User</button>';}else{delC.innerHTML='';}}openModalA11y('user-modal');}
 function closeUserModal(){closeModalA11y('user-modal');_editingUserId=null;}
-async function saveUser(){var errEl=document.getElementById('user-modal-err');errEl.textContent='';var fn=document.getElementById('edit-full-name').value.trim();var em=document.getElementById('edit-email').value.trim();var ph=document.getElementById('edit-phone').value.trim();var un=document.getElementById('edit-username').value.trim().toLowerCase();var pw=document.getElementById('edit-pin').value.trim();var hint=document.getElementById('edit-pw-hint').value.trim();var role=document.getElementById('edit-role').value;var hrate=document.getElementById('edit-hourly-rate').value;if(!fn){errEl.textContent='Full name required.';return;}if(_editingUserId){var upd={full_name:fn,email:em,phone:ph,role:role,password_hint:hint,hourly_rate:parseFloat(hrate)||0};if(pw)upd.password=pw;var origUser=window._adminUsers&&window._adminUsers[_editingUserId];if(origUser&&un!==origUser.username)upd.username=un;var r=await fetch('/admin/users/'+_editingUserId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});var d=await r.json();if(d.ok){if(upd.username&&origUser.username===window._userUsername){window._userUsername=un;}closeUserModal();loadUsers();toast('User updated','ok');}else{errEl.textContent=d.error||'Failed.';}}else{if(!un){errEl.textContent='Username required.';return;}if(!pw||pw.length<6){errEl.textContent='Password must be at least 6 characters.';return;}var r=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:un,full_name:fn,email:em,phone:ph,password:pw,password_hint:hint,role:role})});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User created','ok');}else{errEl.textContent=d.error||'Failed.';}}}
-async function deactivateUser(uid,username,active){if(!confirm((active?'Deactivate':'Reactivate')+' "'+username+'"?'))return;var r=await fetch('/admin/users/'+uid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!active})});var d=await r.json();if(d.ok){loadUsers();toast('User '+(active?'deactivated':'reactivated'),'ok');}else toast('Error: '+(d.error||'failed'),'err');}
-async function confirmDeleteUser(uid,username){if(!confirm('Are you sure you want to permanently delete "'+username+'"? This will remove their account and all related data.'))return;if(!confirm('This cannot be undone. Are you absolutely sure you want to delete "'+username+'"?'))return;var r=await fetch('/admin/users/'+uid,{method:'DELETE'});var d=await r.json();if(d.ok){closeUserModal();loadUsers();toast('User "'+username+'" permanently deleted','ok');}else toast('Error: '+(d.error||'failed'),'err');}
+async function saveUser(){
+  var errEl=document.getElementById('user-modal-err');errEl.textContent='';
+  var fn=document.getElementById('edit-full-name').value.trim();
+  var em=document.getElementById('edit-email').value.trim();
+  var ph=document.getElementById('edit-phone').value.trim();
+  var un=document.getElementById('edit-username').value.trim().toLowerCase();
+  var pw=document.getElementById('edit-pin').value.trim();
+  var hint=document.getElementById('edit-pw-hint').value.trim();
+  var role=document.getElementById('edit-role').value;
+  var hrate=document.getElementById('edit-hourly-rate').value;
+  if(!fn){errEl.textContent='Full name required.';return;}
+  if(_editingUserId){
+    var upd={full_name:fn,email:em,phone:ph,role:role,password_hint:hint,hourly_rate:parseFloat(hrate)||0};
+    if(pw)upd.password=pw;
+    var origUser=window._adminUsers&&window._adminUsers[_editingUserId];
+    if(origUser&&un!==origUser.username)upd.username=un;
+    try {
+      await _safeFetch('/admin/users/'+_editingUserId,{method:'PATCH',body:JSON.stringify(upd)});
+      if(upd.username&&origUser.username===window._userUsername){window._userUsername=un;}
+      toast('User updated','ok');
+      closeUserModal();
+      loadUsers();
+    } catch(e) {
+      errEl.textContent=e.message||'Failed.';
+      toast(e.message||'Failed to update user','err');
+      // Intentionally keep the modal open so user can retry.
+    }
+  } else {
+    if(!un){errEl.textContent='Username required.';return;}
+    if(!pw||pw.length<6){errEl.textContent='Password must be at least 6 characters.';return;}
+    try {
+      await _safeFetch('/admin/users',{method:'POST',body:JSON.stringify({username:un,full_name:fn,email:em,phone:ph,password:pw,password_hint:hint,role:role})});
+      toast('User created','ok');
+      closeUserModal();
+      loadUsers();
+    } catch(e) {
+      errEl.textContent=e.message||'Failed.';
+      toast(e.message||'Failed to create user','err');
+      // Intentionally keep the modal open so user can retry.
+    }
+  }
+}
+async function deactivateUser(uid,username,active){
+  if(!confirm((active?'Deactivate':'Reactivate')+' "'+username+'"?'))return;
+  try {
+    await _safeFetch('/admin/users/'+uid,{method:'PATCH',body:JSON.stringify({active:!active})});
+    toast('User '+(active?'deactivated':'reactivated'),'ok');
+    loadUsers();
+  } catch(e) {
+    toast(e.message||'Failed','err');
+  }
+}
+async function confirmDeleteUser(uid,username){
+  if(!confirm('Are you sure you want to permanently delete "'+username+'"? This will remove their account and all related data.'))return;
+  if(!confirm('This cannot be undone. Are you absolutely sure you want to delete "'+username+'"?'))return;
+  try {
+    await _safeFetch('/admin/users/'+uid,{method:'DELETE'});
+    toast('User "'+username+'" permanently deleted','ok');
+    closeUserModal();
+    loadUsers();
+  } catch(e) {
+    toast(e.message||'Failed','err');
+  }
+}
 
 // -- Work Order Detail View ---------------------------------------------------
 var _currentWorkOrderId=null;
@@ -15244,7 +15331,7 @@ function loadFeedback(){
   }).catch(function(){c.innerHTML='<div class="empty-state"><div class="empty-state-desc">Failed to load feedback.</div></div>';});
 }
 
-function submitBug(){
+async function submitBug(){
   var title=document.getElementById('bug-title').value.trim();
   var desc=document.getElementById('bug-desc').value.trim();
   var severity=document.getElementById('bug-severity').value;
@@ -15253,22 +15340,22 @@ function submitBug(){
   if(!title){msg.textContent='Please enter a title.';msg.style.color='var(--red)';return;}
   if(!desc){msg.textContent='Please enter a description.';msg.style.color='var(--red)';return;}
   msg.textContent='Submitting...';msg.style.color='var(--dgray)';
-  fetch('/bugs/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-    title:title,description:desc,severity:severity,panel:panel,
-    browser_info:navigator.userAgent,screen_info:screen.width+'x'+screen.height
-  })}).then(function(r){return r.json();}).then(function(d){
-    if(d.ok){
-      msg.textContent='Bug report submitted. Thank you!';msg.style.color='#2E7D32';
-      document.getElementById('bug-title').value='';
-      document.getElementById('bug-desc').value='';
-      document.getElementById('bug-severity').value='Minor';
-      document.getElementById('bug-panel').value='';
-      if(typeof toast==='function')toast('Bug report submitted','ok');
-      setTimeout(function(){msg.textContent='';},4000);
-    } else {
-      msg.textContent=d.error||'Failed to submit.';msg.style.color='var(--red)';
-    }
-  }).catch(function(){msg.textContent='Network error.';msg.style.color='var(--red)';});
+  try {
+    await _safeFetch('/bugs/submit',{method:'POST',body:JSON.stringify({
+      title:title,description:desc,severity:severity,panel:panel,
+      browser_info:navigator.userAgent,screen_info:screen.width+'x'+screen.height
+    })});
+    msg.textContent='Bug report submitted. Thank you!';msg.style.color='#2E7D32';
+    document.getElementById('bug-title').value='';
+    document.getElementById('bug-desc').value='';
+    document.getElementById('bug-severity').value='Minor';
+    document.getElementById('bug-panel').value='';
+    if(typeof toast==='function')toast('Bug report submitted','ok');
+    setTimeout(function(){msg.textContent='';},4000);
+  } catch(e) {
+    msg.textContent=e.message||'Failed to submit.';msg.style.color='var(--red)';
+    if(typeof toast==='function')toast(e.message||'Failed to submit bug','err');
+  }
 }
 
 var _bugReportsError='';
@@ -15370,7 +15457,7 @@ function renderBugList(){
 }
 
 // Settings-embedded bug report wrappers
-function submitSettingsBug(){
+async function submitSettingsBug(){
   var title=document.getElementById('settings-bug-title').value.trim();
   var desc=document.getElementById('settings-bug-desc').value.trim();
   var severity=document.getElementById('settings-bug-severity').value;
@@ -15379,23 +15466,23 @@ function submitSettingsBug(){
   if(!title){msg.textContent='Please enter a title.';msg.style.color='var(--red)';return;}
   if(!desc){msg.textContent='Please enter a description.';msg.style.color='var(--red)';return;}
   msg.textContent='Submitting...';msg.style.color='var(--dgray)';
-  fetch('/bugs/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-    title:title,description:desc,severity:severity,panel:panel,
-    browser_info:navigator.userAgent,screen_info:screen.width+'x'+screen.height
-  })}).then(function(r){return r.json();}).then(function(d){
-    if(d.ok){
-      msg.textContent='Bug report submitted. Thank you!';msg.style.color='#2E7D32';
-      document.getElementById('settings-bug-title').value='';
-      document.getElementById('settings-bug-desc').value='';
-      document.getElementById('settings-bug-severity').value='Minor';
-      document.getElementById('settings-bug-panel').value='';
-      if(typeof toast==='function')toast('Bug report submitted','ok');
-      setTimeout(function(){msg.textContent='';},4000);
-      if(window._userRole==='dev')loadSettingsBugList();
-    } else {
-      msg.textContent=d.error||'Failed to submit.';msg.style.color='var(--red)';
-    }
-  }).catch(function(){msg.textContent='Network error.';msg.style.color='var(--red)';});
+  try {
+    await _safeFetch('/bugs/submit',{method:'POST',body:JSON.stringify({
+      title:title,description:desc,severity:severity,panel:panel,
+      browser_info:navigator.userAgent,screen_info:screen.width+'x'+screen.height
+    })});
+    msg.textContent='Bug report submitted. Thank you!';msg.style.color='#2E7D32';
+    document.getElementById('settings-bug-title').value='';
+    document.getElementById('settings-bug-desc').value='';
+    document.getElementById('settings-bug-severity').value='Minor';
+    document.getElementById('settings-bug-panel').value='';
+    if(typeof toast==='function')toast('Bug report submitted','ok');
+    setTimeout(function(){msg.textContent='';},4000);
+    if(window._userRole==='dev')loadSettingsBugList();
+  } catch(e) {
+    msg.textContent=e.message||'Failed to submit.';msg.style.color='var(--red)';
+    if(typeof toast==='function')toast(e.message||'Failed to submit bug','err');
+  }
 }
 function loadSettingsBugList(){loadBugList();}
 function renderSettingsBugList(){renderBugList();}
@@ -15427,21 +15514,22 @@ function openBugDetail(id){
   document.getElementById('bug-detail-modal').classList.remove('hidden');
 }
 
-function saveBugUpdate(){
+async function saveBugUpdate(){
   if(!_editingBugId)return;
   var status=document.getElementById('bug-edit-status').value;
   var notes=document.getElementById('bug-edit-notes').value;
   var payload={status:status,admin_notes:notes};
   if(status==='Fixed'||status==='Closed')payload.resolved_at=new Date().toISOString();
   else payload.resolved_at=null;
-  fetch('/bugs/'+_editingBugId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-  .then(function(r){return r.json();}).then(function(d){
-    if(d.ok){
-      document.getElementById('bug-detail-modal').classList.add('hidden');
-      if(typeof toast==='function')toast('Bug updated','ok');
-      loadBugList();
-    }
-  });
+  try {
+    await _safeFetch('/bugs/'+_editingBugId,{method:'PATCH',body:JSON.stringify(payload)});
+    if(typeof toast==='function')toast('Bug updated','ok');
+    document.getElementById('bug-detail-modal').classList.add('hidden');
+    loadBugList();
+  } catch(e) {
+    if(typeof toast==='function')toast(e.message||'Failed to update bug','err');
+    // Intentionally keep the modal open so user can retry.
+  }
 }
 
 // ── Roadmap ────────────────────────────────────────────
@@ -15580,7 +15668,7 @@ function openRoadmapModal(id){
   document.getElementById('rm-title').focus();
 }
 
-function saveRoadmapItem(){
+async function saveRoadmapItem(){
   var title=document.getElementById('rm-title').value.trim();
   if(!title){if(typeof toast==='function')toast('Title is required','err');return;}
   var payload={
@@ -15594,23 +15682,26 @@ function saveRoadmapItem(){
   };
   var url=_editingRoadmapId?'/roadmap/'+_editingRoadmapId:'/roadmap/save';
   var method=_editingRoadmapId?'PATCH':'POST';
-  fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-  .then(function(r){return r.json();}).then(function(d){
-    if(d.ok){
-      closeModalA11y('roadmap-modal');
-      if(typeof toast==='function')toast(_editingRoadmapId?'Item updated':'Item added','ok');
-      loadRoadmapList();
-    } else {
-      if(typeof toast==='function')toast(d.error||'Failed to save','err');
-    }
-  });
+  try {
+    await _safeFetch(url,{method:method,body:JSON.stringify(payload)});
+    if(typeof toast==='function')toast(_editingRoadmapId?'Item updated':'Item added','ok');
+    closeModalA11y('roadmap-modal');
+    loadRoadmapList();
+  } catch(e) {
+    if(typeof toast==='function')toast(e.message||'Failed to save','err');
+    // Intentionally keep the modal open so user can retry.
+  }
 }
 
-function deleteRoadmapItem(id){
+async function deleteRoadmapItem(id){
   if(!confirm('Delete this roadmap item?'))return;
-  fetch('/roadmap/'+id,{method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
-    if(d.ok){if(typeof toast==='function')toast('Item deleted','ok');loadRoadmapList();}
-  });
+  try {
+    await _safeFetch('/roadmap/'+id,{method:'DELETE'});
+    if(typeof toast==='function')toast('Item deleted','ok');
+    loadRoadmapList();
+  } catch(e) {
+    if(typeof toast==='function')toast(e.message||'Failed to delete','err');
+  }
 }
 
 // ── Reminders ──────────────────────────────────────────
@@ -15724,7 +15815,7 @@ function toggleReminderRef(){
 
 function closeReminderModal(){closeModalA11y('reminder-modal');_editingReminderId=null;}
 
-function saveReminder(){
+async function saveReminder(){
   var errEl=document.getElementById('reminder-modal-err');errEl.textContent='';
   var note=document.getElementById('rem-note').value.trim();
   var due=document.getElementById('rem-due-date').value;
@@ -15735,25 +15826,39 @@ function saveReminder(){
   var refName=type!=='general'&&refSel.selectedIndex>0?refSel.options[refSel.selectedIndex].textContent:'';
   if(!note){errEl.textContent='Note is required.';return;}
   if(!due){errEl.textContent='Due date is required.';return;}
-  fetch('/reminders/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-    note:note,due_date:due,assigned_to:assigned,type:type,ref_id:refId,ref_name:refName
-  })}).then(function(r){return r.json();}).then(function(d){
-    if(d.ok){closeReminderModal();renderRemindersTab();toast('Reminder added','ok');}
-    else{errEl.textContent=d.error||'Failed to save.';}
-  });
+  try {
+    await _safeFetch('/reminders/save',{method:'POST',body:JSON.stringify({
+      note:note,due_date:due,assigned_to:assigned,type:type,ref_id:refId,ref_name:refName
+    })});
+    toast('Reminder added','ok');
+    closeReminderModal();
+    renderRemindersTab();
+  } catch(e) {
+    errEl.textContent=e.message||'Failed to save.';
+    toast(e.message||'Failed to save reminder','err');
+    // Intentionally keep the modal open so user can retry.
+  }
 }
 
-function completeReminder(id){
-  fetch('/reminders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({completed:true})}).then(function(r){return r.json();}).then(function(d){
-    if(d.ok){renderRemindersTab();toast('Reminder completed','ok');}
-  });
+async function completeReminder(id){
+  try {
+    await _safeFetch('/reminders/'+id,{method:'PATCH',body:JSON.stringify({completed:true})});
+    toast('Reminder completed','ok');
+    renderRemindersTab();
+  } catch(e) {
+    toast(e.message||'Failed to complete reminder','err');
+  }
 }
 
-function deleteReminder(id){
+async function deleteReminder(id){
   if(!confirm('Delete this reminder?'))return;
-  fetch('/reminders/'+id,{method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
-    if(d.ok){renderRemindersTab();toast('Reminder deleted','ok');}
-  });
+  try {
+    await _safeFetch('/reminders/'+id,{method:'DELETE'});
+    toast('Reminder deleted','ok');
+    renderRemindersTab();
+  } catch(e) {
+    toast(e.message||'Failed to delete reminder','err');
+  }
 }
 
 // ── Tasks Panel ──────────────────────────────────────────
@@ -16011,7 +16116,7 @@ function toggleTaskRef(){
   }
 }
 
-function saveTask(){
+async function saveTask(){
   var errEl=document.getElementById('task-modal-err');errEl.textContent='';
   var title=document.getElementById('task-title').value.trim();
   if(!title){errEl.textContent='Title is required.';return;}
@@ -16030,23 +16135,37 @@ function saveTask(){
   };
   var url=_editingTaskId?'/tasks/'+_editingTaskId:'/tasks/save';
   var method=_editingTaskId?'PATCH':'POST';
-  fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();}).then(function(d){
-    if(d.ok){closeTaskModal();renderTasksList();toast(_editingTaskId?'Task updated':'Task created','ok');}
-    else{errEl.textContent=d.error||'Failed to save.';}
-  });
+  try {
+    await _safeFetch(url,{method:method,body:JSON.stringify(payload)});
+    toast(_editingTaskId?'Task updated':'Task created','ok');
+    closeTaskModal();
+    renderTasksList();
+  } catch(e) {
+    errEl.textContent=e.message||'Failed to save.';
+    toast(e.message||'Failed to save task','err');
+    // Intentionally keep the modal open so user can retry.
+  }
 }
 
-function toggleTask(id,completed){
-  fetch('/tasks/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({completed:completed})}).then(function(r){return r.json();}).then(function(d){
-    if(d.ok){renderTasksList();toast(completed?'Task completed':'Task reopened','ok');}
-  });
+async function toggleTask(id,completed){
+  try {
+    await _safeFetch('/tasks/'+id,{method:'PATCH',body:JSON.stringify({completed:completed})});
+    toast(completed?'Task completed':'Task reopened','ok');
+    renderTasksList();
+  } catch(e) {
+    toast(e.message||'Failed to update task','err');
+  }
 }
 
-function deleteTask(id){
+async function deleteTask(id){
   if(!confirm('Delete this task?'))return;
-  fetch('/tasks/'+id,{method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
-    if(d.ok){renderTasksList();toast('Task deleted','ok');}
-  });
+  try {
+    await _safeFetch('/tasks/'+id,{method:'DELETE'});
+    toast('Task deleted','ok');
+    renderTasksList();
+  } catch(e) {
+    toast(e.message||'Failed to delete task','err');
+  }
 }
 
 function shareProjectLink(){
