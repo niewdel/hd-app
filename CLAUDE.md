@@ -82,7 +82,14 @@ To update a record: `PATCH` to `...rest/v1/TABLE_NAME?id=eq.ID` with JSON body.
 **All tables have RLS DISABLED.**
 
 ### `hd_users`
-id, username (unique), full_name, email, phone, pin_hash (SHA256), role (`admin`/`user`/`field`), active, created_at, created_by, avatar_data (TEXT, base64 profile photo). **Note**: `password_hint` column does NOT exist — do not include it in inserts/updates. Avatar is stored in DB, NOT in Flask session (session cookies have ~4KB limit).
+id, username (unique), full_name, email, phone, pin_hash (bcrypt), role (`admin`/`user`/`field`/`dev`), active, created_at, created_by, avatar_data (TEXT, base64 profile photo), failed_login_count, locked_until, last_login_at, password_updated_at, hourly_rate, welcome_seen_at (TIMESTAMPTZ — set when user dismisses the welcome modal; account-bound, not browser-bound).
+
+**Important conventions:**
+- `username` is the canonical identifier referenced by `created_by`, `assigned_to`, `submitted_by`, etc., across many tables. Format: lowercase `firstname.lastname` (e.g. `justin.ledwein`, `kyle.harrison`). Renames cascade through `_cascade_username` in `app.py`.
+- `email` is independent and used for login alongside username. Login accepts EITHER (`@` in input → email lookup with `@hdgrading.com` enforcement; no `@` → username lookup, no domain check).
+- `pin_hash` is bcrypt; legacy SHA-256 hashes auto-migrate to bcrypt on next successful login.
+- `password_hint` column does NOT exist — do not include it in inserts/updates.
+- Avatar is stored in DB, NOT in Flask session (session cookies have ~4KB limit).
 
 ### `hd_access_log`
 id, username, full_name, action (`login`/`logout`), success, ip_address, user_agent, logged_at.
@@ -285,12 +292,12 @@ The entire frontend is one HTML file. All CSS, JS, and HTML in one file. No buil
 - `showAdminElements()` calls `removeAttribute('data-admin-hidden')` on all `[data-admin-hidden]` elements
 - **Critical**: `boot()` crashes if called when sections/DOM aren't ready — wrapped in `try/catch` so `showAdminElements()` always runs after
 
-### Role Visibility Model (updated 2026-04-20)
+### Role Visibility Model (updated 2026-04-21)
 
-- `dev` (Justin): sees everything, including Users / Activity Log / Archived / Roadmap / All Bug Reports list.
-- `admin` (Kyle): sees Dashboard, Projects, Pipeline, Build Proposal, Saved Docs, Schedule, Contacts, Change Orders, Work Orders, Analytics, Reports, Settings, Tasks, the Bug Submit form, and the Admin → Company tab. Hidden from admin: Users, Activity Log, Archived, Roadmap, the All-Bug-Reports management list.
-- `user`: standard operational role, no admin surfaces.
-- `field`: reduced UI, no pricing surfaces.
+- `dev` (Justin): sees everything, including Users / Activity Log / Archived / Roadmap / Bug Reports.
+- `admin` (Kyle): sees Dashboard, Projects, Pipeline, Build Proposal, Saved Docs, Schedule, Contacts, Change Orders, Work Orders, Analytics, Reports, Settings, the Feedback panel, and the Admin → Company tab. Hidden from admin: Users, Activity Log, Archived, Roadmap, Bug Reports (entire panel — admin uses Feedback instead, which is simpler / less specific). The Welcome modal copy intentionally does NOT mention what's hidden from admin (don't tip them off to features they don't have access to).
+- `user`: standard operational role, sees the Feedback panel; no admin surfaces.
+- `field`: reduced UI — Dashboard, Schedule, Work Orders, time tracking only. No pricing surfaces, no Feedback, no Bug Reports.
 
 **Attribute rules:**
 - `data-admin-hidden` — hidden from user/field, visible to admin+dev.
