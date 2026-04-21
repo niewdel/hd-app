@@ -221,6 +221,14 @@ id, proposal_id, number, date, description, snap (JSONB), add_total, deduct_tota
 |---|---|---|---|
 | GET | `/boot/data` | yes | Returns quotes + pipeline stages + proposals in one call (parallel server-side) |
 
+### Backend Helpers (added 2026-04-20)
+
+- `_safe_error(e, context)` — logs internally via `app.logger.exception`, returns generic `{'error': 'Internal error. Check logs.'}` with 500. Use in authed routes; do NOT use for 400/403 semantic responses or public routes.
+- `_sb_eq(column, value)` — URL-safe PostgREST filter via `urllib.parse.quote`. Use instead of f-string interpolation in any route that builds a `?col=eq.{var}` filter.
+- `_owns_or_admin(record_created_by)` — null-safe ownership check. Returns True for admin/dev unconditionally; for other roles compares `record_created_by` to `session.get('username')`. Apply on update/delete routes.
+- `set_security_headers` now sets explicit `Access-Control-Allow-Origin` for the Railway production domain only. Other origins get no CORS header (no broad allowlist).
+- `/send-email` rate-limit: 20 sends per rolling 24h per user. Audit log to `hd_email_log` table — must exist in Supabase or rate limit silently fails open.
+
 ### Other Routes
 - `/roadmap/*` — Roadmap CRUD (admin)
 - `/notifications/*` — Notification system
@@ -266,6 +274,22 @@ The entire frontend is one HTML file. All CSS, JS, and HTML in one file. No buil
 - CSS: `[data-admin-hidden]{display:none}`
 - `showAdminElements()` calls `removeAttribute('data-admin-hidden')` on all `[data-admin-hidden]` elements
 - **Critical**: `boot()` crashes if called when sections/DOM aren't ready — wrapped in `try/catch` so `showAdminElements()` always runs after
+
+### Role Visibility Model (updated 2026-04-20)
+
+- `dev` (Justin): sees everything, including Users / Activity Log / Archived / Roadmap / All Bug Reports list.
+- `admin` (Kyle): sees Dashboard, Projects, Pipeline, Build Proposal, Saved Docs, Schedule, Contacts, Change Orders, Work Orders, Analytics, Reports, Settings, Tasks, the Bug Submit form, and the Admin → Company tab. Hidden from admin: Users, Activity Log, Archived, Roadmap, the All-Bug-Reports management list.
+- `user`: standard operational role, no admin surfaces.
+- `field`: reduced UI, no pricing surfaces.
+
+**Attribute rules:**
+- `data-admin-hidden` — hidden from user/field, visible to admin+dev.
+- `data-dev-hidden` — hidden from everyone except dev.
+- `data-field-hidden` — hidden only from field.
+
+`showAdminElements()` (around index.html:3852) removes these attributes based on `window._userRole`.
+
+The Roadmap panel is now a standalone nav entry with `data-dev-hidden`, not a nested Admin tab. Admin tab list in `showAdminTab` is `['company','users','activity','deleted']` — no `'roadmap'`.
 
 ### Key Global Variables
 ```js
@@ -405,6 +429,21 @@ Signage Crew    | b-signage | $1,000/day | 40 EA/day
 - **Activity Log tab**: timestamped logins with IP, filterable by user
 - Edit user modal uses `window._adminUsers[id]` lookup (not JSON.stringify inline) to avoid escaping issues with special chars in names
 
+### Frontend Helpers (added 2026-04-20)
+
+- `_safeFetch(url, opts)` (around index.html:3845) — async fetch wrapper. Throws on non-2xx with the server's `{error}` message attached. Use in EVERY save/delete/update UI handler. Pattern: wrap in try/catch; show error toast in catch; do NOT close the modal on failure.
+- `_wxVideoUrl(code, tod)` — maps weather code + time of day to `/static/wx/wx-*.mp4` path.
+- `_wxTimeOfDay(data)` — returns `'dawn' | 'day' | 'dusk' | 'night'` for the selected day, using API sunrise/sunset when available with clock-heuristic fallback.
+- `_wxSelectedDay` — module-level integer, default 0 (today). `_selectWxDay(idx)` updates it and re-renders both hero and daily strip.
+
+### Weather Widget Architecture (rebuilt 2026-04-20)
+
+- Open-meteo API at `latitude=35.4088, longitude=-80.5795` (Concord, NC), 30-min cache via `_weatherCache` global.
+- Hero band uses `<video autoplay loop muted playsinline>` from `/static/wx/wx-*.mp4` (Mixkit free-for-commercial-use clips, ~36 MB total). Mapped via `_wxVideoUrl(code, tod)`.
+- 9 video files: `wx-clear-day`, `wx-clear-night`, `wx-partly-day`, `wx-partly-night`, `wx-overcast`, `wx-fog`, `wx-rain` (also covers drizzle and heavyrain), `wx-snow`, `wx-storm`.
+- Daily forecast strip: 7 clickable tiles. Tapping a tile sets `_wxSelectedDay` and the hero swaps to that day's data + video.
+- Schedule panel weather widget is unchanged (still uses canvas animation system) — explicit scope decision; can migrate to video later for visual consistency.
+
 ---
 
 ## Known Issues & Important Notes
@@ -527,6 +566,10 @@ curl -s -X PATCH "https://azznfkboiwayifhhcguz.supabase.co/rest/v1/hd_bug_report
 - [ ] Concrete items: allow custom `cy_per_lf` override per item
 - [ ] Truck calculator: user reported still needs testing after override fixes (2026-03-30)
 - [ ] Verify material costs populate correctly for all presets after Settings customization
+- [ ] Replace schedule-panel weather canvas with video for visual consistency with dashboard
+- [ ] Per-user ICS calendar feed tokens (deferred from H2)
+- [ ] File upload magic-byte validation (deferred from H5)
+- [ ] Full visual redesign rollout per `REDESIGN_*.md` docs
 
 ---
 
