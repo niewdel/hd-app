@@ -90,6 +90,16 @@ id, username, full_name, action (`login`/`logout`), success, ip_address, user_ag
 ### `proposals` (quotes/projects)
 id, name, client, total, stage_id (FK to pipeline_stages), snap (JSONB — full proposal snapshot), share_token (unique, for public sharing), created_by, created_at, archived, archived_at, project_number.
 
+**Design note — proposals and projects share this table.** A row with `snap.is_project = false` is a proposal (estimate that may or may not become a job). A row with `snap.is_project = true` is a live project (won deal that's executing). Project-only fields (work orders, scheduled dates, linked proposals, change orders, daily logs) live inside the `snap` JSONB rather than as separate columns.
+
+This is intentional. The state transition from proposal → project is just a flag flip + linkage, with no data migration. Reports that need to scope to "actual projects" filter `snap.is_project === true`. Reports that span all opportunities iterate the full table.
+
+A separate `projects` table was considered and rejected (2026-04-21): the cost of refactoring the JSONB-stored work orders / change orders / linked proposals into a normalized schema across ~16 frontend filter sites and 4-5 foreign-key tables was high, and the only benefit was conceptual cleanliness. The single-table + JSONB design is also a common Postgres pattern for entities that share most fields and differ by lifecycle stage.
+
+Foreign keys: `change_orders.proposal_id`, `hd_time_entries.project_id`, and `hd_notifications.project_id` all reference `proposals.id` (the row's PK regardless of whether it's currently a proposal or a project).
+
+Reports use the helpers `_isReportable(p)` and `_isProjectReportable(p)` (defined just above `selectReport()` in `index.html`) to filter source data. `_isReportable` strips archived rows; `_isProjectReportable` additionally enforces `snap.is_project === true`. Use these in any new report or analytics function instead of inlining the check.
+
 ### `clients`
 id, name, company, phone, email, address, city_state, notes.
 

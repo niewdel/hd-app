@@ -5312,6 +5312,8 @@ function renderAnalytics(){
     return;
   }
   if(emptyMsg)emptyMsg.style.display='none';
+  // Defensive filter: skip archived rows even if backend already excluded them
+  quotes=quotes.filter(_isReportable);
   var totalBid=0,highestMargin=null,lowestMargin=null,highestJob='',lowestJob='';
   quotes.forEach(function(q){
     var bid=parseFloat(q.total)||0;
@@ -5340,9 +5342,11 @@ function renderAnalytics(){
   });
   var avgBid=quotes.length?totalBid/quotes.length:0;
 
-  // Compute additional metrics from pipeline data
+  // Compute additional metrics from pipeline data — exclude archived rows defensively.
+  // Backend `/quotes/list` already filters archived, but report-style metrics route
+  // through the same _isProjectReportable helper so future bypasses stay safe.
   var pp=pipelineProposals||[];
-  var projects=pp.filter(function(p){var sn=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};return sn.is_project===true;});
+  var projects=pp.filter(_isProjectReportable);
   var wonProjects=projects.filter(function(p){return p.pipeline_stages&&p.pipeline_stages.name==='Completed';});
   var lostProjects=projects.filter(function(p){return p.pipeline_stages&&p.pipeline_stages.name==='Lost';});
   var activeProjects=projects.filter(function(p){return !p.pipeline_stages||!p.pipeline_stages.is_closed;});
@@ -15126,6 +15130,24 @@ function toggleDarkMode(){
 /* --- Reports --- */
 var _currentReport='estimate-perf';
 
+/** True if a row is real, non-archived data that belongs in reports.
+ *  Accepts either a raw pipelineProposals row OR a getFilteredData-mapped item. */
+function _isReportable(p){
+  if(!p) return false;
+  if(p.archived === true || p.archived_at) return false;
+  return true;
+}
+/** True if a row is an actual project (not a proposal-only row) AND reportable.
+ *  Accepts either a raw pipelineProposals row OR a getFilteredData-mapped item. */
+function _isProjectReportable(p){
+  if(!_isReportable(p)) return false;
+  // getFilteredData already extracts is_project as a boolean
+  if(typeof p.is_project === 'boolean') return p.is_project === true;
+  // Raw row: parse snap
+  var snap = typeof p.snap === 'string' ? (function(){try{return JSON.parse(p.snap||'{}');}catch(e){return {};}})() : (p.snap || {});
+  return snap.is_project === true;
+}
+
 function selectReport(reportId,el){
   _currentReport=reportId;
   document.querySelectorAll('.rpt-nav-item').forEach(function(n){n.classList.remove('rpt-nav-active');});
@@ -15140,12 +15162,12 @@ function initReports(){
 }
 
 function populateReportFilters(){
-  // Populate client dropdown
+  // Populate client dropdown — exclude archived rows so deleted clients don't appear
   var cs=document.getElementById('rpt-client');
   if(cs){
     var opts='<option value="">All Clients</option>';
     var seen={};
-    (pipelineProposals||[]).forEach(function(p){
+    (pipelineProposals||[]).filter(_isReportable).forEach(function(p){
       var c=p.client||'';if(c&&!seen[c]){seen[c]=true;opts+='<option value="'+esc(c)+'">'+esc(c)+'</option>';}
     });
     cs.innerHTML=opts;
@@ -15155,7 +15177,7 @@ function populateReportFilters(){
   if(ss){
     var opts2='<option value="">All</option>';
     var seen2={};
-    (pipelineProposals||[]).concat(savedQuotes||[]).forEach(function(p){
+    (pipelineProposals||[]).filter(_isReportable).concat((savedQuotes||[]).filter(_isReportable)).forEach(function(p){
       var cb=p.created_by||'';if(cb&&!seen2[cb]){seen2[cb]=true;opts2+='<option value="'+esc(cb)+'">'+esc(cb)+'</option>';}
     });
     ss.innerHTML=opts2;
@@ -15165,7 +15187,7 @@ function populateReportFilters(){
   if(rs){
     var opts3='<option value="">All Regions</option>';
     var seen3={};
-    (pipelineProposals||[]).forEach(function(p){
+    (pipelineProposals||[]).filter(_isReportable).forEach(function(p){
       var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
       var cs2=snap.city_state||snap.cs||'';if(cs2&&!seen3[cs2]){seen3[cs2]=true;opts3+='<option value="'+esc(cs2)+'">'+esc(cs2)+'</option>';}
     });
@@ -15200,7 +15222,7 @@ function getFilteredData(){
   var clientF=(document.getElementById('rpt-client')||{}).value||'';
   var spEl=document.getElementById('rpt-salesperson');var spF=spEl?spEl.value:'';
   var regionEl=document.getElementById('rpt-region');var regionF=regionEl?regionEl.value:'';
-  var all=(pipelineProposals||[]).filter(function(p){return !p.archived&&!p.archived_at;}).map(function(p){
+  var all=(pipelineProposals||[]).filter(_isReportable).map(function(p){
     var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
     return{id:p.id,name:p.name||snap.name||'',client:p.client||snap.client||'',total:parseFloat(p.total)||0,
       stage:p.pipeline_stages?p.pipeline_stages.name:'',stageColor:p.pipeline_stages?p.pipeline_stages.color:'#999',
@@ -15376,7 +15398,8 @@ function renderRptEstimatePerf(){
 function renderRptJobPerf(){
   var data=getFilteredData();var items=data.filtered;
   var out=document.getElementById('rpt-output');if(!out)return;
-  var projects=items.filter(function(p){return p.is_project;});
+  // Job-cost / win-loss reports MUST only count actual projects (not proposal-only rows)
+  var projects=items.filter(_isProjectReportable);
   var approved=projects.filter(function(p){return p.stage==='Approved';});
   var scheduled=projects.filter(function(p){return p.stage==='Scheduled';});
   var inProgress=projects.filter(function(p){return p.stage==='In Progress';});
@@ -15464,7 +15487,9 @@ function renderRptJobPerf(){
 function renderRptMaterialsCosts(){
   var data=getFilteredData();var items=data.filtered;
   var out=document.getElementById('rpt-output');if(!out)return;
-  var projects=items.filter(function(p){return p.is_project;});
+  // Project-scoped sub-tables only include real projects; aggregate material totals
+  // span every reportable row (proposals + projects) since materials are estimated upstream.
+  var projects=items.filter(_isProjectReportable);
 
   // Aggregate materials from proposals
   var matMap={};var totalTons=0;var totalMatCost=0;var totalTruckCost=0;
