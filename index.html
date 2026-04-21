@@ -15040,22 +15040,24 @@ function _tourStepsForRole(role){
     'Company-level controls. Owners and admins can update business info here.');
   var bugs=step('[aria-label="Bug Report"]','Spotted something?',
     'Send Justin a screenshot + description here. Faster than texting &mdash; he can triage and fix from one queue.');
+  var feedback=step('[aria-label="Feedback"]','Feedback',
+    'Got a thought, idea, or something that feels off? Drop a quick note here and Justin will see it.');
   var roadmap=step('[aria-label="Roadmap"]','Roadmap',
     'Track upcoming features and product direction. Dev-only.');
   var account=step('.topbar-account-btn','Your Account',
     'Open this menu anytime to access your profile, change your password, toggle theme, re-launch this tour, or sign out.','left');
 
   if(role==='dev'){
-    return [dashboard,projects,schedule,contacts,reports,settings,admin,bugs,roadmap,account];
+    return [dashboard,projects,schedule,contacts,reports,settings,admin,bugs,feedback,roadmap,account];
   }
   if(role==='admin'){
-    return [dashboard,projects,schedule,contacts,reports,settings,admin,bugs,account];
+    return [dashboard,projects,schedule,contacts,reports,settings,admin,feedback,account];
   }
   if(role==='field'){
-    return [dashboard,schedule,bugs,account];
+    return [dashboard,schedule,account];
   }
   // 'user' default
-  return [dashboard,projects,schedule,contacts,reports,bugs,account];
+  return [dashboard,projects,schedule,contacts,reports,feedback,account];
 }
 function startHelpTour(){
   closeHelpModal();

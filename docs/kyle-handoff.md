@@ -32,9 +32,9 @@ We did a full hardening sweep the night before handoff. A few things were explic
 - **File-upload magic-byte validation** — deferred (no execution risk; static-asset serving only).
 - **Weather widget videos** — first-load takes a moment to fetch the video; subsequent loads are instant from browser cache.
 
-## How to Report a Bug or an Idea
+## How to Send Feedback or Flag Something
 
-In-app **Bug Reports** panel. "Submit a Bug" form, type a short description, set severity, attach a screenshot if relevant, submit. That goes into the queue I review.
+In-app **Feedback** panel. Drop a quick note — what's confusing, what's broken, what you'd change. I see everything that comes through.
 
 This is faster than texting because I can triage and code-fix from one place.
 
@@ -46,7 +46,7 @@ For:
 - You think data you saved is gone.
 - Something you expected to be there isn't.
 
-For everything else, the Bug Reports panel beats a text thread.
+For everything else, the Feedback panel beats a text thread.
 
 — Justin
 
