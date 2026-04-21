@@ -1416,8 +1416,8 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
       </div>
       <div class="login-sub">Internal use only &nbsp;&middot;&nbsp; Authorized access required</div>
       <div class="login-rule"></div>
-      <label for="login-username" class="sr-only">Email address</label>
-      <input class="pin-input" id="login-username" type="email" placeholder="you@hdgrading.com" autocomplete="username" inputmode="email" spellcheck="false" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <label for="login-username" class="sr-only">Email or username</label>
+      <input class="pin-input" id="login-username" type="text" placeholder="Email or username" autocomplete="username" spellcheck="false" onkeydown="if(event.key==='Enter')doLogin()"/>
       <label for="pin-inp" class="sr-only">Password</label>
       <div style="position:relative;">
         <input class="pin-input" id="pin-inp" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:44px;"/>
@@ -3892,21 +3892,21 @@ function togglePinVisibility(){
 async function doLogin(){
   var errEl=document.getElementById('pin-err');
   if(errEl)errEl.textContent='';
-  var email=(document.getElementById('login-username')?document.getElementById('login-username').value.trim().toLowerCase():'');
+  var identifier=(document.getElementById('login-username')?document.getElementById('login-username').value.trim().toLowerCase():'');
   var pin=document.getElementById('pin-inp').value;
   var btn=document.querySelector('.pin-btn');
   if(btn){btn.disabled=true;btn.textContent='Checking...';}
   function done(){if(btn){btn.disabled=false;btn.textContent='Access Tool';}}
-  if(!email){if(errEl)errEl.textContent='Please enter your email.';done();return;}
+  if(!identifier){if(errEl)errEl.textContent='Please enter your email or username.';done();return;}
   if(!pin){if(errEl)errEl.textContent='Please enter your password.';done();return;}
-  if(!/@hdgrading\.com$/.test(email)){if(errEl)errEl.textContent='Please use your @hdgrading.com email.';done();return;}
+  if(identifier.indexOf('@')>=0 && !/@hdgrading\.com$/.test(identifier)){if(errEl)errEl.textContent='Please use your @hdgrading.com email.';done();return;}
   try{
-    var r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:email,password:pin})});
+    var r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:identifier,password:pin})});
     var d=await r.json();
     if(d.ok){
       window._userRole=d.role||'user';
-      window._userName=d.full_name||email;
-      window._userUsername=d.username||email;
+      window._userName=d.full_name||identifier;
+      window._userUsername=d.username||identifier;
       window._lastLogin=d.last_login||null;
       window._userEmail=d.email||'';
       window._userPhone=d.phone||'';

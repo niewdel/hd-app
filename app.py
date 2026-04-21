@@ -184,29 +184,36 @@ def index():
 @app.route('/auth/login', methods=['POST'])
 def login():
     data = request.get_json() or {}
-    email = str(data.get('username', data.get('email', ''))).strip().lower()
+    identifier = str(data.get('username', data.get('email', ''))).strip().lower()
     password = str(data.get('password', data.get('pin', ''))).strip()
 
-    # Enforce @hdgrading.com domain
-    if not validate_hd_email(email):
-        return jsonify({'error': 'Please use your @hdgrading.com email'}), 401
+    # Allow either @hdgrading.com email or a plain short username.
+    is_email = '@' in identifier
+    if is_email:
+        if not validate_hd_email(identifier):
+            return jsonify({'error': 'Please use your @hdgrading.com email'}), 401
+        lookup_col = 'email'
+    else:
+        if not identifier or len(identifier) > 64:
+            return jsonify({'error': 'Incorrect email or password'}), 401
+        lookup_col = 'username'
 
-    # Rate limit: 5 attempts per IP+email per 10 min
+    # Rate limit: 5 attempts per IP+identifier per 10 min
     ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip() or 'unknown'
-    rl_key = f'login:{ip}:{email}'
+    rl_key = f'login:{ip}:{identifier}'
     allowed, retry = rate_limit_check(rl_key, max_attempts=5, window_s=600)
     if not allowed:
         return jsonify({'error': f'Too many attempts. Try again in {retry} seconds.'}), 429
 
     try:
-        r = http.get(sb_url('hd_users', '?' + _sb_eq('username', email) + '&' + 'active=eq.true&' + 'limit=1'),
+        r = http.get(sb_url('hd_users', '?' + _sb_eq(lookup_col, identifier) + '&' + 'active=eq.true&' + 'limit=1'),
                      headers=sb_headers(), timeout=5)
         if r.status_code != 200:
             return jsonify({'error': 'Database connection error. Please try again.'}), 503
         rows = r.json()
         if not rows:
             # Generic error — no user enumeration
-            log_access(email, '', 'login', False)
+            log_access(identifier, '', 'login', False)
             return jsonify({'error': 'Incorrect email or password'}), 401
         user = rows[0]
 
@@ -262,7 +269,7 @@ def login():
             except Exception:
                 pass
             rate_limit_record_failure(rl_key, window_s=600)
-            log_access(email, '', 'login', False)
+            log_access(identifier, '', 'login', False)
             return jsonify({'error': 'Incorrect email or password'}), 401
     except http.exceptions.ConnectionError:
         return jsonify({'error': 'Cannot reach database. Check your connection.'}), 503
@@ -874,24 +881,27 @@ def update_user(uid):
 def _cascade_username(old, new):
     """Update username references across tables when a user is renamed."""
     h = sb_headers()
-    try:
-        # hd_notifications: recipient
-        http.patch(sb_url('hd_notifications', '?' + _sb_eq('recipient', old)), headers=h,
-                   json={'recipient': new}, timeout=5)
-        # hd_notifications: created_by
-        http.patch(sb_url('hd_notifications', '?' + _sb_eq('created_by', old)), headers=h,
-                   json={'created_by': new}, timeout=5)
-        # hd_access_log: username
-        http.patch(sb_url('hd_access_log', '?' + _sb_eq('username', old)), headers=h,
-                   json={'username': new}, timeout=5)
-        # proposals: created_by
-        http.patch(sb_url('proposals', '?' + _sb_eq('created_by', old)), headers=h,
-                   json={'created_by': new}, timeout=5)
-        # projects: created_by
-        http.patch(sb_url('projects', '?' + _sb_eq('created_by', old)), headers=h,
-                   json={'created_by': new}, timeout=5)
-    except Exception:
-        pass  # Best-effort — don't fail the user update
+    # Each entry: (table, column)
+    targets = [
+        ('hd_notifications',  'recipient'),
+        ('hd_notifications',  'created_by'),
+        ('hd_access_log',     'username'),
+        ('proposals',         'created_by'),
+        ('projects',          'created_by'),
+        ('hd_tasks',          'created_by'),
+        ('hd_tasks',          'assigned_to'),
+        ('hd_reminders',      'created_by'),
+        ('hd_reminders',      'assigned_to'),
+        ('hd_bug_reports',    'submitted_by'),
+        ('change_orders',     'created_by'),
+        ('hd_email_log',      'sender_username'),
+    ]
+    for table, col in targets:
+        try:
+            http.patch(sb_url(table, '?' + _sb_eq(col, old)),
+                       headers=h, json={col: new}, timeout=5)
+        except Exception:
+            pass  # Best-effort — don't fail the rename
 
 
 @app.route('/admin/users/<int:uid>', methods=['DELETE'])
