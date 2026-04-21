@@ -5504,10 +5504,11 @@ function _renderWxHero(el,data,idx){
   var uvL=uvLabel(uv);
   var windD=isToday?windDir(cur.wind_direction_10m||0):'';
   var tod=_wxTimeOfDay(data);
-  // Real footage video loop for every weather category. Mixkit pack, all stored
-  // locally under /static/wx/. _wxVideoUrl maps (code, tod) to the right file.
-  var videoUrl=_wxVideoUrl(code,tod);
-  var bgHtml='<video autoplay loop muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;background:#1a1f2a;"><source src="'+videoUrl+'" type="video/mp4"></video>';
+  // Static photo background per weather + time-of-day. Subtle ken-burns
+  // zoom adds a touch of life. Videos can be reintroduced per-category
+  // later by swapping _wxPhotoUrl for an alternate helper.
+  var photoUrl=_wxPhotoUrl(code,tod);
+  var bgHtml='<div style="position:absolute;inset:0;z-index:0;background-image:url(\''+photoUrl+'\');background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#1a1f2a;animation:wxKenBurns 30s ease-in-out infinite alternate;"></div>';
   // Rain pill — uses selected day's precip prob
   var rain=daily.precipitation_probability_max?(daily.precipitation_probability_max[idx]||0):0;
   var rainPill='';
@@ -13083,18 +13084,31 @@ function _wxCodeToCat(code){
   if(code>=95)return 'storm';
   return 'clear';
 }
-function _wxVideoUrl(code, tod){
+var WX_PHOTOS = {
+  'clear-day':   'https://images.unsplash.com/photo-1601297183305-6df142704ea2?w=1600&h=600&fit=crop&q=80&auto=format',
+  'clear-night': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1600&h=600&fit=crop&q=80&auto=format',
+  'partly-day':  'https://images.unsplash.com/photo-1505533321630-975218a5f66f?w=1600&h=600&fit=crop&q=80&auto=format',
+  'partly-night':'https://images.unsplash.com/photo-1517299321609-52687d1bc55a?w=1600&h=600&fit=crop&q=80&auto=format',
+  'overcast':    'https://images.unsplash.com/photo-1499956827185-0d63ee78a910?w=1600&h=600&fit=crop&q=80&auto=format',
+  'fog':         'https://images.unsplash.com/photo-1543968996-ee822b8176ba?w=1600&h=600&fit=crop&q=80&auto=format',
+  'drizzle':     'https://images.unsplash.com/photo-1428592953211-077101b2021b?w=1600&h=600&fit=crop&q=80&auto=format',
+  'rain':        'https://images.unsplash.com/photo-1493314894560-5c412a56c17c?w=1600&h=600&fit=crop&q=80&auto=format',
+  'heavy-rain':  'https://images.unsplash.com/photo-1429552077091-836152271555?w=1600&h=600&fit=crop&q=80&auto=format',
+  'snow':        'https://images.unsplash.com/photo-1457269449834-928af64c684d?w=1600&h=600&fit=crop&q=80&auto=format',
+  'storm':       'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=1600&h=600&fit=crop&q=80&auto=format'
+};
+function _wxPhotoUrl(code, tod){
   var cat = _wxCodeToCat(code);
-  if(cat === 'clear')    return tod==='night' ? '/static/wx/wx-clear-night.mp4'  : '/static/wx/wx-clear-day.mp4';
-  if(cat === 'partly')   return tod==='night' ? '/static/wx/wx-partly-night.mp4' : '/static/wx/wx-partly-day.mp4';
-  if(cat === 'overcast') return '/static/wx/wx-overcast.mp4';
-  if(cat === 'fog')      return '/static/wx/wx-fog.mp4';
-  if(cat === 'drizzle')  return '/static/wx/wx-rain.mp4';
-  if(cat === 'rain')     return '/static/wx/wx-rain.mp4';
-  if(cat === 'heavyrain')return '/static/wx/wx-rain.mp4';
-  if(cat === 'snow')     return '/static/wx/wx-snow.mp4';
-  if(cat === 'storm')    return '/static/wx/wx-storm.mp4';
-  return '/static/wx/wx-clear-day.mp4';
+  if(cat === 'clear')    return tod==='night' ? WX_PHOTOS['clear-night']  : WX_PHOTOS['clear-day'];
+  if(cat === 'partly')   return tod==='night' ? WX_PHOTOS['partly-night'] : WX_PHOTOS['partly-day'];
+  if(cat === 'overcast') return WX_PHOTOS['overcast'];
+  if(cat === 'fog')      return WX_PHOTOS['fog'];
+  if(cat === 'drizzle')  return WX_PHOTOS['drizzle'];
+  if(cat === 'rain')     return WX_PHOTOS['rain'];
+  if(cat === 'heavyrain')return WX_PHOTOS['heavy-rain'];
+  if(cat === 'snow')     return WX_PHOTOS['snow'];
+  if(cat === 'storm')    return WX_PHOTOS['storm'];
+  return WX_PHOTOS['clear-day'];
 }
 function _wxTimeOfDay(data){
   // Returns one of 'dawn','day','dusk','night' for the SELECTED day's date.
