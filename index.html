@@ -15,6 +15,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="/driver.css"/>
+<script src="/driver.js.iife.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;color-scheme:light dark;}
@@ -1596,6 +1598,10 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
                 <span>App Settings</span>
               </button>
+              <button class="actions-menu-item" onclick="closeProfileMenu();openHelpModal();">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Help &amp; Tour</span>
+              </button>
               <button class="actions-menu-item" onclick="toggleThemeFromMenu()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
                 <span>Toggle theme</span>
@@ -3141,6 +3147,71 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
   </div>
 </div>
 
+<!-- Help / Welcome Modal -->
+<div class="modal-overlay hidden" id="help-modal" role="dialog" aria-labelledby="help-modal-title" aria-modal="true">
+  <div class="modal" style="max-width:720px;max-height:80vh;display:flex;flex-direction:column;">
+    <div class="modal-hdr">
+      <h3 id="help-modal-title">Welcome to the HD Platform</h3>
+      <button class="btn-ico" onclick="closeHelpModal()" aria-label="Close" style="font-size:18px;">&#10005;</button>
+    </div>
+    <div class="modal-body" style="padding:18px 22px;overflow-y:auto;flex:1;line-height:1.6;font-size:13.5px;">
+      <p style="margin-bottom:14px;color:var(--txt-secondary);">
+        HD Hauling &amp; Grading's internal operations platform. Everything used to run the business &mdash; proposals, CRM, project pipeline, scheduling, work orders, job costing, exports, reporting, admin. Every panel you see is live production data.
+      </p>
+
+      <div style="font-family:var(--font-display);font-weight:700;font-size:14px;margin:18px 0 8px;color:var(--blk);">What I want from you</div>
+      <p style="margin-bottom:8px;">
+        Walk every panel. Build a test proposal. Move it through the pipeline (New Lead &rarr; Estimate Sent &rarr; Approved &rarr; Scheduled). Export a PDF. Add a test client. Log a test work order. Then go through the panels you'd actually use day-to-day and tell me what's confusing, what's missing, what you'd change.
+      </p>
+      <p style="margin-bottom:6px;">The surfaces where your input matters most:</p>
+      <ul style="padding-left:20px;margin-bottom:14px;">
+        <li><b>Dashboard</b> &mdash; does the top-of-screen view feel like the right summary?</li>
+        <li><b>Build Proposal</b> &mdash; does the flow from blank &rarr; sent proposal make sense?</li>
+        <li><b>Pipeline</b> &mdash; does it show what you need to see to run the business?</li>
+        <li><b>Reports &amp; Analytics</b> &mdash; anything missing for the decisions you actually make?</li>
+      </ul>
+
+      <div style="font-family:var(--font-display);font-weight:700;font-size:14px;margin:18px 0 8px;color:var(--blk);">What's intentionally polish-pending</div>
+      <p style="margin-bottom:8px;">
+        We did a full hardening sweep the night before handoff. A few things were explicitly deferred so you don't flag them as bugs:
+      </p>
+      <ul style="padding-left:20px;margin-bottom:14px;">
+        <li><b>Full visual redesign</b> &mdash; direction is locked in (Field Ops Premium tone with Command Center density and Executive Industrial polish on exports), but the rollout is multi-week. What you see today is the current system, not the redesign.</li>
+        <li><b>Mobile UX</b> &mdash; the app works on mobile but hasn't had a dedicated mobile pass. Tables and dense views will feel cramped on a phone. iPad is fine.</li>
+        <li><b>ICS calendar feed tokens</b> &mdash; per-user rotation is deferred. Single shared token still powers the schedule export feed.</li>
+        <li><b>File-upload magic-byte validation</b> &mdash; deferred (no execution risk; static-asset serving only).</li>
+        <li><b>Weather widget videos</b> &mdash; first-load takes a moment to fetch the video; subsequent loads are instant from browser cache.</li>
+      </ul>
+
+      <div style="font-family:var(--font-display);font-weight:700;font-size:14px;margin:18px 0 8px;color:var(--blk);">How to report a bug or an idea</div>
+      <p style="margin-bottom:14px;">
+        In-app <b>Bug Reports</b> panel. Hit "Submit a Bug", type a short description, set severity, attach a screenshot if relevant, submit. That goes into the queue I review. This is faster than texting because I can triage and code-fix from one place.
+      </p>
+
+      <div style="font-family:var(--font-display);font-weight:700;font-size:14px;margin:18px 0 8px;color:var(--blk);">When to text me directly</div>
+      <ul style="padding-left:20px;margin-bottom:14px;">
+        <li>You can't log in at all.</li>
+        <li>You see a stack trace or a 500 error page.</li>
+        <li>You think data you saved is gone.</li>
+        <li>Something you expected to be there isn't.</li>
+      </ul>
+      <p style="margin-bottom:14px;color:var(--txt-secondary);">
+        For everything else, the Bug Reports panel beats a text thread.
+      </p>
+
+      <div style="margin-top:18px;padding:12px 14px;background:var(--bg-sub);border:1px solid var(--bdr);border-radius:var(--rad-s);font-size:12.5px;color:var(--txt-secondary);">
+        <b style="color:var(--blk);">Tip:</b> You can re-open this Help screen any time from the user menu in the top right (your avatar &rarr; Help &amp; Tour).
+      </div>
+
+      <p style="margin-top:18px;font-style:italic;color:var(--txt-secondary);">&mdash; Justin</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-sec btn-sm" onclick="closeHelpModal()">Close</button>
+      <button class="btn btn-red btn-sm" onclick="startHelpTour()">Take the Tour</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /app -->
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -3852,6 +3923,7 @@ async function doLogin(){
       renderUserChrome();
       initAutoLogout();
       _fetchBootData();
+      _maybeShowWelcomeOnFirstLogin();
     } else {
       if(errEl)errEl.textContent=d.error||'Incorrect email or password.';
       document.getElementById('pin-inp').value='';
@@ -14890,6 +14962,59 @@ function copyCalFeedUrl(){
   }
 }
 
+// -- Help Modal + Interactive Tour ---------------------------------------------
+function openHelpModal(){
+  var m=document.getElementById('help-modal');
+  if(m)m.classList.remove('hidden');
+}
+function closeHelpModal(){
+  var m=document.getElementById('help-modal');
+  if(m)m.classList.add('hidden');
+}
+function _maybeShowWelcomeOnFirstLogin(){
+  try{
+    if(!localStorage.getItem('hd_welcome_seen')){
+      setTimeout(openHelpModal,800);
+      localStorage.setItem('hd_welcome_seen','1');
+    }
+  }catch(_){}
+}
+function startHelpTour(){
+  closeHelpModal();
+  if(typeof window.driver==='undefined'||!window.driver.js){
+    if(typeof toast==='function')toast('Tour library not loaded','err');
+    return;
+  }
+  var driverFn=window.driver.js.driver;
+  var steps=[
+    {element:'[aria-label="Dashboard"]',popover:{title:'Dashboard',description:'Your operations command center. Weather, today\'s scheduled jobs, the bid calendar, and incoming leads &mdash; all in one view.',side:'right'}},
+    {element:'[aria-label="Projects"]',popover:{title:'Projects',description:'Pipeline (Kanban), list, bid calendar, and map views of every job. Move proposals through stages &mdash; New Lead &rarr; Estimate Sent &rarr; Approved &rarr; Scheduled.',side:'right'}},
+    {element:'[aria-label="Schedule"]',popover:{title:'Schedule',description:'Day, week, and month views of all crew assignments. Drag work orders onto days to assign. Weather is pinned at the top so you can see what\'s coming.',side:'right'}},
+    {element:'[aria-label="Contacts"]',popover:{title:'Contacts',description:'Clients and subcontractors. Each record stores their full history of proposals, projects, and notes.',side:'right'}},
+    {element:'[aria-label="Reports"]',popover:{title:'Reports & Analytics',description:'Operational, financial, and crew reports. Job costing, sales pipeline, time-tracked hours, win/loss ratios.',side:'right'}},
+    {element:'[aria-label="App Settings"]',popover:{title:'Settings',description:'Material prices, crew rates, item library, company info &mdash; the operational config that powers proposals and reports.',side:'right'}},
+    {element:'[aria-label="Admin"]',popover:{title:'Admin',description:'Company info and other admin-level controls.',side:'right'}},
+    {element:'[aria-label="Bug Report"]',popover:{title:'Spotted something?',description:'Use Bug Report to send Justin a screenshot + description. Faster than texting &mdash; he can triage and fix from one queue.',side:'right'}},
+    {element:'.topbar-account-btn',popover:{title:'Your Account',description:'Open this menu anytime to access your profile, change your password, toggle theme, re-launch this tour, or sign out.',side:'left'}}
+  ];
+  // Filter out steps whose target isn't in the DOM (e.g. role-hidden nav items)
+  steps=steps.filter(function(s){return !!document.querySelector(s.element);});
+  if(!steps.length){if(typeof toast==='function')toast('No tour targets visible','err');return;}
+  var tour=driverFn({
+    showProgress:true,
+    progressText:'Step {{current}} of {{total}}',
+    nextBtnText:'Next \u2192',
+    prevBtnText:'\u2190 Back',
+    doneBtnText:'Done',
+    overlayColor:'rgba(0,0,0,0.7)',
+    stagePadding:6,
+    stageRadius:8,
+    onDestroyStarted:function(){tour.destroy();},
+    steps:steps
+  });
+  tour.drive();
+}
+
 // Startup: check auth on every page load so _userRole is set from server
 (async function(){
   try{
@@ -14915,6 +15040,7 @@ function copyCalFeedUrl(){
       initAutoLogout();
       // Ensure dashboard loads even if boot partially failed
       _fetchBootData();
+      _maybeShowWelcomeOnFirstLogin();
     }
   }catch(e){}
 })();
