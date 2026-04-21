@@ -682,6 +682,12 @@ body.dark .ops-utility-title{color:#E4E4E7;}
 #panel-reports .ops-project-layout,
 #panel-schedule .ops-schedule-grid{grid-template-columns:minmax(0,1fr);}
 
+/* Kanban horizontal-scroll fade affordance — hints there's more to scroll right */
+#proj-pipeline-view{
+  -webkit-mask-image: linear-gradient(to right, black 95%, transparent);
+          mask-image: linear-gradient(to right, black 95%, transparent);
+}
+
 /* Project card redesign */
 .mc-proj-card{
   display:flex;align-items:center;gap:14px;padding:14px 16px;
@@ -1676,6 +1682,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           <div class="card-hdr">
             <span class="card-title">Project Information</span>
             <span id="proposal-doc-badge" style="display:none;background:var(--red-soft);color:var(--red);padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700;font-family:monospace;letter-spacing:.5px;"></span>
+            <span id="proposal-lock-badge" style="display:none;padding:4px 10px;background:var(--red);color:#fff;border-radius:4px;font-size:11px;font-weight:600;letter-spacing:0.4px;">LOCKED &middot; READ-ONLY</span>
           </div>
           <div class="card-body">
             <div class="fg fg2" style="margin-bottom:11px;">
@@ -2418,7 +2425,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                 <button class="btn btn-primary btn-sm" onclick="saveMatPrices()">Save Prices</button>
                 <button class="btn btn-sec btn-sm" onclick="openAddMaterialForm()">+ Add Material</button>
-                <button class="btn btn-sec btn-sm" onclick="resetMatPrices()">Reset Defaults</button>
+                <button class="btn btn-sec btn-sm" onclick="resetMatPrices()">Restore Defaults</button>
                 <span id="mat-prices-updated" style="font-size:11px;color:var(--dgray);"></span>
               </div>
               <div id="add-mat-form" style="display:none;margin-top:12px;padding:12px;background:var(--lgray);border-radius:6px;border:1px solid var(--bdr);">
@@ -6164,6 +6171,12 @@ function _renderProjectSummaryInner(proj){
   if(psCO&&canSeePricing()){
     var coList=snap.change_orders||[];
     psCO.innerHTML='';
+    if(!coList.length){
+      var coEmpty=document.createElement('div');
+      coEmpty.style.cssText='padding:16px;text-align:center;color:var(--muted,var(--dgray));font-size:13px;';
+      coEmpty.textContent='No change orders for this proposal.';
+      psCO.appendChild(coEmpty);
+    }
     if(coList.length){
       coList.forEach(function(co,idx){
         var card=document.createElement('div');
@@ -11327,13 +11340,36 @@ function renderProjectMap(){
 function filterProjects(q){
   q=(q||'').toLowerCase();
   var stageFilter=(document.getElementById('proj-stage-filter')||{}).value||'';
-  document.querySelectorAll('#projects-list > div').forEach(function(card){
+  var list=document.getElementById('projects-list');
+  if(!list)return;
+  // Remove any existing filter-empty banner before evaluating
+  var prevBanner=document.getElementById('proj-filter-empty');
+  if(prevBanner)prevBanner.remove();
+  var visibleCount=0,totalCount=0;
+  list.querySelectorAll(':scope > div').forEach(function(card){
+    if(card.id==='proj-filter-empty')return;
+    totalCount++;
     var text=(card.textContent||'').toLowerCase();
     var cardStage=card.dataset.stage||'';
     var matchText=!q||text.indexOf(q)>-1;
     var matchStage=!stageFilter||cardStage===stageFilter;
-    card.style.display=(matchText&&matchStage)?'':'none';
+    var show=matchText&&matchStage;
+    card.style.display=show?'':'none';
+    if(show)visibleCount++;
   });
+  // Show filter-empty banner only when there ARE projects but none match
+  if(totalCount>0 && visibleCount===0 && (q||stageFilter)){
+    var banner=document.createElement('div');
+    banner.id='proj-filter-empty';
+    banner.style.cssText='padding:24px;text-align:center;color:var(--muted,var(--dgray));font-size:13px;';
+    banner.innerHTML='No projects match this filter. <button class="btn btn-sec btn-sm" style="margin-left:8px;" onclick="clearProjectFilters()">Clear filters</button>';
+    list.appendChild(banner);
+  }
+}
+function clearProjectFilters(){
+  var s=document.getElementById('projects-search');if(s)s.value='';
+  var sf=document.getElementById('proj-stage-filter');if(sf)sf.value='';
+  filterProjects('');
 }
 function filterClients(q){
   q=(q||'').toLowerCase();
@@ -11985,6 +12021,15 @@ function updateClockTimer(){
 function toggleWOClock(){
   var btn=document.getElementById('wo-clock-btn');
   var gpsEl=document.getElementById('wo-clock-gps');
+  if(!btn||!gpsEl){toast('Time clock UI not ready','err');return;}
+  // Defensive: button text reflects intent. If user is trying to clock OUT but
+  // there is no active entry (state corruption / race), surface it instead of
+  // silently rolling forward into a clock-IN.
+  var btnIntent=(btn.textContent||'').toLowerCase();
+  if(btnIntent.indexOf('clock out')>-1 && !_woActiveEntry){
+    toast('No active time entry to clock out.','err');
+    return;
+  }
   btn.disabled=true;
   gpsEl.textContent='Getting GPS location...';
   getGPSLocation(function(lat,lng){
@@ -15211,8 +15256,13 @@ var _editingBugId=null;
 
 // ── Proposal Approval & Locking ────────────────────────────────
 window._proposalLocked=false;
+function _updateProposalLockBadge(){
+  var badge=document.getElementById('proposal-lock-badge');
+  if(badge)badge.style.display=window._proposalLocked?'':'none';
+}
 function _lockProposal(approvedBy,approvedAt){
   window._proposalLocked=true;
+  _updateProposalLockBadge();
   var existing=document.getElementById('proposal-lock-banner');
   if(existing)existing.remove();
   var banner=document.createElement('div');
@@ -15240,6 +15290,7 @@ function _lockProposal(approvedBy,approvedAt){
 }
 function _unlockProposal(){
   window._proposalLocked=false;
+  _updateProposalLockBadge();
   var banner=document.getElementById('proposal-lock-banner');if(banner)banner.remove();
   document.querySelectorAll('#panel-build .locked-input').forEach(function(el){
     el.removeAttribute('disabled');el.classList.remove('locked-input');

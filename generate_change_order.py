@@ -38,9 +38,19 @@ TM = 1.05 * inch
 BM = 0.6  * inch
 
 
+def _num(v, default=0.0):
+    """Coerce ``v`` to float, defending against None / strings / bad input."""
+    try:
+        if v is None:
+            return default
+        return float(v)
+    except (TypeError, ValueError):
+        return default
+
+
 def fi(n):
     """Format a number as $X,XXX.XX (without the dollar sign)."""
-    return '{:,.2f}'.format(n)
+    return '{:,.2f}'.format(_num(n))
 
 
 def S():
@@ -333,10 +343,10 @@ def items_table(items, st):
 
 def cost_summary(data, st):
     cw = W - inch
-    orig_amt     = data.get('orig_contract_amount', 0)
-    add_total    = data.get('add_total', 0)
-    deduct_total = data.get('deduct_total', 0)
-    revised      = data.get('revised_total', orig_amt)
+    orig_amt     = _num(data.get('orig_contract_amount', 0))
+    add_total    = _num(data.get('add_total', 0))
+    deduct_total = _num(data.get('deduct_total', 0))
+    revised      = _num(data.get('revised_total', orig_amt), default=orig_amt)
 
     lbl_s = ParagraphStyle('csl', fontName='Helvetica', fontSize=9, textColor=DGRAY)
     val_s = ParagraphStyle('csv', fontName='Helvetica', fontSize=9, textColor=BLACK, alignment=TA_RIGHT)

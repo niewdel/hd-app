@@ -9,6 +9,14 @@ from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 from reportlab.pdfgen import canvas as pdfcanvas
 from reportlab.platypus.flowables import Flowable
 
+
+def _truncate(txt, n=150):
+    """Cap free-form text at ``n`` chars to avoid pricing-table overflow."""
+    if not txt:
+        return ''
+    s = str(txt)
+    return s if len(s) <= n else s[:n - 1] + '…'
+
 RED     = colors.HexColor('#CC0000')
 BLACK   = colors.HexColor('#000000')
 WHITE   = colors.HexColor('#FFFFFF')
@@ -908,9 +916,9 @@ def build(data, out_path):
         opt_data = [['Option', 'Description', 'Total']]
         for opt in pricing_opts:
             opt_data.append([
-                opt.get('name', ''),
-                opt.get('description', ''),
-                '${:,.2f}'.format(float(opt.get('total', 0)))
+                _truncate(opt.get('name', ''), 60),
+                _truncate(opt.get('description', ''), 150),
+                '${:,.2f}'.format(float(opt.get('total', 0) or 0))
             ])
         opt_tbl = Table(opt_data, colWidths=[1.8*inch, 3.5*inch, 1.7*inch])
         opt_tbl.setStyle(TableStyle([
