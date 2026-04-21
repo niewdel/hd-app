@@ -820,7 +820,7 @@ def create_user():
             return jsonify({'ok':True,'user':user})
         return jsonify({'ok':False,'error':r.text}), 400
     except Exception as e:
-        return jsonify({'ok':False,'error':str(e)}), 500
+        return _safe_error(e, context='admin/users.create')
 
 @app.route('/admin/users/<int:uid>', methods=['PATCH'])
 @require_dev
@@ -868,7 +868,7 @@ def update_user(uid):
 
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok':False,'error':str(e)}), 500
+        return _safe_error(e, context='admin/users.update')
 
 
 def _cascade_username(old, new):
@@ -942,7 +942,7 @@ def get_logs():
         r = http.get(sb_url('hd_access_log', params), headers=sb_headers(), timeout=5)
         return jsonify({'ok':True,'logs':r.json() if r.status_code==200 else []})
     except Exception as e:
-        return jsonify({'ok':False,'error':str(e)}), 500
+        return _safe_error(e, context='admin/logs')
 
 @app.route('/admin/archived')
 @require_dev
@@ -2303,7 +2303,8 @@ def submit_lead():
             pass  # Don't fail the lead submission if notification fails
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        print(f'[submit_lead] {type(e).__name__}: {e}')
+        return jsonify({'ok': False, 'error': 'Could not save lead. Please try again.'}), 500
 
 @app.route('/leads/list')
 @require_auth
