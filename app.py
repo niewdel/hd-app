@@ -65,7 +65,7 @@ def set_security_headers(response):
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: blob: https:; "
         "font-src 'self' data:; "
-        "connect-src 'self' https://azznfkboiwayifhhcguz.supabase.co; "
+        "connect-src 'self' https://azznfkboiwayifhhcguz.supabase.co https://api.open-meteo.com; "
         "frame-ancestors 'none'; "
         "base-uri 'self'; "
         "form-action 'self'"
