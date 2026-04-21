@@ -72,10 +72,22 @@ def set_security_headers(response):
     )
     if request.is_secure:
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    origin = request.headers.get('Origin', '')
+    allowed = 'https://web-production-e19b3.up.railway.app'
+    if origin == allowed:
+        response.headers['Access-Control-Allow-Origin'] = allowed
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
     return response
 
 def sb_url(table, params=''):
     return f'{SUPABASE_URL}/rest/v1/{table}{params}'
+
+from urllib.parse import quote as _url_quote
+
+def _sb_eq(column, value):
+    """Build a safe PostgREST 'column=eq.<value>' filter with proper URL encoding.
+    Prevents query-param injection via unescaped & or ? in value."""
+    return '{}=eq.{}'.format(column, _url_quote(str(value), safe=''))
 
 def hash_password(pw):
     """Shim: legacy name kept so existing callers (user-creation routes) still work.
@@ -116,6 +128,15 @@ def log_access(username, full_name, action='login', success=True):
     except Exception:
         pass
 
+def _safe_error(e, context=''):
+    """Log exception internally; return a generic client-safe message.
+    Use in authed routes where leaking str(e) is undesirable."""
+    try:
+        app.logger.exception('[%s] %s', context or 'route', e)
+    except Exception:
+        pass
+    return jsonify({'error': 'Internal error. Check logs.'}), 500
+
 def require_auth(f):
     @functools.wraps(f)
     def decorated(*args, **kwargs):
@@ -144,6 +165,18 @@ def require_dev(f):
         return f(*args, **kwargs)
     return decorated
 
+def _owns_or_admin(record_created_by):
+    """Return True if the current session owns the record or is admin/dev.
+    Null-safe — records with null created_by are owned by 'estimates@hdgrading.com'
+    after the 2026-04-20 backfill, so null here means not-yet-migrated and
+    we fall through to admin/dev check."""
+    role = session.get('role', '')
+    if role in ('admin', 'dev'):
+        return True
+    if record_created_by and record_created_by == session.get('username'):
+        return True
+    return False
+
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
@@ -166,7 +199,7 @@ def login():
         return jsonify({'error': f'Too many attempts. Try again in {retry} seconds.'}), 429
 
     try:
-        r = http.get(sb_url('hd_users', f'?username=eq.{email}&active=eq.true&limit=1'),
+        r = http.get(sb_url('hd_users', '?' + _sb_eq('username', email) + '&' + 'active=eq.true&' + 'limit=1'),
                      headers=sb_headers(), timeout=5)
         if r.status_code != 200:
             return jsonify({'error': 'Database connection error. Please try again.'}), 503
@@ -192,7 +225,7 @@ def login():
             # Seamless migration: legacy SHA-256 hashes get upgraded to bcrypt on successful login
             if needs_rehash:
                 try:
-                    http.patch(sb_url('hd_users', f'?id=eq.{user["id"]}'),
+                    http.patch(sb_url('hd_users', '?' + _sb_eq('id', user["id"])),
                                headers={**sb_headers(), 'Prefer': 'return=minimal'},
                                json={'pin_hash': bcrypt_hash_password(password),
                                      'password_updated_at': datetime.utcnow().isoformat()},
@@ -201,7 +234,7 @@ def login():
                     pass
             # Reset failed-login counter + stamp last_login_at
             try:
-                http.patch(sb_url('hd_users', f'?id=eq.{user["id"]}'),
+                http.patch(sb_url('hd_users', '?' + _sb_eq('id', user["id"])),
                            headers={**sb_headers(), 'Prefer': 'return=minimal'},
                            json={'failed_login_count': 0, 'locked_until': None,
                                  'last_login_at': datetime.utcnow().isoformat()},
@@ -223,7 +256,7 @@ def login():
                 update = {'failed_login_count': new_count}
                 if new_count >= 10:
                     update['locked_until'] = (datetime.utcnow() + timedelta(minutes=15)).isoformat()
-                http.patch(sb_url('hd_users', f'?id=eq.{user["id"]}'),
+                http.patch(sb_url('hd_users', '?' + _sb_eq('id', user["id"])),
                            headers={**sb_headers(), 'Prefer': 'return=minimal'},
                            json=update, timeout=5)
             except Exception:
@@ -256,7 +289,7 @@ def change_password():
         return jsonify({'ok': False, 'error': 'Password must be at least 8 characters'}), 400
     username = session.get('username', '')
     try:
-        r = http.get(sb_url('hd_users', f'?username=eq.{username}&limit=1'), headers=sb_headers(), timeout=5)
+        r = http.get(sb_url('hd_users', '?' + _sb_eq('username', username) + '&' + 'limit=1'), headers=sb_headers(), timeout=5)
         if r.status_code != 200 or not r.json():
             return jsonify({'ok': False, 'error': 'User not found'}), 404
         user = r.json()[0]
@@ -265,7 +298,7 @@ def change_password():
             return jsonify({'ok': False, 'error': 'Current password is incorrect'}), 401
         update = {'pin_hash': bcrypt_hash_password(new_pw),
                   'password_updated_at': datetime.utcnow().isoformat()}
-        http.patch(sb_url('hd_users', f'?username=eq.{username}'), headers={**sb_headers(), 'Prefer': 'return=minimal'}, json=update, timeout=5)
+        http.patch(sb_url('hd_users', '?' + _sb_eq('username', username)), headers={**sb_headers(), 'Prefer': 'return=minimal'}, json=update, timeout=5)
         return jsonify({'ok': True})
     except Exception as e:
         print(f'[change-password] {type(e).__name__}: {e}')
@@ -294,7 +327,7 @@ def auth_update_profile():
             avatar_data = sanitize_avatar_data(data.get('avatar_data', ''))
             update['avatar_data'] = avatar_data
         r = http.patch(
-            sb_url('hd_users', f'?username=eq.{username}'),
+            sb_url('hd_users', '?' + _sb_eq('username', username)),
             headers={**sb_headers(), 'Prefer': 'return=representation'},
             json=update,
             timeout=5
@@ -317,7 +350,7 @@ def auth_update_profile():
     except ValueError as e:
         return jsonify({'ok': False, 'error': str(e)}), 400
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='auth/profile')
 
 # ââ Proposals âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
@@ -343,7 +376,7 @@ def quotes_save():
         log_access(session.get('username',''), session.get('full_name',''), f'created proposal "{data.get("name","")}"')
         return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='quotes/save')
 
 @app.route('/quotes/update/<int:qid>', methods=['PATCH'])
 @require_auth
@@ -359,12 +392,12 @@ def quotes_update(qid):
             'snap':   snap if isinstance(snap, dict) else json.loads(snap),
             'created_by': session.get('username', ''),
         }
-        r = http.patch(sb_url('proposals', f'?id=eq.{qid}'), headers=sb_headers(), json=payload, timeout=10)
+        r = http.patch(sb_url('proposals', '?' + _sb_eq('id', qid)), headers=sb_headers(), json=payload, timeout=10)
         r.raise_for_status()
         log_access(session.get('username',''), session.get('full_name',''), f'updated proposal "{data.get("name","")}"')
         return jsonify({'ok': True, 'id': qid})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='quotes/update/<int:qid>')
 
 @app.route('/boot/data')
 @require_auth
@@ -387,7 +420,7 @@ def boot_data():
             'proposals': f_pipeline.result()
         })
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='boot/data')
 
 @app.route('/quotes/list')
 @require_auth
@@ -397,39 +430,41 @@ def quotes_list():
         r.raise_for_status()
         return jsonify({'ok': True, 'quotes': r.json()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='quotes/list')
 
 @app.route('/quotes/delete/<int:qid>', methods=['DELETE'])
 @require_auth
 def quotes_delete(qid):
     try:
-        # Get name before deleting for the log
+        # Ownership check: fetch created_by + name in one call
         name = ''
-        try:
-            gr = http.get(sb_url('proposals', f'?id=eq.{qid}&select=name'), headers=sb_headers(), timeout=5)
-            if gr.status_code == 200 and gr.json():
-                name = gr.json()[0].get('name', '')
-        except Exception:
-            pass
+        lookup = http.get(sb_url('proposals', '?' + _sb_eq('id', qid) + '&select=name,created_by'),
+                          headers=sb_admin_headers(), timeout=10)
+        rows = lookup.json() if lookup.ok else []
+        if not rows:
+            return jsonify({'error': 'Not found'}), 404
+        if not _owns_or_admin(rows[0].get('created_by')):
+            return jsonify({'error': 'Not permitted'}), 403
+        name = rows[0].get('name', '') or ''
         r = http.patch(
-            sb_url('proposals', f'?id=eq.{qid}'),
+            sb_url('proposals', '?' + _sb_eq('id', qid)),
             json={'archived': True, 'archived_at': datetime.utcnow().isoformat()},
             headers=sb_headers(), timeout=10
         )
         r.raise_for_status()
         # Cascade delete associated data (change orders, time entries)
         try:
-            http.delete(sb_url('change_orders', f'?proposal_id=eq.{qid}'), headers=sb_headers(), timeout=10)
+            http.delete(sb_url('change_orders', '?' + _sb_eq('proposal_id', qid)), headers=sb_headers(), timeout=10)
         except Exception:
             pass
         try:
-            http.delete(sb_url('hd_time_entries', f'?project_id=eq.{qid}'), headers=sb_headers(), timeout=10)
+            http.delete(sb_url('hd_time_entries', '?' + _sb_eq('project_id', qid)), headers=sb_headers(), timeout=10)
         except Exception:
             pass
         log_access(session.get('username',''), session.get('full_name',''), f'archived proposal "{name}"')
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='quotes/delete/<int:qid>')
 
 # ââ Pipeline ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
@@ -441,7 +476,7 @@ def pipeline_stages():
         r.raise_for_status()
         return jsonify({'ok': True, 'stages': r.json()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='pipeline/stages')
 
 @app.route('/pipeline/list')
 @require_auth
@@ -454,7 +489,7 @@ def pipeline_list():
         r.raise_for_status()
         return jsonify({'ok': True, 'proposals': r.json()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='pipeline/list')
 
 @app.route('/pipeline/move/<int:proposal_id>', methods=['PATCH'])
 @require_auth
@@ -462,7 +497,7 @@ def pipeline_move(proposal_id):
     data = request.get_json() or {}
     try:
         r = http.patch(
-            sb_url('proposals', f'?id=eq.{proposal_id}'),
+            sb_url('proposals', '?' + _sb_eq('id', proposal_id)),
             headers=sb_headers(),
             json={'stage_id': data.get('stage_id')},
             timeout=10
@@ -494,7 +529,7 @@ def pipeline_move(proposal_id):
                 pass
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='pipeline/move/<int:proposal_id>')
 
 @app.route('/proposals/approve/<int:proposal_id>', methods=['POST'])
 @require_auth
@@ -505,7 +540,7 @@ def approve_proposal(proposal_id):
         approvers = ag.json()[0]['value'] if ag.status_code == 200 and ag.json() else []
         if username not in approvers:
             return jsonify({'ok': False, 'error': 'Not authorized to approve'}), 403
-        r = http.get(sb_url('proposals', f'?id=eq.{proposal_id}&select=snap,name'), headers=sb_headers(), timeout=5)
+        r = http.get(sb_url('proposals', '?' + _sb_eq('id', proposal_id) + '&' + 'select=snap,name'), headers=sb_headers(), timeout=5)
         rows = r.json() if r.status_code == 200 else []
         if not rows:
             return jsonify({'ok': False, 'error': 'Not found'}), 404
@@ -522,7 +557,7 @@ def approve_proposal(proposal_id):
         update = {'snap': json.dumps(snap) if isinstance(snap, dict) else snap}
         if approved_stage_id:
             update['stage_id'] = approved_stage_id
-        http.patch(sb_url('proposals', f'?id=eq.{proposal_id}'), headers=sb_headers(), json=update, timeout=10)
+        http.patch(sb_url('proposals', '?' + _sb_eq('id', proposal_id)), headers=sb_headers(), json=update, timeout=10)
         # Notify all users
         proposal_name = rows[0].get('name', f'Project #{proposal_id}')
         try:
@@ -546,7 +581,7 @@ def approve_proposal(proposal_id):
         log_access(username, session.get('full_name',''), f'approved proposal "{proposal_name}"')
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='proposals/approve/<int:proposal_id>')
 
 @app.route('/proposals/pull-back/<int:proposal_id>', methods=['POST'])
 @require_auth
@@ -557,7 +592,7 @@ def pull_back_proposal(proposal_id):
         approvers = ag.json()[0]['value'] if ag.status_code == 200 and ag.json() else []
         if username not in approvers:
             return jsonify({'ok': False, 'error': 'Not authorized'}), 403
-        r = http.get(sb_url('proposals', f'?id=eq.{proposal_id}&select=snap,name'), headers=sb_headers(), timeout=5)
+        r = http.get(sb_url('proposals', '?' + _sb_eq('id', proposal_id) + '&' + 'select=snap,name'), headers=sb_headers(), timeout=5)
         rows = r.json() if r.status_code == 200 else []
         if not rows:
             return jsonify({'ok': False, 'error': 'Not found'}), 404
@@ -574,12 +609,12 @@ def pull_back_proposal(proposal_id):
         update = {'snap': json.dumps(snap) if isinstance(snap, dict) else snap}
         if wfa_stage_id:
             update['stage_id'] = wfa_stage_id
-        http.patch(sb_url('proposals', f'?id=eq.{proposal_id}'), headers=sb_headers(), json=update, timeout=10)
+        http.patch(sb_url('proposals', '?' + _sb_eq('id', proposal_id)), headers=sb_headers(), json=update, timeout=10)
         proposal_name = rows[0].get('name', f'Project #{proposal_id}')
         log_access(username, session.get('full_name',''), f'pulled back proposal "{proposal_name}" for edits')
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='proposals/pull-back/<int:proposal_id>')
 
 def _next_project_number():
     """Generate next project number: HD-YYMM-### format."""
@@ -649,23 +684,31 @@ def project_create():
         log_access(session.get('username',''), session.get('full_name',''), f'created project "{data.get("name","")}" ({project_number})')
         return jsonify({'ok': True, 'id': result[0]['id'] if result else None, 'project_number': project_number})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='projects/create')
 
 @app.route('/projects/update/<int:pid>', methods=['PATCH'])
 @require_auth
 def project_update(pid):
     data = request.get_json() or {}
     try:
+        # Ownership check
+        lookup = http.get(sb_url('proposals', '?' + _sb_eq('id', pid) + '&select=created_by'),
+                          headers=sb_admin_headers(), timeout=10)
+        rows = lookup.json() if lookup.ok else []
+        if not rows:
+            return jsonify({'error': 'Not found'}), 404
+        if not _owns_or_admin(rows[0].get('created_by')):
+            return jsonify({'error': 'Not permitted'}), 403
         payload = {}
         if 'name' in data: payload['name'] = data['name']
         if 'client' in data: payload['client'] = data['client']
         if 'snap' in data: payload['snap'] = data['snap']
         if 'total' in data: payload['total'] = float(data['total'])
-        r = http.patch(sb_url('proposals', f'?id=eq.{pid}'), headers=sb_headers(), json=payload, timeout=10)
+        r = http.patch(sb_url('proposals', '?' + _sb_eq('id', pid)), headers=sb_headers(), json=payload, timeout=10)
         r.raise_for_status()
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='projects/update/<int:pid>')
 
 # ââ Clients âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
@@ -677,7 +720,7 @@ def clients_list():
         r.raise_for_status()
         return jsonify({'ok': True, 'clients': r.json()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='clients/list')
 
 @app.route('/clients/save', methods=['POST'])
 @require_auth
@@ -694,14 +737,14 @@ def clients_save():
         result = r.json()
         return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='clients/save')
 
 @app.route('/clients/update/<int:client_id>', methods=['PATCH'])
 @require_auth
 def clients_update(client_id):
     data = request.get_json() or {}
     try:
-        r = http.patch(sb_url('clients', f'?id=eq.{client_id}'), headers=sb_headers(), json={
+        r = http.patch(sb_url('clients', '?' + _sb_eq('id', client_id)), headers=sb_headers(), json={
             'name': data.get('name', ''), 'company': data.get('company', ''),
             'phone': data.get('phone', ''), 'email': data.get('email', ''),
             'address': data.get('address', ''), 'city_state': data.get('city_state', ''),
@@ -710,17 +753,21 @@ def clients_update(client_id):
         r.raise_for_status()
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='clients/update/<int:client_id>')
 
 @app.route('/clients/delete/<int:client_id>', methods=['DELETE'])
 @require_auth
 def clients_delete(client_id):
     try:
-        r = http.delete(sb_url('clients', f'?id=eq.{client_id}'), headers=sb_headers(), timeout=10)
+        # Ownership check: clients table has no created_by column in this schema,
+        # so only admin/dev may delete.
+        if not _owns_or_admin(None):
+            return jsonify({'error': 'Not permitted'}), 403
+        r = http.delete(sb_url('clients', '?' + _sb_eq('id', client_id)), headers=sb_headers(), timeout=10)
         r.raise_for_status()
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='clients/delete/<int:client_id>')
 
 # ââ PDF / DOCX ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
@@ -734,7 +781,7 @@ def list_users_basic():
         users = r.json() if r.status_code == 200 else []
         return jsonify({'ok': True, 'users': users})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='users/list')
 
 
 @app.route('/admin/users', methods=['GET'])
@@ -748,7 +795,7 @@ def get_users():
             u.pop('password_hash', None)
         return jsonify({'ok': True, 'users': users})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='admin/users')
 
 @app.route('/admin/users', methods=['POST'])
 @require_dev
@@ -800,14 +847,14 @@ def update_user(uid):
         old_username = None
         if 'username' in update:
             try:
-                r0 = http.get(sb_url('hd_users', f'?id=eq.{uid}&select=username'), headers=sb_headers(), timeout=5)
+                r0 = http.get(sb_url('hd_users', '?' + _sb_eq('id', uid) + '&' + 'select=username'), headers=sb_headers(), timeout=5)
                 if r0.status_code == 200 and r0.json():
                     old_username = r0.json()[0]['username']
             except Exception:
                 pass
 
         headers = {**sb_headers(), 'Prefer': 'return=representation'}
-        r = http.patch(sb_url('hd_users', f'?id=eq.{uid}'), headers=headers, json=update, timeout=5)
+        r = http.patch(sb_url('hd_users', '?' + _sb_eq('id', uid)), headers=headers, json=update, timeout=5)
         if r.status_code not in (200, 204):
             return jsonify({'ok': False, 'error': r.text}), 400
         rows = r.json() if r.status_code == 200 else []
@@ -829,19 +876,19 @@ def _cascade_username(old, new):
     h = sb_headers()
     try:
         # hd_notifications: recipient
-        http.patch(sb_url('hd_notifications', f'?recipient=eq.{old}'), headers=h,
+        http.patch(sb_url('hd_notifications', '?' + _sb_eq('recipient', old)), headers=h,
                    json={'recipient': new}, timeout=5)
         # hd_notifications: created_by
-        http.patch(sb_url('hd_notifications', f'?created_by=eq.{old}'), headers=h,
+        http.patch(sb_url('hd_notifications', '?' + _sb_eq('created_by', old)), headers=h,
                    json={'created_by': new}, timeout=5)
         # hd_access_log: username
-        http.patch(sb_url('hd_access_log', f'?username=eq.{old}'), headers=h,
+        http.patch(sb_url('hd_access_log', '?' + _sb_eq('username', old)), headers=h,
                    json={'username': new}, timeout=5)
         # proposals: created_by
-        http.patch(sb_url('proposals', f'?created_by=eq.{old}'), headers=h,
+        http.patch(sb_url('proposals', '?' + _sb_eq('created_by', old)), headers=h,
                    json={'created_by': new}, timeout=5)
         # projects: created_by
-        http.patch(sb_url('projects', f'?created_by=eq.{old}'), headers=h,
+        http.patch(sb_url('projects', '?' + _sb_eq('created_by', old)), headers=h,
                    json={'created_by': new}, timeout=5)
     except Exception:
         pass  # Best-effort — don't fail the user update
@@ -853,7 +900,7 @@ def delete_user(uid):
     """Permanently delete a user and all their related data."""
     try:
         # Look up user first
-        r = http.get(sb_url('hd_users', f'?id=eq.{uid}&select=username'), headers=sb_headers(), timeout=5)
+        r = http.get(sb_url('hd_users', '?' + _sb_eq('id', uid) + '&' + 'select=username'), headers=sb_headers(), timeout=5)
         if r.status_code != 200 or not r.json():
             return jsonify({'ok': False, 'error': 'User not found'}), 404
         username = r.json()[0]['username']
@@ -865,23 +912,23 @@ def delete_user(uid):
         h = {**sb_headers(), 'Prefer': 'return=minimal'}
 
         # Delete related data across all tables
-        http.delete(sb_url('hd_access_log', f'?username=eq.{username}'), headers=h, timeout=5)
-        http.delete(sb_url('hd_notifications', f'?recipient=eq.{username}'), headers=h, timeout=5)
-        http.delete(sb_url('hd_reminders', f'?assigned_to=eq.{username}'), headers=h, timeout=5)
-        http.delete(sb_url('hd_reminders', f'?created_by=eq.{username}'), headers=h, timeout=5)
-        http.delete(sb_url('hd_tasks', f'?assigned_to=eq.{username}'), headers=h, timeout=5)
-        http.delete(sb_url('hd_tasks', f'?created_by=eq.{username}'), headers=h, timeout=5)
-        http.delete(sb_url('hd_time_entries', f'?username=eq.{username}'), headers=h, timeout=5)
-        http.delete(sb_url('hd_bug_reports', f'?submitted_by=eq.{username}'), headers=h, timeout=5)
+        http.delete(sb_url('hd_access_log', '?' + _sb_eq('username', username)), headers=h, timeout=5)
+        http.delete(sb_url('hd_notifications', '?' + _sb_eq('recipient', username)), headers=h, timeout=5)
+        http.delete(sb_url('hd_reminders', '?' + _sb_eq('assigned_to', username)), headers=h, timeout=5)
+        http.delete(sb_url('hd_reminders', '?' + _sb_eq('created_by', username)), headers=h, timeout=5)
+        http.delete(sb_url('hd_tasks', '?' + _sb_eq('assigned_to', username)), headers=h, timeout=5)
+        http.delete(sb_url('hd_tasks', '?' + _sb_eq('created_by', username)), headers=h, timeout=5)
+        http.delete(sb_url('hd_time_entries', '?' + _sb_eq('username', username)), headers=h, timeout=5)
+        http.delete(sb_url('hd_bug_reports', '?' + _sb_eq('submitted_by', username)), headers=h, timeout=5)
 
         # Delete the user record
-        r2 = http.delete(sb_url('hd_users', f'?id=eq.{uid}'), headers=h, timeout=5)
+        r2 = http.delete(sb_url('hd_users', '?' + _sb_eq('id', uid)), headers=h, timeout=5)
         if r2.status_code not in (200, 204):
             return jsonify({'ok': False, 'error': r2.text}), 400
 
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='admin/users/<int:uid>')
 
 
 @app.route('/admin/logs', methods=['GET'])
@@ -890,8 +937,8 @@ def get_logs():
     try:
         limit = int(request.args.get('limit',100))
         uf = request.args.get('username','')
-        params = f'?order=logged_at.desc&limit={limit}'
-        if uf: params += f'&username=eq.{uf}'
+        params = '?' + 'order=logged_at.desc&' + f'limit={limit}'
+        if uf: params += '&' + _sb_eq('username', uf)
         r = http.get(sb_url('hd_access_log', params), headers=sb_headers(), timeout=5)
         return jsonify({'ok':True,'logs':r.json() if r.status_code==200 else []})
     except Exception as e:
@@ -908,14 +955,14 @@ def admin_archived():
         r.raise_for_status()
         return jsonify({'ok': True, 'items': r.json()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='admin/archived')
 
 @app.route('/admin/restore/<int:qid>', methods=['POST'])
 @require_dev
 def admin_restore(qid):
     try:
         r = http.patch(
-            sb_url('proposals', f'?id=eq.{qid}'),
+            sb_url('proposals', '?' + _sb_eq('id', qid)),
             json={'archived': False, 'archived_at': None},
             headers=sb_headers(), timeout=10
         )
@@ -923,7 +970,7 @@ def admin_restore(qid):
         log_access(session.get('username',''), session.get('full_name',''), f'restored archived proposal id={qid}')
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='admin/restore/<int:qid>')
 
 @app.route('/generate-pdf', methods=['POST'])
 @require_auth
@@ -935,7 +982,7 @@ def generate_pdf():
         build(data, out)
         return send_file(out, mimetype='application/pdf', as_attachment=False, download_name='HD_Proposal.pdf')
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return _safe_error(e, context='generate-pdf')
 
 
 @app.route('/generate-co-pdf', methods=['POST'])
@@ -949,7 +996,7 @@ def generate_co_pdf():
         co_build(data, out)
         return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_ChangeOrder.pdf')
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return _safe_error(e, context='generate-co-pdf')
 
 @app.route('/generate-jc-pdf', methods=['POST'])
 @require_auth
@@ -962,7 +1009,7 @@ def generate_jc_pdf():
         jc_build(data, out)
         return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_JobCost.pdf')
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return _safe_error(e, context='generate-jc-pdf')
 
 
 @app.route('/generate-pricing-breakdown', methods=['POST'])
@@ -976,7 +1023,7 @@ def generate_pricing_breakdown():
         pb_build(data, out)
         return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_Pricing_Breakdown.pdf')
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return _safe_error(e, context='generate-pricing-breakdown')
 
 @app.route('/generate-wo-pdf', methods=['POST'])
 @require_auth
@@ -989,7 +1036,7 @@ def generate_wo_pdf():
         wo_build(data, out)
         return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_WorkOrder.pdf')
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return _safe_error(e, context='generate-wo-pdf')
 
 @app.route('/generate-daily-report', methods=['POST'])
 @require_auth
@@ -1002,7 +1049,7 @@ def generate_daily_report():
         dr_build(data, out)
         return send_file(out, mimetype='application/pdf', as_attachment=True, download_name='HD_Daily_Report.pdf')
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return _safe_error(e, context='generate-daily-report')
 
 @app.route('/generate-report-pdf', methods=['POST'])
 @require_auth
@@ -1015,7 +1062,7 @@ def generate_report_pdf():
         name = data.get('report_name', 'Report').replace(' ', '_')
         return send_file(out, mimetype='application/pdf', as_attachment=True, download_name=f'HD_{name}.pdf')
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return _safe_error(e, context='generate-report-pdf')
 
 @app.route('/change-orders/save', methods=['POST'])
 @require_auth
@@ -1048,7 +1095,7 @@ def co_save():
             return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
         return jsonify({'ok': False, 'error': 'Supabase error: ' + str(r.status_code)}), 400
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='change-orders/save')
 
 @app.route('/change-orders/list')
 @require_auth
@@ -1057,13 +1104,13 @@ def co_list():
         proposal_id = request.args.get('proposal_id', '')
         params = '?select=*&order=created_at.desc'
         if proposal_id:
-            params += f'&proposal_id=eq.{proposal_id}'
+            params += '&' + _sb_eq('proposal_id', proposal_id)
         r = http.get(sb_url('change_orders', params), headers=sb_headers(), timeout=10)
         if r.status_code == 200:
             return jsonify({'ok': True, 'change_orders': r.json()})
         return jsonify({'ok': True, 'change_orders': []})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='change-orders/list')
 
 # ââ Email âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
@@ -1071,12 +1118,20 @@ def co_list():
 @require_auth
 def co_delete(coid):
     try:
-        r = http.delete(sb_url('change_orders', f'?id=eq.{coid}'), headers=sb_headers(), timeout=10)
+        # Ownership check
+        lookup = http.get(sb_url('change_orders', '?' + _sb_eq('id', coid) + '&select=created_by'),
+                          headers=sb_admin_headers(), timeout=10)
+        rows = lookup.json() if lookup.ok else []
+        if not rows:
+            return jsonify({'error': 'Not found'}), 404
+        if not _owns_or_admin(rows[0].get('created_by')):
+            return jsonify({'error': 'Not permitted'}), 403
+        r = http.delete(sb_url('change_orders', '?' + _sb_eq('id', coid)), headers=sb_headers(), timeout=10)
         r.raise_for_status()
         log_access(session.get('username',''), session.get('full_name',''), f'deleted change order #{coid}')
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='change-orders/delete/<int:coid>')
 
 @app.route('/send-email', methods=['POST'])
 @require_auth
@@ -1090,6 +1145,30 @@ def send_email():
     from email import encoders
 
     data = request.get_json() or {}
+    sender = session.get('username', '')
+    send_succeeded = False
+    send_error_str = None
+
+    # Rate limit: 20 sends per rolling 24h per user (audited via hd_email_log)
+    try:
+        since = (datetime.utcnow() - timedelta(hours=24)).isoformat()
+        count_url = sb_url('hd_email_log',
+            '?select=id&' + _sb_eq('sender_username', sender) +
+            '&sent_at=gte.' + _url_quote(since, safe=''))
+        count_resp = http.get(count_url, headers=sb_admin_headers(prefer='count=exact'), timeout=10)
+        if count_resp.ok:
+            count_header = count_resp.headers.get('Content-Range', '')
+            sent_count = 0
+            if '/' in count_header:
+                try: sent_count = int(count_header.split('/')[-1])
+                except ValueError: pass
+            if sent_count >= 20:
+                return jsonify({'ok': False, 'error': 'Daily email limit reached (20 per 24h).'}), 429
+    except Exception:
+        # Rate-limit table missing or unreachable — fail open so sends aren't blocked
+        # by infra issues. Audit log call below will also no-op.
+        pass
+
     try:
         token_json = os.environ.get('GMAIL_TOKEN_JSON', '')
         if not token_json:
@@ -1108,9 +1187,26 @@ def send_email():
             msg.attach(part)
         raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
         service.users().messages().send(userId='me', body={'raw': raw}).execute()
+        send_succeeded = True
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        send_error_str = str(e)
+        return _safe_error(e, context='send-email')
+    finally:
+        # Audit log every send attempt (best-effort)
+        try:
+            http.post(sb_url('hd_email_log'),
+                      headers=sb_admin_headers(),
+                      json={
+                          'sender_username': sender,
+                          'recipient_to': (data.get('to') or '')[:500],
+                          'subject': (data.get('subject') or '')[:500],
+                          'attachment_name': (data.get('pdf_filename') or '')[:500],
+                          'success': send_succeeded,
+                          'error': None if send_succeeded else (send_error_str or '')[:500]
+                      }, timeout=10)
+        except Exception:
+            pass
 
 # ── File Upload (Supabase Storage) ───────────────────────────────────────────
 
@@ -1189,7 +1285,7 @@ def upload_site_plan(project_id):
         public_url = f'{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{file_path}'
 
         # Update project snap with site_plan_url
-        proj_r = http.get(sb_url('proposals', f'?id=eq.{project_id}&select=snap'), headers=sb_headers(), timeout=5)
+        proj_r = http.get(sb_url('proposals', '?' + _sb_eq('id', project_id) + '&' + 'select=snap'), headers=sb_headers(), timeout=5)
         rows = proj_r.json()
         if rows:
             snap = rows[0].get('snap') or {}
@@ -1197,7 +1293,7 @@ def upload_site_plan(project_id):
                 snap = json.loads(snap)
             snap['site_plan_url'] = public_url
             http.patch(
-                sb_url('proposals', f'?id=eq.{project_id}'),
+                sb_url('proposals', '?' + _sb_eq('id', project_id)),
                 headers=sb_headers(),
                 json={'snap': snap},
                 timeout=5
@@ -1205,7 +1301,7 @@ def upload_site_plan(project_id):
 
         return jsonify({'ok': True, 'url': public_url})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='upload/site-plan/<int:project_id>')
 
 # ── Project File Attachments (Supabase Storage) ──────────────────────────────
 
@@ -1286,7 +1382,7 @@ def upload_project_file(project_id):
         public_url = f'{SUPABASE_URL}/storage/v1/object/public/{FILES_BUCKET}/{storage_path}'
 
         # Append file metadata to project snap.files[]
-        proj_r = http.get(sb_url('proposals', f'?id=eq.{project_id}&select=snap'), headers=sb_headers(), timeout=5)
+        proj_r = http.get(sb_url('proposals', '?' + _sb_eq('id', project_id) + '&' + 'select=snap'), headers=sb_headers(), timeout=5)
         rows = proj_r.json()
         if rows:
             snap = rows[0].get('snap') or {}
@@ -1304,7 +1400,7 @@ def upload_project_file(project_id):
                 'uploaded_at': datetime.now().isoformat()
             })
             http.patch(
-                sb_url('proposals', f'?id=eq.{project_id}'),
+                sb_url('proposals', '?' + _sb_eq('id', project_id)),
                 headers=sb_headers(),
                 json={'snap': snap},
                 timeout=5
@@ -1312,7 +1408,7 @@ def upload_project_file(project_id):
 
         return jsonify({'ok': True, 'url': public_url, 'name': file.filename, 'path': storage_path, 'size': len(file_data), 'type': ext})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='upload/project-file/<int:project_id>')
 
 
 @app.route('/upload/project-file/<int:project_id>/delete', methods=['POST'])
@@ -1337,7 +1433,7 @@ def delete_project_file(project_id):
         )
 
         # Remove from project snap.files[]
-        proj_r = http.get(sb_url('proposals', f'?id=eq.{project_id}&select=snap'), headers=sb_headers(), timeout=5)
+        proj_r = http.get(sb_url('proposals', '?' + _sb_eq('id', project_id) + '&' + 'select=snap'), headers=sb_headers(), timeout=5)
         rows = proj_r.json()
         if rows:
             snap = rows[0].get('snap') or {}
@@ -1345,7 +1441,7 @@ def delete_project_file(project_id):
                 snap = json.loads(snap)
             snap['files'] = [f for f in (snap.get('files') or []) if f.get('path') != storage_path]
             http.patch(
-                sb_url('proposals', f'?id=eq.{project_id}'),
+                sb_url('proposals', '?' + _sb_eq('id', project_id)),
                 headers=sb_headers(),
                 json={'snap': snap},
                 timeout=5
@@ -1353,7 +1449,7 @@ def delete_project_file(project_id):
 
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='upload/project-file/<int:project_id>/delete')
 
 
 # ── Setup: create hd_settings table if needed ───────────────────────────────
@@ -1525,7 +1621,7 @@ def notifications_list():
     username = session.get('username', '')
     try:
         r = http.get(
-            sb_url('hd_notifications', f'?recipient=eq.{username}&dismissed=eq.false&order=created_at.desc&limit=50'),
+            sb_url('hd_notifications', '?' + _sb_eq('recipient', username) + '&' + 'dismissed=eq.false&' + 'order=created_at.desc&' + 'limit=50'),
             headers=sb_headers(), timeout=5)
         if r.status_code == 200:
             return jsonify({'ok': True, 'notifications': r.json()})
@@ -1560,7 +1656,7 @@ def notifications_unread_count():
     username = session.get('username', '')
     try:
         r = http.get(
-            sb_url('hd_notifications', f'?recipient=eq.{username}&dismissed=eq.false&read=eq.false&select=id'),
+            sb_url('hd_notifications', '?' + _sb_eq('recipient', username) + '&' + 'dismissed=eq.false&' + 'read=eq.false&' + 'select=id'),
             headers=sb_headers(), timeout=5)
         count = len(r.json()) if r.status_code == 200 else 0
         return jsonify({'ok': True, 'count': count})
@@ -1572,10 +1668,10 @@ def notifications_unread_count():
 @require_auth
 def notifications_read(nid):
     try:
-        http.patch(sb_url('hd_notifications', f'?id=eq.{nid}'), headers=sb_headers(), json={'read': True}, timeout=5)
+        http.patch(sb_url('hd_notifications', '?' + _sb_eq('id', nid)), headers=sb_headers(), json={'read': True}, timeout=5)
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='notifications/read/<int:nid>')
 
 
 @app.route('/notifications/read-all', methods=['POST'])
@@ -1583,21 +1679,21 @@ def notifications_read(nid):
 def notifications_read_all():
     username = session.get('username', '')
     try:
-        http.patch(sb_url('hd_notifications', f'?recipient=eq.{username}&read=eq.false'),
+        http.patch(sb_url('hd_notifications', '?' + _sb_eq('recipient', username) + '&' + 'read=eq.false'),
             headers=sb_headers(), json={'read': True}, timeout=5)
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='notifications/read-all')
 
 
 @app.route('/notifications/dismiss/<int:nid>', methods=['POST'])
 @require_auth
 def notifications_dismiss(nid):
     try:
-        http.patch(sb_url('hd_notifications', f'?id=eq.{nid}'), headers=sb_headers(), json={'dismissed': True}, timeout=5)
+        http.patch(sb_url('hd_notifications', '?' + _sb_eq('id', nid)), headers=sb_headers(), json={'dismissed': True}, timeout=5)
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='notifications/dismiss/<int:nid>')
 
 
 @app.route('/notifications/send', methods=['POST'])
@@ -1634,7 +1730,7 @@ def notifications_send():
 
         return jsonify({'ok': True, 'sent': len(rows)})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='notifications/send')
 
 
 def _send_notif_emails(recipients, created_by, title, body, project_name):
@@ -1651,7 +1747,7 @@ def _send_notif_emails(recipients, created_by, title, body, project_name):
         for username in recipients:
             if username == created_by:
                 continue
-            r = http.get(sb_url('hd_users', f'?username=eq.{username}&select=email,full_name'), headers=sb_headers(), timeout=5)
+            r = http.get(sb_url('hd_users', '?' + _sb_eq('username', username) + '&' + 'select=email,full_name'), headers=sb_headers(), timeout=5)
             users = r.json() if r.status_code == 200 else []
             if not users or not users[0].get('email'):
                 continue
@@ -1679,13 +1775,13 @@ def _send_notif_emails(recipients, created_by, title, body, project_name):
 @require_auth
 def settings_get(key):
     try:
-        r = http.get(sb_url('hd_settings', f'?key=eq.{key}&select=value'), headers=sb_headers(), timeout=5)
+        r = http.get(sb_url('hd_settings', '?' + _sb_eq('key', key) + '&' + 'select=value'), headers=sb_headers(), timeout=5)
         rows = r.json()
         if rows and len(rows) > 0:
             return jsonify({'ok': True, 'value': rows[0]['value']})
         return jsonify({'ok': True, 'value': None})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='settings/get/<key>')
 
 @app.route('/settings/bulk', methods=['POST'])
 @require_auth
@@ -1697,12 +1793,12 @@ def settings_bulk_get():
         return jsonify({'ok': True, 'values': {}})
     try:
         key_filter = ','.join(keys)
-        r = http.get(sb_url('hd_settings', f'?key=in.({key_filter})&select=key,value'), headers=sb_headers(), timeout=5)
+        r = http.get(sb_url('hd_settings', '?' + f'key=in.({key_filter})' + '&' + 'select=key,value'), headers=sb_headers(), timeout=5)
         rows = r.json()
         values = {row['key']: row['value'] for row in rows}
         return jsonify({'ok': True, 'values': values})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='settings/bulk')
 
 @app.route('/settings/save', methods=['POST'])
 @require_auth
@@ -1728,7 +1824,7 @@ def settings_save():
             return jsonify({'ok': True})
         return jsonify({'ok': False, 'error': f'Supabase returned {r.status_code}: {r.text}'}), 500
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='settings/save')
 
 @app.route('/settings/approval-group', methods=['GET'])
 @require_auth
@@ -1738,7 +1834,7 @@ def get_approval_group():
         rows = r.json() if r.status_code == 200 else []
         return jsonify({'ok': True, 'approvers': rows[0]['value'] if rows else []})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='settings/approval-group')
 
 @app.route('/settings/approval-group', methods=['POST'])
 @require_dev
@@ -1751,7 +1847,7 @@ def save_approval_group():
         r = http.post(sb_url('hd_settings'), headers=h, json={'key': 'approval_group', 'value': approvers}, timeout=5)
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='settings/approval-group')
 
 @app.route('/schedule/feed-token')
 @require_auth
@@ -1862,18 +1958,18 @@ def submit_bug():
             return jsonify({'ok': False, 'error': 'Failed to save bug report', 'details': r.text[:500]}), 400
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='bugs/submit')
 
 @app.route('/bugs/list')
 @require_dev
 def list_bugs():
     try:
-        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_bug_reports?select=*&order=submitted_at.desc", headers=sb_admin_headers(), timeout=10)
+        r = http.get(sb_url('hd_bug_reports', "?" + "select=*&" + "order=submitted_at.desc"), headers=sb_admin_headers(), timeout=10)
         if r.status_code != 200:
             return jsonify({'ok': False, 'error': 'Failed to load bug reports', 'details': r.text[:500]}), r.status_code
         return jsonify({'ok': True, 'items': r.json()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='bugs/list')
 
 @app.route('/bugs/<int:bug_id>', methods=['PATCH'])
 @require_dev
@@ -1889,12 +1985,12 @@ def update_bug(bug_id):
                 updates['resolved_at'] = None
         if 'admin_notes' in d:
             updates['admin_notes'] = d['admin_notes']
-        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_bug_reports?id=eq.{bug_id}", json=updates, headers=sb_admin_headers(), timeout=10)
+        r = http.patch(sb_url('hd_bug_reports', "?" + _sb_eq('id', bug_id)), json=updates, headers=sb_admin_headers(), timeout=10)
         if r.status_code >= 300:
             return jsonify({'ok': False, 'error': 'Failed to update bug report', 'details': r.text[:500]}), 400
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='bugs/<int:bug_id>')
 
 # ── Feedback ─────────────────────────────────────────────
 @app.route('/feedback/submit', methods=['POST'])
@@ -1911,7 +2007,7 @@ def submit_feedback():
             return jsonify({'ok': False, 'error': 'Failed to save feedback'}), 500
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='feedback/submit')
 
 @app.route('/feedback/list')
 @require_auth
@@ -1922,22 +2018,22 @@ def list_feedback():
         if role == 'dev':
             r = http.get(sb_url('hd_feedback', '?select=*&order=submitted_at.desc&limit=200'), headers=sb_headers(), timeout=10)
         else:
-            r = http.get(sb_url('hd_feedback', f'?submitted_by=eq.{username}&select=*&order=submitted_at.desc&limit=200'), headers=sb_headers(), timeout=10)
+            r = http.get(sb_url('hd_feedback', '?' + _sb_eq('submitted_by', username) + '&' + 'select=*&' + 'order=submitted_at.desc&' + 'limit=200'), headers=sb_headers(), timeout=10)
         return jsonify({'ok': True, 'items': r.json() if r.status_code == 200 else []})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='feedback/list')
 
 # ── Roadmap ──────────────────────────────────────────────
 @app.route('/roadmap/list')
 @require_dev
 def list_roadmap():
     try:
-        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_roadmap?select=*&order=sort_order.asc,created_at.desc", headers=sb_admin_headers(), timeout=10)
+        r = http.get(sb_url('hd_roadmap', "?" + "select=*&" + "order=sort_order.asc,created_at.desc"), headers=sb_admin_headers(), timeout=10)
         if r.status_code != 200:
             return jsonify({'ok': False, 'error': 'Failed to load roadmap items', 'details': r.text[:500]}), r.status_code
         return jsonify({'ok': True, 'items': r.json()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='roadmap/list')
 
 @app.route('/roadmap/save', methods=['POST'])
 @require_dev
@@ -1961,7 +2057,7 @@ def save_roadmap():
             return jsonify({'ok': False, 'error': 'Failed to save roadmap item', 'details': r.text[:500]}), 400
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='roadmap/save')
 
 @app.route('/roadmap/<int:item_id>', methods=['PATCH'])
 @require_dev
@@ -1973,23 +2069,23 @@ def update_roadmap(item_id):
             if k in d:
                 updates[k] = d[k]
         updates['updated_at'] = datetime.utcnow().isoformat()
-        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_roadmap?id=eq.{item_id}", json=updates, headers=sb_admin_headers(), timeout=10)
+        r = http.patch(sb_url('hd_roadmap', "?" + _sb_eq('id', item_id)), json=updates, headers=sb_admin_headers(), timeout=10)
         if r.status_code >= 300:
             return jsonify({'ok': False, 'error': 'Failed to update roadmap item', 'details': r.text[:500]}), 400
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='roadmap/<int:item_id>')
 
 @app.route('/roadmap/<int:item_id>', methods=['DELETE'])
 @require_dev
 def delete_roadmap(item_id):
     try:
-        r = http.delete(f"{SUPABASE_URL}/rest/v1/hd_roadmap?id=eq.{item_id}", headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
+        r = http.delete(sb_url('hd_roadmap', "?" + _sb_eq('id', item_id)), headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
         if r.status_code >= 300:
             return jsonify({'ok': False, 'error': 'Failed to delete roadmap item', 'details': r.text[:500]}), 400
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='roadmap/<int:item_id>')
 
 # ── Public Proposal Sharing & Approval ────────────────────
 @app.route('/proposal/share/<int:pid>', methods=['POST'])
@@ -1999,7 +2095,7 @@ def share_proposal(pid):
     try:
         token = uuid.uuid4().hex
         r = http.patch(
-            sb_url('proposals', f'?id=eq.{pid}'),
+            sb_url('proposals', '?' + _sb_eq('id', pid)),
             headers=sb_headers(),
             json={'share_token': token},
             timeout=10
@@ -2008,7 +2104,7 @@ def share_proposal(pid):
             return jsonify({'ok': False, 'error': r.text[:500]}), 400
         return jsonify({'ok': True, 'token': token})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='proposal/share/<int:pid>')
 
 @app.route('/proposal/view/<token>')
 def public_proposal_view(token):
@@ -2020,7 +2116,7 @@ def public_proposal_view(token):
         return jsonify({'ok': False, 'error': 'Proposal not found'}), 404
     try:
         r = http.get(
-            sb_url('proposals', f'?share_token=eq.{token}&select=id,name,client,date,total,snap,project_number'),
+            sb_url('proposals', '?' + _sb_eq('share_token', token) + '&' + 'select=id,name,client,date,total,snap,project_number'),
             headers=sb_admin_headers(), timeout=10
         )
         if r.status_code != 200:
@@ -2069,7 +2165,7 @@ def public_proposal_approve(token):
             return jsonify({'ok': False, 'error': 'Your name is required to approve'}), 400
         # Find the proposal
         r = http.get(
-            sb_url('proposals', f'?share_token=eq.{token}&select=id,snap,stage_id,created_by,name'),
+            sb_url('proposals', '?' + _sb_eq('share_token', token) + '&' + 'select=id,snap,stage_id,created_by,name'),
             headers=sb_admin_headers(), timeout=10
         )
         items = r.json() if r.status_code == 200 else []
@@ -2109,7 +2205,7 @@ def public_proposal_approve(token):
         update = {'snap': json.dumps(snap)}
         update.update(stage_update)
         r2 = http.patch(
-            sb_url('proposals', f'?id=eq.{pid}'),
+            sb_url('proposals', '?' + _sb_eq('id', pid)),
             headers=sb_admin_headers(),
             json=update, timeout=10
         )
@@ -2172,11 +2268,11 @@ def submit_lead():
         # Try to match existing client by email or phone
         matched_client_id = None
         if email:
-            cr = http.get(sb_url('clients', f'?email=eq.{email}&select=id,name&limit=1'), headers=sb_admin_headers(), timeout=5)
+            cr = http.get(sb_url('clients', '?' + _sb_eq('email', email) + '&' + 'select=id,name&' + 'limit=1'), headers=sb_admin_headers(), timeout=5)
             if cr.status_code == 200 and cr.json():
                 matched_client_id = cr.json()[0]['id']
         if not matched_client_id and phone:
-            cr = http.get(sb_url('clients', f'?phone=eq.{phone}&select=id,name&limit=1'), headers=sb_admin_headers(), timeout=5)
+            cr = http.get(sb_url('clients', '?' + _sb_eq('phone', phone) + '&' + 'select=id,name&' + 'limit=1'), headers=sb_admin_headers(), timeout=5)
             if cr.status_code == 200 and cr.json():
                 matched_client_id = cr.json()[0]['id']
         row = {
@@ -2214,15 +2310,15 @@ def submit_lead():
 def list_leads():
     try:
         status = request.args.get('status', 'new')
-        q = f"{SUPABASE_URL}/rest/v1/hd_leads?select=*&order=submitted_at.desc"
+        q = sb_url('hd_leads', "?" + "select=*&" + "order=submitted_at.desc")
         if status != 'all':
-            q += f"&status=eq.{status}"
+            q += '&' + _sb_eq('status', status)
         r = http.get(q, headers=sb_admin_headers(), timeout=10)
         if r.status_code != 200:
             return jsonify({'ok': False, 'error': r.text[:500]}), r.status_code
         return jsonify({'ok': True, 'items': r.json()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='leads/list')
 
 @app.route('/leads/<int:lid>', methods=['PATCH'])
 @require_auth
@@ -2233,12 +2329,12 @@ def update_lead(lid):
         if 'status' in d: updates['status'] = d['status']
         if not updates:
             return jsonify({'ok': False, 'error': 'Nothing to update'}), 400
-        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_leads?id=eq.{lid}", json=updates, headers=sb_admin_headers(), timeout=10)
+        r = http.patch(sb_url('hd_leads', "?" + _sb_eq('id', lid)), json=updates, headers=sb_admin_headers(), timeout=10)
         if r.status_code >= 300:
             return jsonify({'ok': False, 'error': r.text[:500]}), 400
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='leads/<int:lid>')
 
 @app.route('/leads/<int:lid>/convert', methods=['POST'])
 @require_auth
@@ -2246,7 +2342,7 @@ def convert_lead(lid):
     """Convert a lead into a pipeline project and optionally a client."""
     try:
         # Get the lead
-        lr = http.get(f"{SUPABASE_URL}/rest/v1/hd_leads?id=eq.{lid}&select=*", headers=sb_admin_headers(), timeout=10)
+        lr = http.get(sb_url('hd_leads', "?" + _sb_eq('id', lid) + "&" + "select=*"), headers=sb_admin_headers(), timeout=10)
         if lr.status_code != 200 or not lr.json():
             return jsonify({'ok': False, 'error': 'Lead not found'}), 404
         lead = lr.json()[0]
@@ -2296,12 +2392,12 @@ def convert_lead(lid):
             pdata = pr.json()[0] if isinstance(pr.json(), list) else pr.json()
             proposal_id = pdata.get('id')
         # Mark lead as accepted
-        http.patch(f"{SUPABASE_URL}/rest/v1/hd_leads?id=eq.{lid}",
+        http.patch(sb_url('hd_leads', "?" + _sb_eq('id', lid)),
                    json={'status': 'accepted', 'created_proposal_id': proposal_id},
                    headers=sb_admin_headers(), timeout=10)
         return jsonify({'ok': True, 'proposal_id': proposal_id, 'client_id': client_id})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='leads/<int:lid>/convert')
 
 # ── Time Tracking (GPS Clock-In/Out) ──────────────────────
 @app.route('/time/clock-in', methods=['POST'])
@@ -2313,7 +2409,7 @@ def time_clock_in():
         d = request.json or {}
         username = session.get('username')
         # Check for existing active clock-in
-        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_time_entries?username=eq.{username}&clock_out=is.null&select=id",
+        r = http.get(sb_url('hd_time_entries', "?" + _sb_eq('username', username) + "&" + "clock_out=is.null&" + "select=id"),
                      headers=sb_admin_headers(), timeout=5)
         if r.status_code == 200 and r.json():
             return jsonify({'ok': False, 'error': 'Already clocked in. Clock out first.'}), 400
@@ -2331,7 +2427,7 @@ def time_clock_in():
         entry = r.json()[0] if isinstance(r.json(), list) else r.json()
         return jsonify({'ok': True, 'entry': entry})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='time/clock-in')
 
 @app.route('/time/clock-out', methods=['POST'])
 @require_auth
@@ -2342,7 +2438,7 @@ def time_clock_out():
         d = request.json or {}
         username = session.get('username')
         # Find active entry
-        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_time_entries?username=eq.{username}&clock_out=is.null&select=*&limit=1",
+        r = http.get(sb_url('hd_time_entries', "?" + _sb_eq('username', username) + "&" + "clock_out=is.null&" + "select=*&" + "limit=1"),
                      headers=sb_admin_headers(), timeout=5)
         if r.status_code != 200 or not r.json():
             return jsonify({'ok': False, 'error': 'No active clock-in found'}), 400
@@ -2352,7 +2448,7 @@ def time_clock_out():
         clock_out = datetime.utcnow()
         hours = round((clock_out - clock_in).total_seconds() / 3600, 2)
         # Look up hourly rate
-        ur = http.get(sb_url('hd_users', f'?username=eq.{username}&select=hourly_rate'), headers=sb_admin_headers(), timeout=5)
+        ur = http.get(sb_url('hd_users', '?' + _sb_eq('username', username) + '&' + 'select=hourly_rate'), headers=sb_admin_headers(), timeout=5)
         rate = 0
         if ur.status_code == 200 and ur.json():
             rate = float(ur.json()[0].get('hourly_rate') or 0)
@@ -2365,25 +2461,25 @@ def time_clock_out():
             'hourly_rate': rate,
             'labor_cost': cost
         }
-        r2 = http.patch(f"{SUPABASE_URL}/rest/v1/hd_time_entries?id=eq.{eid}", json=update, headers=sb_admin_headers(), timeout=10)
+        r2 = http.patch(sb_url('hd_time_entries', "?" + _sb_eq('id', eid)), json=update, headers=sb_admin_headers(), timeout=10)
         if r2.status_code >= 300:
             return jsonify({'ok': False, 'error': r2.text[:500]}), 400
         return jsonify({'ok': True, 'hours': hours, 'cost': cost})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='time/clock-out')
 
 @app.route('/time/active')
 @require_auth
 def time_active():
     try:
         username = session.get('username')
-        r = http.get(f"{SUPABASE_URL}/rest/v1/hd_time_entries?username=eq.{username}&clock_out=is.null&select=*&limit=1",
+        r = http.get(sb_url('hd_time_entries', "?" + _sb_eq('username', username) + "&" + "clock_out=is.null&" + "select=*&" + "limit=1"),
                      headers=sb_admin_headers(), timeout=5)
         if r.status_code == 200 and r.json():
             return jsonify({'ok': True, 'active': r.json()[0]})
         return jsonify({'ok': True, 'active': None})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='time/active')
 
 @app.route('/time/entries')
 @require_auth
@@ -2391,11 +2487,11 @@ def time_entries():
     try:
         project_id = request.args.get('project_id')
         wo_id = request.args.get('work_order_id')
-        q = f"{SUPABASE_URL}/rest/v1/hd_time_entries?select=*&order=clock_in.desc"
+        q = sb_url('hd_time_entries', "?" + "select=*&" + "order=clock_in.desc")
         if project_id:
-            q += f"&project_id=eq.{project_id}"
+            q += '&' + _sb_eq('project_id', project_id)
         if wo_id:
-            q += f"&work_order_id=eq.{wo_id}"
+            q += '&' + _sb_eq('work_order_id', wo_id)
         r = http.get(q, headers=sb_admin_headers(), timeout=10)
         if r.status_code != 200:
             return jsonify({'ok': False, 'error': r.text[:500]}), r.status_code
@@ -2407,25 +2503,25 @@ def time_entries():
                 e.pop('labor_cost', None)
         return jsonify({'ok': True, 'entries': entries})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='time/entries')
 
 @app.route('/time/<int:tid>', methods=['DELETE'])
 @require_admin
 def delete_time_entry(tid):
     try:
-        r = http.delete(f"{SUPABASE_URL}/rest/v1/hd_time_entries?id=eq.{tid}", headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
+        r = http.delete(sb_url('hd_time_entries', "?" + _sb_eq('id', tid)), headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
         if r.status_code >= 300:
             return jsonify({'ok': False, 'error': r.text[:500]}), 400
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='time/<int:tid>')
 
 # ── Tasks ──────────────────────────────────────────────────
 @app.route('/tasks/list')
 @require_auth
 def list_tasks():
     try:
-        q = f"{SUPABASE_URL}/rest/v1/hd_tasks?select=*&order=due_date.asc.nullslast,created_at.desc"
+        q = sb_url('hd_tasks', "?" + "select=*&" + "order=due_date.asc.nullslast,created_at.desc")
         filt = request.args.get('filter', 'open')
         username = session.get('username')
         if filt == 'completed':
@@ -2433,13 +2529,15 @@ def list_tasks():
         else:
             q += '&completed=eq.false'
         # Visibility: show public tasks + private tasks owned by or assigned to current user
-        q += f'&or=(visibility.eq.public,created_by.eq.{username},assigned_to.eq.{username})'
+        # username is URL-encoded for defense-in-depth (session-set, but contains @ which needs encoding)
+        _enc_user = _url_quote(str(username or ''), safe='')
+        q += f'&or=(visibility.eq.public,created_by.eq.{_enc_user},assigned_to.eq.{_enc_user})'
         r = http.get(q, headers=sb_admin_headers(), timeout=10)
         if r.status_code != 200:
             return jsonify({'ok': False, 'error': r.text[:500]}), r.status_code
         return jsonify({'ok': True, 'items': r.json()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='tasks/list')
 
 @app.route('/tasks/save', methods=['POST'])
 @require_auth
@@ -2467,12 +2565,20 @@ def save_task():
             return jsonify({'ok': False, 'error': r.text[:500]}), 400
         return jsonify({'ok': True, 'item': r.json()[0] if isinstance(r.json(), list) else r.json()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='tasks/save')
 
 @app.route('/tasks/<int:tid>', methods=['PATCH'])
 @require_auth
 def update_task(tid):
     try:
+        # Ownership check
+        lookup = http.get(sb_url('hd_tasks', '?' + _sb_eq('id', tid) + '&select=created_by'),
+                          headers=sb_admin_headers(), timeout=10)
+        rows = lookup.json() if lookup.ok else []
+        if not rows:
+            return jsonify({'error': 'Not found'}), 404
+        if not _owns_or_admin(rows[0].get('created_by')):
+            return jsonify({'error': 'Not permitted'}), 403
         d = request.json or {}
         updates = {}
         for field in ('title', 'description', 'priority', 'status', 'visibility', 'assigned_to', 'due_date', 'ref_type', 'ref_id', 'ref_name'):
@@ -2487,30 +2593,38 @@ def update_task(tid):
         if not updates:
             return jsonify({'ok': False, 'error': 'Nothing to update'}), 400
         updates['updated_at'] = datetime.utcnow().isoformat()
-        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_tasks?id=eq.{tid}", json=updates, headers=sb_admin_headers(), timeout=10)
+        r = http.patch(sb_url('hd_tasks', "?" + _sb_eq('id', tid)), json=updates, headers=sb_admin_headers(), timeout=10)
         if r.status_code >= 300:
             return jsonify({'ok': False, 'error': r.text[:500]}), 400
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='tasks/<int:tid>')
 
 @app.route('/tasks/<int:tid>', methods=['DELETE'])
 @require_auth
 def delete_task(tid):
     try:
-        r = http.delete(f"{SUPABASE_URL}/rest/v1/hd_tasks?id=eq.{tid}", headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
+        # Ownership check
+        lookup = http.get(sb_url('hd_tasks', '?' + _sb_eq('id', tid) + '&select=created_by'),
+                          headers=sb_admin_headers(), timeout=10)
+        rows = lookup.json() if lookup.ok else []
+        if not rows:
+            return jsonify({'error': 'Not found'}), 404
+        if not _owns_or_admin(rows[0].get('created_by')):
+            return jsonify({'error': 'Not permitted'}), 403
+        r = http.delete(sb_url('hd_tasks', "?" + _sb_eq('id', tid)), headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
         if r.status_code >= 300:
             return jsonify({'ok': False, 'error': r.text[:500]}), 400
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='tasks/<int:tid>')
 
 # ── Reminders ─────────────────────────────────────────────
 @app.route('/reminders/list')
 @require_auth
 def list_reminders():
     try:
-        q = f"{SUPABASE_URL}/rest/v1/hd_reminders?select=*&order=due_date.asc"
+        q = sb_url('hd_reminders', "?" + "select=*&" + "order=due_date.asc")
         filt = request.args.get('filter')
         if filt == 'due':
             today = datetime.utcnow().strftime('%Y-%m-%d')
@@ -2526,7 +2640,7 @@ def list_reminders():
             return jsonify({'ok': False, 'error': r.text[:500]}), r.status_code
         return jsonify({'ok': True, 'items': r.json()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='reminders/list')
 
 @app.route('/reminders/save', methods=['POST'])
 @require_auth
@@ -2552,12 +2666,20 @@ def save_reminder():
             return jsonify({'ok': False, 'error': r.text[:500]}), 400
         return jsonify({'ok': True, 'item': r.json()[0] if isinstance(r.json(), list) else r.json()})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='reminders/save')
 
 @app.route('/reminders/<int:rid>', methods=['PATCH'])
 @require_auth
 def update_reminder(rid):
     try:
+        # Ownership check
+        lookup = http.get(sb_url('hd_reminders', '?' + _sb_eq('id', rid) + '&select=created_by'),
+                          headers=sb_admin_headers(), timeout=10)
+        rows = lookup.json() if lookup.ok else []
+        if not rows:
+            return jsonify({'error': 'Not found'}), 404
+        if not _owns_or_admin(rows[0].get('created_by')):
+            return jsonify({'error': 'Not permitted'}), 403
         d = request.json or {}
         updates = {}
         if 'completed' in d:
@@ -2571,23 +2693,31 @@ def update_reminder(rid):
         if 'assigned_to' in d: updates['assigned_to'] = str(d['assigned_to']).strip()
         if not updates:
             return jsonify({'ok': False, 'error': 'Nothing to update'}), 400
-        r = http.patch(f"{SUPABASE_URL}/rest/v1/hd_reminders?id=eq.{rid}", json=updates, headers=sb_admin_headers(), timeout=10)
+        r = http.patch(sb_url('hd_reminders', "?" + _sb_eq('id', rid)), json=updates, headers=sb_admin_headers(), timeout=10)
         if r.status_code >= 300:
             return jsonify({'ok': False, 'error': r.text[:500]}), 400
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='reminders/<int:rid>')
 
 @app.route('/reminders/<int:rid>', methods=['DELETE'])
 @require_auth
 def delete_reminder(rid):
     try:
-        r = http.delete(f"{SUPABASE_URL}/rest/v1/hd_reminders?id=eq.{rid}", headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
+        # Ownership check
+        lookup = http.get(sb_url('hd_reminders', '?' + _sb_eq('id', rid) + '&select=created_by'),
+                          headers=sb_admin_headers(), timeout=10)
+        rows = lookup.json() if lookup.ok else []
+        if not rows:
+            return jsonify({'error': 'Not found'}), 404
+        if not _owns_or_admin(rows[0].get('created_by')):
+            return jsonify({'error': 'Not permitted'}), 403
+        r = http.delete(sb_url('hd_reminders', "?" + _sb_eq('id', rid)), headers=sb_admin_headers(prefer='return=minimal'), timeout=10)
         if r.status_code >= 300:
             return jsonify({'ok': False, 'error': r.text[:500]}), 400
         return jsonify({'ok': True})
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return _safe_error(e, context='reminders/<int:rid>')
 
 if __name__ == '__main__':
     app.run(debug=os.environ.get('FLASK_ENV') != 'production', port=5000)
