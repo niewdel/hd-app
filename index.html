@@ -3912,6 +3912,7 @@ async function doLogin(){
       window._userEmail=d.email||'';
       window._userPhone=d.phone||'';
       window._userAvatar=d.avatar_data||'';
+      if(typeof d.welcome_seen==='boolean')window._userWelcomeSeen=d.welcome_seen;
       window._draftUserAvatar=window._userAvatar||'';
       hydrateSenderFromAccount(false);
       document.getElementById('login-screen').style.display='none';
@@ -15009,12 +15010,31 @@ function openHelpModal(){
 function closeHelpModal(){
   var m=document.getElementById('help-modal');
   if(m)m.classList.add('hidden');
+  // Mark seen on the server (account-bound) AND in localStorage (browser
+  // fallback for the case where the server column doesn't exist yet).
+  _markWelcomeSeen();
+}
+function _markWelcomeSeen(){
+  window._userWelcomeSeen=true;
+  try{localStorage.setItem('hd_welcome_seen','1');}catch(_){}
+  try{
+    fetch('/auth/welcome-seen',{method:'POST',headers:{'Content-Type':'application/json'}})
+      .catch(function(){}); // best-effort; localStorage covers failure
+  }catch(_){}
 }
 function _maybeShowWelcomeOnFirstLogin(){
+  // Server flag wins. Falls back to localStorage if server hasn't told us
+  // either way (e.g., welcome_seen_at column doesn't exist yet).
   try{
+    if(window._userWelcomeSeen===true) return; // server says seen
+    if(window._userWelcomeSeen===false){
+      // Server explicitly says not seen → show, regardless of localStorage
+      setTimeout(openHelpModal,800);
+      return;
+    }
+    // Server didn't tell us — fall back to legacy localStorage flag
     if(!localStorage.getItem('hd_welcome_seen')){
       setTimeout(openHelpModal,800);
-      localStorage.setItem('hd_welcome_seen','1');
     }
   }catch(_){}
 }
@@ -15102,6 +15122,10 @@ function startHelpTour(){
       window._userEmail=d.email||'';
       window._userPhone=d.phone||'';
       window._userAvatar=d.avatar_data||'';
+      // Server-tracked welcome-seen flag. Stays undefined if /auth/check
+      // didn't include it (e.g., column doesn't exist yet) — falls back to
+      // localStorage in _maybeShowWelcomeOnFirstLogin.
+      if(typeof d.welcome_seen==='boolean')window._userWelcomeSeen=d.welcome_seen;
       window._draftUserAvatar=window._userAvatar||'';
       hydrateSenderFromAccount(false);
       document.getElementById('login-screen').style.display='none';

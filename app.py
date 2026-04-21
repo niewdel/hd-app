@@ -255,7 +255,8 @@ def login():
             return jsonify({'ok': True, 'role': session['role'], 'username': session['username'],
                             'full_name': session['full_name'],
                             'email': session['email'], 'phone': session['phone'],
-                            'avatar_data': user.get('avatar_data', '')})
+                            'avatar_data': user.get('avatar_data', ''),
+                            'welcome_seen': bool(user.get('welcome_seen_at'))})
         else:
             # Increment failure counter; lock account at 10 cumulative failures
             try:
@@ -341,9 +342,32 @@ def auth_check():
         return jsonify({'authenticated': True,
                         'role': user.get('role', session.get('role', 'user')),
                         'username': user.get('username', session.get('username', '')),
-                        'full_name': user.get('full_name', session.get('full_name', ''))})
+                        'full_name': user.get('full_name', session.get('full_name', '')),
+                        'welcome_seen': bool(user.get('welcome_seen_at'))})
     return jsonify({'authenticated': True, 'role': session.get('role', 'user'),
-                    'username': session.get('username', ''), 'full_name': session.get('full_name', '')})
+                    'username': session.get('username', ''), 'full_name': session.get('full_name', ''),
+                    'welcome_seen': False})
+
+@app.route('/auth/welcome-seen', methods=['POST'])
+@require_auth
+def mark_welcome_seen():
+    """Mark the current user's welcome modal as seen so it doesn't auto-show on
+    subsequent logins from any device. Called by the frontend when the welcome
+    modal is dismissed."""
+    try:
+        username = session.get('username', '')
+        if not username:
+            return jsonify({'ok': False, 'error': 'No session'}), 401
+        from datetime import datetime
+        http.patch(sb_url('hd_users', '?' + _sb_eq('username', username)),
+                   headers={**sb_headers(), 'Prefer': 'return=minimal'},
+                   json={'welcome_seen_at': datetime.utcnow().isoformat()},
+                   timeout=5)
+        return jsonify({'ok': True})
+    except Exception as e:
+        # If the column doesn't exist yet (SQL migration not run), this 4xx's
+        # silently. Frontend still has the localStorage fallback.
+        return _safe_error(e, context='auth/welcome-seen')
 
 @app.route('/auth/profile', methods=['PATCH'])
 @require_auth
