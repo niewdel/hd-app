@@ -5429,18 +5429,13 @@ function _renderWxHero(el,data,idx){
   var tod=_wxTimeOfDay(data);
   var heroCat=_wxCodeToCat(code);
   var bgHtml;
-  if(heroCat==='rain'){
-    // Real rain video loop — better than any photo+overlay combo for selling actual rain.
+  // Real rain video loop for any rain-like category — drizzle, rain, heavyrain, storm.
+  // Better than any photo+overlay combo for selling actual rain.
+  if(heroCat==='rain'||heroCat==='drizzle'||heroCat==='heavyrain'||heroCat==='storm'){
     bgHtml='<video autoplay loop muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;background:#1a1f2a;"><source src="/static/wx/wx-rain.mp4" type="video/mp4"></video>';
   } else {
     var photoUrl=_wxPhotoUrl(code,tod);
     bgHtml='<div style="position:absolute;inset:0;z-index:0;background-image:url(\''+photoUrl+'\');background-size:cover;background-position:center;background-repeat:no-repeat;animation:wxKenBurns 30s ease-in-out infinite alternate;"></div>';
-    if(heroCat==='heavyrain'||heroCat==='drizzle'||heroCat==='storm'){
-      var rainCls='wx-rain-fx';
-      if(heroCat==='heavyrain'||heroCat==='storm')rainCls+=' wx-rain-heavy';
-      else if(heroCat==='drizzle')rainCls+=' wx-rain-drizzle';
-      bgHtml+='<div class="'+rainCls+'" aria-hidden="true"></div>';
-    }
   }
   // Rain pill — uses selected day's precip prob
   var rain=daily.precipitation_probability_max?(daily.precipitation_probability_max[idx]||0):0;
