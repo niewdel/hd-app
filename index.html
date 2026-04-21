@@ -15000,7 +15000,7 @@ function openHelpModal(){
     var nameLine=window._userName?('Welcome, '+window._userName+'. '):'Welcome. ';
     var roleLine='';
     if(window._userRole==='dev')        roleLine='You have full developer access.';
-    else if(window._userRole==='admin') roleLine='You have admin access — every panel except Users.';
+    else if(window._userRole==='admin') roleLine='You have admin access across the platform.';
     else if(window._userRole==='field') roleLine='You have field access — schedule, work orders, and time tracking.';
     else                                roleLine='You have standard access — proposals, pipeline, contacts, and reports.';
     rl.textContent=nameLine+roleLine;
