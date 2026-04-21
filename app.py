@@ -313,10 +313,37 @@ def change_password():
 
 @app.route('/auth/check')
 def auth_check():
-    if session.get('authenticated'):
-        return jsonify({'authenticated': True, 'role': session.get('role','user'),
-                        'username': session.get('username',''), 'full_name': session.get('full_name','')})
-    return jsonify({'authenticated': False})
+    if not session.get('authenticated'):
+        return jsonify({'authenticated': False})
+    # Refresh session against current DB row in case the user was renamed
+    # since this session was created (e.g., admin changed their username).
+    # Look up by current session.username first; fall back to email if missing
+    # (which happens when username was changed but session still has the old value).
+    sess_un = session.get('username', '')
+    sess_em = session.get('email', '')
+    user = None
+    try:
+        if sess_un:
+            r = http.get(sb_url('hd_users', '?' + _sb_eq('username', sess_un) + '&active=eq.true&limit=1'),
+                         headers=sb_headers(), timeout=5)
+            if r.status_code == 200 and r.json():
+                user = r.json()[0]
+        if not user and sess_em:
+            r = http.get(sb_url('hd_users', '?' + _sb_eq('email', sess_em) + '&active=eq.true&limit=1'),
+                         headers=sb_headers(), timeout=5)
+            if r.status_code == 200 and r.json():
+                user = r.json()[0]
+                # Username drift detected — refresh session to current DB value
+                apply_user_session(user)
+    except Exception:
+        pass  # Network blip — fall back to current session values
+    if user:
+        return jsonify({'authenticated': True,
+                        'role': user.get('role', session.get('role', 'user')),
+                        'username': user.get('username', session.get('username', '')),
+                        'full_name': user.get('full_name', session.get('full_name', ''))})
+    return jsonify({'authenticated': True, 'role': session.get('role', 'user'),
+                    'username': session.get('username', ''), 'full_name': session.get('full_name', '')})
 
 @app.route('/auth/profile', methods=['PATCH'])
 @require_auth
