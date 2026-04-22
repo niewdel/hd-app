@@ -2280,7 +2280,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           <button class="stab on" data-admin-hidden id="stab-estimating" onclick="showSettingsTab('estimating')">Estimating</button>
           <button class="stab" data-admin-hidden id="stab-library" onclick="showSettingsTab('library')">Item Library</button>
           <button class="stab" data-admin-hidden id="stab-crewequip" onclick="showSettingsTab('crewequip')">Crew &amp; Equipment</button>
-          <button class="stab" data-dev-hidden id="stab-approvalgrp" onclick="showSettingsTab('approvalgrp')">Approval Group</button>
+          <button class="stab" data-admin-hidden id="stab-approvalgrp" onclick="showSettingsTab('approvalgrp')">Approval Group</button>
         </div>
 
         <!-- General Tab (hidden — moved to account modal, kept for DOM refs) -->
@@ -3163,7 +3163,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
       <div style="font-family:var(--font-display);font-weight:700;font-size:14px;margin:18px 0 8px;color:var(--blk);">What I want from you</div>
       <p style="margin-bottom:8px;">
-        Walk every panel. Build a test proposal. Move it through the pipeline (New Lead &rarr; Estimate Sent &rarr; Approved &rarr; Scheduled). Export a PDF. Add a test client. Log a test work order. Then go through the panels you'd actually use day-to-day and tell me what's confusing, what's missing, what you'd change.
+        Walk every panel. Build a test proposal. Move it through the pipeline (Lead &rarr; Takeoff &rarr; Sent &rarr; Won). Export a PDF. Add a test client. Log a test work order. Then go through the panels you'd actually use day-to-day and tell me what's confusing, what's missing, what you'd change.
       </p>
       <p style="margin-bottom:6px;">The surfaces where your input matters most:</p>
       <ul style="padding-left:20px;margin-bottom:14px;">
@@ -9996,8 +9996,8 @@ async function exportPDF(){
     var url=URL.createObjectURL(blob);
     window.open(url,'_blank');
     toast('PDF opened — use browser print/download to save','ok');
-    // Auto-move to "Estimate Sent" in pipeline if we have a saved quote
-    if(lastSavedQuoteId) autoMoveToStage(lastSavedQuoteId,'Estimate Sent');
+    // Auto-move to "Sent" stage when the proposal PDF is exported
+    if(lastSavedQuoteId) autoMoveToStage(lastSavedQuoteId,'Sent');
   }catch(e){toast('PDF error: '+e.message,'err');}
   finally{
     if(btn){btn.disabled=false;btn.textContent='Export PDF';}
@@ -15116,7 +15116,7 @@ function _tourStepsForRole(role){
   var dashboard=step('[aria-label="Dashboard"]','Dashboard',
     'Your operations command center. Today\'s weather, scheduled jobs, the bid calendar, and incoming leads &mdash; all in one view.');
   var projects=step('[aria-label="Projects"]','Projects',
-    'Pipeline (Kanban), list, bid calendar, and map views of every job. Move proposals through stages &mdash; New Lead &rarr; Estimate Sent &rarr; Approved &rarr; Scheduled.');
+    'Pipeline (Kanban), list, bid calendar, and map views of every job. Move proposals through stages &mdash; Lead &rarr; Takeoff &rarr; Waiting for Approval &rarr; Approved &rarr; Sent &rarr; Won.');
   var schedule=step('[aria-label="Schedule"]','Schedule',
     'Day, week, and month views of all crew assignments. Drag work orders onto days to assign. Weather is pinned at the top so you can see what\'s coming.');
   var contacts=step('[aria-label="Contacts"]','Contacts',
