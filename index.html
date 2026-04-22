@@ -2659,10 +2659,6 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                 <label class="btn btn-sec btn-sm" style="cursor:pointer;"><input type="file" accept="image/*" multiple style="display:none;" onchange="uploadWOPhotos(this.files)"/>+ Add Photos</label>
               </div>
             </div>
-            <div class="mc-card" style="margin-bottom:14px;">
-              <div class="card-hdr"><span class="card-title">Material Suppliers</span></div>
-              <div class="card-body" id="wo-suppliers"><div class="empty-state"><div class="empty-state-desc">No suppliers listed.</div></div></div>
-            </div>
           </div>
         </div>
       </div></div>
@@ -6562,6 +6558,10 @@ function _renderProjectSummaryInner(proj){
           if(wo.status===s)opt.selected=true;
           statusBtn.appendChild(opt);
         });
+        // Stop click/mousedown from bubbling to the parent card (which opens the WO view).
+        // Without this, opening the dropdown opens the WO before the user can pick an option.
+        statusBtn.addEventListener('click',function(e){e.stopPropagation();});
+        statusBtn.addEventListener('mousedown',function(e){e.stopPropagation();});
         (function(i){statusBtn.addEventListener('change',function(e){
           e.stopPropagation();
           snap.work_orders[i].status=this.value;
@@ -7417,9 +7417,6 @@ function openWorkOrderModal(editWoId){
     +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Contact Phone</label><input id="wo-contact-phone" class="inp" placeholder="(555) 000-0000" style="width:100%;" value="'+esc(editing?editing.onsite_phone:'')+'"></div>'
     +'</div>'
     +'<div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Crew Notes</label><textarea id="wo-crew-notes" rows="2" class="inp" placeholder="Special instructions for the crew..." style="width:100%;resize:vertical;">'+esc(editing?editing.crew_notes:'')+'</textarea></div>'
-    +'<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--dgray);text-transform:uppercase;letter-spacing:0.5px;">Material Suppliers</div>'
-    +'<div id="wo-suppliers-list"></div>'
-    +'<button class="btn btn-sec btn-sm" style="margin-bottom:14px;" onclick="addWOSupplier()">+ Add Supplier</button>'
     +'<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--dgray);text-transform:uppercase;letter-spacing:0.5px;">Scheduling</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:10px;margin-bottom:10px;">'
     +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Start Date</label><input type="date" id="wo-sched-date" class="inp" style="width:100%;" value="'+(editing&&editing.scheduled_date?editing.scheduled_date:'')+'"></div>'
@@ -7436,9 +7433,6 @@ function openWorkOrderModal(editWoId){
   modal.appendChild(box);
   modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
   document.body.appendChild(modal);
-  // Init suppliers
-  window._woSuppliers=(editing&&editing.suppliers)?editing.suppliers.map(function(s){return {name:s.name||'',type:s.type||'',phone:s.phone||'',notes:s.notes||''};}):[];
-  renderWOSuppliers();
   document.getElementById('wo-save').addEventListener('click',function(){
     var name=document.getElementById('wo-name').value.trim();
     if(!name){toast('Enter a work order name','err');return;}
@@ -7458,7 +7452,8 @@ function openWorkOrderModal(editWoId){
       scheduled_days:parseInt(document.getElementById('wo-sched-days').value)||1,
       scheduled_time:document.getElementById('wo-sched-time').value||null,
       scheduled_end_time:document.getElementById('wo-sched-end-time').value||null,
-      suppliers:window._woSuppliers||[],
+      // Suppliers UI removed; preserve existing data on the WO so it isn't dropped on edit.
+      suppliers:(editing&&editing.suppliers)||[],
       linked_proposal:linkedProp,
       phase_id:(function(){var pe=document.getElementById('wo-phase');return pe?parseInt(pe.value)||null:null;})(),
       date:new Date().toISOString().split('T')[0]
@@ -12583,22 +12578,7 @@ function renderWorkOrderDetail(){
   if(wo.assigned_to)notesHtml+='<div style="margin-top:8px;font-size:12px;"><b>Assigned To:</b> '+esc(wo.assigned_to)+'</div>';
   notesEl.innerHTML=notesHtml||'<p style="color:var(--dgray);font-size:12px;">No crew notes.</p>';
 
-  // Material Suppliers
-  var supEl=document.getElementById('wo-suppliers');
-  if(supEl){
-    var suppliers=wo.suppliers||[];
-    if(suppliers.length){
-      var supHtml='';
-      suppliers.forEach(function(s){
-        supHtml+='<div style="padding:8px 0;border-bottom:1px solid var(--bdr);">'
-          +'<div style="font-weight:600;font-size:13px;">'+esc(s.name||'Unnamed')+(s.type?' <span style="font-size:11px;font-weight:400;color:var(--dgray);">('+esc(s.type)+')</span>':'')+'</div>'
-          +(s.phone?'<div style="font-size:12px;color:var(--dgray);">'+esc(s.phone)+'</div>':'')
-          +(s.notes?'<div style="font-size:11px;color:#555;margin-top:2px;">'+esc(s.notes)+'</div>':'')
-          +'</div>';
-      });
-      supEl.innerHTML=supHtml;
-    } else {supEl.innerHTML='<p style="color:var(--dgray);font-size:12px;">No suppliers listed.</p>';}
-  }
+  // Material Suppliers section removed from WO view — block intentionally omitted.
 
   // Site Plan
   var spEl=document.getElementById('wo-site-plan');
