@@ -2321,8 +2321,6 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             </div>
           </div>
           <!-- Proposal Sender Defaults removed — profile is used as sender info -->
-          <!-- Hidden inputs to keep saveSender/loadSenderUI from crashing -->
-          <input type="hidden" id="sender-name"/><input type="hidden" id="sender-email"/><input type="hidden" id="sender-phone"/>
           <div class="card">
             <div class="card-hdr"><span class="card-title">Appearance</span></div>
             <div class="card-body dark-mode-card">
@@ -3692,9 +3690,10 @@ function getUserInitials(name){
   return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
 }
 
-function hydrateSenderFromAccount(force){
-  var profileSender={name:window._userName||'',email:window._userEmail||'',phone:window._userPhone||''};
-  if(force||(!sender.name&&!sender.email&&!sender.phone))sender=profileSender;
+// Sender info is always derived from the logged-in user's account record
+// (hd_users.full_name/email/phone). No app-level hd_sender setting.
+function hydrateSenderFromAccount(){
+  sender={name:window._userName||'',email:window._userEmail||'',phone:window._userPhone||''};
 }
 
 function getActiveAvatarData(){
@@ -3816,8 +3815,7 @@ async function saveAcctProfile(){
     window._userName=prof.full_name||fullName;window._userEmail=prof.email||email;window._userPhone=prof.phone||phone;
     window._userAvatar=prof.avatar_data||'';window._draftUserAvatar=window._userAvatar;
     renderUserChrome();
-    sender={name:window._userName,email:window._userEmail,phone:window._userPhone};
-    _saveSetting('hd_sender',sender);loadSenderUI();
+    hydrateSenderFromAccount();
     // Also sync the old profile form if it exists
     var pn=document.getElementById('profile-name');if(pn)pn.value=window._userName;
     var pe=document.getElementById('profile-email');if(pe)pe.value=window._userEmail;
@@ -3922,12 +3920,12 @@ async function doLogin(){
       window._notifPrefsFromServer=d.notif_prefs||null;
       if(typeof d.welcome_seen==='boolean')window._userWelcomeSeen=d.welcome_seen;
       window._draftUserAvatar=window._userAvatar||'';
-      hydrateSenderFromAccount(false);
+      hydrateSenderFromAccount();
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
       stopLoginCanvas();
       try{boot();}catch(e){console.warn('boot error:',e.message);}
-      hydrateSenderFromAccount(false);
+      hydrateSenderFromAccount();
       initSidebarCanvas();
       showAdminElements();
       renderUserChrome();
@@ -4697,7 +4695,6 @@ function _saveSetting(key,value){
 function loadStorage(){
   // Load from localStorage first (instant), then overlay with Supabase data
   try{
-    var s=localStorage.getItem('hd_sender');if(s)sender=JSON.parse(s);
     var p=localStorage.getItem('hd_presets');if(p)PRESETS=JSON.parse(p);
     var bd=localStorage.getItem('hd_badge_defs');if(bd){try{Object.assign(BADGE_DEFS,JSON.parse(bd));}catch(e){}}
     var mp=localStorage.getItem('hd_mat_prices');
@@ -4779,11 +4776,10 @@ function _applyJCDefaults(d){
 }
 
 function _loadFromSupabase(){
-  fetch('/settings/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:['hd_sender','hd_presets','hd_badge_defs','hd_mat_prices','hd_jc_defaults','hd_crews','hd_bid_library','hd_handbook_url','hd_equipment','hd_unit_prices','hd_notif_prefs','hd_company_info','hd_dark_mode','hd_auto_logout','hd_sb_pinned','hd_subcontractors','hd_default_notes']})})
+  fetch('/settings/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:['hd_presets','hd_badge_defs','hd_mat_prices','hd_jc_defaults','hd_crews','hd_bid_library','hd_handbook_url','hd_equipment','hd_unit_prices','hd_notif_prefs','hd_company_info','hd_dark_mode','hd_auto_logout','hd_sb_pinned','hd_subcontractors','hd_default_notes']})})
     .then(function(r){return r.json();}).then(function(d){
       if(!d.ok||!d.values)return;
       var v=d.values;
-      if(v.hd_sender){sender=v.hd_sender;try{localStorage.setItem('hd_sender',JSON.stringify(v.hd_sender));}catch(e){}}
       if(v.hd_presets){PRESETS=v.hd_presets;try{localStorage.setItem('hd_presets',JSON.stringify(v.hd_presets));}catch(e){}}
       if(v.hd_badge_defs){Object.assign(BADGE_DEFS,v.hd_badge_defs);try{localStorage.setItem('hd_badge_defs',JSON.stringify(BADGE_DEFS));}catch(e){}applyBadgeStyles();}
       if(v.hd_mat_prices){_applyMatPrices(v.hd_mat_prices);try{localStorage.setItem('hd_mat_prices',JSON.stringify(v.hd_mat_prices));}catch(e){}}
@@ -8293,7 +8289,7 @@ function showPanel(id,el){
   if(id==='project')renderProjectSummary();
   if(id==='build')updateProposalDocBadge();
   if(id==='co'){populateCOProposalDropdown();updateCODocBadge();}
-  if(id==='settings'){loadSenderUI();renderMatPriceInputs();renderJCDefaults();showSettingsTab('estimating');}
+  if(id==='settings'){renderMatPriceInputs();renderJCDefaults();showSettingsTab('estimating');}
   if(id==='jobcost'){aggregateWOActualsIntoEVA();renderJobCost();renderEVA();}
   // analytics panel removed
   if(id==='pipeline')setTimeout(renderPipeline,50);
@@ -10659,9 +10655,7 @@ async function saveOwnProfile(){
     window._userAvatar=p.avatar_data||'';
     window._draftUserAvatar=window._userAvatar||'';
     renderUserChrome();
-    // Sync sender defaults to profile
-    sender={name:window._userName||'',email:window._userEmail||'',phone:window._userPhone||''};
-    _saveSetting('hd_sender',sender);loadSenderUI();
+    hydrateSenderFromAccount();
     if(status){status.textContent='Profile saved.';status.style.color='var(--badge-ok)';}
     toast('Profile updated','ok');
   }catch(e){
@@ -10669,26 +10663,10 @@ async function saveOwnProfile(){
   }
 }
 
-function saveSender(){
-  sender={
-    name:(document.getElementById('sender-name')||{}).value||'',
-    email:(document.getElementById('sender-email')||{}).value||'',
-    phone:(document.getElementById('sender-phone')||{}).value||''
-  };
-  _saveSetting('hd_sender',sender);
-  toast('Sender defaults saved','ok');
-}
-function resetSenderToProfile(){
-  sender={name:window._userName||'',email:window._userEmail||'',phone:window._userPhone||''};
-  loadSenderUI();
-  _saveSetting('hd_sender',sender);
-  toast('Sender defaults synced to your profile','ok');
-}
-function loadSenderUI(){
-  var name=document.getElementById('sender-name'); if(name)name.value=sender.name||'';
-  var email=document.getElementById('sender-email'); if(email)email.value=sender.email||'';
-  var phone=document.getElementById('sender-phone'); if(phone)phone.value=sender.phone||'';
-}
+// Sender info now sourced exclusively from the logged-in user's account
+// (Account Settings > Profile). The sender_name/email/phone embedded in
+// proposal PDFs and email templates always reflect whoever sent it.
+// saveSender / resetSenderToProfile / loadSenderUI removed.
 var DEFAULT_PROJECT_NOTES='All work to be performed in accordance with NCDOT standards. Site must be clear of debris prior to mobilization. See Exhibit A on Page 3 for Site Plan & Takeoffs.';
 var _defaultProjectNotes=DEFAULT_PROJECT_NOTES;
 function saveDefaultNotes(){
@@ -15197,12 +15175,12 @@ function startHelpTour(){
       // localStorage in _maybeShowWelcomeOnFirstLogin.
       if(typeof d.welcome_seen==='boolean')window._userWelcomeSeen=d.welcome_seen;
       window._draftUserAvatar=window._userAvatar||'';
-      hydrateSenderFromAccount(false);
+      hydrateSenderFromAccount();
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').className='on';
       stopLoginCanvas();
       try{boot();}catch(e){console.warn('boot error:',e.message);}
-      hydrateSenderFromAccount(false);
+      hydrateSenderFromAccount();
       initSidebarCanvas();
       showAdminElements();
       renderUserChrome();
