@@ -67,12 +67,17 @@ To update a record: `PATCH` to `...rest/v1/TABLE_NAME?id=eq.ID` with JSON body.
 ├── generate_job_cost.py
 ├── generate_docx.py        # Word doc generator
 ├── generate_report.py      # Report PDF generator
+├── generate_work_order.py
 ├── proposal_view.html      # PUBLIC page — shareable proposal view + client approval
-├── lead_form.html          # PUBLIC page — lead intake form for potential clients
-├── hd_logo_cropped.png     # Logo for PDF cover page
-├── hd_logo.png             # Logo for login bar (has extra padding)
+├── lead_form.html          # PUBLIC page — quote-request form (iframe-aware)
+├── applicants_form.html    # PUBLIC page — careers / job application form (iframe-aware, resume upload)
+├── hd_logo.png             # Full logo (HD letters + HAULING & GRADING wordmark) — login screen + public form headers
+├── hd-no-background.png    # Same as hd_logo.png but with transparent background — used in public form headers (replaces hd_logo)
+├── hd-mark.png             # HD-only crop (no wordmark) — favicon + sidebar/topbar logo
 ├── requirements.txt
 └── Procfile
+
+NOTE: hd_logo_cropped.png is referenced by some PDF generators with a fallback to hd_logo.png; the cropped file does not currently ship in the repo.
 ```
 
 ---
@@ -95,9 +100,13 @@ id, username (unique), full_name, email, phone, pin_hash (bcrypt), role (`admin`
 id, username, full_name, action (`login`/`logout`), success, ip_address, user_agent, logged_at.
 
 ### `proposals` (quotes/projects)
-id, name, client, total, stage_id (FK to pipeline_stages), snap (JSONB — full proposal snapshot), share_token (unique, for public sharing), created_by, created_at, archived, archived_at, project_number.
+id, client_id, name, client, date, total, snap (JSONB — full proposal snapshot), stage_id (FK to pipeline_stages), status, notes, created_at, updated_at, created_by, archived, archived_at, share_token.
 
-**Design note — proposals and projects share this table.** A row with `snap.is_project = false` is a proposal (estimate that may or may not become a job). A row with `snap.is_project = true` is a live project (won deal that's executing). Project-only fields (work orders, scheduled dates, linked proposals, change orders, daily logs) live inside the `snap` JSONB rather than as separate columns.
+**There is NO top-level `project_number` column** — earlier docs were wrong. The project number lives inside `snap.project_number`. PostgREST 400s if you POST `project_number` in the row body. (Bit `convert_lead` 2026-04-22; backfilled.)
+
+**`snap` MUST be passed as a dict object, NOT json.dumps(string).** PostgREST will store a stringified JSON inside the JSONB column if you pass a string, which breaks server-side jsonb queries (`snap->>'key'` returns NULL) and forces the frontend to double-`JSON.parse`. `/projects/create` does this correctly; `convert_lead` was fixed 2026-04-22.
+
+**Design note — proposals and projects share this table.** A row with `snap.is_project = false` (or unset) is a proposal (estimate that may or may not become a job). A row with `snap.is_project = true` is a live project. **The Pipeline panel filter is `snap.is_project === true`** — rows without that flag are silently invisible there. New `convert_lead` flow now sets `is_project: true` so converted leads appear in Pipeline → Lead column.
 
 This is intentional. The state transition from proposal → project is just a flag flip + linkage, with no data migration. Reports that need to scope to "actual projects" filter `snap.is_project === true`. Reports that span all opportunities iterate the full table.
 
@@ -105,14 +114,24 @@ A separate `projects` table was considered and rejected (2026-04-21): the cost o
 
 Foreign keys: `change_orders.proposal_id`, `hd_time_entries.project_id`, and `hd_notifications.project_id` all reference `proposals.id` (the row's PK regardless of whether it's currently a proposal or a project).
 
-Reports use the helpers `_isReportable(p)` and `_isProjectReportable(p)` (defined just above `selectReport()` in `index.html`) to filter source data. `_isReportable` strips archived rows; `_isProjectReportable` additionally enforces `snap.is_project === true`. Use these in any new report or analytics function instead of inlining the check.
+Reports use the helpers `_isReportable(p)` and `_isProjectReportable(p)` (defined just above `selectReport()` in `index.html`) to filter source data. `_isReportable` strips archived rows AND any row in the **Disqualified** stage (counts_in_ratio:false in pipeline_stages — those deals never reached real evaluation, see 2026-04-22). `_isProjectReportable` additionally enforces `snap.is_project === true`. Use these in any new report or analytics function instead of inlining the check.
 
 ### `clients`
 id, name, company, phone, email, address, city_state, notes.
 
 ### `pipeline_stages`
 id, name, color, position, counts_in_ratio, is_closed.
-9 stages: New Lead, Estimate Sent, Follow Up, Under Review, Approved, Scheduled, In Progress, Completed, Lost.
+**Live 8 stages** (verified via Supabase 2026-04-22):
+1. Lead (id 19) — counts_in_ratio:false, is_closed:false
+2. Takeoff (id 21) — false / false
+3. Waiting for Approval (id 28) — false / false (triggers approval-request notification to approver group)
+4. Approved (id 29) — false / false (internal pricing approval; locks proposal)
+5. Sent (id 23) — false / false (auto-set when PDF exported)
+6. Won (id 25) — true / true (triggers work-order auto-create + GC selection + jobs_won email)
+7. Lost (id 26) — true / true (triggers jobs_lost email)
+8. Disqualified (id 27) — false / true (excluded from reports via _isReportable)
+
+NOTE: Older code references stale stage names like "New Lead", "Estimate Sent", "Follow Up", "Under Review", "Scheduled", "In Progress", "Completed" — these stages no longer exist. Reports/funnel still have hardcoded stale lists in 5 places (deferred sweep). The welcome modal + tour copy was fixed 2026-04-22.
 
 ### `hd_bug_reports`
 id, title, description, severity (Minor/Major/Critical), panel, status (Open/In Progress/Fixed/Closed), submitted_by, submitted_at, browser_info, screen_info, admin_notes, resolved_at.
@@ -122,6 +141,11 @@ id, type (general/project/client), ref_id, ref_name, note, due_date, assigned_to
 
 ### `hd_leads`
 id, name, company, email, phone, address, description, source, status (new/accepted/rejected), matched_client_id, created_proposal_id, submitted_at.
+
+### `hd_applicants` (new 2026-04-22)
+id, name, email, phone, city_state, position, role_type (Office/Field/Either), years_exp (None/<1/1-3/3-5/5-10/10+), work_eligible BOOL, age_18_plus BOOL, has_license BOOL, cdl_class (None/Class A/Class B), resume_path, resume_filename, resume_mime, note, source, status (new/reviewed/contacted/rejected/hired), reviewed_by, reviewed_at, admin_notes, submitted_at.
+
+Resume files live in the **`resumes` Supabase Storage bucket** (private; 5MB cap; PDF + DOC + DOCX only). Server-side proxy at `/applicants/<id>/resume` streams the file to authenticated office staff via the service-role key — bucket is never exposed to the browser directly.
 
 ### `hd_roadmap`
 id, title, description, category, status, priority, version, created_at.
@@ -173,11 +197,20 @@ id, proposal_id, number, date, description, snap (JSONB), add_total, deduct_tota
 ### Lead Intake (NO AUTH for submit)
 | Method | Route | Description |
 |---|---|---|
-| GET | `/lead-form` | Serves public lead intake form |
-| POST | `/leads/submit` | Public lead submission with auto client dedup |
+| GET | `/lead-form` | Serves public lead intake form (iframe-allowed) |
+| POST | `/leads/submit` | Public lead submission with auto client dedup. Notifies office staff in-app + email (default ON). |
 | GET | `/leads/list` | List leads (requires auth) |
 | PATCH | `/leads/<id>` | Update lead status (requires auth) |
-| POST | `/leads/<id>/convert` | Convert lead to project + client (requires auth) |
+| POST | `/leads/<id>/convert` | Convert lead to project + client (requires auth). Sets `snap.is_project: true` so it appears in Pipeline. Uses `sb_admin_headers` (RLS on proposals). Returns ok:false on insert failure instead of silently marking lead accepted. |
+
+### Applicant Intake (NO AUTH for submit) — added 2026-04-22
+| Method | Route | Description |
+|---|---|---|
+| GET | `/applicants-form` | Serves public job application form (iframe-allowed) |
+| POST | `/applicants/submit` | Multipart upload — uploads resume to `resumes` Storage bucket, inserts hd_applicants row, fans in-app notif + email (default ON via `_users_opted_in('new_applicants', default=True)`) |
+| GET | `/applicants/list` | List applicants (?status=new\|all). Auth required. |
+| PATCH | `/applicants/<id>` | Update status (reviewed/contacted/rejected/hired) + admin_notes. Stamps reviewed_by/at. |
+| GET | `/applicants/<id>/resume` | Server-side proxy that streams the resume file from the private Storage bucket using the service-role key. Auth required. |
 
 ### Reminders
 | Method | Route | Auth | Description |
@@ -240,13 +273,18 @@ id, proposal_id, number, date, description, snap (JSONB), add_total, deduct_tota
 |---|---|---|---|
 | GET | `/boot/data` | yes | Returns quotes + pipeline stages + proposals in one call (parallel server-side) |
 
-### Backend Helpers (added 2026-04-20)
+### Backend Helpers (added 2026-04-20, updated 2026-04-22)
 
 - `_safe_error(e, context)` — logs internally via `app.logger.exception`, returns generic `{'error': 'Internal error. Check logs.'}` with 500. Use in authed routes; do NOT use for 400/403 semantic responses or public routes.
 - `_sb_eq(column, value)` — URL-safe PostgREST filter via `urllib.parse.quote`. Use instead of f-string interpolation in any route that builds a `?col=eq.{var}` filter.
 - `_owns_or_admin(record_created_by)` — null-safe ownership check. Returns True for admin/dev unconditionally; for other roles compares `record_created_by` to `session.get('username')`. Apply on update/delete routes.
-- `set_security_headers` now sets explicit `Access-Control-Allow-Origin` for the Railway production domain only. Other origins get no CORS header (no broad allowlist).
+- `set_security_headers` allowlists `https://hdapp.up.railway.app` for CORS, AND allows iframe embedding for `/lead-form` + `/applicants-form` only (everything else gets `X-Frame-Options: DENY` + `frame-ancestors 'none'`).
 - `/send-email` rate-limit: 20 sends per rolling 24h per user. Audit log to `hd_email_log` table — must exist in Supabase or rate limit silently fails open.
+- `_users_opted_in(email_pref_key, default=False)` — returns active office users (admin/user/dev) opted in to a given email pref. **`default=True`** treats users with `notif_prefs.email[key]==null` as opted-in (used for `new_leads` and `new_applicants` so existing users get emails without re-saving prefs).
+- `_send_lead_email(lead)` and `_send_applicant_email(applicant)` — both use the Gmail OAuth (`GMAIL_TOKEN_JSON`) and send from `admin@hdgrading.com`. Sender Gmail account configured 2026-04-22.
+
+### Sender info (changed 2026-04-22)
+The "From" name/email/phone on proposal PDFs and prefilled email templates **always reflects the logged-in user** (sourced from `hd_users.full_name/email/phone`). The previous shared `hd_sender` app setting was removed — Settings → Account is the single place to update it. `hydrateSenderFromAccount()` re-derives the sender global from `window._userName/_userEmail/_userPhone`.
 
 ### Other Routes
 - `/roadmap/*` — Roadmap CRUD (admin)
@@ -264,7 +302,7 @@ The entire frontend is one HTML file. All CSS, JS, and HTML in one file. No buil
 ### Panels (navigation sections)
 | Panel ID | Description |
 |---|---|
-| `panel-dashboard` | Dashboard — KPIs, weather, today's schedule, reminders, leads, recent activity |
+| `panel-dashboard` | Dashboard — KPIs, weather, today's schedule, reminders, **Forms & Applicants** (combined leads + careers feed with red `QUOTE` / blue `CAREER` badges), recent activity |
 | `panel-build` | Proposal builder with pricing options |
 | `panel-project` | Single project detail view |
 | `panel-projects` | Projects list + pipeline (Kanban) |
