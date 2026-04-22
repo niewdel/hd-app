@@ -2579,7 +2579,7 @@ def convert_lead(lid):
             'stage_id': stage_id,
             'snap': json.dumps(snap),
             'created_by': session.get('username', 'system'),
-            'project_number': proj_num
+            # project_number lives inside snap (line above) — proposals table has no top-level column for it.
         }
         # RLS is enabled on `proposals` — must use service-role headers to insert.
         pr = http.post(sb_url('proposals'), json=prop_row, headers=sb_admin_headers(), timeout=10)
