@@ -193,15 +193,6 @@
       </div>
 
       <div class="field">
-        <label>Office, Field, or Either? <span class="req">*</span></label>
-        <div class="seg-group" role="radiogroup" aria-label="Role type">
-          <div class="seg-opt"><input type="radio" name="ap-role" id="ap-role-office" value="Office" required><label for="ap-role-office">Office</label></div>
-          <div class="seg-opt"><input type="radio" name="ap-role" id="ap-role-field" value="Field"><label for="ap-role-field">Field</label></div>
-          <div class="seg-opt"><input type="radio" name="ap-role" id="ap-role-either" value="Either"><label for="ap-role-either">Either</label></div>
-        </div>
-      </div>
-
-      <div class="field">
         <label for="ap-years">Years of Experience in Similar Work <span class="req">*</span></label>
         <select id="ap-years" required>
           <option value="">— Select —</option>
@@ -362,7 +353,6 @@ function submitApplicant(){
     phone: document.getElementById('ap-phone').value.trim(),
     city_state: document.getElementById('ap-city').value.trim(),
     position: document.getElementById('ap-position').value.trim(),
-    role_type: _radio('ap-role'),
     years_exp: document.getElementById('ap-years').value,
     work_eligible: _radio('ap-eligible'),
     age_18_plus: _radio('ap-age'),
@@ -372,7 +362,7 @@ function submitApplicant(){
     source: document.getElementById('ap-source').value
   };
 
-  var required = ['name','email','phone','city_state','position','role_type','years_exp','work_eligible','age_18_plus','has_license','source'];
+  var required = ['name','email','phone','city_state','position','years_exp','work_eligible','age_18_plus','has_license','source'];
   for (var i = 0; i < required.length; i++) {
     if (!fields[required[i]]) {
       err.textContent = 'Please fill out every required field.';
