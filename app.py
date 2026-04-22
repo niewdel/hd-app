@@ -52,9 +52,9 @@ def sb_admin_headers(prefer='return=representation'):
 
 @app.after_request
 def set_security_headers(response):
-    # /lead-form is intentionally embeddable on external websites (public quote form).
-    # Everything else denies framing.
-    is_public_embed = request.path == '/lead-form'
+    # /lead-form and /applicants-form are intentionally embeddable on external
+    # websites (public quote + careers forms). Everything else denies framing.
+    is_public_embed = request.path in ('/lead-form', '/applicants-form')
     if not is_public_embed:
         response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-Content-Type-Options'] = 'nosniff'
