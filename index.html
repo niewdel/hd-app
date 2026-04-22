@@ -1671,10 +1671,13 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div class="ops-stack" id="dash-pipeline-col">
               <div class="dash-section">
                 <div class="dash-section-hdr">
-                  <span class="dash-section-title">New Leads</span>
-                  <button class="btn btn-sec btn-sm" onclick="window.open('/lead-form','_blank')">View Form</button>
+                  <span class="dash-section-title">Forms &amp; Applicants</span>
+                  <div style="display:flex;gap:6px;">
+                    <button class="btn btn-sec btn-sm" onclick="window.open('/lead-form','_blank')" title="Public Quote Request form">Quote Form</button>
+                    <button class="btn btn-sec btn-sm" onclick="window.open('/applicants-form','_blank')" title="Public Careers / Application form">Careers Form</button>
+                  </div>
                 </div>
-                <div id="dash-leads" style="max-height:280px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><div class="empty-state-title">No new leads</div><div class="empty-state-desc">Share your lead form to capture inbound requests</div></div></div>
+                <div id="dash-leads" style="max-height:320px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><div class="empty-state-title">No new submissions</div><div class="empty-state-desc">Share your Quote &amp; Careers forms to capture inbound activity</div></div></div>
               </div>
 
               <div class="dash-section">
@@ -2380,6 +2383,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div style="font-weight:600;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);">Email Alerts</div>
               <div id="notif-toggles-email" style="display:flex;flex-direction:column;gap:6px;">
                 <div class="notif-toggle-row"><span class="notif-toggle-label">New Leads<span class="notif-toggle-desc">When a quote request arrives from the website form</span></span><label class="dark-switch"><input type="checkbox" data-email-key="new_leads" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
+                <div class="notif-toggle-row"><span class="notif-toggle-label">New Applicants<span class="notif-toggle-desc">When someone submits a job application from the careers form</span></span><label class="dark-switch"><input type="checkbox" data-email-key="new_applicants" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
                 <div class="notif-toggle-row"><span class="notif-toggle-label">Jobs Won<span class="notif-toggle-desc">When a project moves to Approved stage</span></span><label class="dark-switch"><input type="checkbox" data-email-key="jobs_won" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
                 <div class="notif-toggle-row"><span class="notif-toggle-label">New Assignments<span class="notif-toggle-desc">When you're assigned to a project</span></span><label class="dark-switch"><input type="checkbox" data-email-key="assignment" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
                 <div class="notif-toggle-row"><span class="notif-toggle-label">@Mentions<span class="notif-toggle-desc">When someone tags you in a note</span></span><label class="dark-switch"><input type="checkbox" data-email-key="mention" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
@@ -14691,7 +14695,7 @@ function markAllNotifsRead(){
 }
 
 // ── Notification Preferences ──────────────────────────────────────────────
-var _notifPrefs={inapp:{mention:true,assignment:true,stage_change:true,due_date:true,weather:true},email:{jobs_won:false,assignment:false,mention:false,jobs_lost:false,new_leads:false}};
+var _notifPrefs={inapp:{mention:true,assignment:true,stage_change:true,due_date:true,weather:true},email:{jobs_won:false,assignment:false,mention:false,jobs_lost:false,new_leads:false,new_applicants:true}};
 
 function _applyNotifPrefsToUI(){
   document.querySelectorAll('[data-notif-key]').forEach(function(cb){
@@ -17068,34 +17072,156 @@ function renderPricingOptions(){
   c.innerHTML=html;
 }
 
-// ── Leads ────────────────────────────────────────────────
-function loadDashLeads(){
+// ── Forms & Applicants (dashboard) ───────────────────────
+// Combined feed: leads (Quote requests) + applicants (Careers).
+// Each card carries a colored badge so the type is readable at a glance.
+
+var _BADGE_QUOTE = 'background:#fdecec;color:#a30000;border-left:3px solid #cc0000;';
+var _BADGE_CAREER = 'background:#e8f0fb;color:#1e4ba0;border-left:3px solid #2563eb;';
+
+function _formCardOuter(borderLeftCss){
+  return 'display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bdr);' + borderLeftCss;
+}
+function _badgePill(label, css){
+  return '<span style="display:inline-block;font-size:9px;font-weight:800;letter-spacing:0.6px;padding:2px 7px;border-radius:3px;text-transform:uppercase;' + css.replace(/border-left:[^;]+;/, '') + '">' + label + '</span>';
+}
+
+function loadDashForms(){
   var c=document.getElementById('dash-leads');if(!c)return;
-  fetch('/leads/list?status=new').then(function(r){return r.json();}).then(function(d){
-    if(!d.ok||!d.items||d.items.length===0){
-      c.innerHTML='<div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><div class="empty-state-title">No new leads</div><div class="empty-state-desc">Share your lead form to capture inbound requests</div></div>';
+  Promise.all([
+    fetch('/leads/list?status=new').then(function(r){return r.json();}).catch(function(){return {ok:false,items:[]};}),
+    fetch('/applicants/list?status=new').then(function(r){return r.json();}).catch(function(){return {ok:false,items:[]};})
+  ]).then(function(results){
+    var leads = (results[0] && results[0].items) || [];
+    var apps  = (results[1] && results[1].items) || [];
+    var feed = [];
+    leads.forEach(function(l){ feed.push({kind:'lead', when:l.submitted_at||'', data:l}); });
+    apps.forEach(function(a){ feed.push({kind:'applicant', when:a.submitted_at||'', data:a}); });
+    feed.sort(function(a,b){ return (b.when||'').localeCompare(a.when||''); });
+    if(feed.length === 0){
+      c.innerHTML='<div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><div class="empty-state-title">No new submissions</div><div class="empty-state-desc">Share your Quote &amp; Careers forms to capture inbound activity</div></div>';
       return;
     }
     var html='';
-    d.items.forEach(function(l){
-      var ago=l.submitted_at?timeSince(new Date(l.submitted_at)):'';
-      html+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);">';
-      html+='<div style="flex:1;min-width:0;">';
-      html+='<div style="font-size:13px;font-weight:500;">'+esc(l.name)+(l.company?' <span style="color:var(--dgray);font-weight:400;">— '+esc(l.company)+'</span>':'')+'</div>';
-      html+='<div style="font-size:11px;color:var(--dgray);margin-top:2px;">';
-      if(l.email)html+=esc(l.email)+' ';
-      if(l.phone)html+=esc(l.phone)+' ';
-      html+='</div>';
-      if(l.description)html+='<div style="font-size:12px;color:var(--dgray);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(l.description)+'</div>';
-      if(ago)html+='<div style="font-size:10px;color:var(--dgray);margin-top:2px;">'+ago+'</div>';
-      html+='</div>';
-      html+='<div style="display:flex;gap:4px;flex-shrink:0;">';
-      html+='<button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="convertLead('+l.id+')">Accept</button>';
-      html+='<button class="btn-ico" onclick="dismissLead('+l.id+')" title="Dismiss" style="color:var(--red);font-size:14px;">&#10005;</button>';
-      html+='</div></div>';
+    feed.forEach(function(item){
+      var ago = item.when ? timeSince(new Date(item.when)) : '';
+      if(item.kind === 'lead'){
+        var l = item.data;
+        html += '<div style="' + _formCardOuter('border-left:3px solid #cc0000;background:#fffafa;') + '">';
+        html += '<div style="flex:1;min-width:0;">';
+        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' + _badgePill('Quote', _BADGE_QUOTE) + '<span style="font-size:11px;color:var(--dgray);">' + ago + '</span></div>';
+        html += '<div style="font-size:13px;font-weight:600;">' + esc(l.name) + (l.company?' <span style="color:var(--dgray);font-weight:400;">— ' + esc(l.company) + '</span>':'') + '</div>';
+        html += '<div style="font-size:11px;color:var(--dgray);margin-top:2px;">';
+        if(l.email) html += esc(l.email) + ' ';
+        if(l.phone) html += esc(l.phone);
+        html += '</div>';
+        if(l.description) html += '<div style="font-size:12px;color:var(--dgray);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(l.description) + '</div>';
+        html += '</div>';
+        html += '<div style="display:flex;gap:4px;flex-shrink:0;">';
+        html += '<button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="convertLead(' + l.id + ')">Accept</button>';
+        html += '<button class="btn-ico" onclick="dismissLead(' + l.id + ')" title="Dismiss" style="color:var(--red);font-size:14px;">&#10005;</button>';
+        html += '</div></div>';
+      } else {
+        var a = item.data;
+        var roleBits = [];
+        if(a.position) roleBits.push(esc(a.position));
+        if(a.role_type) roleBits.push(esc(a.role_type));
+        if(a.years_exp) roleBits.push(esc(a.years_exp) + ' yrs');
+        html += '<div style="' + _formCardOuter('border-left:3px solid #2563eb;background:#fafbff;') + '">';
+        html += '<div style="flex:1;min-width:0;">';
+        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' + _badgePill('Career', _BADGE_CAREER) + '<span style="font-size:11px;color:var(--dgray);">' + ago + '</span>' + (a.resume_path?'<span style="font-size:10px;color:#1e4ba0;font-weight:600;">Resume attached</span>':'') + '</div>';
+        html += '<div style="font-size:13px;font-weight:600;">' + esc(a.name) + '</div>';
+        if(roleBits.length) html += '<div style="font-size:12px;color:var(--dgray);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + roleBits.join(' · ') + '</div>';
+        html += '<div style="font-size:11px;color:var(--dgray);margin-top:2px;">';
+        if(a.email) html += esc(a.email) + ' ';
+        if(a.phone) html += esc(a.phone);
+        html += '</div>';
+        html += '</div>';
+        html += '<div style="display:flex;gap:4px;flex-shrink:0;">';
+        html += '<button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="viewApplicant(' + a.id + ')">View</button>';
+        html += '<button class="btn-ico" onclick="dismissApplicant(' + a.id + ')" title="Dismiss" style="color:var(--red);font-size:14px;">&#10005;</button>';
+        html += '</div></div>';
+      }
     });
-    c.innerHTML=html;
-  }).catch(function(){});
+    c.innerHTML = html;
+  });
+}
+
+// Backwards-compat alias — older code paths still call loadDashLeads
+function loadDashLeads(){ return loadDashForms(); }
+
+// ── Applicant viewer ─────────────────────────────────────
+var _applicantsCache = {};
+
+function viewApplicant(id){
+  fetch('/applicants/list?status=all').then(function(r){return r.json();}).then(function(d){
+    if(!d.ok) return;
+    var a = (d.items||[]).find(function(x){return x.id===id;});
+    if(!a){ toast('Applicant not found','err'); return; }
+    _applicantsCache[id] = a;
+    var modal = document.getElementById('applicant-modal');
+    if(!modal){ console.error('applicant-modal element missing'); return; }
+    document.getElementById('am-title').textContent = a.name || 'Applicant';
+    var bodyHtml = '';
+    function row(label, val){ if(!val && val!==false) return ''; if(val===true) val='Yes'; if(val===false) val='No'; return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px;"><span style="color:var(--dgray);">'+label+'</span><span style="font-weight:600;text-align:right;max-width:60%;">'+esc(String(val))+'</span></div>'; }
+    bodyHtml += row('Position', a.position);
+    bodyHtml += row('Role type', a.role_type);
+    bodyHtml += row('Years experience', a.years_exp);
+    bodyHtml += row('Email', a.email);
+    bodyHtml += row('Phone', a.phone);
+    bodyHtml += row('Location', a.city_state);
+    bodyHtml += row('Eligible to work in US', a.work_eligible);
+    bodyHtml += row('18 or older', a.age_18_plus);
+    bodyHtml += row("Driver's license", a.has_license);
+    if(a.cdl_class && a.cdl_class !== 'None') bodyHtml += row('CDL', a.cdl_class);
+    bodyHtml += row('Source', a.source);
+    bodyHtml += row('Submitted', a.submitted_at ? new Date(a.submitted_at).toLocaleString() : '');
+    bodyHtml += row('Status', a.status);
+    if(a.note){
+      bodyHtml += '<div style="margin-top:14px;"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--dgray);margin-bottom:5px;">Applicant note</div><div style="font-size:13px;line-height:1.5;background:var(--lgray);padding:10px 12px;border-radius:6px;white-space:pre-wrap;">'+esc(a.note)+'</div></div>';
+    }
+    if(a.resume_path){
+      bodyHtml += '<div style="margin-top:14px;"><a href="/applicants/'+a.id+'/resume" target="_blank" rel="noopener" class="btn btn-sec" style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>View resume'+(a.resume_filename?' — '+esc(a.resume_filename):'')+'</a></div>';
+    } else {
+      bodyHtml += '<div style="margin-top:14px;font-size:12px;color:var(--dgray);font-style:italic;">No resume attached.</div>';
+    }
+    document.getElementById('am-body').innerHTML = bodyHtml;
+    document.getElementById('am-id').value = id;
+    modal.classList.remove('hidden');
+  });
+}
+
+function closeApplicantModal(){
+  var m = document.getElementById('applicant-modal');
+  if(m) m.classList.add('hidden');
+}
+
+function setApplicantStatus(newStatus){
+  var id = parseInt(document.getElementById('am-id').value, 10);
+  if(!id) return;
+  fetch('/applicants/'+id, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({status:newStatus})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.ok){
+      toast('Marked '+newStatus, 'ok');
+      closeApplicantModal();
+      loadDashForms();
+    } else {
+      toast(d.error||'Update failed','err');
+    }
+  });
+}
+
+function dismissApplicant(id){
+  fetch('/applicants/'+id, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({status:'rejected'})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.ok){ loadDashForms(); toast('Applicant dismissed','ok'); }
+  });
 }
 
 function timeSince(date){
@@ -17132,6 +17258,26 @@ function addReminderFromProject(){
   openAddReminderModal('project',_currentProjectId,name);
 }
 </script>
+
+<!-- Applicant Detail Modal -->
+<div id="applicant-modal" class="modal-overlay hidden">
+  <div class="modal" style="width:520px;max-width:96vw;">
+    <div class="modal-hdr">
+      <h3><span style="display:inline-block;font-size:9px;font-weight:800;letter-spacing:0.6px;padding:2px 7px;border-radius:3px;background:#e8f0fb;color:#1e4ba0;margin-right:8px;vertical-align:middle;">CAREER</span><span id="am-title">Applicant</span></h3>
+      <button class="btn-ico" onclick="closeApplicantModal()" style="font-size:18px;">&#10005;</button>
+    </div>
+    <div class="modal-body" id="am-body" style="max-height:70vh;overflow-y:auto;"></div>
+    <input type="hidden" id="am-id"/>
+    <div class="modal-foot" style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-sec btn-sm" onclick="setApplicantStatus('reviewed')">Mark Reviewed</button>
+        <button class="btn btn-sec btn-sm" onclick="setApplicantStatus('contacted')">Mark Contacted</button>
+        <button class="btn btn-sec btn-sm" onclick="setApplicantStatus('hired')" style="border-color:#2e7d32;color:#2e7d32;">Mark Hired</button>
+      </div>
+      <button class="btn btn-red" onclick="closeApplicantModal()">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- Client Modal -->
 <div id="client-modal" class="modal-overlay hidden">

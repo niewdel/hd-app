@@ -2417,10 +2417,11 @@ def submit_lead():
         return jsonify({'ok': False, 'error': 'Could not save lead. Please try again.'}), 500
 
 LEAD_EMAIL_FROM = 'HD Hauling & Grading <admin@hdgrading.com>'
-def _users_opted_in(email_pref_key):
+def _users_opted_in(email_pref_key, default=False):
     """Return a list of (email, full_name) tuples for active office users
-    (role in admin/user/dev) whose notif_prefs.email[pref_key] === true and
-    who have an email address on file."""
+    (role in admin/user/dev) whose notif_prefs.email[pref_key] is True, OR is
+    unset and `default` is True (used for opt-in-by-default keys like
+    'new_applicants')."""
     try:
         r = http.get(sb_url('hd_users',
             '?active=eq.true&role=in.(admin,user,dev)'
@@ -2435,7 +2436,8 @@ def _users_opted_in(email_pref_key):
                 continue
             prefs = u.get('notif_prefs') or {}
             email_prefs = prefs.get('email') or {}
-            if email_prefs.get(email_pref_key) is True:
+            pref_val = email_prefs.get(email_pref_key)
+            if pref_val is True or (pref_val is None and default):
                 out.append((em, u.get('full_name') or em))
         return out
     except Exception as e:
@@ -2590,6 +2592,275 @@ def convert_lead(lid):
         return jsonify({'ok': True, 'proposal_id': proposal_id, 'client_id': client_id})
     except Exception as e:
         return _safe_error(e, context='leads/<int:lid>/convert')
+
+# ── Applicant Intake (job applications) ───────────────────
+APPLICANT_EMAIL_FROM = 'HD Hauling & Grading <admin@hdgrading.com>'
+RESUME_BUCKET = 'resumes'
+RESUME_MAX_BYTES = 5 * 1024 * 1024  # mirrors Storage bucket cap
+RESUME_ALLOWED_MIME = {
+    'application/pdf': 'pdf',
+    'application/msword': 'doc',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+}
+
+def _safe_resume_filename(name):
+    """Strip path separators + non-printable chars; cap length."""
+    base = (name or 'resume').rsplit('/', 1)[-1].rsplit('\\', 1)[-1]
+    cleaned = ''.join(c for c in base if c.isalnum() or c in '._- ').strip().replace(' ', '_')
+    return (cleaned or 'resume')[:120]
+
+def _storage_url(bucket, path=''):
+    return f'{SUPABASE_URL}/storage/v1/object/{bucket}/{path}'
+
+def _storage_admin_headers(content_type=None):
+    h = {
+        'apikey': SUPABASE_SERVICE_KEY,
+        'Authorization': f'Bearer {SUPABASE_SERVICE_KEY}',
+    }
+    if content_type:
+        h['Content-Type'] = content_type
+    return h
+
+@app.route('/applicants-form')
+def applicants_form_page():
+    """Serve the public job application form."""
+    return send_file('applicants_form.html')
+
+@app.route('/applicants/submit', methods=['POST'])
+def submit_applicant():
+    """Public route — no auth. Accept multipart job application from public form.
+    Uploads resume (optional) to Supabase Storage 'resumes' bucket, writes a row
+    to hd_applicants, notifies office users (in-app + email gated by pref)."""
+    # Rate limit per IP (5 / 30 min — applications shouldn't be high-volume)
+    try:
+        from security import rate_limit_check
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip() or 'unknown'
+        allowed, retry = rate_limit_check(f'applicant:{ip}', max_attempts=5, window_s=1800)
+        if not allowed:
+            return jsonify({'ok': False, 'error': f'Too many submissions. Try again in {retry}s.'}), 429
+    except ImportError:
+        pass
+
+    try:
+        f = request.form
+        name = f.get('name', '').strip()[:200]
+        if not name:
+            return jsonify({'ok': False, 'error': 'Name is required'}), 400
+
+        def yes(v): return str(v).strip().lower() in ('yes', 'true', '1', 'y')
+
+        row = {
+            'name': name,
+            'email': f.get('email', '').strip()[:200],
+            'phone': f.get('phone', '').strip()[:40],
+            'city_state': f.get('city_state', '').strip()[:200],
+            'position': f.get('position', '').strip()[:200],
+            'role_type': f.get('role_type', '').strip()[:20],
+            'years_exp': f.get('years_exp', '').strip()[:10],
+            'work_eligible': yes(f.get('work_eligible', '')),
+            'age_18_plus': yes(f.get('age_18_plus', '')),
+            'has_license': yes(f.get('has_license', '')),
+            'cdl_class': f.get('cdl_class', 'None').strip()[:20],
+            'note': f.get('note', '').strip()[:4000],
+            'source': f.get('source', '').strip()[:100],
+            'status': 'new',
+        }
+
+        resume = request.files.get('resume')
+        resume_path = None
+        resume_filename = None
+        resume_mime = None
+        if resume and resume.filename:
+            mime = (resume.mimetype or '').lower()
+            if mime not in RESUME_ALLOWED_MIME:
+                return jsonify({'ok': False, 'error': 'Resume must be PDF, DOC, or DOCX.'}), 400
+            data = resume.read()
+            if len(data) > RESUME_MAX_BYTES:
+                return jsonify({'ok': False, 'error': 'Resume exceeds 5 MB limit.'}), 400
+            ext = RESUME_ALLOWED_MIME[mime]
+            safe_name = _safe_resume_filename(resume.filename)
+            object_path = f'{uuid.uuid4()}_{safe_name}'
+            if not object_path.lower().endswith('.' + ext):
+                object_path += '.' + ext
+            up = http.post(
+                _storage_url(RESUME_BUCKET, object_path),
+                headers=_storage_admin_headers(content_type=mime),
+                data=data,
+                timeout=30,
+            )
+            if up.status_code >= 300:
+                app.logger.error('Storage upload failed: %s %s', up.status_code, up.text[:200])
+                return jsonify({'ok': False, 'error': 'Could not upload resume. Try again.'}), 500
+            resume_path = object_path
+            resume_filename = safe_name
+            resume_mime = mime
+
+        row['resume_path'] = resume_path
+        row['resume_filename'] = resume_filename
+        row['resume_mime'] = resume_mime
+
+        r = http.post(f"{SUPABASE_URL}/rest/v1/hd_applicants", json=row, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            # Best-effort cleanup of orphan upload
+            if resume_path:
+                try:
+                    http.delete(_storage_url(RESUME_BUCKET, resume_path), headers=_storage_admin_headers(), timeout=10)
+                except Exception:
+                    pass
+            return jsonify({'ok': False, 'error': 'Could not save application. Try again.'}), 500
+
+        # In-app notification fan-out to office users
+        try:
+            ur = http.get(sb_url('hd_users', '?active=eq.true&role=neq.field&select=username'), headers=sb_admin_headers(), timeout=5)
+            if ur.status_code == 200 and ur.json():
+                pos = row['position'] or 'Unspecified role'
+                title = f'New applicant: {name}'
+                body = f'{pos} — {row["years_exp"] or "—"} yrs exp, {row["role_type"] or "Role TBD"}'
+                rows = [{'recipient': u['username'], 'type': 'info', 'title': title, 'body': body, 'created_by': 'system'} for u in ur.json()]
+                http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=rows, timeout=5)
+        except Exception:
+            pass
+
+        # Email fan-out (best-effort, opt-in via notif_prefs.email.new_applicants)
+        try:
+            _send_applicant_email(row)
+        except Exception:
+            pass
+
+        return jsonify({'ok': True})
+    except Exception as e:
+        app.logger.exception('submit_applicant')
+        return jsonify({'ok': False, 'error': 'Could not save application. Please try again.'}), 500
+
+def _send_applicant_email(applicant):
+    """Email each office user opted in to New Applicants notifications.
+    Silently no-ops if Gmail isn't configured or nobody's opted in."""
+    if not GMAIL_AVAILABLE:
+        return
+    token_json = os.environ.get('GMAIL_TOKEN_JSON', '')
+    if not token_json:
+        return
+    recipients = _users_opted_in('new_applicants', default=True)
+    if not recipients:
+        return
+    import base64
+    from email.mime.text import MIMEText
+    try:
+        creds = Credentials.from_authorized_user_info(json.loads(token_json))
+        service = gmail_build('gmail', 'v1', credentials=creds)
+        name = applicant.get('name') or 'Unknown'
+        position = applicant.get('position') or 'Unspecified role'
+        subject = f'HD Hauling — New applicant: {name} ({position})'
+        body_lines = [
+            'A new job application came in from the careers form.',
+            '',
+            f'Name:           {name}',
+            f'Position:       {position}',
+            f'Role type:      {applicant.get("role_type") or "—"}',
+            f'Experience:     {applicant.get("years_exp") or "—"}',
+            f'Email:          {applicant.get("email") or "—"}',
+            f'Phone:          {applicant.get("phone") or "—"}',
+            f'Location:       {applicant.get("city_state") or "—"}',
+            f'Eligible to work: {"Yes" if applicant.get("work_eligible") else "No"}',
+            f'18 or older:    {"Yes" if applicant.get("age_18_plus") else "No"}',
+            f"Driver's license: {'Yes' if applicant.get('has_license') else 'No'}",
+            f'CDL:            {applicant.get("cdl_class") or "None"}',
+            f'Resume:         {"attached in app" if applicant.get("resume_path") else "not provided"}',
+            f'Source:         {applicant.get("source") or "—"}',
+            '',
+            'Note from applicant:',
+            applicant.get('note') or '—',
+            '',
+            'Open in the app: https://hdapp.up.railway.app/#dashboard',
+            '',
+            '— HD Hauling & Grading',
+        ]
+        body = '\n'.join(body_lines)
+        for email_addr, _full_name in recipients:
+            try:
+                msg = MIMEText(body, 'plain')
+                msg['to'] = email_addr
+                msg['from'] = APPLICANT_EMAIL_FROM
+                msg['subject'] = subject
+                raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+                service.users().messages().send(userId='me', body={'raw': raw}).execute()
+            except Exception as inner:
+                app.logger.error('[_send_applicant_email recipient=%s] %s', email_addr, inner)
+    except Exception as e:
+        app.logger.exception('_send_applicant_email')
+
+@app.route('/applicants/list')
+@require_auth
+def list_applicants():
+    """List applicants. ?status=new (default) | all"""
+    try:
+        status = request.args.get('status', 'new')
+        q = sb_url('hd_applicants', '?select=*&order=submitted_at.desc')
+        if status != 'all':
+            q += '&' + _sb_eq('status', status)
+        r = http.get(q, headers=sb_admin_headers(), timeout=10)
+        if r.status_code != 200:
+            return jsonify({'ok': False, 'error': r.text[:500]}), r.status_code
+        return jsonify({'ok': True, 'items': r.json()})
+    except Exception as e:
+        return _safe_error(e, context='applicants/list')
+
+@app.route('/applicants/<int:aid>', methods=['PATCH'])
+@require_auth
+def update_applicant(aid):
+    try:
+        d = request.json or {}
+        updates = {}
+        for key in ('status', 'admin_notes'):
+            if key in d:
+                updates[key] = d[key]
+        if 'status' in updates and updates['status'] in ('reviewed', 'contacted', 'rejected', 'hired'):
+            updates['reviewed_by'] = session.get('username', '')
+            updates['reviewed_at'] = datetime.utcnow().isoformat()
+        if not updates:
+            return jsonify({'ok': False, 'error': 'Nothing to update'}), 400
+        r = http.patch(sb_url('hd_applicants', '?' + _sb_eq('id', aid)), json=updates, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True})
+    except Exception as e:
+        return _safe_error(e, context='applicants/<int:aid>')
+
+@app.route('/applicants/<int:aid>/resume')
+@require_auth
+def applicant_resume(aid):
+    """Server-side proxy: fetch the resume from the private Storage bucket
+    using the service-role key and stream it to the authenticated office user.
+    Resumes never leave server-side auth context."""
+    try:
+        r = http.get(sb_url('hd_applicants', '?' + _sb_eq('id', aid) + '&select=resume_path,resume_filename,resume_mime,name'),
+                     headers=sb_admin_headers(), timeout=5)
+        if r.status_code != 200 or not r.json():
+            return jsonify({'ok': False, 'error': 'Applicant not found'}), 404
+        ap = r.json()[0]
+        path = ap.get('resume_path')
+        if not path:
+            return jsonify({'ok': False, 'error': 'No resume on file'}), 404
+        sr = http.get(_storage_url(RESUME_BUCKET, path), headers=_storage_admin_headers(), timeout=20, stream=True)
+        if sr.status_code != 200:
+            return jsonify({'ok': False, 'error': 'Could not fetch resume'}), 502
+        from flask import Response
+        mime = ap.get('resume_mime') or 'application/octet-stream'
+        # Suggest a download filename based on the applicant's name + original ext
+        ext = (ap.get('resume_filename') or '').rsplit('.', 1)
+        ext = ext[-1] if len(ext) == 2 else 'bin'
+        safe_name = ''.join(c for c in (ap.get('name') or 'applicant') if c.isalnum() or c in '_- ').strip().replace(' ', '_') or 'applicant'
+        download_name = f'{safe_name}_resume.{ext}'
+        return Response(
+            sr.iter_content(chunk_size=64 * 1024),
+            mimetype=mime,
+            headers={
+                'Content-Disposition': f'inline; filename="{download_name}"',
+                'Cache-Control': 'private, max-age=0',
+            },
+        )
+    except Exception as e:
+        return _safe_error(e, context='applicants/resume')
 
 # ── Time Tracking (GPS Clock-In/Out) ──────────────────────
 @app.route('/time/clock-in', methods=['POST'])

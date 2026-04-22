@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join Our Team — HD Hauling & Grading</title>
+<link rel="icon" type="image/png" href="/hd_logo_cropped.png"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --red:#CC0000;
+    --red-dk:#A30000;
+    --blk:#111;
+    --gray:#5a5a5a;
+    --gray-lt:#8a8a8a;
+    --lgray:#f5f5f5;
+    --bdr:#e3e3e3;
+    --bdr-strong:#cfcfcf;
+    --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  html,body{background:transparent;color:var(--blk);font-family:var(--font);line-height:1.5;}
+
+  /* ---------- Standalone-page chrome (only shown when NOT iframed) ---------- */
+  .header{background:var(--blk);padding:16px 24px;display:flex;align-items:center;gap:12px;}
+  .header img{height:36px;}
+  .header span{color:#fff;font-size:14px;font-weight:600;letter-spacing:1px;}
+  .container{max-width:680px;margin:32px auto;padding:0 16px;}
+  body:not(.embed-mode){background:#f8f8f8;}
+  .card{background:#fff;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;}
+  .card-hdr{padding:24px 28px 20px;border-bottom:1px solid var(--bdr);}
+
+  /* ---------- Embed mode: strip page chrome, fill host width ---------- */
+  body.embed-mode .header{display:none;}
+  body.embed-mode .container{max-width:none;margin:0;padding:0;}
+  body.embed-mode .card{border:none;border-radius:0;background:transparent;}
+  body.embed-mode .card-hdr{border-bottom:1px solid var(--bdr);padding:0 0 20px;margin-bottom:8px;}
+  body.embed-mode .card-body{padding:24px 0 8px;}
+
+  /* ---------- Form content ---------- */
+  .card-hdr h2{font-size:24px;font-weight:800;letter-spacing:-0.01em;line-height:1.2;}
+  .card-hdr h2 .accent{color:var(--red);}
+  .card-hdr p{font-size:14px;color:var(--gray);margin-top:6px;}
+  .card-body{padding:24px 28px 28px;}
+
+  .section-hdr{margin-top:28px;margin-bottom:4px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--blk);padding-bottom:8px;border-bottom:2px solid var(--red);display:inline-block;}
+  .section-hdr:first-of-type{margin-top:0;}
+
+  .field{margin-top:18px;}
+  .field-tight{margin-top:14px;}
+  .field-help{font-size:12px;color:var(--gray-lt);margin-top:5px;line-height:1.4;}
+  label{display:block;font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;}
+  .req{color:var(--red);margin-left:2px;}
+
+  input,textarea,select{
+    width:100%;
+    padding:12px 14px;
+    border:1px solid var(--bdr-strong);
+    border-radius:6px;
+    font-size:15px;
+    font-family:var(--font);
+    color:var(--blk);
+    background:#fff;
+    transition:border-color .15s, box-shadow .15s;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  input::placeholder,textarea::placeholder{color:#b0b0b0;}
+  input:focus,textarea:focus,select:focus{
+    outline:none;
+    border-color:var(--red);
+    box-shadow:0 0 0 3px rgba(204,0,0,0.12);
+  }
+  textarea{min-height:100px;resize:vertical;line-height:1.5;}
+
+  select{
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 14px center;
+    padding-right:36px;
+  }
+
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  .row2 .field{margin-top:0;}
+
+  /* Radio + checkbox segmented controls */
+  .seg-group{display:flex;gap:8px;flex-wrap:wrap;}
+  .seg-opt{flex:1;min-width:90px;}
+  .seg-opt input{position:absolute;opacity:0;pointer-events:none;}
+  .seg-opt label{
+    display:block;text-align:center;padding:10px 12px;
+    border:1px solid var(--bdr-strong);border-radius:6px;
+    font-size:13px;font-weight:600;color:var(--gray);
+    text-transform:none;letter-spacing:0;margin:0;cursor:pointer;
+    background:#fff;transition:all .12s;
+  }
+  .seg-opt input:checked + label{
+    background:var(--red);border-color:var(--red);color:#fff;
+    box-shadow:0 0 0 3px rgba(204,0,0,0.12);
+  }
+  .seg-opt label:hover{border-color:var(--red);}
+  .seg-opt input:checked + label:hover{border-color:var(--red);}
+
+  /* File upload */
+  .file-drop{
+    border:2px dashed var(--bdr-strong);border-radius:8px;
+    padding:22px 18px;text-align:center;cursor:pointer;
+    transition:border-color .15s, background .15s;background:#fafafa;
+  }
+  .file-drop:hover{border-color:var(--red);background:#fff5f5;}
+  .file-drop.has-file{border-color:var(--red);background:#fff5f5;border-style:solid;}
+  .file-drop svg{color:var(--gray-lt);margin-bottom:8px;}
+  .file-drop.has-file svg{color:var(--red);}
+  .file-drop-text{font-size:14px;font-weight:600;color:var(--blk);}
+  .file-drop-sub{font-size:12px;color:var(--gray-lt);margin-top:3px;}
+  .file-drop input[type=file]{display:none;}
+
+  .btn-submit{
+    display:block;width:100%;margin-top:24px;padding:15px 16px;
+    background:var(--red);color:#fff;border:none;border-radius:6px;
+    font-size:15px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;
+    cursor:pointer;font-family:var(--font);
+    transition:background .15s, transform .05s;
+    box-shadow:0 1px 0 rgba(0,0,0,0.04);
+  }
+  .btn-submit:hover{background:var(--red-dk);}
+  .btn-submit:active{transform:translateY(1px);}
+  .btn-submit:disabled{opacity:.55;cursor:not-allowed;background:var(--red);}
+
+  .err{color:var(--red);font-size:13px;margin-top:12px;font-weight:500;min-height:18px;}
+  .privacy{font-size:12px;color:var(--gray-lt);text-align:center;margin-top:14px;line-height:1.4;}
+
+  .success{text-align:center;padding:48px 24px;}
+  .success-ic{width:56px;height:56px;border-radius:50%;background:#e8f5ec;color:#2e7d32;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;}
+  .success h3{font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-0.01em;}
+  .success p{font-size:14px;color:var(--gray);max-width:380px;margin:0 auto;}
+
+  @media(max-width:560px){
+    .row2{grid-template-columns:1fr;gap:0;}
+    .row2 .field{margin-top:18px;}
+    .row2 .field:first-child{margin-top:0;}
+    .container{margin:16px auto;padding:0 12px;}
+    .card-hdr{padding:20px 20px 16px;}
+    .card-body{padding:20px;}
+    body.embed-mode .card-hdr{padding:0 0 16px;}
+    body.embed-mode .card-body{padding:20px 0 8px;}
+    .card-hdr h2{font-size:20px;}
+    .seg-opt{min-width:auto;}
+  }
+</style>
+</head>
+<body>
+<header class="header">
+  <img src="/hd_logo_cropped.png" alt="HD Hauling & Grading"/>
+  <span>HD HAULING &amp; GRADING</span>
+</header>
+
+<div class="container">
+  <div class="card" id="form-card">
+    <div class="card-hdr">
+      <h2>Join Our <span class="accent">Team</span></h2>
+      <p>HD Hauling &amp; Grading is hiring office and field staff. Tell us about yourself and our team will be in touch.</p>
+    </div>
+    <div class="card-body">
+
+      <div class="section-hdr">About You</div>
+
+      <div class="field">
+        <label for="ap-name">Full Name <span class="req">*</span></label>
+        <input type="text" id="ap-name" placeholder="John Smith" autocomplete="name" required/>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="ap-email">Email <span class="req">*</span></label>
+          <input type="email" id="ap-email" placeholder="john@example.com" autocomplete="email" required/>
+        </div>
+        <div class="field">
+          <label for="ap-phone">Phone <span class="req">*</span></label>
+          <input type="tel" id="ap-phone" placeholder="(555) 000-0000" autocomplete="tel" required/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="ap-city">City &amp; State <span class="req">*</span></label>
+        <input type="text" id="ap-city" placeholder="Concord, NC" autocomplete="address-level2" required/>
+      </div>
+
+      <div class="section-hdr">The Role</div>
+
+      <div class="field">
+        <label for="ap-position">Position You're Interested In <span class="req">*</span></label>
+        <input type="text" id="ap-position" placeholder="e.g. Equipment Operator, Estimator, Crew Member" required/>
+      </div>
+
+      <div class="field">
+        <label>Office, Field, or Either? <span class="req">*</span></label>
+        <div class="seg-group" role="radiogroup" aria-label="Role type">
+          <div class="seg-opt"><input type="radio" name="ap-role" id="ap-role-office" value="Office" required><label for="ap-role-office">Office</label></div>
+          <div class="seg-opt"><input type="radio" name="ap-role" id="ap-role-field" value="Field"><label for="ap-role-field">Field</label></div>
+          <div class="seg-opt"><input type="radio" name="ap-role" id="ap-role-either" value="Either"><label for="ap-role-either">Either</label></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="ap-years">Years of Experience in Similar Work <span class="req">*</span></label>
+        <select id="ap-years" required>
+          <option value="">— Select —</option>
+          <option value="None">None / Entry-level</option>
+          <option value="<1">Less than 1 year</option>
+          <option value="1-3">1 – 3 years</option>
+          <option value="3-5">3 – 5 years</option>
+          <option value="5-10">5 – 10 years</option>
+          <option value="10+">10+ years</option>
+        </select>
+      </div>
+
+      <div class="section-hdr">Eligibility</div>
+
+      <div class="field">
+        <label>Eligible to work in the United States? <span class="req">*</span></label>
+        <div class="seg-group" role="radiogroup">
+          <div class="seg-opt"><input type="radio" name="ap-eligible" id="ap-eligible-y" value="yes" required><label for="ap-eligible-y">Yes</label></div>
+          <div class="seg-opt"><input type="radio" name="ap-eligible" id="ap-eligible-n" value="no"><label for="ap-eligible-n">No</label></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>18 years of age or older? <span class="req">*</span></label>
+        <div class="seg-group" role="radiogroup">
+          <div class="seg-opt"><input type="radio" name="ap-age" id="ap-age-y" value="yes" required><label for="ap-age-y">Yes</label></div>
+          <div class="seg-opt"><input type="radio" name="ap-age" id="ap-age-n" value="no"><label for="ap-age-n">No</label></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Valid Driver's License? <span class="req">*</span></label>
+        <div class="seg-group" role="radiogroup">
+          <div class="seg-opt"><input type="radio" name="ap-license" id="ap-license-y" value="yes" required><label for="ap-license-y">Yes</label></div>
+          <div class="seg-opt"><input type="radio" name="ap-license" id="ap-license-n" value="no"><label for="ap-license-n">No</label></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="ap-cdl">Commercial Driver's License (CDL)?</label>
+        <select id="ap-cdl">
+          <option value="None">No CDL</option>
+          <option value="Class A">Class A CDL</option>
+          <option value="Class B">Class B CDL</option>
+        </select>
+        <div class="field-help">Required for some equipment / truck-driving positions.</div>
+      </div>
+
+      <div class="section-hdr">Resume &amp; Notes</div>
+
+      <div class="field">
+        <label>Upload Your Resume</label>
+        <div class="file-drop" id="ap-file-drop" onclick="document.getElementById('ap-resume').click()">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <div class="file-drop-text" id="ap-file-text">Click to upload your resume</div>
+          <div class="file-drop-sub" id="ap-file-sub">PDF or Word (.doc, .docx) — max 5 MB</div>
+          <input type="file" id="ap-resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onchange="onResumeChosen(event)"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="ap-note">A Brief Note About Yourself</label>
+        <textarea id="ap-note" placeholder="Anything you'd like our hiring team to know — relevant experience, why you're interested, schedule preferences, etc."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="ap-source">How did you hear about us? <span class="req">*</span></label>
+        <select id="ap-source" required>
+          <option value="">— Select —</option>
+          <option value="Indeed">Indeed</option>
+          <option value="LinkedIn">LinkedIn</option>
+          <option value="Referral">Referral from current employee</option>
+          <option value="Google">Google Search</option>
+          <option value="Drove Past">Drove Past a Job Site</option>
+          <option value="Social Media">Social Media</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div id="ap-err" class="err" role="alert" aria-live="polite"></div>
+      <button class="btn-submit" id="btn-ap-submit" onclick="submitApplicant()">Submit Application</button>
+      <p class="privacy">Your information and resume are kept private and used only by HD Hauling &amp; Grading hiring staff to evaluate your application.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auto-detect iframe embed and strip page chrome
+(function(){
+  try { if (window.self !== window.top) document.body.classList.add('embed-mode'); }
+  catch (e) { document.body.classList.add('embed-mode'); }
+})();
+
+// Post height to parent so the iframe can auto-resize
+function postHeight(){
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({type:'hd-applicantform-height', height:document.documentElement.scrollHeight}, '*');
+    }
+  } catch(e){}
+}
+window.addEventListener('load', postHeight);
+window.addEventListener('resize', postHeight);
+new ResizeObserver(postHeight).observe(document.body);
+
+var _resumeFile = null;
+var MAX_RESUME_BYTES = 5 * 1024 * 1024;
+var ALLOWED_RESUME_EXT = ['pdf','doc','docx'];
+
+function onResumeChosen(e){
+  var f = e.target.files && e.target.files[0];
+  var drop = document.getElementById('ap-file-drop');
+  var text = document.getElementById('ap-file-text');
+  var sub = document.getElementById('ap-file-sub');
+  var err = document.getElementById('ap-err');
+  err.textContent = '';
+  if (!f) {
+    _resumeFile = null;
+    drop.classList.remove('has-file');
+    text.textContent = 'Click to upload your resume';
+    sub.textContent = 'PDF or Word (.doc, .docx) — max 5 MB';
+    return;
+  }
+  var ext = (f.name.split('.').pop() || '').toLowerCase();
+  if (ALLOWED_RESUME_EXT.indexOf(ext) === -1) {
+    err.textContent = 'Resume must be PDF, DOC, or DOCX.';
+    e.target.value = '';
+    return;
+  }
+  if (f.size > MAX_RESUME_BYTES) {
+    err.textContent = 'Resume is over the 5 MB limit. Please upload a smaller file.';
+    e.target.value = '';
+    return;
+  }
+  _resumeFile = f;
+  drop.classList.add('has-file');
+  text.textContent = f.name;
+  sub.textContent = (f.size / 1024).toFixed(0) + ' KB — click to choose a different file';
+}
+
+function _radio(name){
+  var els = document.querySelectorAll('input[name="' + name + '"]:checked');
+  return els.length ? els[0].value : '';
+}
+
+function submitApplicant(){
+  var err = document.getElementById('ap-err');
+  var btn = document.getElementById('btn-ap-submit');
+  err.textContent = '';
+
+  var fields = {
+    name: document.getElementById('ap-name').value.trim(),
+    email: document.getElementById('ap-email').value.trim(),
+    phone: document.getElementById('ap-phone').value.trim(),
+    city_state: document.getElementById('ap-city').value.trim(),
+    position: document.getElementById('ap-position').value.trim(),
+    role_type: _radio('ap-role'),
+    years_exp: document.getElementById('ap-years').value,
+    work_eligible: _radio('ap-eligible'),
+    age_18_plus: _radio('ap-age'),
+    has_license: _radio('ap-license'),
+    cdl_class: document.getElementById('ap-cdl').value,
+    note: document.getElementById('ap-note').value.trim(),
+    source: document.getElementById('ap-source').value
+  };
+
+  var required = ['name','email','phone','city_state','position','role_type','years_exp','work_eligible','age_18_plus','has_license','source'];
+  for (var i = 0; i < required.length; i++) {
+    if (!fields[required[i]]) {
+      err.textContent = 'Please fill out every required field.';
+      return;
+    }
+  }
+
+  btn.disabled = true;
+  btn.textContent = _resumeFile ? 'Uploading...' : 'Submitting...';
+
+  var fd = new FormData();
+  Object.keys(fields).forEach(function(k){ fd.append(k, fields[k]); });
+  if (_resumeFile) fd.append('resume', _resumeFile, _resumeFile.name);
+
+  fetch('/applicants/submit', { method: 'POST', body: fd })
+    .then(function(r){ return r.json().then(function(d){ return {status:r.status, data:d}; }); })
+    .then(function(res){
+      var d = res.data;
+      if (d && d.ok) {
+        document.getElementById('form-card').innerHTML =
+          '<div class="success">' +
+            '<div class="success-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+            '<h3>Application Received</h3>' +
+            '<p>Thanks, ' + fields.name.split(' ')[0].replace(/[<>"]/g,'') + '. Our hiring team will review your application and reach out if it looks like a match. We appreciate your interest in HD Hauling &amp; Grading.</p>' +
+          '</div>';
+        postHeight();
+      } else {
+        err.textContent = (d && d.error) || 'Something went wrong. Please try again.';
+        btn.disabled = false;
+        btn.textContent = 'Submit Application';
+      }
+    })
+    .catch(function(){
+      err.textContent = 'Network error. Please try again.';
+      btn.disabled = false;
+      btn.textContent = 'Submit Application';
+    });
+}
+</script>
+</body>
+</html>
