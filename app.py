@@ -2555,8 +2555,8 @@ def convert_lead(lid):
             cr = http.post(sb_url('clients'), json=client_row, headers=sb_admin_headers(), timeout=10)
             if cr.status_code in (200, 201) and cr.json():
                 client_id = cr.json()[0]['id'] if isinstance(cr.json(), list) else cr.json().get('id')
-        # Find "New Lead" stage
-        sr = http.get(sb_url('pipeline_stages', '?select=id&order=position.asc&limit=1'), headers=sb_headers(), timeout=5)
+        # Find first pipeline stage ("Lead")
+        sr = http.get(sb_url('pipeline_stages', '?select=id&order=position.asc&limit=1'), headers=sb_admin_headers(), timeout=5)
         stage_id = sr.json()[0]['id'] if sr.status_code == 200 and sr.json() else None
         # Generate project number
         proj_num = _next_project_number()
@@ -2581,11 +2581,17 @@ def convert_lead(lid):
             'created_by': session.get('username', 'system'),
             'project_number': proj_num
         }
-        pr = http.post(sb_url('proposals'), json=prop_row, headers=sb_headers(), timeout=10)
+        # RLS is enabled on `proposals` — must use service-role headers to insert.
+        pr = http.post(sb_url('proposals'), json=prop_row, headers=sb_admin_headers(), timeout=10)
         proposal_id = None
         if pr.status_code in (200, 201) and pr.json():
             pdata = pr.json()[0] if isinstance(pr.json(), list) else pr.json()
             proposal_id = pdata.get('id')
+        # If the proposal insert failed, surface the error and leave the lead alone
+        # so the user can retry instead of marking it accepted with no project behind it.
+        if not proposal_id:
+            app.logger.error('convert_lead: proposal insert failed (%s) %s', pr.status_code, pr.text[:300])
+            return jsonify({'ok': False, 'error': 'Could not create project from lead. Try again or contact support.'}), 500
         # Mark lead as accepted
         http.patch(sb_url('hd_leads', "?" + _sb_eq('id', lid)),
                    json={'status': 'accepted', 'created_proposal_id': proposal_id},
