@@ -2455,7 +2455,7 @@ def _send_lead_email(lead):
     token_json = os.environ.get('GMAIL_TOKEN_JSON', '')
     if not token_json:
         return
-    recipients = _users_opted_in('new_leads')
+    recipients = _users_opted_in('new_leads', default=True)
     if not recipients:
         return
     import base64

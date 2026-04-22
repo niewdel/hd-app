@@ -14706,7 +14706,7 @@ function markAllNotifsRead(){
 }
 
 // ── Notification Preferences ──────────────────────────────────────────────
-var _notifPrefs={inapp:{mention:true,assignment:true,stage_change:true,due_date:true,weather:true},email:{jobs_won:false,assignment:false,mention:false,jobs_lost:false,new_leads:false,new_applicants:true}};
+var _notifPrefs={inapp:{mention:true,assignment:true,stage_change:true,due_date:true,weather:true},email:{jobs_won:false,assignment:false,mention:false,jobs_lost:false,new_leads:true,new_applicants:true}};
 
 function _applyNotifPrefsToUI(){
   document.querySelectorAll('[data-notif-key]').forEach(function(cb){
