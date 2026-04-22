@@ -2384,7 +2384,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               <div id="notif-toggles-email" style="display:flex;flex-direction:column;gap:6px;">
                 <div class="notif-toggle-row"><span class="notif-toggle-label">New Leads<span class="notif-toggle-desc">When a quote request arrives from the website form</span></span><label class="dark-switch"><input type="checkbox" data-email-key="new_leads" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
                 <div class="notif-toggle-row"><span class="notif-toggle-label">New Applicants<span class="notif-toggle-desc">When someone submits a job application from the careers form</span></span><label class="dark-switch"><input type="checkbox" data-email-key="new_applicants" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
-                <div class="notif-toggle-row"><span class="notif-toggle-label">Jobs Won<span class="notif-toggle-desc">When a project moves to Approved stage</span></span><label class="dark-switch"><input type="checkbox" data-email-key="jobs_won" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
+                <div class="notif-toggle-row"><span class="notif-toggle-label">Jobs Won<span class="notif-toggle-desc">When a project moves to Won stage (client awarded the work)</span></span><label class="dark-switch"><input type="checkbox" data-email-key="jobs_won" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
                 <div class="notif-toggle-row"><span class="notif-toggle-label">New Assignments<span class="notif-toggle-desc">When you're assigned to a project</span></span><label class="dark-switch"><input type="checkbox" data-email-key="assignment" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
                 <div class="notif-toggle-row"><span class="notif-toggle-label">@Mentions<span class="notif-toggle-desc">When someone tags you in a note</span></span><label class="dark-switch"><input type="checkbox" data-email-key="mention" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
                 <div class="notif-toggle-row"><span class="notif-toggle-label">Jobs Lost<span class="notif-toggle-desc">When a project moves to Lost stage</span></span><label class="dark-switch"><input type="checkbox" data-email-key="jobs_lost" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
@@ -11122,9 +11122,10 @@ async function moveCard(proposalId, stageId) {
       var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
       if(snap.locked&&!isApprover()){toast('This proposal is locked. Only approvers can move it.','err');return;}
     }
-    // Check if moving to Approved with multiple GCs
-    var approvedStage=(_pipelineStages||pipelineStages||[]).find(function(s){return s.name==='Approved';});
-    if(approvedStage&&stageId===approvedStage.id){
+    // Check if moving to Won with multiple GCs — prompt for which client awarded
+    // the work. (Approved is internal pricing approval; Won is the actual award.)
+    var wonStage=(_pipelineStages||pipelineStages||[]).find(function(s){return s.name==='Won';});
+    if(wonStage&&stageId===wonStage.id){
       var proj=pipelineProposals.find(function(x){return x.id===proposalId;});
       if(proj){
         var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
@@ -12989,12 +12990,14 @@ function exportWorkOrderPDF(){
     }).catch(function(e){toast('Error: '+e.message,'err');});
 }
 
-// -- Auto-Create Work Order on Approved Stage ---------------------------------
+// -- Auto-Create Work Order on Won Stage --------------------------------------
+// Approved is an internal pricing-approval stage. The project isn't actually
+// awarded by the client until it moves to Won — that's the trigger for work
+// order creation, GC selection, and "jobs won" email notifications.
 function autoCreateWorkOrder(projectId,stageId){
-  // Find the Approved stage
   if(!_pipelineStages)return;
-  var approvedStage=_pipelineStages.find(function(s){return s.name==='Approved';});
-  if(!approvedStage||stageId!==approvedStage.id)return;
+  var wonStage=_pipelineStages.find(function(s){return s.name==='Won';});
+  if(!wonStage||stageId!==wonStage.id)return;
   var proj=pipelineProposals.find(function(p){return p.id===projectId;});
   if(!proj)return;
   var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
@@ -13008,17 +13011,17 @@ function autoCreateWorkOrder(projectId,stageId){
     var q=savedQuotes.find(function(x){return x.id===linked[0];});
     if(!snap.work_orders)snap.work_orders=[];
     snap.work_orders.push({
-      id:Date.now(),name:proj.name+' — Work Order',description:'Auto-created when project moved to Approved.',
+      id:Date.now(),name:proj.name+' — Work Order',description:'Auto-created when project moved to Won.',
       assigned_to:'',status:'pending',date:new Date().toISOString().split('T')[0],
       linked_proposal:linked[0],onsite_contact:'',onsite_phone:'',crew_notes:'',scheduled_date:null
     });
-    addProjectActivity(snap,'wo','Work order auto-created (Approved)');
+    addProjectActivity(snap,'wo','Work order auto-created (Won)');
     fetch('/projects/update/'+projectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({snap:snap})})
       .then(function(){proj.snap=snap;toast('Work order auto-created','ok');});
   } else {
     // Multiple proposals — prompt user to select
     _currentProjectId=projectId;
-    toast('Project approved — add a work order and select a proposal','ok');
+    toast('Project won — add a work order and select a proposal','ok');
     setTimeout(function(){openWorkOrderModal();},500);
   }
 }
@@ -14780,7 +14783,7 @@ function sendAssignmentNotification(username,projectId,projectName){
 // Send notification for stage changes (jobs won/lost)
 function sendStageChangeNotification(projectId,projectName,newStage){
   var senderName=window._userName||window._userUsername||'Someone';
-  var isWon=newStage==='Approved';
+  var isWon=newStage==='Won';
   var isLost=newStage==='Lost';
   var emailType=isWon?'jobs_won':isLost?'jobs_lost':null;
   fetch('/notifications/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
