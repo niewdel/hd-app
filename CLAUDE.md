@@ -295,7 +295,7 @@ The entire frontend is one HTML file. All CSS, JS, and HTML in one file. No buil
 ### Role Visibility Model (updated 2026-04-21)
 
 - `dev` (Justin): sees everything, including Users / Activity Log / Archived / Roadmap / Bug Reports.
-- `admin` (Kyle): sees Dashboard, Projects, Pipeline, Build Proposal, Saved Docs, Schedule, Contacts, Change Orders, Work Orders, Analytics, Reports, Settings, the Feedback panel, and the Admin → Company tab. Hidden from admin: Users, Activity Log, Archived, Roadmap, Bug Reports (entire panel — admin uses Feedback instead, which is simpler / less specific). The Welcome modal copy intentionally does NOT mention what's hidden from admin (don't tip them off to features they don't have access to).
+- `admin` (Kyle): sees Dashboard, Projects, Pipeline, Build Proposal, Saved Docs, Schedule, Contacts, Change Orders, Work Orders, Analytics, Reports, Settings, the Feedback panel, and the Admin → Company + Archived tabs. Hidden from admin: Users, Activity Log, Roadmap, Bug Reports (entire panel — admin uses Feedback instead, which is simpler / less specific). The Welcome modal copy intentionally does NOT mention what's hidden from admin (don't tip them off to features they don't have access to).
 - `user`: standard operational role, sees the Feedback panel; no admin surfaces.
 - `field`: reduced UI — Dashboard, Schedule, Work Orders, time tracking only. No pricing surfaces, no Feedback, no Bug Reports.
 

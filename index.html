@@ -2837,7 +2837,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
     <button class="stab on" id="admin-tab-company" onclick="showAdminTab('company')">Company</button>
     <button class="stab" id="admin-tab-users" data-dev-hidden onclick="showAdminTab('users')">Users</button>
     <button class="stab" id="admin-tab-activity" data-dev-hidden onclick="showAdminTab('activity')">Activity Log</button>
-    <button class="stab" id="admin-tab-deleted" data-dev-hidden onclick="showAdminTab('deleted')">Archived</button>
+    <button class="stab" id="admin-tab-deleted" onclick="showAdminTab('deleted')">Archived</button>
   </div>
   <!-- Company tab -->
   <div id="admin-pane-company">
@@ -2895,7 +2895,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
     </div>
   </div>
   <!-- Archived tab -->
-  <div id="admin-pane-deleted" data-dev-hidden style="display:none;">
+  <div id="admin-pane-deleted" style="display:none;">
     <div class="card">
       <div class="card-hdr" style="display:flex;align-items:center;gap:16px;">
         <span class="card-title">Archived Projects</span>
@@ -3184,8 +3184,8 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
         <li><b>Weather widget videos</b> &mdash; first-load takes a moment to fetch the video; subsequent loads are instant from browser cache.</li>
       </ul>
 
-      <div style="font-family:var(--font-display);font-weight:700;font-size:14px;margin:18px 0 8px;color:var(--blk);">How to report a bug or an idea</div>
-      <p style="margin-bottom:14px;">
+      <div style="font-family:var(--font-display);font-weight:700;font-size:14px;margin:18px 0 8px;color:var(--blk);" id="welcome-report-heading">How to report a bug or an idea</div>
+      <p style="margin-bottom:14px;" id="welcome-report-body">
         In-app <b>Bug Reports</b> panel. Hit "Submit a Bug", type a short description, set severity, attach a screenshot if relevant, submit. That goes into the queue I review. This is faster than texting because I can triage and code-fix from one place.
       </p>
 
@@ -3196,7 +3196,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
         <li>You think data you saved is gone.</li>
         <li>Something you expected to be there isn't.</li>
       </ul>
-      <p style="margin-bottom:14px;color:var(--txt-secondary);">
+      <p style="margin-bottom:14px;color:var(--txt-secondary);" id="welcome-report-footer">
         For everything else, the Bug Reports panel beats a text thread.
       </p>
 
@@ -12140,8 +12140,19 @@ async function renderArchived(){
       (function(id){restoreBtn.addEventListener('click',async function(){
         try{
           var rr=await fetch('/admin/restore/'+id,{method:'POST'});var dd=await rr.json();
-          if(dd.ok){toast('Restored successfully','ok');renderArchived();renderSaved();renderPipeline();renderProjectsList();}
-          else toast('Restore failed','err');
+          if(dd.ok){
+            toast('Restored successfully','ok');
+            // Refresh in-memory caches so Pipeline/Reports/Saved all see the restored row.
+            try{
+              var results=await Promise.all([
+                fetch('/quotes/list').then(function(r){return r.json();}),
+                fetch('/pipeline/list').then(function(r){return r.json();})
+              ]);
+              if(results[0]&&results[0].ok)savedQuotes=results[0].quotes;
+              if(results[1]&&results[1].ok)pipelineProposals=results[1].proposals;
+            }catch(_){}
+            renderArchived();renderSaved();renderPipeline();renderProjectsList();
+          } else toast('Restore failed','err');
         }catch(e){toast('Restore error: '+e.message,'err');}
       });})(item.id);
       row.appendChild(restoreBtn);
@@ -15006,6 +15017,26 @@ function openHelpModal(){
     else                                roleLine='You have standard access — proposals, pipeline, contacts, and reports.';
     rl.textContent=nameLine+roleLine;
   }
+  // Role-aware "how to report" copy: dev has Bug Reports, others have Feedback,
+  // field has neither and should just text directly.
+  var rh=document.getElementById('welcome-report-heading');
+  var rb=document.getElementById('welcome-report-body');
+  var rf=document.getElementById('welcome-report-footer');
+  if(rh&&rb&&rf){
+    if(window._userRole==='dev'){
+      rh.textContent='How to report a bug or an idea';
+      rb.innerHTML='In-app <b>Bug Reports</b> panel. Hit "Submit a Bug", type a short description, set severity, attach a screenshot if relevant, submit. That goes into the queue I review. This is faster than texting because I can triage and code-fix from one place.';
+      rf.textContent='For everything else, the Bug Reports panel beats a text thread.';
+    } else if(window._userRole==='field'){
+      rh.textContent='How to flag something';
+      rb.textContent='Text me directly with a short description and a screenshot if you can. Field role is scoped to schedule, work orders, and time tracking — keep it quick.';
+      rf.textContent='';
+    } else {
+      rh.textContent='How to send feedback or flag a bug';
+      rb.innerHTML='Use the in-app <b>Feedback</b> tab. Type a short note — bug, idea, anything confusing — and submit. That goes into the queue I review. Faster than texting because I can triage and code-fix from one place.';
+      rf.textContent='For everything else, the Feedback tab beats a text thread.';
+    }
+  }
 }
 function closeHelpModal(){
   var m=document.getElementById('help-modal');
@@ -15197,7 +15228,13 @@ function selectReport(reportId,el){
   renderCurrentReport();
 }
 
-function initReports(){
+async function initReports(){
+  // Refresh pipelineProposals so reports reflect any archive/restore activity
+  // that happened in another tab or earlier in this session.
+  try{
+    var d=await fetch('/pipeline/list').then(function(r){return r.json();});
+    if(d&&d.ok)pipelineProposals=d.proposals;
+  }catch(_){}
   populateReportFilters();
   if(!_currentReport)_currentReport='estimate-perf';
   renderCurrentReport();
@@ -15264,7 +15301,7 @@ function getFilteredData(){
   var clientF=(document.getElementById('rpt-client')||{}).value||'';
   var spEl=document.getElementById('rpt-salesperson');var spF=spEl?spEl.value:'';
   var regionEl=document.getElementById('rpt-region');var regionF=regionEl?regionEl.value:'';
-  var all=(pipelineProposals||[]).filter(_isReportable).map(function(p){
+  var rawAll=(pipelineProposals||[]).filter(_isReportable).map(function(p){
     var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
     return{id:p.id,name:p.name||snap.name||'',client:p.client||snap.client||'',total:parseFloat(p.total)||0,
       stage:p.pipeline_stages?p.pipeline_stages.name:'',stageColor:p.pipeline_stages?p.pipeline_stages.color:'#999',
@@ -15277,6 +15314,17 @@ function getFilteredData(){
       work_orders:snap.work_orders||[],linked_proposals:snap.linked_proposals||[],
       change_orders:snap.change_orders||[],material_tracking:snap.material_tracking||[],
       invoices:snap.invoices||[],project_number:snap.project_number||''};
+  });
+  // Mirror calcPipelineValue() dedup: variant proposals linked to a reportable
+  // project are subordinate line items, not separate opportunities.
+  var linkedIds={};
+  rawAll.forEach(function(item){
+    if(item.is_project&&item.linked_proposals&&item.linked_proposals.length){
+      item.linked_proposals.forEach(function(id){linkedIds[id]=true;});
+    }
+  });
+  var all=rawAll.filter(function(item){
+    return item.is_project?true:!linkedIds[item.id];
   });
   // Date filter
   var fromT=range.from.getTime();var toT=range.to.getTime()+86400000;
