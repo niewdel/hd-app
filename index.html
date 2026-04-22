@@ -16084,7 +16084,7 @@ function loadApprovalGroupSettings(){
   c.innerHTML='<div style="font-size:12px;color:var(--dgray);">Loading...</div>';
   Promise.all([
     fetch('/settings/approval-group').then(function(r){return r.json();}),
-    fetch('/users/list-basic').then(function(r){return r.json();})
+    fetch('/users/list').then(function(r){return r.json();})
   ]).then(function(results){
     var ag=results[0].ok&&Array.isArray(results[0].approvers)?results[0].approvers:[];
     var users=results[1].ok?results[1].users:[];
