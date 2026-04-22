@@ -899,6 +899,23 @@ def get_users():
     except Exception as e:
         return _safe_error(e, context='admin/users')
 
+@app.route('/users/list-basic', methods=['GET'])
+@require_admin
+def list_users_basic():
+    """Lightweight user picker — used by Approval Group settings and any
+    other UI that just needs to choose from active office staff. Excludes
+    field role (they don't approve proposals) and exposes only the
+    fields needed for the picker (no hashes, no email, no PII)."""
+    try:
+        r = http.get(sb_url('hd_users',
+            '?active=eq.true&role=in.(admin,user,dev)&order=full_name.asc&select=username,full_name,role'),
+            headers=sb_admin_headers(), timeout=5)
+        if r.status_code != 200:
+            return jsonify({'ok': False, 'error': r.text[:200]}), r.status_code
+        return jsonify({'ok': True, 'users': r.json()})
+    except Exception as e:
+        return _safe_error(e, context='users/list-basic')
+
 @app.route('/admin/users', methods=['POST'])
 @require_dev
 def create_user():
