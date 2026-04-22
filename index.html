@@ -2379,6 +2379,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
               <div style="font-weight:600;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--dgray);">Email Alerts</div>
               <div id="notif-toggles-email" style="display:flex;flex-direction:column;gap:6px;">
+                <div class="notif-toggle-row"><span class="notif-toggle-label">New Leads<span class="notif-toggle-desc">When a quote request arrives from the website form</span></span><label class="dark-switch"><input type="checkbox" data-email-key="new_leads" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
                 <div class="notif-toggle-row"><span class="notif-toggle-label">Jobs Won<span class="notif-toggle-desc">When a project moves to Approved stage</span></span><label class="dark-switch"><input type="checkbox" data-email-key="jobs_won" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
                 <div class="notif-toggle-row"><span class="notif-toggle-label">New Assignments<span class="notif-toggle-desc">When you're assigned to a project</span></span><label class="dark-switch"><input type="checkbox" data-email-key="assignment" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
                 <div class="notif-toggle-row"><span class="notif-toggle-label">@Mentions<span class="notif-toggle-desc">When someone tags you in a note</span></span><label class="dark-switch"><input type="checkbox" data-email-key="mention" onchange="saveNotifPrefs()"><span class="slider"></span></label></div>
@@ -3912,6 +3913,7 @@ async function doLogin(){
       window._userEmail=d.email||'';
       window._userPhone=d.phone||'';
       window._userAvatar=d.avatar_data||'';
+      window._notifPrefsFromServer=d.notif_prefs||null;
       if(typeof d.welcome_seen==='boolean')window._userWelcomeSeen=d.welcome_seen;
       window._draftUserAvatar=window._userAvatar||'';
       hydrateSenderFromAccount(false);
@@ -14689,11 +14691,9 @@ function markAllNotifsRead(){
 }
 
 // ── Notification Preferences ──────────────────────────────────────────────
-var _notifPrefs={inapp:{mention:true,assignment:true,stage_change:true,due_date:true,weather:true},email:{jobs_won:false,assignment:false,mention:false,jobs_lost:false}};
+var _notifPrefs={inapp:{mention:true,assignment:true,stage_change:true,due_date:true,weather:true},email:{jobs_won:false,assignment:false,mention:false,jobs_lost:false,new_leads:false}};
 
-function loadNotifPrefs(){
-  try{var s=localStorage.getItem('hd_notif_prefs');if(s){var p=JSON.parse(s);if(p.inapp)Object.assign(_notifPrefs.inapp,p.inapp);if(p.email)Object.assign(_notifPrefs.email,p.email);}}catch(e){}
-  // Apply to checkboxes
+function _applyNotifPrefsToUI(){
   document.querySelectorAll('[data-notif-key]').forEach(function(cb){
     var k=cb.getAttribute('data-notif-key');
     cb.checked=_notifPrefs.inapp[k]!==false;
@@ -14704,6 +14704,25 @@ function loadNotifPrefs(){
   });
 }
 
+function loadNotifPrefs(){
+  // Per-user prefs hydrated from /auth/check (window._notifPrefsFromServer).
+  // Fall back to /auth/prefs if the login payload didn't include them, and
+  // finally to localStorage for offline/cold-load cases.
+  function apply(p){
+    if(!p)return;
+    if(p.inapp)Object.assign(_notifPrefs.inapp,p.inapp);
+    if(p.email)Object.assign(_notifPrefs.email,p.email);
+  }
+  apply(window._notifPrefsFromServer);
+  _applyNotifPrefsToUI();
+  // Kick off a fresh fetch in the background to cover renames or out-of-band updates.
+  fetch('/auth/prefs').then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok){apply(d.notif_prefs);_applyNotifPrefsToUI();try{localStorage.setItem('hd_notif_prefs',JSON.stringify(_notifPrefs));}catch(e){}}
+  }).catch(function(){
+    try{var s=localStorage.getItem('hd_notif_prefs');if(s){apply(JSON.parse(s));_applyNotifPrefsToUI();}}catch(e){}
+  });
+}
+
 function saveNotifPrefs(){
   document.querySelectorAll('[data-notif-key]').forEach(function(cb){
     _notifPrefs.inapp[cb.getAttribute('data-notif-key')]=cb.checked;
@@ -14711,8 +14730,12 @@ function saveNotifPrefs(){
   document.querySelectorAll('[data-email-key]').forEach(function(cb){
     _notifPrefs.email[cb.getAttribute('data-email-key')]=cb.checked;
   });
-  _saveSetting('hd_notif_prefs',_notifPrefs);
-  toast('Notification preferences saved','ok');
+  try{localStorage.setItem('hd_notif_prefs',JSON.stringify(_notifPrefs));}catch(e){}
+  fetch('/auth/prefs',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({notif_prefs:_notifPrefs})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.ok)toast('Notification preferences saved','ok');
+      else toast('Could not save notification preferences','err');
+    }).catch(function(){toast('Could not save notification preferences','err');});
 }
 
 function shouldNotify(type){return _notifPrefs.inapp[type]!==false;}
@@ -15153,6 +15176,7 @@ function startHelpTour(){
       window._userEmail=d.email||'';
       window._userPhone=d.phone||'';
       window._userAvatar=d.avatar_data||'';
+      window._notifPrefsFromServer=d.notif_prefs||null;
       // Server-tracked welcome-seen flag. Stays undefined if /auth/check
       // didn't include it (e.g., column doesn't exist yet) — falls back to
       // localStorage in _maybeShowWelcomeOnFirstLogin.

@@ -82,7 +82,7 @@ To update a record: `PATCH` to `...rest/v1/TABLE_NAME?id=eq.ID` with JSON body.
 **All tables have RLS DISABLED.**
 
 ### `hd_users`
-id, username (unique), full_name, email, phone, pin_hash (bcrypt), role (`admin`/`user`/`field`/`dev`), active, created_at, created_by, avatar_data (TEXT, base64 profile photo), failed_login_count, locked_until, last_login_at, password_updated_at, hourly_rate, welcome_seen_at (TIMESTAMPTZ — set when user dismisses the welcome modal; account-bound, not browser-bound).
+id, username (unique), full_name, email, phone, pin_hash (bcrypt), role (`admin`/`user`/`field`/`dev`), active, created_at, created_by, avatar_data (TEXT, base64 profile photo), failed_login_count, locked_until, last_login_at, password_updated_at, hourly_rate, welcome_seen_at (TIMESTAMPTZ — set when user dismisses the welcome modal; account-bound, not browser-bound), notif_prefs (JSONB — per-user notification preferences; shape `{inapp:{mention,assignment,stage_change,due_date,weather}, email:{new_leads,jobs_won,assignment,mention,jobs_lost}}`).
 
 **Important conventions:**
 - `username` is the canonical identifier referenced by `created_by`, `assigned_to`, `submitted_by`, etc., across many tables. Format: lowercase `firstname.lastname` (e.g. `justin.ledwein`, `kyle.harrison`). Renames cascade through `_cascade_username` in `app.py`.
@@ -148,9 +148,11 @@ id, proposal_id, number, date, description, snap (JSONB), add_total, deduct_tota
 ### Auth
 | Method | Route | Auth | Description |
 |---|---|---|---|
-| POST | `/auth/login` | none | Username + password login |
+| POST | `/auth/login` | none | Username + password login (returns role, username, full_name, email, phone, avatar_data, notif_prefs, welcome_seen) |
 | POST | `/auth/logout` | yes | Clears session |
-| GET | `/auth/check` | none | Returns auth status |
+| GET | `/auth/check` | none | Returns auth status + user shell (role, username, full_name, email, notif_prefs, welcome_seen) |
+| GET | `/auth/prefs` | yes | Returns current user's `notif_prefs` JSONB |
+| PATCH | `/auth/prefs` | yes | Replaces current user's `notif_prefs` (always scoped to session user — no way to write another user's prefs) |
 
 ### Proposals/Quotes
 | Method | Route | Auth | Description |

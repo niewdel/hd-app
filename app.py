@@ -52,13 +52,18 @@ def sb_admin_headers(prefer='return=representation'):
 
 @app.after_request
 def set_security_headers(response):
-    response.headers['X-Frame-Options'] = 'DENY'
+    # /lead-form is intentionally embeddable on external websites (public quote form).
+    # Everything else denies framing.
+    is_public_embed = request.path == '/lead-form'
+    if not is_public_embed:
+        response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy'] = 'geolocation=(self), camera=(), microphone=(), payment=()'
     # CSP: keeps 'unsafe-inline' because the single-file SPA has many inline scripts/styles.
     # Still a significant improvement over no CSP (blocks external-script injection, frames, form-action).
+    frame_ancestors = "*" if is_public_embed else "'none'"
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline'; "
@@ -66,7 +71,7 @@ def set_security_headers(response):
         "img-src 'self' data: blob: https:; "
         "font-src 'self' data:; "
         "connect-src 'self' https://azznfkboiwayifhhcguz.supabase.co https://api.open-meteo.com; "
-        "frame-ancestors 'none'; "
+        f"frame-ancestors {frame_ancestors}; "
         "base-uri 'self'; "
         "form-action 'self'"
     )
@@ -256,6 +261,7 @@ def login():
                             'full_name': session['full_name'],
                             'email': session['email'], 'phone': session['phone'],
                             'avatar_data': user.get('avatar_data', ''),
+                            'notif_prefs': user.get('notif_prefs') or {},
                             'welcome_seen': bool(user.get('welcome_seen_at'))})
         else:
             # Increment failure counter; lock account at 10 cumulative failures
@@ -343,10 +349,48 @@ def auth_check():
                         'role': user.get('role', session.get('role', 'user')),
                         'username': user.get('username', session.get('username', '')),
                         'full_name': user.get('full_name', session.get('full_name', '')),
+                        'email': user.get('email', session.get('email', '')),
+                        'notif_prefs': user.get('notif_prefs') or {},
                         'welcome_seen': bool(user.get('welcome_seen_at'))})
     return jsonify({'authenticated': True, 'role': session.get('role', 'user'),
                     'username': session.get('username', ''), 'full_name': session.get('full_name', ''),
-                    'welcome_seen': False})
+                    'email': session.get('email', ''), 'notif_prefs': {}, 'welcome_seen': False})
+
+@app.route('/auth/prefs', methods=['GET'])
+@require_auth
+def auth_get_prefs():
+    """Return the current user's notif_prefs JSONB. Used by the frontend on
+    load as a fallback if /auth/check didn't hydrate them."""
+    username = session.get('username', '')
+    try:
+        r = http.get(sb_url('hd_users', '?' + _sb_eq('username', username) +
+                            '&select=notif_prefs&limit=1'),
+                     headers=sb_headers(), timeout=5)
+        rows = r.json() if r.status_code == 200 else []
+        prefs = (rows[0].get('notif_prefs') if rows else None) or {}
+        return jsonify({'ok': True, 'notif_prefs': prefs})
+    except Exception as e:
+        return _safe_error(e, context='auth/prefs GET')
+
+@app.route('/auth/prefs', methods=['PATCH'])
+@require_auth
+def auth_patch_prefs():
+    """Replace the current user's notif_prefs JSONB. Body: {notif_prefs: {...}}.
+    Always scoped to the current user — no way for one user to write another's."""
+    data = request.get_json() or {}
+    prefs = data.get('notif_prefs')
+    if not isinstance(prefs, dict):
+        return jsonify({'ok': False, 'error': 'notif_prefs must be an object'}), 400
+    username = session.get('username', '')
+    try:
+        r = http.patch(sb_url('hd_users', '?' + _sb_eq('username', username)),
+                       headers={**sb_headers(), 'Prefer': 'return=minimal'},
+                       json={'notif_prefs': prefs}, timeout=5)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': 'Save failed'}), 500
+        return jsonify({'ok': True})
+    except Exception as e:
+        return _safe_error(e, context='auth/prefs PATCH')
 
 @app.route('/auth/welcome-seen', methods=['POST'])
 @require_auth
@@ -2362,10 +2406,96 @@ def submit_lead():
                     http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=notif_rows, timeout=5)
         except Exception:
             pass  # Don't fail the lead submission if notification fails
+        # Email notification to admin@hdgrading.com (best-effort)
+        try:
+            _send_lead_email(row)
+        except Exception:
+            pass
         return jsonify({'ok': True})
     except Exception as e:
         print(f'[submit_lead] {type(e).__name__}: {e}')
         return jsonify({'ok': False, 'error': 'Could not save lead. Please try again.'}), 500
+
+LEAD_EMAIL_FROM = 'HD Hauling & Grading <admin@hdgrading.com>'
+def _users_opted_in(email_pref_key):
+    """Return a list of (email, full_name) tuples for active office users
+    (role in admin/user/dev) whose notif_prefs.email[pref_key] === true and
+    who have an email address on file."""
+    try:
+        r = http.get(sb_url('hd_users',
+            '?active=eq.true&role=in.(admin,user,dev)'
+            '&select=email,full_name,notif_prefs'),
+            headers=sb_admin_headers(), timeout=5)
+        if r.status_code != 200:
+            return []
+        out = []
+        for u in r.json():
+            em = (u.get('email') or '').strip()
+            if not em:
+                continue
+            prefs = u.get('notif_prefs') or {}
+            email_prefs = prefs.get('email') or {}
+            if email_prefs.get(email_pref_key) is True:
+                out.append((em, u.get('full_name') or em))
+        return out
+    except Exception as e:
+        print(f'[_users_opted_in] {type(e).__name__}: {e}')
+        return []
+
+def _send_lead_email(lead):
+    """Email each office user who opted in to New Leads notifications.
+    Sent from admin@hdgrading.com (requires admin@hdgrading.com to be the
+    OAuthed Gmail account or a verified Send-As alias on that account).
+    Silently no-ops if Gmail isn't configured or nobody's opted in."""
+    if not GMAIL_AVAILABLE:
+        return
+    token_json = os.environ.get('GMAIL_TOKEN_JSON', '')
+    if not token_json:
+        return
+    recipients = _users_opted_in('new_leads')
+    if not recipients:
+        return
+    import base64
+    from email.mime.text import MIMEText
+    try:
+        creds = Credentials.from_authorized_user_info(json.loads(token_json))
+        service = gmail_build('gmail', 'v1', credentials=creds)
+        name = lead.get('name') or 'Unknown'
+        company = lead.get('company') or ''
+        subject_bits = ['New lead', name]
+        if company:
+            subject_bits.append(f'({company})')
+        subject = 'HD Hauling — ' + ' '.join(subject_bits)
+        body_template = [
+            'A new quote request came in from the website.',
+            '',
+            f'Name:        {name}',
+            f'Company:     {company or "—"}',
+            f'Phone:       {lead.get("phone") or "—"}',
+            f'Email:       {lead.get("email") or "—"}',
+            f'Address:     {lead.get("address") or "—"}',
+            f'Source:      {lead.get("source") or "—"}',
+            '',
+            'Description:',
+            lead.get('description') or '—',
+            '',
+            'Open in the app: https://web-production-e19b3.up.railway.app/#leads',
+            '',
+            '— HD Hauling & Grading'
+        ]
+        body = '\n'.join(body_template)
+        for email_addr, _full_name in recipients:
+            try:
+                msg = MIMEText(body, 'plain')
+                msg['to'] = email_addr
+                msg['from'] = LEAD_EMAIL_FROM
+                msg['subject'] = subject
+                raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+                service.users().messages().send(userId='me', body={'raw': raw}).execute()
+            except Exception as inner:
+                print(f'[_send_lead_email recipient={email_addr}] {type(inner).__name__}: {inner}')
+    except Exception as e:
+        print(f'[_send_lead_email] {type(e).__name__}: {e}')
 
 @app.route('/leads/list')
 @require_auth
