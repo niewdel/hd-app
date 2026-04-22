@@ -34,7 +34,7 @@ An all-in-one internal web app for HD Hauling & Grading (paving contractor) — 
 
 | Resource | Value |
 |---|---|
-| **Live URL** | https://web-production-e19b3.up.railway.app |
+| **Live URL** | https://hdapp.up.railway.app |
 | **GitHub Repo** | https://github.com/niewdel/hd-app |
 | **Supabase Project** | azznfkboiwayifhhcguz |
 | **Supabase URL** | https://azznfkboiwayifhhcguz.supabase.co |

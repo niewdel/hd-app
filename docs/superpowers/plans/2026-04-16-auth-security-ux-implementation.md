@@ -722,7 +722,7 @@ git push origin main
 
 - [ ] **Step 2: Wait ~90s for Railway deploy**
 
-- [ ] **Step 3: Smoke test** at `https://web-production-e19b3.up.railway.app`
+- [ ] **Step 3: Smoke test** at `https://hdapp.up.railway.app`
 
 | Action | Expected |
 |---|---|

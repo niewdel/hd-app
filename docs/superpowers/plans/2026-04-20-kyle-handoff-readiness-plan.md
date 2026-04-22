@@ -390,7 +390,7 @@ EOF
 ```bash
 git push origin main
 ```
-Wait ~60s. Open `https://web-production-e19b3.up.railway.app/auth/check` — expect a JSON response, not a 500. If the response is a 500, Railway env var for SECRET_KEY may be missing — fix via Railway dashboard before continuing.
+Wait ~60s. Open `https://hdapp.up.railway.app/auth/check` — expect a JSON response, not a 500. If the response is a 500, Railway env var for SECRET_KEY may be missing — fix via Railway dashboard before continuing.
 
 - [ ] **Step 4: Live smoke as dev**
 
@@ -711,7 +711,7 @@ Read `app.py:51-72`. Confirm the current `set_security_headers` body.
 Insert right before `return response` (around line 72):
 ```python
     origin = request.headers.get('Origin', '')
-    allowed = 'https://web-production-e19b3.up.railway.app'
+    allowed = 'https://hdapp.up.railway.app'
     if origin == allowed:
         response.headers['Access-Control-Allow-Origin'] = allowed
         response.headers['Access-Control-Allow-Credentials'] = 'true'
@@ -862,7 +862,7 @@ EOF
 ```bash
 git push origin main
 ```
-Wait ~60s. `curl -s https://web-production-e19b3.up.railway.app/auth/check` — expect JSON, not 500.
+Wait ~60s. `curl -s https://hdapp.up.railway.app/auth/check` — expect JSON, not 500.
 
 - [ ] **Step 4: Live smoke**
 
@@ -1349,7 +1349,7 @@ Generate a change order PDF with missing add_total. Confirm no 500.
 Create `/tmp/gen-smoke.sh`:
 ```bash
 #!/bin/bash
-BASE="https://web-production-e19b3.up.railway.app"
+BASE="https://hdapp.up.railway.app"
 COOKIE="/tmp/hd.cookies"
 # Login
 curl -s -c $COOKIE -X POST "$BASE/auth/login" \
@@ -1455,7 +1455,7 @@ Create `docs/kyle-handoff.md` with this content (substitute `${KYLE_PASS}` with 
 
 ## Login
 
-- **URL:** https://web-production-e19b3.up.railway.app
+- **URL:** https://hdapp.up.railway.app
 - **Username:** kharrison@hdgrading.com
 - **Temporary password:** <REPLACE_WITH_KYLE_PASS>
 - **First step:** log in, then change your password via Settings → My Profile → Change Password.
@@ -1713,7 +1713,7 @@ git push origin main
 
 - [ ] **Step 3: Final Railway verify**
 
-Wait 60s. `curl -s https://web-production-e19b3.up.railway.app/auth/check` — JSON, not 500. Log in as both users one more time, confirm no regressions from the final commit.
+Wait 60s. `curl -s https://hdapp.up.railway.app/auth/check` — JSON, not 500. Log in as both users one more time, confirm no regressions from the final commit.
 
 - [ ] **Step 4: Deliver runbook to Kyle**
 

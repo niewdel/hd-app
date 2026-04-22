@@ -78,7 +78,7 @@ def set_security_headers(response):
     if request.is_secure:
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     origin = request.headers.get('Origin', '')
-    allowed = 'https://web-production-e19b3.up.railway.app'
+    allowed = 'https://hdapp.up.railway.app'
     if origin == allowed:
         response.headers['Access-Control-Allow-Origin'] = allowed
         response.headers['Access-Control-Allow-Credentials'] = 'true'
@@ -2482,7 +2482,7 @@ def _send_lead_email(lead):
             'Description:',
             lead.get('description') or '—',
             '',
-            'Open in the app: https://web-production-e19b3.up.railway.app/#leads',
+            'Open in the app: https://hdapp.up.railway.app/#leads',
             '',
             '— HD Hauling & Grading'
         ]

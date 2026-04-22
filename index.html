@@ -17248,7 +17248,17 @@ function convertLead(id){
   fetch('/leads/'+id+'/convert',{method:'POST',headers:{'Content-Type':'application/json'}})
     .then(function(r){return r.json();})
     .then(function(d){
-      if(d.ok){toast('Lead converted to project','ok');loadDashLeads();renderPipeline();}
+      if(d.ok){
+        toast('Lead converted to project','ok');
+        // Refresh server-side data before re-rendering so the new proposal
+        // shows up in Pipeline + Saved Docs without a manual page reload.
+        loadDashForms();
+        fetch('/pipeline/list').then(function(r){return r.json();}).then(function(pl){
+          if(pl&&pl.proposals)pipelineProposals=pl.proposals;
+          renderPipeline();
+        }).catch(function(){renderPipeline();});
+        try{if(typeof loadSavedQuotes==='function')loadSavedQuotes();}catch(e){}
+      }
       else toast(d.error||'Failed to convert','err');
     });
 }

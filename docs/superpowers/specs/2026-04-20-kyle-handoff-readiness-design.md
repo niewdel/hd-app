@@ -9,7 +9,7 @@
 
 ## 1. Goal
 
-Kyle Harrison (CEO) gets a production login at `https://web-production-e19b3.up.railway.app` on 2026-04-21 and spends a full day across every panel of the HD platform without hitting broken states, silent data loss, footguns, stack traces, or dev artifacts. The deferred security items H1–H8 from the 2026-04-16 site sweep are resolved or explicitly waived with rationale.
+Kyle Harrison (CEO) gets a production login at `https://hdapp.up.railway.app` on 2026-04-21 and spends a full day across every panel of the HD platform without hitting broken states, silent data loss, footguns, stack traces, or dev artifacts. The deferred security items H1–H8 from the 2026-04-16 site sweep are resolved or explicitly waived with rationale.
 
 ## 2. Exit Criteria
 
