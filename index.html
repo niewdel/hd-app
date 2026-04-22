@@ -2420,7 +2420,6 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               </div>
               <div class="fg fg2" style="gap:10px;margin-bottom:10px;">
                 <div><label style="font-size:12px;">Tons Per Truck</label><input id="jc-default-tons-per-truck" type="number" min="1" step="10" style="width:100%;"/></div>
-                <div><label style="font-size:12px;">Overhead %</label><input id="jc-default-overhead-pct" type="number" min="0" step="1" style="width:100%;"/></div>
               </div>
               <div style="display:flex;gap:8px;align-items:center;">
                 <button class="btn btn-primary btn-sm" onclick="saveJCDefaults()">Save</button>
@@ -3275,9 +3274,7 @@ var MAT = {
 var JC_CREW_RATE_DEFAULT = 5000;
 var JC_PRODUCTIVITY_DEFAULT = 400; // tons/day
 var jcProductivity = JC_PRODUCTIVITY_DEFAULT;
-var JC_OVERHEAD_PCT_DEFAULT = 15;
 var jcCrewRate = JC_CREW_RATE_DEFAULT;
-var jcOverheadPct = JC_OVERHEAD_PCT_DEFAULT;
 var TRUCK_RATE_DEFAULT = 100; // $/hr per truck
 var TRUCK_HOURS_DEFAULT = 8; // hours per day
 var TONS_PER_TRUCK_DEFAULT = 100; // tons per truck per day
@@ -4773,7 +4770,6 @@ function _applyMatPrices(mpd){
 
 function _applyJCDefaults(d){
   if(d.crew_rate)jcCrewRate=d.crew_rate;
-  if(d.overhead_pct)jcOverheadPct=d.overhead_pct;
   if(d.productivity)jcProductivity=d.productivity;
   if(d.tons_per_truck)jcTonsPerTruck=d.tons_per_truck;
   if(d.truck_rate)jcTruckRate=d.truck_rate;
@@ -4944,22 +4940,21 @@ function loadJCDefaults(){
 
 function saveJCDefaults(){
   var cr=parseFloat(document.getElementById('jc-default-crew-rate')?document.getElementById('jc-default-crew-rate').value:jcCrewRate)||jcCrewRate;
-  var op=parseFloat(document.getElementById('jc-default-overhead-pct')?document.getElementById('jc-default-overhead-pct').value:jcOverheadPct)||jcOverheadPct;
-  jcCrewRate=cr; jcOverheadPct=op;
+  jcCrewRate=cr;
   var pr=parseFloat(document.getElementById('jc-default-productivity')?document.getElementById('jc-default-productivity').value:JC_PRODUCTIVITY_DEFAULT)||JC_PRODUCTIVITY_DEFAULT;jcProductivity=pr;
   var tpt=parseFloat(document.getElementById('jc-default-tons-per-truck')?document.getElementById('jc-default-tons-per-truck').value:jcTonsPerTruck)||jcTonsPerTruck;jcTonsPerTruck=tpt;
   var tr2=parseFloat(document.getElementById('jc-default-truck-rate')?document.getElementById('jc-default-truck-rate').value:jcTruckRate)||jcTruckRate;jcTruckRate=tr2;
   var th=parseFloat(document.getElementById('jc-default-truck-hours')?document.getElementById('jc-default-truck-hours').value:jcTruckHours)||jcTruckHours;jcTruckHours=th;
   var mobP=parseFloat(document.getElementById('jc-default-mob-price')?document.getElementById('jc-default-mob-price').value:jcMobPrice)||jcMobPrice;jcMobPrice=mobP;
   var mobC=parseFloat(document.getElementById('jc-default-mob-cost')?document.getElementById('jc-default-mob-cost').value:jcMobCost)||jcMobCost;jcMobCost=mobC;
-  _saveSetting('hd_jc_defaults',{crew_rate:cr,overhead_pct:op,productivity:jcProductivity,tons_per_truck:jcTonsPerTruck,truck_rate:jcTruckRate,truck_hours:jcTruckHours,mob_price:jcMobPrice,mob_cost:jcMobCost});
+  _saveSetting('hd_jc_defaults',{crew_rate:cr,productivity:jcProductivity,tons_per_truck:jcTonsPerTruck,truck_rate:jcTruckRate,truck_hours:jcTruckHours,mob_price:jcMobPrice,mob_cost:jcMobCost});
   renderJCDefaults();
   var ind=document.getElementById('jc-settings-indicator');
   if(ind){ind.textContent='Saved.';setTimeout(function(){ind.textContent='';},2000);}
 }
 
 function resetJCDefaults(){
-  jcCrewRate=JC_CREW_RATE_DEFAULT; jcOverheadPct=JC_OVERHEAD_PCT_DEFAULT; jcProductivity=JC_PRODUCTIVITY_DEFAULT;
+  jcCrewRate=JC_CREW_RATE_DEFAULT; jcProductivity=JC_PRODUCTIVITY_DEFAULT;
   jcTonsPerTruck=TONS_PER_TRUCK_DEFAULT; jcTruckRate=TRUCK_RATE_DEFAULT; jcTruckHours=TRUCK_HOURS_DEFAULT;
   jcMobPrice=MOB_PRICE_DEFAULT; jcMobCost=MOB_COST_DEFAULT;
   _saveSetting('hd_jc_defaults',null);
@@ -4968,7 +4963,6 @@ function resetJCDefaults(){
 
 function renderJCDefaults(){
   var cr=document.getElementById('jc-default-crew-rate');if(cr)cr.value=jcCrewRate;
-  var op=document.getElementById('jc-default-overhead-pct');if(op)op.value=jcOverheadPct;
   var pr=document.getElementById('jc-default-productivity');if(pr)pr.value=jcProductivity;
   var tpt=document.getElementById('jc-default-tons-per-truck');if(tpt)tpt.value=jcTonsPerTruck;
   var tr2=document.getElementById('jc-default-truck-rate');if(tr2)tr2.value=jcTruckRate;
@@ -4977,7 +4971,6 @@ function renderJCDefaults(){
   var mc=document.getElementById('jc-default-mob-cost');if(mc)mc.value=jcMobCost;
   // Also update the build panel fields if they are at default
   var bcr=document.getElementById('jc-crew-rate');if(bcr)bcr.value=jcCrewRate;
-  var bop=document.getElementById('jc-overhead-pct');if(bop)bop.value=jcOverheadPct;
 }
 
 function calcJobCost(){
@@ -5057,8 +5050,6 @@ function initJobCost(){
   if(jcDaysEl)jcDaysEl.addEventListener('input',function(){renderJobCost();});
   var jcCrEl=document.getElementById('jc-crew-rate');
   if(jcCrEl)jcCrEl.addEventListener('input',function(){jcCrEl._edited=true;renderJobCost();});
-  var jcOpEl=document.getElementById('jc-overhead-pct');
-  if(jcOpEl)jcOpEl.addEventListener('input',function(){jcOpEl._edited=true;renderJobCost();});
 }
 
 // ---- Estimates vs Actuals ----
@@ -8574,7 +8565,7 @@ function mkLayer(l){
     rate:l.rate!==undefined?l.rate:defaultRate,
     markup:mu,
     days_override:l.days_override!==undefined?l.days_override:null,
-    overhead:l.overhead!==undefined?l.overhead:jcOverheadPct,
+    overhead:l.overhead!==undefined?l.overhead:0,
     rate_override:l.rate_override!==undefined?l.rate_override:null,
     trucks_override:l.trucks_override!==undefined?l.trucks_override:null,
     description:l.description||''};
@@ -10093,7 +10084,7 @@ async function saveQuote(quiet){
   snap.line_items=p.line_items;snap.total=p.total;
   snap.document_number=p.document_number||'';
   snap.project_number=p.project_number||'';
-  var jcData=calcJobCost();snap.jc_labor_cost=jcData.laborCost;snap.jc_overhead_pct=jcData.ovhPct;snap.jc_total_cost=jcData.totalCost;snap.jc_margin_pct=jcData.marginPct;
+  var jcData=calcJobCost();snap.jc_labor_cost=jcData.laborCost;snap.jc_total_cost=jcData.totalCost;snap.jc_margin_pct=jcData.marginPct;
   if(Object.keys(evaActuals).length)snap.eva_actuals=JSON.parse(JSON.stringify(evaActuals));
   // Revision tracking: increment on update
   if(lastSavedQuoteId){
@@ -10526,7 +10517,7 @@ async function generateJobCostFromSaved(qid){
     sender_name:sender.name||'HD Hauling & Grading',
     bid_total:q.total||0,
     labor_cost:snap.jc_labor_cost||0,
-    overhead_pct:snap.jc_overhead_pct||jcOverheadPct,
+    overhead_pct:0,
     total_cost:snap.jc_total_cost||0,
     margin_pct:snap.jc_margin_pct||0,
     sections:snap.sections||[],
