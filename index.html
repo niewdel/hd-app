@@ -15252,10 +15252,15 @@ function toggleDarkMode(){
 var _currentReport='estimate-perf';
 
 /** True if a row is real, non-archived data that belongs in reports.
- *  Accepts either a raw pipelineProposals row OR a getFilteredData-mapped item. */
+ *  Accepts either a raw pipelineProposals row OR a getFilteredData-mapped item.
+ *  Excludes the "Disqualified" stage (counts_in_ratio:false in pipeline_stages) —
+ *  those deals never reached real evaluation and shouldn't skew win/loss math. */
 function _isReportable(p){
   if(!p) return false;
   if(p.archived === true || p.archived_at) return false;
+  // Stage exclusion — handle both raw and getFilteredData-mapped shapes.
+  var stageName = (p.pipeline_stages && p.pipeline_stages.name) || p.stage || '';
+  if (stageName === 'Disqualified') return false;
   return true;
 }
 /** True if a row is an actual project (not a proposal-only row) AND reportable.
