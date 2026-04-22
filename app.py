@@ -2562,6 +2562,10 @@ def convert_lead(lid):
         proj_num = _next_project_number()
         # Create proposal/project
         snap = {
+            # is_project=true is required for the row to appear in the Pipeline,
+            # Projects list, and reports — it's the actual filter the frontend
+            # uses to distinguish "live items" from miscellaneous proposal rows.
+            'is_project': True,
             'project_name': lead.get('company') or lead['name'],
             'client': lead['name'],
             'address': lead.get('address', ''),
@@ -2577,7 +2581,10 @@ def convert_lead(lid):
             'client': lead['name'],
             'total': 0,
             'stage_id': stage_id,
-            'snap': json.dumps(snap),
+            # snap is JSONB — pass the dict directly; json.dumps would store a
+            # JSON-encoded string inside the JSONB column, which the frontend
+            # then has to JSON.parse a second time.
+            'snap': snap,
             'created_by': session.get('username', 'system'),
             # project_number lives inside snap (line above) — proposals table has no top-level column for it.
         }
