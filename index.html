@@ -11677,34 +11677,41 @@ function _normalizeDomain(raw){
   return d;
 }
 
-// N-tier image fallback. Given an ordered list of URLs, sets src to the
-// first; on error, advances to the next; when exhausted, removes the <img>
-// so the initials underneath stay visible.
+// N-tier image fallback. Sets src to the first URL in the list; on error,
+// advances to the next. Also advances if the loaded image is tiny (< 48px),
+// which catches the case where a service returns a generic fallback globe
+// with HTTP 404 — browsers sometimes fire load instead of error for those
+// because the response body is a valid (if tiny) PNG. When the chain is
+// exhausted → remove the <img> so the initials underneath show through.
+var _LOGO_MIN_PX = 48;
 function _imgWithFallbacks(urls, cls){
   if(!urls || !urls.length) return '';
   var primary = urls[0];
   var rest = urls.slice(1);
   var fbAttr = rest.length ? ' data-fb="' + esc(rest.join('|')) + '"' : '';
-  var onerr = rest.length
-    ? "var l=(this.dataset.fb||'').split('|').filter(Boolean);if(!l.length){this.remove();return;}this.src=l.shift();this.dataset.fb=l.join('|');"
-    : 'this.remove()';
-  return '<img class="' + cls + '" src="' + esc(primary) + '" alt="" loading="lazy"' + fbAttr + ' onerror="' + onerr + '">';
+  var advance = "var l=(this.dataset.fb||'').split('|').filter(Boolean);if(!l.length){this.remove();return;}this.src=l.shift();this.dataset.fb=l.join('|');";
+  var onerr = rest.length ? advance : 'this.remove()';
+  var tinyBranch = rest.length ? advance : 'this.remove();return;';
+  var onload = 'if(this.naturalWidth<' + _LOGO_MIN_PX + '){' + tinyBranch + '}';
+  return '<img class="' + cls + '" src="' + esc(primary) + '" alt="" loading="lazy"' + fbAttr +
+    ' onerror="' + onerr + '" onload="' + onload + '">';
 }
 
 // Fallback chain — prioritises sources that return the HIGHEST native res
 // for the given domain so the 36px avatar (72px on retina) stays sharp:
 // 1. Google faviconV2 at sz=128 — scrapes the site's HTML for the best
-//    available icon. Returns 128×128 when the site has one; proper 404 for
-//    unknown domains (so onerror advances the chain).
+//    available icon. Returns 128×128 when the site has one, plus a 16×16
+//    globe fallback with HTTP 404 for unknown domains.
 // 2. icon.horse — community service that also fetches the site's best icon.
-// 3. DuckDuckGo /ip3/<domain>.ico — stable backup, smaller images.
-// When all three fail → img removed, initials show through.
+// When both fail (or only return tiny fallback icons) → img removed,
+// initials show through. Dropped DDG from the chain: it serves a 48×48
+// globe for unknown domains that inconsistently triggers onerror across
+// browsers, producing the "blurry globe" avatars users were seeing.
 function _logoImgsForDomain(domain){
   if(!domain) return null;
   return [
     'https://www.google.com/s2/favicons?domain=' + domain + '&sz=128',
-    'https://icon.horse/icon/' + domain,
-    'https://icons.duckduckgo.com/ip3/' + domain + '.ico'
+    'https://icon.horse/icon/' + domain
   ];
 }
 
