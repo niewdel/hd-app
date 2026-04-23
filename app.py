@@ -2605,6 +2605,9 @@ def submit_lead():
         return jsonify({'ok': False, 'error': 'Could not save lead. Please try again.'}), 500
 
 LEAD_EMAIL_FROM = 'HD Hauling & Grading <admin@hdgrading.com>'
+# Always-on recipient for new lead notifications. Goes on every lead email
+# regardless of any user's opt-in prefs (shared inbox for estimating team).
+LEAD_ALWAYS_TO = 'estimates@hdgrading.com'
 def _users_opted_in(email_pref_key, default=False):
     """Return a list of (email, full_name) tuples for active office users
     (role in admin/user/dev) whose notif_prefs.email[pref_key] is True, OR is
@@ -2733,16 +2736,26 @@ def _render_form_email_html(*, title, name, subtitle, rows, badges=None,
     )
 
 def _send_lead_email(lead):
-    """Email each office user who opted in to New Leads notifications.
+    """Email each office user who opted in to New Leads notifications PLUS
+    the always-on estimates@hdgrading.com shared inbox.
+
+    Opted-in users: all active admin/user/dev accounts unless they've explicitly
+    set notif_prefs.email.new_leads = false. Field users are always excluded
+    (they're not in the role filter inside _users_opted_in).
+
     Sent from admin@hdgrading.com (requires admin@hdgrading.com to be the
     OAuthed Gmail account or a verified Send-As alias on that account).
-    Silently no-ops if Gmail isn't configured or nobody's opted in."""
+    Silently no-ops if Gmail isn't configured."""
     if not GMAIL_AVAILABLE:
         return
     token_json = os.environ.get('GMAIL_TOKEN_JSON', '')
     if not token_json:
         return
-    recipients = _users_opted_in('new_leads', default=True)
+    recipients = list(_users_opted_in('new_leads', default=True))
+    # Always include the estimates inbox, deduped against opted-in user emails.
+    _seen = {em.lower() for (em, _nm) in recipients}
+    if LEAD_ALWAYS_TO.lower() not in _seen:
+        recipients.append((LEAD_ALWAYS_TO, 'HD Estimates'))
     if not recipients:
         return
     import base64
