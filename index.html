@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#111111"/>
 <meta name="color-scheme" content="light dark"/>
 <title>HD Hauling &amp; Grading - Proposal Generator</title>
-<link rel="icon" type="image/png" href="/hd-mark.png"/>
+<link rel="icon" type="image/png" href="/hd-favicon.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -1382,7 +1382,8 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 .sub-card:hover{box-shadow:var(--shadow-m);transform:translateY(-1px);}
 .client-card{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:11px;transition:box-shadow .2s,transform .2s;}
 .client-card:hover{box-shadow:var(--shadow-m);transform:translateY(-1px);}
-.client-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.client-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;}
+.avatar-logo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#fff;border-radius:50%;}
 .client-info{flex:1;}
 .client-name{font-weight:600;font-size:13px;}
 .client-sub{font-size:11px;color:var(--dgray);margin-top:2px;}
@@ -11579,7 +11580,7 @@ async function renderClients() {
       card.dataset.company=(c.company||'').toLowerCase();
       card.dataset.email=(c.email||'').toLowerCase();
       var initials = (c.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
-      card.innerHTML = '<div class="client-avatar" role="button" tabindex="0" aria-label="Open client '+esc(c.name||'')+'" onclick="openClientSummary('+c.id+')">'+initials+'</div>'
+      card.innerHTML = '<div class="client-avatar" role="button" tabindex="0" aria-label="Open client '+esc(c.name||'')+'" onclick="openClientSummary('+c.id+')">'+initials+_logoOverlayHtml(c.email)+'</div>'
         +'<div class="client-info" role="button" tabindex="0" aria-label="Open client '+esc(c.name||'')+'" onclick="openClientSummary('+c.id+')">'
         +'<div class="client-name">'+esc(c.name)+(c.company?' <span style="font-weight:400;color:var(--dgray);">- '+esc(c.company)+'</span>':'')+'</div>'
         +'<div class="client-sub">'+[c.phone,c.email].filter(Boolean).map(esc).join(' | ')+'</div>'
@@ -11595,6 +11596,38 @@ async function renderClients() {
     clients = clientsList.map(function(c){return {id:c.id,name:c.name,phone:c.phone||'',email:c.email||'',company:c.company||'',address:c.address||'',city_state:c.city_state||''};});
   } catch(e){container.innerHTML='<p style="color:var(--red);font-size:13px;">Error: '+e.message+'</p>';}
   // Legacy mirroring removed — contacts panel is now primary
+}
+
+// ---------- Company logo resolver (DuckDuckGo favicon service) ----------
+// Derives a favicon URL from a business email domain. Returns null for
+// personal email providers (gmail, yahoo, etc.) so we don't clutter avatars
+// with provider icons. DDG returns 404 for unknown domains — the onerror
+// handler on the <img> removes the overlay and falls back to initials.
+var _PERSONAL_EMAIL_DOMAINS = {
+  'gmail.com':1,'yahoo.com':1,'hotmail.com':1,'outlook.com':1,'aol.com':1,
+  'icloud.com':1,'me.com':1,'mac.com':1,'live.com':1,'msn.com':1,
+  'proton.me':1,'protonmail.com':1,'mail.com':1,'ymail.com':1,
+  'googlemail.com':1,'hey.com':1,'fastmail.com':1,'duck.com':1,'tutanota.com':1,
+  'comcast.net':1,'verizon.net':1,'att.net':1,'sbcglobal.net':1,'bellsouth.net':1,
+  'cox.net':1,'charter.net':1,'earthlink.net':1,'frontier.com':1
+};
+
+function _companyLogoUrl(email){
+  if(!email || typeof email !== 'string') return null;
+  var at = email.indexOf('@');
+  if(at < 0) return null;
+  var domain = email.slice(at+1).trim().toLowerCase().replace(/[^a-z0-9.\-]/g,'');
+  if(!domain || domain.indexOf('.') < 1) return null;
+  if(_PERSONAL_EMAIL_DOMAINS[domain]) return null;
+  return 'https://icons.duckduckgo.com/ip3/' + domain + '.ico';
+}
+
+// Returns an <img> tag that overlays the initials in the avatar slot. If the
+// logo 404s, the onerror removes the img so the initials stay visible.
+function _logoOverlayHtml(email){
+  var url = _companyLogoUrl(email);
+  if(!url) return '';
+  return '<img class="avatar-logo-img" src="' + esc(url) + '" alt="" loading="lazy" onerror="this.remove()">';
 }
 
 function showContactsTab(tab){
@@ -11941,7 +11974,7 @@ function renderSubsList(){
     var initials=(sub.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
     var projLabel=item.projName?'<span style="background:var(--badge-info-bg);color:var(--badge-info);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">'+esc(item.projName)+'</span>':'<span style="background:var(--badge-muted-bg);color:var(--badge-muted);padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">Standalone</span>';
     var statusBadge='<span style="font-size:10px;font-weight:700;color:#fff;background:'+(statusColors[sub.status]||'#999')+';padding:1px 8px;border-radius:3px;text-transform:uppercase;margin-left:6px;">'+esc((sub.status||'pending'))+'</span>';
-    card.innerHTML='<div style="width:36px;height:36px;border-radius:50%;background:#6B4FA6;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+initials+'</div>'
+    card.innerHTML='<div style="width:36px;height:36px;border-radius:50%;background:#6B4FA6;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;">'+initials+_logoOverlayHtml(sub.email)+'</div>'
       +'<div style="flex:1;">'
       +'<div style="font-weight:600;font-size:13px;">'+esc(sub.name)+(sub.trade?' <span style="font-weight:400;color:var(--dgray);">— '+esc(sub.trade)+'</span>':'')+projLabel+statusBadge+'</div>'
       +'<div style="font-size:11px;color:var(--dgray);margin-top:2px;">'+[sub.phone,sub.quote_amount?'$'+Math.round(sub.quote_amount).toLocaleString():''].filter(Boolean).join(' | ')+'</div>'

@@ -308,6 +308,7 @@ When Settings customization renames standard materials (e.g., "ABC" → "Heavy D
 
 ### Frontend Helpers
 - `_safeFetch(url, opts)` — fetch wrapper; throws on non-2xx with the server's `{error}` message. Use in every save/delete/update handler. Pattern: try/catch; toast in catch; do NOT close the modal on failure.
+- `_companyLogoUrl(email)` / `_logoOverlayHtml(email)` — derive a company favicon URL from a business email's domain via DuckDuckGo's favicon service (`icons.duckduckgo.com/ip3/<domain>.ico`). Skips personal email providers (gmail, yahoo, etc.) via the `_PERSONAL_EMAIL_DOMAINS` map. Used to auto-populate client + subcontractor avatars. DDG returns a proper 404 for unknown domains; the `<img>` element's `onerror` removes it so initials stay visible. No API key needed. Used in `renderClients` (client cards) and `renderSubsList` (sub cards); avatar slot uses `.client-avatar` CSS (position:relative; overflow:hidden) + `.avatar-logo-img` (absolute-positioned overlay).
 - `_wxSelectedDay` / `_selectWxDay(idx)` / `_wxVideoUrl(code, tod)` / `_wxTimeOfDay(data)` — dashboard weather widget. Hero uses `<video>` from `/static/wx/wx-*.mp4` (9 files mapping Open-meteo weather codes × time of day). Data from Open-meteo API at Concord, NC (`35.4088, -80.5795`), cached 30 min in `_weatherCache`.
 
 ---
