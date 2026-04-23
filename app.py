@@ -879,12 +879,16 @@ def clients_list():
 def clients_save():
     data = request.get_json() or {}
     try:
-        r = http.post(sb_url('clients'), headers=sb_headers(), json={
+        row = {
             'name': data.get('name', ''), 'company': data.get('company', ''),
             'phone': data.get('phone', ''), 'email': data.get('email', ''),
             'address': data.get('address', ''), 'city_state': data.get('city_state', ''),
             'notes': data.get('notes', ''),
-        }, timeout=10)
+        }
+        # company_id is optional FK to hd_companies; None = unlinked contact
+        if 'company_id' in data:
+            row['company_id'] = data.get('company_id') or None
+        r = http.post(sb_url('clients'), headers=sb_headers(), json=row, timeout=10)
         r.raise_for_status()
         result = r.json()
         return jsonify({'ok': True, 'id': result[0]['id'] if result else None})
@@ -896,12 +900,15 @@ def clients_save():
 def clients_update(client_id):
     data = request.get_json() or {}
     try:
-        r = http.patch(sb_url('clients', '?' + _sb_eq('id', client_id)), headers=sb_headers(), json={
+        row = {
             'name': data.get('name', ''), 'company': data.get('company', ''),
             'phone': data.get('phone', ''), 'email': data.get('email', ''),
             'address': data.get('address', ''), 'city_state': data.get('city_state', ''),
             'notes': data.get('notes', ''),
-        }, timeout=10)
+        }
+        if 'company_id' in data:
+            row['company_id'] = data.get('company_id') or None
+        r = http.patch(sb_url('clients', '?' + _sb_eq('id', client_id)), headers=sb_headers(), json=row, timeout=10)
         r.raise_for_status()
         return jsonify({'ok': True})
     except Exception as e:
@@ -920,6 +927,125 @@ def clients_delete(client_id):
         return jsonify({'ok': True})
     except Exception as e:
         return _safe_error(e, context='clients/delete/<int:client_id>')
+
+# -- Companies --------------------------------------------------------------
+# CRM-level org entities. A company can be a customer, a subcontractor, or
+# both. Individual contacts (clients table) link via clients.company_id.
+
+_COMPANY_WRITABLE_FIELDS = (
+    'name', 'domain', 'phone', 'email', 'address', 'city_state',
+    'is_customer', 'is_subcontractor', 'trade', 'notes', 'logo_url',
+)
+
+def _company_row_from_payload(data):
+    row = {}
+    for k in _COMPANY_WRITABLE_FIELDS:
+        if k in data:
+            v = data.get(k)
+            if isinstance(v, str):
+                v = v.strip()
+            row[k] = v
+    # Normalize domain: strip protocol/path, lowercase
+    if 'domain' in row and row['domain']:
+        d = str(row['domain']).lower().strip()
+        d = re.sub(r'^https?://', '', d)
+        d = d.split('/', 1)[0].split('?', 1)[0]
+        row['domain'] = d or None
+    return row
+
+@app.route('/companies/list')
+@require_auth
+def companies_list():
+    """List companies. Optional filters: role=customer|subcontractor|all, q=<search>."""
+    try:
+        role = (request.args.get('role') or 'all').lower()
+        q = (request.args.get('q') or '').strip()
+        params = 'select=*&order=name.asc'
+        if role == 'customer':
+            params += '&is_customer=eq.true'
+        elif role == 'subcontractor':
+            params += '&is_subcontractor=eq.true'
+        if q:
+            from urllib.parse import quote as _qq
+            needle = _qq('*' + q + '*')
+            params += '&or=(name.ilike.{0},domain.ilike.{0},trade.ilike.{0})'.format(needle)
+        r = http.get(sb_url('hd_companies', '?' + params), headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True, 'companies': r.json()})
+    except Exception as e:
+        return _safe_error(e, context='companies/list')
+
+@app.route('/companies/<int:cid>')
+@require_auth
+def companies_get(cid):
+    """Single company with its linked contacts (clients)."""
+    try:
+        cr = http.get(sb_url('hd_companies', '?' + _sb_eq('id', cid) + '&select=*'), headers=sb_admin_headers(), timeout=5)
+        if cr.status_code != 200 or not cr.json():
+            return jsonify({'ok': False, 'error': 'Company not found'}), 404
+        company = cr.json()[0]
+        lr = http.get(
+            sb_url('clients', '?' + _sb_eq('company_id', cid) + '&select=id,name,email,phone,address,city_state,notes&order=name.asc'),
+            headers=sb_admin_headers(), timeout=5
+        )
+        contacts = lr.json() if lr.status_code == 200 else []
+        return jsonify({'ok': True, 'company': company, 'contacts': contacts})
+    except Exception as e:
+        return _safe_error(e, context='companies/<int:cid>')
+
+@app.route('/companies/save', methods=['POST'])
+@require_auth
+def companies_save():
+    """Create a new company. Name required; defaults to is_customer=true if no role flag set."""
+    data = request.get_json() or {}
+    name = str(data.get('name', '')).strip()
+    if not name:
+        return jsonify({'ok': False, 'error': 'Company name is required.'}), 400
+    try:
+        row = _company_row_from_payload(data)
+        row['name'] = name
+        if not row.get('is_customer') and not row.get('is_subcontractor'):
+            row['is_customer'] = True
+        r = http.post(sb_url('hd_companies'), headers=sb_admin_headers(), json=row, timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        result = r.json()
+        return jsonify({'ok': True, 'id': result[0]['id'] if result else None, 'company': result[0] if result else None})
+    except Exception as e:
+        return _safe_error(e, context='companies/save')
+
+@app.route('/companies/<int:cid>', methods=['PATCH'])
+@require_auth
+def companies_update(cid):
+    """Partial update — only fields present in payload are modified."""
+    data = request.get_json() or {}
+    try:
+        row = _company_row_from_payload(data)
+        if not row:
+            return jsonify({'ok': False, 'error': 'Nothing to update'}), 400
+        row['updated_at'] = datetime.utcnow().isoformat()
+        r = http.patch(sb_url('hd_companies', '?' + _sb_eq('id', cid)), headers=sb_admin_headers(), json=row, timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True})
+    except Exception as e:
+        return _safe_error(e, context='companies/<int:cid>')
+
+@app.route('/companies/<int:cid>', methods=['DELETE'])
+@require_auth
+def companies_delete(cid):
+    """Permanently delete a company. Linked clients.company_id becomes NULL
+    (FK ON DELETE SET NULL) — contact records stay intact but unlinked."""
+    try:
+        if not _owns_or_admin(None):
+            return jsonify({'ok': False, 'error': 'Not permitted'}), 403
+        r = http.delete(sb_url('hd_companies', '?' + _sb_eq('id', cid)), headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True})
+    except Exception as e:
+        return _safe_error(e, context='companies/<int:cid> DELETE')
 
 # ââ PDF / DOCX ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 

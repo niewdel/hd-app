@@ -2126,13 +2126,17 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           <div style="display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--bdr);flex-wrap:wrap;">
             <div class="settings-tab-bar" style="margin:0;">
               <button class="stab on" id="contacts-tab-clients" onclick="showContactsTab('clients')">Clients</button>
-              <button class="stab" id="contacts-tab-subs" onclick="showContactsTab('subs')">Subcontractors</button>
+              <button class="stab" id="contacts-tab-companies" onclick="showContactsTab('companies')">Companies</button>
               <button class="stab" id="contacts-tab-leads" onclick="showContactsTab('leads')">Leads</button>
               <button class="stab" id="contacts-tab-applicants" onclick="showContactsTab('applicants')">Applicants</button>
             </div>
-            <div style="margin-left:auto;display:flex;gap:8px;" id="contacts-action-btns">
-              <button class="btn btn-sec btn-sm" onclick="openClientModal()">Add Client</button>
-              <button class="btn btn-primary btn-sm" onclick="openSubModal()">Add Subcontractor</button>
+            <div style="margin-left:auto;display:flex;gap:8px;">
+              <div id="contacts-action-btns-clients" class="contacts-actions" style="display:flex;gap:8px;">
+                <button class="btn btn-primary btn-sm" onclick="openClientModal()">Add Client</button>
+              </div>
+              <div id="contacts-action-btns-companies" class="contacts-actions" style="display:none;gap:8px;">
+                <button class="btn btn-primary btn-sm" onclick="openCompanyModal()">Add Company</button>
+              </div>
             </div>
           </div>
           <div class="card-body">
@@ -2148,15 +2152,19 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                 </div>
               </div>
             </div>
-            <div id="contacts-pane-subs" style="display:none;">
+            <div id="contacts-pane-companies" style="display:none;">
               <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
-                <div id="contacts-subs-count" style="font-size:13px;color:var(--dgray);"></div>
-                <input id="contacts-subs-search" type="text" aria-label="Search subcontractors" placeholder="Search subcontractors&hellip;" oninput="filterSubs(this.value)" style="flex:1;max-width:400px;"/>
+                <div id="contacts-companies-count" style="font-size:13px;color:var(--dgray);"></div>
+                <select id="contacts-companies-role" onchange="filterCompanies()" style="max-width:180px;">
+                  <option value="all">All roles</option>
+                  <option value="customer">Customers</option>
+                  <option value="subcontractor">Subcontractors</option>
+                </select>
+                <input id="contacts-companies-search" type="text" aria-label="Search companies" placeholder="Search name, domain, trade&hellip;" oninput="filterCompanies()" style="flex:1;max-width:400px;"/>
               </div>
-              <div id="contacts-subs-list">
+              <div id="contacts-companies-list">
                 <div class="empty-state">
-                  <div class="empty-state-title">No subcontractors yet</div>
-                  <div class="empty-state-desc">Add a subcontractor to track relationships.</div>
+                  <div class="empty-state-title">Loading companies&hellip;</div>
                 </div>
               </div>
             </div>
@@ -2234,6 +2242,37 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                   <button class="btn btn-primary btn-sm" onclick="addClientNote()">Add</button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+
+      <!-- COMPANY SUMMARY PANEL -->
+      <div class="panel" id="panel-company-summary"><div class="content" style="padding:20px;">
+        <div class="ops-page-head">
+          <div class="ops-page-copy">
+            <div class="ops-page-eyebrow">Company</div>
+            <div class="ops-page-title" id="cs-co-header"></div>
+          </div>
+          <div class="ops-head-actions">
+            <button class="btn btn-sec btn-sm" onclick="showPanel('contacts');showContactsTab('companies');">&larr; Back to Companies</button>
+            <button class="btn btn-sec btn-sm" onclick="editCompany(_currentCompanyId)">Edit Company</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;">
+          <div>
+            <div class="mc-card" style="margin-bottom:14px;">
+              <div class="card-hdr"><span class="card-title">Company Info</span></div>
+              <div class="card-body" id="cs-co-info"><div class="empty-state"><div class="empty-state-desc">Loading&hellip;</div></div></div>
+            </div>
+          </div>
+          <div>
+            <div class="mc-card">
+              <div class="card-hdr" style="display:flex;justify-content:space-between;align-items:center;">
+                <span class="card-title">Linked Contacts</span>
+                <button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="openClientModalForCompany(_currentCompanyId)">+ Add Contact</button>
+              </div>
+              <div class="card-body" id="cs-co-contacts"><div class="empty-state"><div class="empty-state-desc">Loading&hellip;</div></div></div>
             </div>
           </div>
         </div>
@@ -11572,6 +11611,10 @@ async function renderClients() {
       renderClients();
     }});
     container.appendChild(clientBulkBar);
+    // Make sure companies are loaded so we can resolve logos via linked company
+    await _ensureCompaniesLoaded();
+    var companiesById = {};
+    (_contactsCompaniesCache||[]).forEach(function(co){ companiesById[co.id] = co; });
     clientsList.forEach(function(c){
       var card = document.createElement('div');
       card.className = 'client-card';
@@ -11580,7 +11623,10 @@ async function renderClients() {
       card.dataset.company=(c.company||'').toLowerCase();
       card.dataset.email=(c.email||'').toLowerCase();
       var initials = (c.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
-      card.innerHTML = '<div class="client-avatar" role="button" tabindex="0" aria-label="Open client '+esc(c.name||'')+'" onclick="openClientSummary('+c.id+')">'+initials+_logoOverlayHtml(c.email)+'</div>'
+      // Prefer the linked company's logo (better quality than email-derived)
+      var linkedCo = c.company_id ? companiesById[c.company_id] : null;
+      var logoHtml = linkedCo ? _companyLogoHtml(linkedCo) : _logoOverlayHtml(c.email);
+      card.innerHTML = '<div class="client-avatar" role="button" tabindex="0" aria-label="Open client '+esc(c.name||'')+'" onclick="openClientSummary('+c.id+')">'+initials+logoHtml+'</div>'
         +'<div class="client-info" role="button" tabindex="0" aria-label="Open client '+esc(c.name||'')+'" onclick="openClientSummary('+c.id+')">'
         +'<div class="client-name">'+esc(c.name)+(c.company?' <span style="font-weight:400;color:var(--dgray);">- '+esc(c.company)+'</span>':'')+'</div>'
         +'<div class="client-sub">'+[c.phone,c.email].filter(Boolean).map(esc).join(' | ')+'</div>'
@@ -11598,11 +11644,8 @@ async function renderClients() {
   // Legacy mirroring removed — contacts panel is now primary
 }
 
-// ---------- Company logo resolver (DuckDuckGo favicon service) ----------
-// Derives a favicon URL from a business email domain. Returns null for
-// personal email providers (gmail, yahoo, etc.) so we don't clutter avatars
-// with provider icons. DDG returns 404 for unknown domains — the onerror
-// handler on the <img> removes the overlay and falls back to initials.
+// ---------- Company logo resolver (icon.horse primary, DDG fallback) ----------
+// Personal email domains don't get logos — we'd just show a generic provider icon.
 var _PERSONAL_EMAIL_DOMAINS = {
   'gmail.com':1,'yahoo.com':1,'hotmail.com':1,'outlook.com':1,'aol.com':1,
   'icloud.com':1,'me.com':1,'mac.com':1,'live.com':1,'msn.com':1,
@@ -11612,35 +11655,316 @@ var _PERSONAL_EMAIL_DOMAINS = {
   'cox.net':1,'charter.net':1,'earthlink.net':1,'frontier.com':1
 };
 
-function _companyLogoUrl(email){
+function _domainFromEmail(email){
   if(!email || typeof email !== 'string') return null;
   var at = email.indexOf('@');
   if(at < 0) return null;
   var domain = email.slice(at+1).trim().toLowerCase().replace(/[^a-z0-9.\-]/g,'');
   if(!domain || domain.indexOf('.') < 1) return null;
   if(_PERSONAL_EMAIL_DOMAINS[domain]) return null;
-  return 'https://icons.duckduckgo.com/ip3/' + domain + '.ico';
+  return domain;
 }
 
-// Returns an <img> tag that overlays the initials in the avatar slot. If the
-// logo 404s, the onerror removes the img so the initials stay visible.
+function _normalizeDomain(raw){
+  if(!raw || typeof raw !== 'string') return null;
+  var d = raw.toLowerCase().trim()
+    .replace(/^https?:\/\//,'')
+    .split('/')[0].split('?')[0]
+    .replace(/[^a-z0-9.\-]/g,'');
+  if(!d || d.indexOf('.') < 1) return null;
+  return d;
+}
+
+// Two-tier fallback chain: icon.horse (sharper, ~17KB) primary, DDG (stable,
+// proper 404s) secondary, then remove the img so initials show through.
+function _imgWithFallback(primary, fallback, cls){
+  var attrs = 'class="' + cls + '" src="' + esc(primary) + '" alt="" loading="lazy"';
+  if(fallback){
+    attrs += ' onerror="if(this.dataset.f){this.remove();}else{this.dataset.f=\'1\';this.src=\'' + esc(fallback) + '\';}"';
+  } else {
+    attrs += ' onerror="this.remove()"';
+  }
+  return '<img ' + attrs + '>';
+}
+
+function _logoImgsForDomain(domain){
+  if(!domain) return null;
+  return {
+    primary: 'https://icon.horse/icon/' + domain,
+    fallback: 'https://icons.duckduckgo.com/ip3/' + domain + '.ico'
+  };
+}
+
+// Email-based overlay (used for clients, subs, applicants — anywhere we only
+// have an email address to work with).
 function _logoOverlayHtml(email){
-  var url = _companyLogoUrl(email);
-  if(!url) return '';
-  return '<img class="avatar-logo-img" src="' + esc(url) + '" alt="" loading="lazy" onerror="this.remove()">';
+  var d = _domainFromEmail(email);
+  if(!d) return '';
+  var urls = _logoImgsForDomain(d);
+  return _imgWithFallback(urls.primary, urls.fallback, 'avatar-logo-img');
+}
+
+// Company-record-aware: prefers manual logo_url override, else derives from
+// the company's domain field.
+function _companyLogoHtml(company){
+  if(!company) return '';
+  if(company.logo_url){
+    return '<img class="avatar-logo-img" src="' + esc(company.logo_url) + '" alt="" loading="lazy" onerror="this.remove()">';
+  }
+  var d = _normalizeDomain(company.domain || '');
+  if(!d) return '';
+  var urls = _logoImgsForDomain(d);
+  return _imgWithFallback(urls.primary, urls.fallback, 'avatar-logo-img');
+}
+
+// Kept for callers that still want just the URL
+function _companyLogoUrl(email){
+  var d = _domainFromEmail(email);
+  return d ? ('https://icon.horse/icon/' + d) : null;
 }
 
 function showContactsTab(tab){
-  ['clients','subs','leads','applicants'].forEach(function(t){
+  ['clients','companies','leads','applicants'].forEach(function(t){
     var pane=document.getElementById('contacts-pane-'+t);if(pane)pane.style.display=t===tab?'':'none';
     var btn=document.getElementById('contacts-tab-'+t);if(btn){if(t===tab)btn.classList.add('on');else btn.classList.remove('on');}
   });
-  // Add Client/Subcontractor buttons only make sense on clients/subs tabs
-  var actionBtns=document.getElementById('contacts-action-btns');
-  if(actionBtns) actionBtns.style.display=(tab==='clients'||tab==='subs')?'':'none';
-  // Lazy-load the historical tabs on first open
+  // Show the per-tab action buttons (Add Client vs Add Company), hide others
+  document.querySelectorAll('.contacts-actions').forEach(function(g){g.style.display='none';});
+  var actionGroup=document.getElementById('contacts-action-btns-'+tab);
+  if(actionGroup) actionGroup.style.display='flex';
+  // Lazy-load tabs on first open
+  if(tab==='companies' && !_contactsCompaniesLoaded){ loadContactsCompanies(); }
   if(tab==='leads' && !_contactsLeadsLoaded){ loadContactsLeads(); }
   if(tab==='applicants' && !_contactsApplicantsLoaded){ loadContactsApplicants(); }
+}
+
+// ---------- Companies (Contacts tab) ----------
+var _contactsCompaniesCache=[];
+var _contactsCompaniesLoaded=false;
+
+function loadContactsCompanies(){
+  var list=document.getElementById('contacts-companies-list');
+  if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Loading companies&hellip;</div></div>';
+  fetch('/companies/list').then(function(r){return r.json();}).then(function(d){
+    if(!d.ok){
+      if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Couldn\'t load companies</div><div class="empty-state-desc">'+esc(d.error||'Unknown error')+'</div></div>';
+      return;
+    }
+    _contactsCompaniesCache=d.companies||[];
+    _contactsCompaniesLoaded=true;
+    filterCompanies();
+  }).catch(function(){
+    if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Network error</div><div class="empty-state-desc">Could not load companies.</div></div>';
+  });
+}
+
+function filterCompanies(){
+  var q=((document.getElementById('contacts-companies-search')||{}).value||'').toLowerCase().trim();
+  var role=((document.getElementById('contacts-companies-role')||{}).value||'all');
+  var filtered=_contactsCompaniesCache.filter(function(co){
+    if(role==='customer' && !co.is_customer) return false;
+    if(role==='subcontractor' && !co.is_subcontractor) return false;
+    if(!q) return true;
+    var hay=((co.name||'')+' '+(co.domain||'')+' '+(co.trade||'')+' '+(co.email||'')+' '+(co.phone||'')).toLowerCase();
+    return hay.indexOf(q)>-1;
+  });
+  renderContactsCompaniesList(filtered);
+  var count=document.getElementById('contacts-companies-count');
+  if(count) count.textContent=filtered.length+' of '+_contactsCompaniesCache.length+(_contactsCompaniesCache.length===1?' company':' companies');
+}
+
+function _companyRolePills(co){
+  var html='';
+  if(co.is_customer) html+='<span style="display:inline-block;font-size:9px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:var(--form-pill-quote-bg);color:var(--form-pill-quote-fg);margin-left:6px;">Customer</span>';
+  if(co.is_subcontractor) html+='<span style="display:inline-block;font-size:9px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:#ede9fe;color:#5b21b6;margin-left:6px;">Subcontractor</span>';
+  return html;
+}
+
+function renderContactsCompaniesList(items){
+  var list=document.getElementById('contacts-companies-list');
+  if(!list) return;
+  if(!items.length){
+    list.innerHTML='<div class="empty-state"><div class="empty-state-title">No companies match</div><div class="empty-state-desc">Try clearing filters or click <b>Add Company</b> to create one.</div></div>';
+    return;
+  }
+  var html='';
+  items.forEach(function(co){
+    var initials=(co.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+    var logo=_companyLogoHtml(co);
+    html+='<div class="client-card" style="cursor:pointer;" onclick="viewCompany('+co.id+')">';
+    html+='<div class="client-avatar" style="background:'+(co.is_subcontractor && !co.is_customer?'#6B4FA6':'var(--red)')+'">'+esc(initials)+logo+'</div>';
+    html+='<div class="client-info" style="flex:1;min-width:0;">';
+    html+='<div class="client-name">'+esc(co.name||'(no name)')+_companyRolePills(co)+'</div>';
+    var sub=[co.domain, co.trade, co.phone].filter(Boolean).map(esc).join(' · ');
+    if(sub) html+='<div class="client-sub">'+sub+'</div>';
+    html+='</div>';
+    html+='<button class="btn btn-sec btn-sm" onclick="event.stopPropagation();editCompany('+co.id+')">Edit</button>';
+    html+='<button class="btn-ico" title="Delete company" onclick="event.stopPropagation();deleteCompany('+co.id+')" style="color:var(--red);">&#10005;</button>';
+    html+='</div>';
+  });
+  list.innerHTML=html;
+}
+
+// ---------- Company modal (create / edit) ----------
+function openCompanyModal(){ _openCompanyModal(null); }
+function editCompany(id){
+  var co=_contactsCompaniesCache.find(function(x){return x.id===id;});
+  if(!co){ toast('Company not found','err'); return; }
+  _openCompanyModal(co);
+}
+
+function _openCompanyModal(editing){
+  var existing=document.getElementById('company-modal');
+  if(existing) existing.remove();
+  var modal=document.createElement('div');
+  modal.id='company-modal';
+  modal.className='modal-overlay';
+  modal.style.display='flex';
+  var box=document.createElement('div');
+  box.className='modal';
+  box.style.cssText='width:480px;max-width:96vw;';
+  var title=editing?'Edit Company':'Add Company';
+  box.innerHTML=
+    '<div class="modal-hdr"><h3>'+title+'</h3><button class="btn-ico" id="co-close" style="font-size:18px;">&#10005;</button></div>'
+    +'<div class="modal-body" style="max-height:70vh;overflow-y:auto;">'
+    +  '<label>Name *</label><input id="co-name" type="text" placeholder="Four Thumb Construction" value="'+esc(editing?editing.name:'')+'"/>'
+    +  '<label style="margin-top:10px;">Website / Domain</label><input id="co-domain" type="text" placeholder="fourthumb.com" value="'+esc(editing&&editing.domain?editing.domain:'')+'"/>'
+    +  '<div style="font-size:11px;color:var(--dgray);margin-top:3px;">Used to auto-fetch the company logo. Paste the website or just the domain.</div>'
+    +  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">'
+    +    '<div><label>Phone</label><input id="co-phone" type="tel" value="'+esc(editing&&editing.phone?editing.phone:'')+'"/></div>'
+    +    '<div><label>Email</label><input id="co-email" type="email" value="'+esc(editing&&editing.email?editing.email:'')+'"/></div>'
+    +  '</div>'
+    +  '<label style="margin-top:10px;">Address</label><input id="co-address" type="text" value="'+esc(editing&&editing.address?editing.address:'')+'"/>'
+    +  '<label style="margin-top:10px;">City &amp; State</label><input id="co-city" type="text" value="'+esc(editing&&editing.city_state?editing.city_state:'')+'"/>'
+    +  '<label style="margin-top:10px;">Trade (for subcontractors)</label><input id="co-trade" type="text" placeholder="e.g. Concrete, Striping, Grading" value="'+esc(editing&&editing.trade?editing.trade:'')+'"/>'
+    +  '<div style="margin-top:14px;padding:12px;background:var(--lgray);border-radius:6px;">'
+    +    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--dgray);margin-bottom:8px;">Relationship</div>'
+    +    '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;color:var(--blk);font-weight:500;margin-bottom:6px;cursor:pointer;">'
+    +      '<input type="checkbox" id="co-iscust" style="width:auto;margin:0;"'+(!editing||editing.is_customer?' checked':'')+'> Customer — we sell to them'
+    +    '</label>'
+    +    '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;color:var(--blk);font-weight:500;cursor:pointer;">'
+    +      '<input type="checkbox" id="co-issub" style="width:auto;margin:0;"'+(editing&&editing.is_subcontractor?' checked':'')+'> Subcontractor — we hire them'
+    +    '</label>'
+    +  '</div>'
+    +  '<label style="margin-top:10px;">Logo URL (optional override)</label><input id="co-logo" type="url" placeholder="https://… (leave blank to auto-fetch from domain)" value="'+esc(editing&&editing.logo_url?editing.logo_url:'')+'"/>'
+    +  '<label style="margin-top:10px;">Notes</label><textarea id="co-notes" style="min-height:60px;">'+esc(editing&&editing.notes?editing.notes:'')+'</textarea>'
+    +'</div>'
+    +'<div class="modal-foot" style="display:flex;justify-content:flex-end;gap:8px;">'
+    +  '<button class="btn btn-sec btn-sm" id="co-cancel">Cancel</button>'
+    +  '<button class="btn btn-red btn-sm" id="co-save">'+(editing?'Save':'Create Company')+'</button>'
+    +'</div>';
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+  var close=function(){ modal.remove(); };
+  document.getElementById('co-close').onclick=close;
+  document.getElementById('co-cancel').onclick=close;
+  modal.addEventListener('click',function(ev){ if(ev.target===modal) close(); });
+  document.getElementById('co-save').onclick=function(){
+    var payload={
+      name:document.getElementById('co-name').value.trim(),
+      domain:document.getElementById('co-domain').value.trim(),
+      phone:document.getElementById('co-phone').value.trim(),
+      email:document.getElementById('co-email').value.trim(),
+      address:document.getElementById('co-address').value.trim(),
+      city_state:document.getElementById('co-city').value.trim(),
+      trade:document.getElementById('co-trade').value.trim(),
+      is_customer:document.getElementById('co-iscust').checked,
+      is_subcontractor:document.getElementById('co-issub').checked,
+      logo_url:document.getElementById('co-logo').value.trim(),
+      notes:document.getElementById('co-notes').value.trim(),
+    };
+    if(!payload.name){ toast('Company name is required','err'); return; }
+    var url=editing?'/companies/'+editing.id:'/companies/save';
+    var method=editing?'PATCH':'POST';
+    fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d && d.ok){
+          toast(editing?'Company updated':'Company created','ok');
+          close();
+          _contactsCompaniesLoaded=false;
+          loadContactsCompanies();
+        } else {
+          toast((d&&d.error)||'Save failed','err');
+        }
+      }).catch(function(){ toast('Network error — try again','err'); });
+  };
+  // Focus the name input
+  setTimeout(function(){ var n=document.getElementById('co-name'); if(n) n.focus(); },0);
+}
+
+function deleteCompany(id){
+  var co=_contactsCompaniesCache.find(function(x){return x.id===id;});
+  var label=co?co.name:'this company';
+  if(!confirm('Delete '+label+'? Any linked contacts will remain but become unlinked. This cannot be undone.')) return;
+  fetch('/companies/'+id,{method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
+    if(d && d.ok){
+      _contactsCompaniesCache=_contactsCompaniesCache.filter(function(x){return x.id!==id;});
+      filterCompanies();
+      toast('Company deleted','ok');
+      // Refresh clients list since their company link is now null
+      try{ renderClients(); }catch(e){}
+    } else {
+      toast((d&&d.error)||'Could not delete','err');
+    }
+  }).catch(function(){ toast('Network error — try again','err'); });
+}
+
+function viewCompany(id){
+  _currentCompanyId=id;
+  showPanel('company-summary');
+  _renderCompanySummary(id);
+}
+
+var _currentCompanyId=null;
+function _renderCompanySummary(id){
+  var header=document.getElementById('cs-co-header');
+  var info=document.getElementById('cs-co-info');
+  var contacts=document.getElementById('cs-co-contacts');
+  if(header) header.textContent='Loading…';
+  if(info) info.innerHTML='<div class="empty-state"><div class="empty-state-desc">Loading…</div></div>';
+  if(contacts) contacts.innerHTML='<div class="empty-state"><div class="empty-state-desc">Loading…</div></div>';
+  fetch('/companies/'+id).then(function(r){return r.json();}).then(function(d){
+    if(!d || !d.ok){ toast((d&&d.error)||'Could not load company','err'); return; }
+    var co=d.company;
+    var list=d.contacts||[];
+    if(header) header.textContent=co.name;
+    var logoHtml=_companyLogoHtml(co);
+    var initials=(co.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+    var avatarBg=(co.is_subcontractor && !co.is_customer)?'#6B4FA6':'var(--red)';
+    var rowHtml=function(label,val){ if(!val) return ''; return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px;"><span style="color:var(--dgray);">'+label+'</span><span style="font-weight:600;text-align:right;max-width:60%;word-break:break-word;">'+esc(String(val))+'</span></div>'; };
+    if(info){
+      info.innerHTML=
+        '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">'
+        +  '<div class="client-avatar" style="width:56px;height:56px;font-size:18px;background:'+avatarBg+';">'+esc(initials)+logoHtml+'</div>'
+        +  '<div style="flex:1;"><div style="font-size:16px;font-weight:700;">'+esc(co.name||'')+_companyRolePills(co)+'</div>'
+        +    (co.domain?'<div style="font-size:12px;color:var(--dgray);margin-top:2px;"><a href="https://'+esc(co.domain)+'" target="_blank" rel="noopener">'+esc(co.domain)+'</a></div>':'')
+        +  '</div>'
+        +'</div>'
+        +rowHtml('Phone', co.phone)
+        +rowHtml('Email', co.email)
+        +rowHtml('Address', co.address)
+        +rowHtml('City / State', co.city_state)
+        +rowHtml('Trade', co.trade)
+        +(co.notes?'<div style="margin-top:14px;"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--dgray);margin-bottom:5px;">Notes</div><div style="font-size:13px;line-height:1.5;background:var(--lgray);padding:10px 12px;border-radius:6px;white-space:pre-wrap;">'+esc(co.notes)+'</div></div>':'');
+    }
+    if(contacts){
+      if(!list.length){
+        contacts.innerHTML='<div class="empty-state"><div class="empty-state-title">No linked contacts yet</div><div class="empty-state-desc">Create a contact and pick this company in the Company picker, or use Add Contact.</div></div>';
+      } else {
+        var ch='';
+        list.forEach(function(c){
+          var cInit=(c.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+          ch+='<div class="client-card" style="cursor:pointer;" onclick="openClientSummary('+c.id+')">'
+            +'<div class="client-avatar">'+esc(cInit)+_logoOverlayHtml(c.email)+'</div>'
+            +'<div class="client-info"><div class="client-name">'+esc(c.name||'')+'</div>'
+            +'<div class="client-sub">'+[c.phone,c.email].filter(Boolean).map(esc).join(' | ')+'</div></div>'
+            +'</div>';
+        });
+        contacts.innerHTML=ch;
+      }
+    }
+  }).catch(function(){ toast('Network error — try again','err'); });
 }
 
 // ---------- Past Leads (Contacts tab) ----------
@@ -12167,13 +12491,45 @@ function removeClientNote(idx){
 }
 function editClientFromSummary(){if(_currentClientId)editClient(_currentClientId);}
 
+function _ensureCompaniesLoaded(){
+  if(_contactsCompaniesLoaded) return Promise.resolve();
+  return fetch('/companies/list').then(function(r){return r.json();}).then(function(d){
+    if(d && d.ok){ _contactsCompaniesCache = d.companies||[]; _contactsCompaniesLoaded = true; }
+  }).catch(function(){});
+}
+
+function _populateCompanyPicker(selectedId){
+  var datalist=document.getElementById('cm-company-options');
+  if(!datalist) return;
+  datalist.innerHTML='';
+  var companies = (_contactsCompaniesCache||[]).slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+  companies.forEach(function(co){
+    var opt=document.createElement('option');
+    opt.value=co.name;
+    opt.dataset.id=co.id;
+    datalist.appendChild(opt);
+  });
+  var sel=selectedId ? companies.find(function(c){return c.id===selectedId;}) : null;
+  document.getElementById('cm-company').value = sel ? sel.name : '';
+  document.getElementById('cm-company-id').value = sel ? String(sel.id) : '';
+}
+
 function openClientModal(prefill) {
   editingClientId = null;
   document.getElementById('client-modal-title').textContent = 'New Client';
   ['name','company','phone','email','notes'].forEach(function(f){
     var el = document.getElementById('cm-'+f); if(el) el.value = (prefill&&prefill[f])||'';
   });
+  document.getElementById('cm-company-id').value = (prefill && prefill.company_id) ? String(prefill.company_id) : '';
+  _ensureCompaniesLoaded().then(function(){ _populateCompanyPicker(prefill && prefill.company_id); });
   document.getElementById('client-modal').classList.remove('hidden');
+}
+
+// Open the client modal preselected with a given company (used from the
+// Company detail page "+ Add Contact" button).
+function openClientModalForCompany(companyId){
+  var co = (_contactsCompaniesCache||[]).find(function(x){return x.id===companyId;});
+  openClientModal({company: co ? co.name : '', company_id: companyId});
 }
 
 function editClient(id) {
@@ -12181,10 +12537,11 @@ function editClient(id) {
   editingClientId = id;
   document.getElementById('client-modal-title').textContent = 'Edit Client';
   document.getElementById('cm-name').value    = c.name||'';
-  document.getElementById('cm-company').value = c.company||'';
   document.getElementById('cm-phone').value   = c.phone||'';
   document.getElementById('cm-email').value   = c.email||'';
   document.getElementById('cm-notes').value   = c.notes||'';
+  document.getElementById('cm-company-id').value = c.company_id ? String(c.company_id) : '';
+  _ensureCompaniesLoaded().then(function(){ _populateCompanyPicker(c.company_id || null); if(!c.company_id) document.getElementById('cm-company').value = c.company||''; });
   document.getElementById('client-modal').classList.remove('hidden');
 }
 
@@ -12193,17 +12550,40 @@ function closeClientModal() {
   editingClientId = null;
 }
 
+// Given the company text field value, resolve to an ID: find existing by
+// exact-name (case-insensitive), or POST /companies/save to create a new one
+// as a customer. Returns a promise resolving to {id, name} or null if empty.
+function _resolveCompanyForClient(){
+  var text = document.getElementById('cm-company').value.trim();
+  if(!text) return Promise.resolve(null);
+  var match = (_contactsCompaniesCache||[]).find(function(c){return (c.name||'').toLowerCase() === text.toLowerCase();});
+  if(match) return Promise.resolve({id: match.id, name: match.name});
+  // Create a new company as customer by default
+  return fetch('/companies/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:text,is_customer:true})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d && d.ok && d.company){
+        _contactsCompaniesCache.push(d.company);
+        _contactsCompaniesLoaded = true;
+        return {id: d.company.id, name: d.company.name};
+      }
+      throw new Error((d && d.error) || 'Failed to create company');
+    });
+}
+
 async function saveClient() {
   var name = document.getElementById('cm-name').value.trim();
   if (!name){toast('Name is required','err');return;}
-  var data = {
-    name:       name,
-    company:    document.getElementById('cm-company').value.trim(),
-    phone:      document.getElementById('cm-phone').value.trim(),
-    email:      document.getElementById('cm-email').value.trim(),
-    notes:      document.getElementById('cm-notes').value.trim(),
-  };
   try {
+    var co = await _resolveCompanyForClient();
+    var data = {
+      name:       name,
+      company:    co ? co.name : '',  // denormalized display text stays in sync
+      company_id: co ? co.id : null,
+      phone:      document.getElementById('cm-phone').value.trim(),
+      email:      document.getElementById('cm-email').value.trim(),
+      notes:      document.getElementById('cm-notes').value.trim(),
+    };
     if (editingClientId) {
       await _safeFetch('/clients/update/'+editingClientId,{method:'PATCH',body:JSON.stringify(data)});
       toast('Client updated','ok');
@@ -12213,9 +12593,14 @@ async function saveClient() {
     }
     closeClientModal();
     renderClients();
+    // If we're on the company detail page and the client was added to this
+    // company, refresh the linked-contacts list.
+    if(_currentCompanyId && typeof _renderCompanySummary==='function'){
+      var panel=document.getElementById('panel-company-summary');
+      if(panel && !panel.classList.contains('hidden')) _renderCompanySummary(_currentCompanyId);
+    }
   } catch(e){
     toast(e.message||'Failed to save client','err');
-    // Intentionally keep the modal open so user can retry.
   }
 }
 
@@ -17675,8 +18060,12 @@ function addReminderFromProject(){
     <div class="modal-hdr"><h3 id="client-modal-title">New Client</h3><button class="btn-ico" onclick="closeClientModal()" style="font-size:18px;">&#10005;</button></div>
     <div class="modal-body">
       <label>Full Name *</label><input id="cm-name" type="text" placeholder="Client full name"/>
-      <label>Company</label><input id="cm-company" type="text" placeholder="Company name"/>
-      <label>Phone</label><input id="cm-phone" type="tel" placeholder="(555) 000-0000"/>
+      <label>Company</label>
+      <input id="cm-company" type="text" list="cm-company-options" placeholder="Type to search or create new" autocomplete="off"/>
+      <datalist id="cm-company-options"></datalist>
+      <input type="hidden" id="cm-company-id"/>
+      <div style="font-size:11px;color:var(--dgray);margin-top:3px;">Pick an existing company or type a new name — we'll create it for you on save.</div>
+      <label style="margin-top:10px;">Phone</label><input id="cm-phone" type="tel" placeholder="(555) 000-0000"/>
       <label>Email</label><input id="cm-email" type="email" placeholder="email@example.com"/>
       <label>Notes</label><textarea id="cm-notes" style="min-height:70px;"></textarea>
     </div>

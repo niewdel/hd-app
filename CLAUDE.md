@@ -97,8 +97,13 @@ id, name, color, position, counts_in_ratio, is_closed.
 
 Older code references stale stage names ("New Lead", "Estimate Sent", "Follow Up", "Under Review", "Scheduled", "In Progress", "Completed") — these no longer exist. Reports/funnel still have hardcoded stale lists in 5 places (deferred sweep).
 
+### `hd_companies`
+id, name, domain, phone, email, address, city_state, is_customer (bool), is_subcontractor (bool), trade, notes, logo_url, created_at, updated_at.
+
+CRM-level organization entities. A company can be a customer, a subcontractor, or both. Individual contacts (`clients` table) link via `clients.company_id` (FK, `ON DELETE SET NULL` — deleting a company unlinks contacts but doesn't delete them). `domain` drives auto-logo fetch via icon.horse + DDG fallback; `logo_url` is an optional manual override. `clients.company` is kept as a denormalized display string for back-compat with older code paths that haven't been migrated to resolve via `company_id`.
+
 ### Other tables
-- `clients` — id, name, company, phone, email, address, city_state, notes
+- `clients` — id, name, company (denormalized display text), company_id (FK → hd_companies), phone, email, address, city_state, notes
 - `hd_access_log` — id, username, full_name, action (login/logout), success, ip_address, user_agent, logged_at
 - `hd_bug_reports` — id, title, description, severity, panel, status (Open/In Progress/Fixed/Closed), submitted_by, submitted_at, browser_info, screen_info, admin_notes, resolved_at
 - `hd_reminders` — id, type, ref_id, ref_name, note, due_date, assigned_to, created_by, completed, completed_at, created_at
@@ -188,13 +193,18 @@ Older code references stale stage names ("New Lead", "Estimate Sent", "Follow Up
 | POST | `/projects/create` | New project |
 | PATCH | `/projects/update/<id>` | Update project |
 
-### Clients & Subcontractors
+### Clients & Companies
 | Method | Route | Description |
 |---|---|---|
 | GET | `/clients/list` | List clients |
-| POST | `/clients/save` | Save/update |
+| POST | `/clients/save` | Save/update; accepts optional `company_id` FK |
+| PATCH | `/clients/update/<id>` | Update (includes `company_id` passthrough) |
 | DELETE | `/clients/delete/<id>` | Delete |
-| GET/POST/DELETE | `/subs/*` | Same CRUD for subs |
+| GET | `/companies/list` | `?role=customer\|subcontractor\|all`, `?q=<search>` across name/domain/trade |
+| GET | `/companies/<id>` | Returns `{company, contacts:[...linked clients]}` |
+| POST | `/companies/save` | Create. Defaults `is_customer=true` if no role flag set |
+| PATCH | `/companies/<id>` | Partial update (any of name/domain/phone/email/address/city_state/is_customer/is_subcontractor/trade/notes/logo_url). Stamps `updated_at` |
+| DELETE | `/companies/<id>` | Hard delete; linked clients become unlinked via FK cascade |
 
 ### Bug Reports
 | Method | Route | Description |
@@ -256,7 +266,8 @@ Single-file SPA — all CSS/JS/HTML in one file, ~170KB. No build step, no bundl
 | `panel-build` | Proposal builder with pricing options |
 | `panel-project` | Single project detail |
 | `panel-projects` | Projects list + pipeline (Kanban) |
-| `panel-contacts` | Clients + Subcontractors tabs |
+| `panel-contacts` | Four tabs: Clients, Companies, Leads, Applicants. Subcontractors are now stored as companies with `is_subcontractor=true` and accessed via the Companies tab (role filter). |
+| `panel-company-summary` | Single-company detail page (header with logo + role badges, info card, linked contacts list with "+ Add Contact" button that prefills the client modal to this company) |
 | `panel-schedule` | Calendar (day/3-day/week/month) |
 | `panel-co` | Change order form |
 | `panel-reports` | Reporting |
@@ -308,7 +319,12 @@ When Settings customization renames standard materials (e.g., "ABC" → "Heavy D
 
 ### Frontend Helpers
 - `_safeFetch(url, opts)` — fetch wrapper; throws on non-2xx with the server's `{error}` message. Use in every save/delete/update handler. Pattern: try/catch; toast in catch; do NOT close the modal on failure.
-- `_companyLogoUrl(email)` / `_logoOverlayHtml(email)` — derive a company favicon URL from a business email's domain via DuckDuckGo's favicon service (`icons.duckduckgo.com/ip3/<domain>.ico`). Skips personal email providers (gmail, yahoo, etc.) via the `_PERSONAL_EMAIL_DOMAINS` map. Used to auto-populate client + subcontractor avatars. DDG returns a proper 404 for unknown domains; the `<img>` element's `onerror` removes it so initials stay visible. No API key needed. Used in `renderClients` (client cards) and `renderSubsList` (sub cards); avatar slot uses `.client-avatar` CSS (position:relative; overflow:hidden) + `.avatar-logo-img` (absolute-positioned overlay).
+- **Logo helpers** — derive a company logo URL from a domain via a two-tier fallback chain: **icon.horse** primary (high-quality PNGs, ~17KB), **icons.duckduckgo.com/ip3/<domain>.ico** fallback (stable service with proper 404s), then remove the `<img>` so initials show through.
+  - `_logoOverlayHtml(email)` — email-based (derives domain, skips personal providers via `_PERSONAL_EMAIL_DOMAINS`).
+  - `_companyLogoHtml(company)` — company-record-aware; prefers manual `logo_url` override, else derives from `company.domain`. Used in client cards (when `company_id` is present), company cards, and the company detail page.
+  - `_imgWithFallback(primary, fallback, cls)` — the underlying helper that builds an `<img>` with a two-tier onerror chain.
+  - Avatar slot CSS: `.client-avatar` is `position:relative; overflow:hidden`; `.avatar-logo-img` is absolute-positioned with `object-fit:cover` so the logo overlays the initials circle.
+  - `_ensureCompaniesLoaded()` populates `_contactsCompaniesCache` so logos resolve via the client's linked company (not just email) in `renderClients`.
 - `_wxSelectedDay` / `_selectWxDay(idx)` / `_wxVideoUrl(code, tod)` / `_wxTimeOfDay(data)` — dashboard weather widget. Hero uses `<video>` from `/static/wx/wx-*.mp4` (9 files mapping Open-meteo weather codes × time of day). Data from Open-meteo API at Concord, NC (`35.4088, -80.5795`), cached 30 min in `_weatherCache`.
 
 ---
