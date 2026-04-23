@@ -2710,6 +2710,19 @@ def update_lead(lid):
     except Exception as e:
         return _safe_error(e, context='leads/<int:lid>')
 
+@app.route('/leads/<int:lid>', methods=['DELETE'])
+@require_auth
+def delete_lead(lid):
+    """Permanently delete a lead. Used to clean out test submissions or leads
+    that office staff no longer want to track. Hard delete — no undo."""
+    try:
+        r = http.delete(sb_url('hd_leads', '?' + _sb_eq('id', lid)), headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True})
+    except Exception as e:
+        return _safe_error(e, context='leads/<int:lid> DELETE')
+
 @app.route('/leads/<int:lid>/convert', methods=['POST'])
 @require_auth
 def convert_lead(lid):
@@ -3056,6 +3069,35 @@ def update_applicant(aid):
         return jsonify({'ok': True})
     except Exception as e:
         return _safe_error(e, context='applicants/<int:aid>')
+
+@app.route('/applicants/<int:aid>', methods=['DELETE'])
+@require_auth
+def delete_applicant(aid):
+    """Permanently delete an applicant + their resume file from Storage.
+    Hard delete — no undo. Resume cleanup is best-effort: DB row always wins,
+    so orphaned files are logged but don't block the delete."""
+    try:
+        # Look up the resume path before deleting so we know what to clean up.
+        lookup = http.get(
+            sb_url('hd_applicants', '?' + _sb_eq('id', aid) + '&select=resume_path'),
+            headers=sb_admin_headers(), timeout=5
+        )
+        resume_path = None
+        if lookup.status_code == 200 and lookup.json():
+            resume_path = lookup.json()[0].get('resume_path')
+        # Delete the DB row first.
+        r = http.delete(sb_url('hd_applicants', '?' + _sb_eq('id', aid)), headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        # Clean up the resume file (best-effort — row is already gone).
+        if resume_path:
+            try:
+                http.delete(_storage_url(RESUME_BUCKET, resume_path), headers=_storage_admin_headers(), timeout=10)
+            except Exception as storage_err:
+                app.logger.warning('Applicant %s deleted but resume cleanup failed: %s', aid, storage_err)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return _safe_error(e, context='applicants/<int:aid> DELETE')
 
 @app.route('/applicants/<int:aid>/resume')
 @require_auth

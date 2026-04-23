@@ -149,6 +149,7 @@ Older code references stale stage names ("New Lead", "Estimate Sent", "Follow Up
 | POST | `/leads/submit` | Public. Auto client dedup. Validates email (`_valid_email`) + phone (normalized via `_normalize_phone` to `000-000-0000`); rejects honeypot via `_honeypot_tripped`. In-app + HTML email notifications (default ON). |
 | GET | `/leads/list` | List leads (auth) |
 | PATCH | `/leads/<id>` | Update lead status (auth) |
+| DELETE | `/leads/<id>` | Permanently delete a lead (auth). Hard delete, no undo. Used from the Contacts → Leads tab. |
 | POST | `/leads/<id>/convert` | Convert lead to project + client (auth). Sets `snap.is_project: true` so it appears in Pipeline. |
 | GET | `/forms/config` | Public. Returns `{places_key}` so iframe forms can load Google Places Autocomplete. Rate-limited 60/min/IP. Empty string if `GOOGLE_PLACES_API_KEY` unset → forms fall back to plain text. |
 
@@ -159,6 +160,7 @@ Older code references stale stage names ("New Lead", "Estimate Sent", "Follow Up
 | POST | `/applicants/submit` | Multipart upload. Uploads resume to `resumes` bucket, inserts row, fans in-app notif + HTML email (default ON). Same validation + honeypot as leads. |
 | GET | `/applicants/list` | List applicants (`?status=new|all`, auth) |
 | PATCH | `/applicants/<id>` | Update status + admin_notes; stamps reviewed_by/at |
+| DELETE | `/applicants/<id>` | Permanently delete applicant + resume file from Storage (auth). Hard delete, no undo. Row delete is authoritative; resume cleanup is best-effort (logs warning on failure but returns ok). Used from Contacts → Applicants tab. |
 | GET | `/applicants/<id>/resume` | Server-side proxy; streams resume via service-role key (auth) |
 
 ### Reminders

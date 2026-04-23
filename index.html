@@ -2126,8 +2126,8 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div class="settings-tab-bar" style="margin:0;">
               <button class="stab on" id="contacts-tab-clients" onclick="showContactsTab('clients')">Clients</button>
               <button class="stab" id="contacts-tab-subs" onclick="showContactsTab('subs')">Subcontractors</button>
-              <button class="stab" id="contacts-tab-leads" onclick="showContactsTab('leads')">Past Leads</button>
-              <button class="stab" id="contacts-tab-applicants" onclick="showContactsTab('applicants')">Past Applicants</button>
+              <button class="stab" id="contacts-tab-leads" onclick="showContactsTab('leads')">Leads</button>
+              <button class="stab" id="contacts-tab-applicants" onclick="showContactsTab('applicants')">Applicants</button>
             </div>
             <div style="margin-left:auto;display:flex;gap:8px;" id="contacts-action-btns">
               <button class="btn btn-sec btn-sm" onclick="openClientModal()">Add Client</button>
@@ -2172,7 +2172,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               </div>
               <div id="contacts-leads-list">
                 <div class="empty-state">
-                  <div class="empty-state-title">Loading past leads&hellip;</div>
+                  <div class="empty-state-title">Loading leads&hellip;</div>
                 </div>
               </div>
             </div>
@@ -2191,7 +2191,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
               </div>
               <div id="contacts-applicants-list">
                 <div class="empty-state">
-                  <div class="empty-state-title">Loading past applicants&hellip;</div>
+                  <div class="empty-state-title">Loading applicants&hellip;</div>
                 </div>
               </div>
             </div>
@@ -11616,7 +11616,7 @@ var _contactsLeadsLoaded=false;
 
 function loadContactsLeads(){
   var list=document.getElementById('contacts-leads-list');
-  if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Loading past leads&hellip;</div></div>';
+  if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Loading leads&hellip;</div></div>';
   fetch('/leads/list?status=all').then(function(r){return r.json();}).then(function(d){
     if(!d.ok){
       if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Couldn\'t load leads</div><div class="empty-state-desc">'+esc(d.error||'Unknown error')+'</div></div>';
@@ -11626,7 +11626,7 @@ function loadContactsLeads(){
     _contactsLeadsLoaded=true;
     filterContactsLeads();
   }).catch(function(){
-    if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Network error</div><div class="empty-state-desc">Could not load past leads.</div></div>';
+    if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Network error</div><div class="empty-state-desc">Could not load leads.</div></div>';
   });
 }
 
@@ -11656,7 +11656,7 @@ function renderContactsLeadsList(items){
   var list=document.getElementById('contacts-leads-list');
   if(!list) return;
   if(!items.length){
-    list.innerHTML='<div class="empty-state"><div class="empty-state-title">No past leads match</div><div class="empty-state-desc">Try clearing filters or check the dashboard Forms &amp; Applicants feed for brand-new submissions.</div></div>';
+    list.innerHTML='<div class="empty-state"><div class="empty-state-title">No leads match</div><div class="empty-state-desc">Try clearing filters or check the dashboard Forms &amp; Applicants feed for brand-new submissions.</div></div>';
     return;
   }
   var html='';
@@ -11675,10 +11675,33 @@ function renderContactsLeadsList(items){
     html+='</div>';
     if(l.description) html+='<div style="font-size:12px;color:var(--dgray);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(l.description)+'</div>';
     html+='</div>';
-    html+='<div style="flex-shrink:0;"><button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="viewLead('+l.id+')">View</button></div>';
+    html+='<div style="flex-shrink:0;display:flex;gap:4px;align-items:center;">';
+    html+='<button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="viewLead('+l.id+')">View</button>';
+    html+='<button class="btn-ico" title="Delete lead" onclick="deleteContactsLead('+l.id+',event)" style="color:var(--red);font-size:14px;">&#10005;</button>';
+    html+='</div>';
     html+='</div>';
   });
   list.innerHTML=html;
+}
+
+function deleteContactsLead(id, ev){
+  if(ev && ev.stopPropagation) ev.stopPropagation();
+  var l=_contactsLeadsCache.find(function(x){return x.id===id;});
+  var label=l?(l.name||'this lead'):'this lead';
+  if(!confirm('Permanently delete '+label+'? This cannot be undone.')) return;
+  fetch('/leads/'+id,{method:'DELETE'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d && d.ok){
+        _contactsLeadsCache=_contactsLeadsCache.filter(function(x){return x.id!==id;});
+        filterContactsLeads();
+        toast('Lead deleted','ok');
+        try{ loadDashForms(); }catch(e){}
+      } else {
+        toast((d&&d.error)||'Could not delete lead','err');
+      }
+    })
+    .catch(function(){ toast('Network error — try again','err'); });
 }
 
 function viewLead(id){
@@ -11714,7 +11737,7 @@ var _contactsApplicantsLoaded=false;
 
 function loadContactsApplicants(){
   var list=document.getElementById('contacts-applicants-list');
-  if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Loading past applicants&hellip;</div></div>';
+  if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Loading applicants&hellip;</div></div>';
   fetch('/applicants/list?status=all').then(function(r){return r.json();}).then(function(d){
     if(!d.ok){
       if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Couldn\'t load applicants</div><div class="empty-state-desc">'+esc(d.error||'Unknown error')+'</div></div>';
@@ -11726,7 +11749,7 @@ function loadContactsApplicants(){
     _contactsApplicantsCache.forEach(function(a){ if(typeof _applicantsCache==='object') _applicantsCache[a.id]=a; });
     filterContactsApplicants();
   }).catch(function(){
-    if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Network error</div><div class="empty-state-desc">Could not load past applicants.</div></div>';
+    if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Network error</div><div class="empty-state-desc">Could not load applicants.</div></div>';
   });
 }
 
@@ -11755,7 +11778,7 @@ function renderContactsApplicantsList(items){
   var list=document.getElementById('contacts-applicants-list');
   if(!list) return;
   if(!items.length){
-    list.innerHTML='<div class="empty-state"><div class="empty-state-title">No past applicants match</div><div class="empty-state-desc">Try clearing filters or check the dashboard feed for new applications.</div></div>';
+    list.innerHTML='<div class="empty-state"><div class="empty-state-title">No applicants match</div><div class="empty-state-desc">Try clearing filters or check the dashboard feed for new applications.</div></div>';
     return;
   }
   var html='';
@@ -11779,10 +11802,35 @@ function renderContactsApplicantsList(items){
     if(a.phone) html+=esc(a.phone);
     html+='</div>';
     html+='</div>';
-    html+='<div style="flex-shrink:0;"><button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="viewApplicant('+a.id+')">View</button></div>';
+    html+='<div style="flex-shrink:0;display:flex;gap:4px;align-items:center;">';
+    html+='<button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="viewApplicant('+a.id+')">View</button>';
+    html+='<button class="btn-ico" title="Delete applicant" onclick="deleteContactsApplicant('+a.id+',event)" style="color:var(--red);font-size:14px;">&#10005;</button>';
+    html+='</div>';
     html+='</div>';
   });
   list.innerHTML=html;
+}
+
+function deleteContactsApplicant(id, ev){
+  if(ev && ev.stopPropagation) ev.stopPropagation();
+  var a=_contactsApplicantsCache.find(function(x){return x.id===id;});
+  var label=a?(a.name||'this applicant'):'this applicant';
+  var extra=(a&&a.resume_path)?' Their resume file will also be deleted.':'';
+  if(!confirm('Permanently delete '+label+'?'+extra+' This cannot be undone.')) return;
+  fetch('/applicants/'+id,{method:'DELETE'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d && d.ok){
+        _contactsApplicantsCache=_contactsApplicantsCache.filter(function(x){return x.id!==id;});
+        if(typeof _applicantsCache==='object' && _applicantsCache[id]) delete _applicantsCache[id];
+        filterContactsApplicants();
+        toast('Applicant deleted','ok');
+        try{ loadDashForms(); }catch(e){}
+      } else {
+        toast((d&&d.error)||'Could not delete applicant','err');
+      }
+    })
+    .catch(function(){ toast('Network error — try again','err'); });
 }
 
 // Search filters
