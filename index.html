@@ -11732,10 +11732,20 @@ function showContactsTab(tab){
   document.querySelectorAll('.contacts-actions').forEach(function(g){g.style.display='none';});
   var actionGroup=document.getElementById('contacts-action-btns-'+tab);
   if(actionGroup) actionGroup.style.display='flex';
-  // Lazy-load tabs on first open
-  if(tab==='companies' && !_contactsCompaniesLoaded){ loadContactsCompanies(); }
-  if(tab==='leads' && !_contactsLeadsLoaded){ loadContactsLeads(); }
-  if(tab==='applicants' && !_contactsApplicantsLoaded){ loadContactsApplicants(); }
+  // Tab activation: render from cache if already loaded (e.g. clients render
+  // may have primed the companies cache), else fetch fresh.
+  if(tab==='companies'){
+    if(_contactsCompaniesLoaded) filterCompanies();
+    else loadContactsCompanies();
+  }
+  if(tab==='leads'){
+    if(_contactsLeadsLoaded) filterContactsLeads();
+    else loadContactsLeads();
+  }
+  if(tab==='applicants'){
+    if(_contactsApplicantsLoaded) filterContactsApplicants();
+    else loadContactsApplicants();
+  }
 }
 
 // ---------- Companies (Contacts tab) ----------
@@ -11824,54 +11834,58 @@ function _openCompanyModal(editing){
   box.className='modal';
   box.style.cssText='width:480px;max-width:96vw;';
   var title=editing?'Edit Company':'Add Company';
+  // Note: prefix is "cmpy-" not "co-" to avoid colliding with the Change
+  // Order panel which uses id="co-name", "co-phone", etc. getElementById
+  // returns the FIRST match in the DOM, so a collision would read the CO
+  // panel's empty field instead of this modal's inputs.
   box.innerHTML=
-    '<div class="modal-hdr"><h3>'+title+'</h3><button class="btn-ico" id="co-close" style="font-size:18px;">&#10005;</button></div>'
+    '<div class="modal-hdr"><h3>'+title+'</h3><button class="btn-ico" id="cmpy-close" style="font-size:18px;">&#10005;</button></div>'
     +'<div class="modal-body" style="max-height:70vh;overflow-y:auto;">'
-    +  '<label>Name *</label><input id="co-name" type="text" placeholder="Four Thumb Construction" value="'+esc(editing?editing.name:'')+'"/>'
-    +  '<label style="margin-top:10px;">Website / Domain</label><input id="co-domain" type="text" placeholder="fourthumb.com" value="'+esc(editing&&editing.domain?editing.domain:'')+'"/>'
+    +  '<label>Name *</label><input id="cmpy-name" type="text" placeholder="Four Thumb Construction" value="'+esc(editing?editing.name:'')+'"/>'
+    +  '<label style="margin-top:10px;">Website / Domain</label><input id="cmpy-domain" type="text" placeholder="fourthumb.com" value="'+esc(editing&&editing.domain?editing.domain:'')+'"/>'
     +  '<div style="font-size:11px;color:var(--dgray);margin-top:3px;">Used to auto-fetch the company logo. Paste the website or just the domain.</div>'
     +  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">'
-    +    '<div><label>Phone</label><input id="co-phone" type="tel" value="'+esc(editing&&editing.phone?editing.phone:'')+'"/></div>'
-    +    '<div><label>Email</label><input id="co-email" type="email" value="'+esc(editing&&editing.email?editing.email:'')+'"/></div>'
+    +    '<div><label>Phone</label><input id="cmpy-phone" type="tel" value="'+esc(editing&&editing.phone?editing.phone:'')+'"/></div>'
+    +    '<div><label>Email</label><input id="cmpy-email" type="email" value="'+esc(editing&&editing.email?editing.email:'')+'"/></div>'
     +  '</div>'
-    +  '<label style="margin-top:10px;">Address</label><input id="co-address" type="text" value="'+esc(editing&&editing.address?editing.address:'')+'"/>'
-    +  '<label style="margin-top:10px;">City &amp; State</label><input id="co-city" type="text" value="'+esc(editing&&editing.city_state?editing.city_state:'')+'"/>'
-    +  '<label style="margin-top:10px;">Trade (for subcontractors)</label><input id="co-trade" type="text" placeholder="e.g. Concrete, Striping, Grading" value="'+esc(editing&&editing.trade?editing.trade:'')+'"/>'
+    +  '<label style="margin-top:10px;">Address</label><input id="cmpy-address" type="text" value="'+esc(editing&&editing.address?editing.address:'')+'"/>'
+    +  '<label style="margin-top:10px;">City &amp; State</label><input id="cmpy-city" type="text" value="'+esc(editing&&editing.city_state?editing.city_state:'')+'"/>'
+    +  '<label style="margin-top:10px;">Trade (for subcontractors)</label><input id="cmpy-trade" type="text" placeholder="e.g. Concrete, Striping, Grading" value="'+esc(editing&&editing.trade?editing.trade:'')+'"/>'
     +  '<div style="margin-top:14px;padding:12px;background:var(--lgray);border-radius:6px;">'
     +    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--dgray);margin-bottom:8px;">Relationship</div>'
     +    '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;color:var(--blk);font-weight:500;margin-bottom:6px;cursor:pointer;">'
-    +      '<input type="checkbox" id="co-iscust" style="width:auto;margin:0;"'+(!editing||editing.is_customer?' checked':'')+'> Customer — we sell to them'
+    +      '<input type="checkbox" id="cmpy-iscust" style="width:auto;margin:0;"'+(!editing||editing.is_customer?' checked':'')+'> Customer — we sell to them'
     +    '</label>'
     +    '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;color:var(--blk);font-weight:500;cursor:pointer;">'
-    +      '<input type="checkbox" id="co-issub" style="width:auto;margin:0;"'+(editing&&editing.is_subcontractor?' checked':'')+'> Subcontractor — we hire them'
+    +      '<input type="checkbox" id="cmpy-issub" style="width:auto;margin:0;"'+(editing&&editing.is_subcontractor?' checked':'')+'> Subcontractor — we hire them'
     +    '</label>'
     +  '</div>'
-    +  '<label style="margin-top:10px;">Logo URL (optional override)</label><input id="co-logo" type="url" placeholder="https://… (leave blank to auto-fetch from domain)" value="'+esc(editing&&editing.logo_url?editing.logo_url:'')+'"/>'
-    +  '<label style="margin-top:10px;">Notes</label><textarea id="co-notes" style="min-height:60px;">'+esc(editing&&editing.notes?editing.notes:'')+'</textarea>'
+    +  '<label style="margin-top:10px;">Logo URL (optional override)</label><input id="cmpy-logo" type="url" placeholder="https://… (leave blank to auto-fetch from domain)" value="'+esc(editing&&editing.logo_url?editing.logo_url:'')+'"/>'
+    +  '<label style="margin-top:10px;">Notes</label><textarea id="cmpy-notes" style="min-height:60px;">'+esc(editing&&editing.notes?editing.notes:'')+'</textarea>'
     +'</div>'
     +'<div class="modal-foot" style="display:flex;justify-content:flex-end;gap:8px;">'
-    +  '<button class="btn btn-sec btn-sm" id="co-cancel">Cancel</button>'
-    +  '<button class="btn btn-red btn-sm" id="co-save">'+(editing?'Save':'Create Company')+'</button>'
+    +  '<button class="btn btn-sec btn-sm" id="cmpy-cancel">Cancel</button>'
+    +  '<button class="btn btn-red btn-sm" id="cmpy-save">'+(editing?'Save':'Create Company')+'</button>'
     +'</div>';
   modal.appendChild(box);
   document.body.appendChild(modal);
   var close=function(){ modal.remove(); };
-  document.getElementById('co-close').onclick=close;
-  document.getElementById('co-cancel').onclick=close;
+  document.getElementById('cmpy-close').onclick=close;
+  document.getElementById('cmpy-cancel').onclick=close;
   modal.addEventListener('click',function(ev){ if(ev.target===modal) close(); });
-  document.getElementById('co-save').onclick=function(){
+  document.getElementById('cmpy-save').onclick=function(){
     var payload={
-      name:document.getElementById('co-name').value.trim(),
-      domain:document.getElementById('co-domain').value.trim(),
-      phone:document.getElementById('co-phone').value.trim(),
-      email:document.getElementById('co-email').value.trim(),
-      address:document.getElementById('co-address').value.trim(),
-      city_state:document.getElementById('co-city').value.trim(),
-      trade:document.getElementById('co-trade').value.trim(),
-      is_customer:document.getElementById('co-iscust').checked,
-      is_subcontractor:document.getElementById('co-issub').checked,
-      logo_url:document.getElementById('co-logo').value.trim(),
-      notes:document.getElementById('co-notes').value.trim(),
+      name:document.getElementById('cmpy-name').value.trim(),
+      domain:document.getElementById('cmpy-domain').value.trim(),
+      phone:document.getElementById('cmpy-phone').value.trim(),
+      email:document.getElementById('cmpy-email').value.trim(),
+      address:document.getElementById('cmpy-address').value.trim(),
+      city_state:document.getElementById('cmpy-city').value.trim(),
+      trade:document.getElementById('cmpy-trade').value.trim(),
+      is_customer:document.getElementById('cmpy-iscust').checked,
+      is_subcontractor:document.getElementById('cmpy-issub').checked,
+      logo_url:document.getElementById('cmpy-logo').value.trim(),
+      notes:document.getElementById('cmpy-notes').value.trim(),
     };
     if(!payload.name){ toast('Company name is required','err'); return; }
     var url=editing?'/companies/'+editing.id:'/companies/save';
@@ -11890,7 +11904,7 @@ function _openCompanyModal(editing){
       }).catch(function(){ toast('Network error — try again','err'); });
   };
   // Focus the name input
-  setTimeout(function(){ var n=document.getElementById('co-name'); if(n) n.focus(); },0);
+  setTimeout(function(){ var n=document.getElementById('cmpy-name'); if(n) n.focus(); },0);
 }
 
 function deleteCompany(id){
