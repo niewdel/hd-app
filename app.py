@@ -1,4 +1,4 @@
-import os, tempfile, functools, json, hashlib, time, uuid
+import os, tempfile, functools, json, hashlib, time, uuid, re, html
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, session, send_file
 from werkzeug.utils import secure_filename
@@ -64,13 +64,16 @@ def set_security_headers(response):
     # CSP: keeps 'unsafe-inline' because the single-file SPA has many inline scripts/styles.
     # Still a significant improvement over no CSP (blocks external-script injection, frames, form-action).
     frame_ancestors = "*" if is_public_embed else "'none'"
+    # Public form pages get Google Maps / Places JS allowed; nowhere else.
+    maps_script = " https://maps.googleapis.com https://maps.gstatic.com" if is_public_embed else ""
+    maps_connect = " https://maps.googleapis.com" if is_public_embed else ""
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline'; "
+        f"script-src 'self' 'unsafe-inline'{maps_script}; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: blob: https:; "
         "font-src 'self' data:; "
-        "connect-src 'self' https://azznfkboiwayifhhcguz.supabase.co https://api.open-meteo.com; "
+        f"connect-src 'self' https://azznfkboiwayifhhcguz.supabase.co https://api.open-meteo.com{maps_connect}; "
         f"frame-ancestors {frame_ancestors}; "
         "base-uri 'self'; "
         "form-action 'self'"
@@ -93,6 +96,53 @@ def _sb_eq(column, value):
     """Build a safe PostgREST 'column=eq.<value>' filter with proper URL encoding.
     Prevents query-param injection via unescaped & or ? in value."""
     return '{}=eq.{}'.format(column, _url_quote(str(value), safe=''))
+
+# ---------- Public form helpers: validation, honeypot, Google Places key ----------
+
+GOOGLE_PLACES_API_KEY = os.environ.get('GOOGLE_PLACES_API_KEY', '')
+HONEYPOT_FIELD = 'website_url'
+_EMAIL_RE = re.compile(r'^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$')
+
+def _normalize_phone(raw):
+    """Return normalized US phone '000-000-0000' or None if not 10 digits.
+    Accepts any input (spaces, parens, dashes, +1 prefix)."""
+    digits = re.sub(r'\D', '', str(raw or ''))
+    if len(digits) == 11 and digits.startswith('1'):
+        digits = digits[1:]
+    if len(digits) != 10:
+        return None
+    return f'{digits[0:3]}-{digits[3:6]}-{digits[6:10]}'
+
+def _valid_email(raw):
+    """True if raw looks like a real email with TLD. Bounds length to prevent ReDoS."""
+    s = str(raw or '').strip()
+    if not s or len(s) > 254:
+        return False
+    return bool(_EMAIL_RE.match(s))
+
+def _honeypot_tripped(payload):
+    """True if the hidden honeypot field was filled (bot indicator).
+    payload: dict-like (request.json or request.form)."""
+    try:
+        return bool(str((payload or {}).get(HONEYPOT_FIELD, '')).strip())
+    except Exception:
+        return False
+
+@app.route('/forms/config')
+def forms_config():
+    """Public (no auth). Returns non-secret config the public forms need.
+    Only exposes the Google Places browser key (already constrained to HTTP
+    referrers via Google Cloud console). Returns empty string if unset so the
+    forms fall back to plain text inputs gracefully."""
+    try:
+        from security import rate_limit_check as _rlc
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip() or 'unknown'
+        allowed, _retry = _rlc(f'formscfg:{ip}', max_attempts=60, window_s=60)
+        if not allowed:
+            return jsonify({'places_key': ''}), 429
+    except ImportError:
+        pass
+    return jsonify({'places_key': GOOGLE_PLACES_API_KEY})
 
 def hash_password(pw):
     """Shim: legacy name kept so existing callers (user-creation routes) still work.
@@ -2365,12 +2415,23 @@ def submit_lead():
         pass  # security.py not yet deployed; skip limiter
     try:
         d = request.json or {}
+        # Honeypot: bots fill hidden fields. Return success so they don't retry,
+        # but skip all DB writes and notifications.
+        if _honeypot_tripped(d):
+            ip_for_log = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip() or 'unknown'
+            app.logger.info('[honeypot] /leads/submit rejected submission from %s', ip_for_log)
+            return jsonify({'ok': True})
         # Cap all text fields to prevent DB/DoS abuse
         name = str(d.get('name', '')).strip()[:200]
         email = str(d.get('email', '')).strip()[:200]
-        phone = str(d.get('phone', '')).strip()[:40]
+        phone_raw = str(d.get('phone', '')).strip()[:40]
         if not name:
-            return jsonify({'ok': False, 'error': 'Name is required'}), 400
+            return jsonify({'ok': False, 'error': 'Name is required.'}), 400
+        if not _valid_email(email):
+            return jsonify({'ok': False, 'error': 'Please enter a valid email address.'}), 400
+        phone = _normalize_phone(phone_raw)
+        if not phone:
+            return jsonify({'ok': False, 'error': 'Please enter a valid 10-digit phone number.'}), 400
         # Try to match existing client by email or phone
         matched_client_id = None
         if email:
@@ -2445,6 +2506,106 @@ def _users_opted_in(email_pref_key, default=False):
         print(f'[_users_opted_in] {type(e).__name__}: {e}')
         return []
 
+def _render_form_email_html(*, title, name, subtitle, rows, badges=None,
+                             free_text_label=None, free_text=None,
+                             cta_label, cta_url):
+    """Return inline-CSS HTML for a branded form-submission email.
+
+    - title: red-bar header title ('New Quote Request' / 'New Job Application')
+    - name: big headline (the submitter's name)
+    - subtitle: below name (company for leads, position for applicants)
+    - rows: list of (label, value) tuples; value=None/empty renders as em-dash
+    - badges: optional list of (label, True/False) for eligibility pills
+    - free_text_label/free_text: optional blockquote section (desc/note)
+    - cta_label/cta_url: red action button
+    """
+    esc = html.escape
+    row_cells = []
+    for i, (label, value) in enumerate(rows):
+        bg = '#f9fafb' if (i % 2) else '#ffffff'
+        display = esc(str(value)) if value not in (None, '', '—') else '<span style="color:#9ca3af;">—</span>'
+        row_cells.append(
+            f'<tr style="background:{bg};">'
+            f'<td style="padding:10px 14px;color:#6b7280;font-size:11px;'
+            f'text-transform:uppercase;letter-spacing:0.4px;font-weight:700;'
+            f'width:38%;vertical-align:top;border-top:1px solid #e5e7eb;">{esc(label)}</td>'
+            f'<td style="padding:10px 14px;color:#111827;font-size:14px;'
+            f'vertical-align:top;border-top:1px solid #e5e7eb;">{display}</td>'
+            f'</tr>'
+        )
+    rows_block = ''.join(row_cells)
+
+    badges_block = ''
+    if badges:
+        pills = []
+        for label, is_true in badges:
+            bg = '#065f46' if is_true else '#9ca3af'
+            mark = '&#10003; ' if is_true else '&#10007; '
+            pills.append(
+                f'<span style="display:inline-block;background:{bg};color:#ffffff;'
+                f'font-size:11px;font-weight:700;text-transform:uppercase;'
+                f'letter-spacing:0.4px;padding:5px 11px;border-radius:999px;'
+                f'margin:0 6px 6px 0;">{mark}{esc(label)}</span>'
+            )
+        badges_block = (
+            f'<tr><td style="padding:16px 22px 0;">{"".join(pills)}</td></tr>'
+        )
+
+    free_text_block = ''
+    if free_text and str(free_text).strip():
+        free_text_block = (
+            '<tr><td style="padding:18px 22px 0;">'
+            f'<div style="font-size:11px;color:#6b7280;text-transform:uppercase;'
+            f'letter-spacing:0.4px;font-weight:700;margin-bottom:8px;">'
+            f'{esc(free_text_label or "Note")}</div>'
+            '<div style="background:#f9fafb;border-left:3px solid #CC0000;'
+            'padding:12px 14px;color:#111827;font-size:14px;line-height:1.55;'
+            'white-space:pre-wrap;border-radius:0 6px 6px 0;">'
+            f'{esc(str(free_text))}</div></td></tr>'
+        )
+
+    return (
+        '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f4f5;'
+        'font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,'
+        'Helvetica,Arial,sans-serif;">'
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+        'border="0" style="background:#f4f4f5;padding:24px 12px;">'
+        '<tr><td align="center">'
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+        'border="0" style="max-width:560px;background:#ffffff;border-radius:12px;'
+        'overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">'
+        '<tr><td style="background:#CC0000;padding:18px 22px;">'
+        '<div style="color:#ffffff;font-size:11px;font-weight:700;letter-spacing:1.4px;'
+        'text-transform:uppercase;opacity:0.85;">HD Hauling &amp; Grading</div>'
+        f'<div style="color:#ffffff;font-size:19px;font-weight:700;'
+        f'letter-spacing:-0.01em;margin-top:3px;">{esc(title)}</div>'
+        '</td></tr>'
+        '<tr><td style="padding:22px 22px 4px;">'
+        f'<div style="color:#111827;font-size:22px;font-weight:700;'
+        f'letter-spacing:-0.01em;line-height:1.25;">{esc(name)}</div>'
+        f'<div style="color:#6b7280;font-size:14px;margin-top:4px;">{esc(subtitle)}</div>'
+        '</td></tr>'
+        f'{badges_block}'
+        '<tr><td style="padding:16px 8px 0;">'
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+        f'border="0" style="border-bottom:1px solid #e5e7eb;">{rows_block}</table>'
+        '</td></tr>'
+        f'{free_text_block}'
+        '<tr><td align="center" style="padding:26px 22px 12px;">'
+        f'<a href="{esc(cta_url)}" style="display:inline-block;background:#CC0000;'
+        f'color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;'
+        f'letter-spacing:0.3px;padding:12px 26px;border-radius:6px;">'
+        f'{esc(cta_label)} &rarr;</a>'
+        '</td></tr>'
+        '<tr><td style="padding:8px 22px 24px;text-align:center;">'
+        '<div style="color:#6b7280;font-size:12px;line-height:1.5;">'
+        '<strong style="color:#111827;">HD Hauling &amp; Grading</strong><br>'
+        'You received this because you\'re subscribed to form notifications.<br>'
+        'Change in app &rarr; Settings &rarr; Notifications.'
+        '</div></td></tr>'
+        '</table></td></tr></table></body></html>'
+    )
+
 def _send_lead_email(lead):
     """Email each office user who opted in to New Leads notifications.
     Sent from admin@hdgrading.com (requires admin@hdgrading.com to be the
@@ -2460,6 +2621,7 @@ def _send_lead_email(lead):
         return
     import base64
     from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
     try:
         creds = Credentials.from_authorized_user_info(json.loads(token_json))
         service = gmail_build('gmail', 'v1', credentials=creds)
@@ -2469,7 +2631,7 @@ def _send_lead_email(lead):
         if company:
             subject_bits.append(f'({company})')
         subject = 'HD Hauling — ' + ' '.join(subject_bits)
-        body_template = [
+        plain_lines = [
             'A new quote request came in from the website.',
             '',
             f'Name:        {name}',
@@ -2486,13 +2648,30 @@ def _send_lead_email(lead):
             '',
             '— HD Hauling & Grading'
         ]
-        body = '\n'.join(body_template)
+        plain_body = '\n'.join(plain_lines)
+        html_body = _render_form_email_html(
+            title='New Quote Request',
+            name=name,
+            subtitle=company or 'Individual',
+            rows=[
+                ('Phone', lead.get('phone')),
+                ('Email', lead.get('email')),
+                ('Address', lead.get('address')),
+                ('Source', lead.get('source')),
+            ],
+            free_text_label='Project description',
+            free_text=lead.get('description'),
+            cta_label='Open in HD App',
+            cta_url='https://hdapp.up.railway.app/#leads',
+        )
         for email_addr, _full_name in recipients:
             try:
-                msg = MIMEText(body, 'plain')
+                msg = MIMEMultipart('alternative')
                 msg['to'] = email_addr
                 msg['from'] = LEAD_EMAIL_FROM
                 msg['subject'] = subject
+                msg.attach(MIMEText(plain_body, 'plain'))
+                msg.attach(MIMEText(html_body, 'html'))
                 raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
                 service.users().messages().send(userId='me', body={'raw': raw}).execute()
             except Exception as inner:
@@ -2657,16 +2836,28 @@ def submit_applicant():
 
     try:
         f = request.form
+        # Honeypot: short-circuit bots without saving. Return success.
+        if _honeypot_tripped(f):
+            ip_for_log = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip() or 'unknown'
+            app.logger.info('[honeypot] /applicants/submit rejected submission from %s', ip_for_log)
+            return jsonify({'ok': True})
         name = f.get('name', '').strip()[:200]
         if not name:
-            return jsonify({'ok': False, 'error': 'Name is required'}), 400
+            return jsonify({'ok': False, 'error': 'Name is required.'}), 400
+
+        email = f.get('email', '').strip()[:200]
+        if not _valid_email(email):
+            return jsonify({'ok': False, 'error': 'Please enter a valid email address.'}), 400
+        phone = _normalize_phone(f.get('phone', '').strip()[:40])
+        if not phone:
+            return jsonify({'ok': False, 'error': 'Please enter a valid 10-digit phone number.'}), 400
 
         def yes(v): return str(v).strip().lower() in ('yes', 'true', '1', 'y')
 
         row = {
             'name': name,
-            'email': f.get('email', '').strip()[:200],
-            'phone': f.get('phone', '').strip()[:40],
+            'email': email,
+            'phone': phone,
             'city_state': f.get('city_state', '').strip()[:200],
             'position': f.get('position', '').strip()[:200],
             'role_type': f.get('role_type', '').strip()[:20],
@@ -2759,18 +2950,18 @@ def _send_applicant_email(applicant):
         return
     import base64
     from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
     try:
         creds = Credentials.from_authorized_user_info(json.loads(token_json))
         service = gmail_build('gmail', 'v1', credentials=creds)
         name = applicant.get('name') or 'Unknown'
         position = applicant.get('position') or 'Unspecified role'
         subject = f'HD Hauling — New applicant: {name} ({position})'
-        body_lines = [
+        plain_lines = [
             'A new job application came in from the careers form.',
             '',
             f'Name:           {name}',
             f'Position:       {position}',
-            f'Role type:      {applicant.get("role_type") or "—"}',
             f'Experience:     {applicant.get("years_exp") or "—"}',
             f'Email:          {applicant.get("email") or "—"}',
             f'Phone:          {applicant.get("phone") or "—"}',
@@ -2789,13 +2980,39 @@ def _send_applicant_email(applicant):
             '',
             '— HD Hauling & Grading',
         ]
-        body = '\n'.join(body_lines)
+        plain_body = '\n'.join(plain_lines)
+        cdl = applicant.get('cdl_class') or 'None'
+        html_body = _render_form_email_html(
+            title='New Job Application',
+            name=name,
+            subtitle=position,
+            rows=[
+                ('Experience', applicant.get('years_exp')),
+                ('Phone', applicant.get('phone')),
+                ('Email', applicant.get('email')),
+                ('Location', applicant.get('city_state')),
+                ('CDL', cdl if cdl and cdl != 'None' else 'No CDL'),
+                ('Resume', 'Attached (open in app to view)' if applicant.get('resume_path') else 'Not provided'),
+                ('Source', applicant.get('source')),
+            ],
+            badges=[
+                ('Eligible to work', bool(applicant.get('work_eligible'))),
+                ('18 or older', bool(applicant.get('age_18_plus'))),
+                ("Driver's license", bool(applicant.get('has_license'))),
+            ],
+            free_text_label='Note from applicant',
+            free_text=applicant.get('note'),
+            cta_label='Open in HD App',
+            cta_url='https://hdapp.up.railway.app/#dashboard',
+        )
         for email_addr, _full_name in recipients:
             try:
-                msg = MIMEText(body, 'plain')
+                msg = MIMEMultipart('alternative')
                 msg['to'] = email_addr
                 msg['from'] = APPLICANT_EMAIL_FROM
                 msg['subject'] = subject
+                msg.attach(MIMEText(plain_body, 'plain'))
+                msg.attach(MIMEText(html_body, 'html'))
                 raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
                 service.users().messages().send(userId='me', body={'raw': raw}).execute()
             except Exception as inner:

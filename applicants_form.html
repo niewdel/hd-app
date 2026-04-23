@@ -134,6 +134,11 @@
   .success h3{font-size:22px;font-weight:700;margin-bottom:8px;letter-spacing:-0.01em;}
   .success p{font-size:14px;color:var(--gray);max-width:380px;margin:0 auto;}
 
+  /* Google Places Autocomplete dropdown — sit above all form content */
+  .pac-container{z-index:2147483647 !important;font-family:var(--font);border-radius:8px;margin-top:2px;box-shadow:0 6px 24px rgba(0,0,0,0.12);}
+  .pac-item{padding:8px 12px;font-size:14px;cursor:pointer;}
+  .pac-item:hover{background:#fff5f5;}
+
   @media(max-width:560px){
     .row2{grid-template-columns:1fr;gap:0;}
     .row2 .field{margin-top:18px;}
@@ -172,17 +177,17 @@
       <div class="row2">
         <div class="field">
           <label for="ap-email">Email <span class="req">*</span></label>
-          <input type="email" id="ap-email" placeholder="john@example.com" autocomplete="email" required/>
+          <input type="email" id="ap-email" placeholder="john@example.com" autocomplete="email" pattern="[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}" required/>
         </div>
         <div class="field">
           <label for="ap-phone">Phone <span class="req">*</span></label>
-          <input type="tel" id="ap-phone" placeholder="(555) 000-0000" autocomplete="tel" required/>
+          <input type="tel" id="ap-phone" placeholder="555-123-4567" autocomplete="tel" inputmode="tel" maxlength="12" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" required/>
         </div>
       </div>
 
       <div class="field">
         <label for="ap-city">City &amp; State <span class="req">*</span></label>
-        <input type="text" id="ap-city" placeholder="Concord, NC" autocomplete="address-level2" required/>
+        <input type="text" id="ap-city" placeholder="Start typing a city…" autocomplete="off" required/>
       </div>
 
       <div class="section-hdr">The Role</div>
@@ -276,6 +281,12 @@
         </select>
       </div>
 
+      <!-- Honeypot: real users won't see or fill this; bots usually will. -->
+      <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;">
+        <label for="ap-website">Website</label>
+        <input type="text" id="ap-website" name="website_url" tabindex="-1" autocomplete="off" value=""/>
+      </div>
+
       <div id="ap-err" class="err" role="alert" aria-live="polite"></div>
       <button class="btn-submit" id="btn-ap-submit" onclick="submitApplicant()">Submit Application</button>
       <p class="privacy">Your information and resume are kept private and used only by HD Hauling &amp; Grading hiring staff to evaluate your application.</p>
@@ -301,6 +312,58 @@ function postHeight(){
 window.addEventListener('load', postHeight);
 window.addEventListener('resize', postHeight);
 new ResizeObserver(postHeight).observe(document.body);
+
+// ---------- Phone mask: auto-format as user types -> 555-123-4567 ----------
+function attachPhoneMask(input){
+  if(!input) return;
+  input.addEventListener('input', function(e){
+    var d = (e.target.value || '').replace(/\D/g, '').slice(0, 10);
+    if(d.length <= 3) e.target.value = d;
+    else if(d.length <= 6) e.target.value = d.slice(0,3) + '-' + d.slice(3);
+    else e.target.value = d.slice(0,3) + '-' + d.slice(3,6) + '-' + d.slice(6);
+  });
+}
+attachPhoneMask(document.getElementById('ap-phone'));
+
+// ---------- Google Places autocomplete on the city field ----------
+// Restrict to US cities. Falls back to plain text if the API key isn't set.
+(function loadPlaces(){
+  fetch('/forms/config').then(function(r){ return r.json(); }).then(function(cfg){
+    var key = cfg && cfg.places_key;
+    if(!key) return;
+    window.initApplicantPlaces = function(){
+      var input = document.getElementById('ap-city');
+      if(!input || !(window.google && window.google.maps && window.google.maps.places)) return;
+      var ac = new google.maps.places.Autocomplete(input, {
+        types: ['(cities)'],
+        componentRestrictions: { country: 'us' },
+        fields: ['address_components', 'formatted_address', 'name']
+      });
+      ac.addListener('place_changed', function(){
+        var p = ac.getPlace() || {};
+        var comps = p.address_components || [];
+        var city = '', state = '';
+        for (var i = 0; i < comps.length; i++) {
+          var types = comps[i].types || [];
+          if (types.indexOf('locality') !== -1) city = comps[i].long_name;
+          else if (!city && types.indexOf('postal_town') !== -1) city = comps[i].long_name;
+          if (types.indexOf('administrative_area_level_1') !== -1) state = comps[i].short_name;
+        }
+        if (city && state) input.value = city + ', ' + state;
+        else if (p.formatted_address) input.value = p.formatted_address;
+      });
+    };
+    var s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) +
+            '&libraries=places&loading=async&callback=initApplicantPlaces';
+    s.async = true;
+    s.defer = true;
+    document.head.appendChild(s);
+  }).catch(function(){ /* keep plain text input */ });
+})();
+
+var EMAIL_RE = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/;
+var PHONE_RE = /^[0-9]{3}-[0-9]{3}-[0-9]{4}$/;
 
 var _resumeFile = null;
 var MAX_RESUME_BYTES = 5 * 1024 * 1024;
@@ -369,12 +432,16 @@ function submitApplicant(){
       return;
     }
   }
+  if (!EMAIL_RE.test(fields.email)) { err.textContent = 'Please enter a valid email address.'; return; }
+  if (!PHONE_RE.test(fields.phone)) { err.textContent = 'Phone must be a 10-digit US number (555-123-4567).'; return; }
 
   btn.disabled = true;
   btn.textContent = _resumeFile ? 'Uploading...' : 'Submitting...';
 
   var fd = new FormData();
   Object.keys(fields).forEach(function(k){ fd.append(k, fields[k]); });
+  var honeypot = (document.getElementById('ap-website') || {}).value || '';
+  fd.append('website_url', honeypot);
   if (_resumeFile) fd.append('resume', _resumeFile, _resumeFile.name);
 
   fetch('/applicants/submit', { method: 'POST', body: fd })

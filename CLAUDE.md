@@ -198,16 +198,17 @@ id, proposal_id, number, date, description, snap (JSONB), add_total, deduct_tota
 | Method | Route | Description |
 |---|---|---|
 | GET | `/lead-form` | Serves public lead intake form (iframe-allowed) |
-| POST | `/leads/submit` | Public lead submission with auto client dedup. Notifies office staff in-app + email (default ON). |
+| POST | `/leads/submit` | Public lead submission with auto client dedup. Validates email (`_valid_email`) + phone (normalized to `000-000-0000` via `_normalize_phone`); rejects honeypot via `_honeypot_tripped`. Notifies office staff in-app + HTML email (default ON). |
 | GET | `/leads/list` | List leads (requires auth) |
 | PATCH | `/leads/<id>` | Update lead status (requires auth) |
 | POST | `/leads/<id>/convert` | Convert lead to project + client (requires auth). Sets `snap.is_project: true` so it appears in Pipeline. Uses `sb_admin_headers` (RLS on proposals). Returns ok:false on insert failure instead of silently marking lead accepted. |
+| GET | `/forms/config` | Public, no auth. Returns `{places_key}` so the two iframe forms can load Google Places Autocomplete. Rate-limited 60/min/IP. Returns empty string if `GOOGLE_PLACES_API_KEY` env var is unset → forms fall back to plain text inputs. |
 
 ### Applicant Intake (NO AUTH for submit) — added 2026-04-22
 | Method | Route | Description |
 |---|---|---|
 | GET | `/applicants-form` | Serves public job application form (iframe-allowed) |
-| POST | `/applicants/submit` | Multipart upload — uploads resume to `resumes` Storage bucket, inserts hd_applicants row, fans in-app notif + email (default ON via `_users_opted_in('new_applicants', default=True)`) |
+| POST | `/applicants/submit` | Multipart upload — uploads resume to `resumes` Storage bucket, inserts hd_applicants row, fans in-app notif + HTML email (default ON via `_users_opted_in('new_applicants', default=True)`). Validates email + phone (normalized to `000-000-0000`); rejects honeypot. |
 | GET | `/applicants/list` | List applicants (?status=new\|all). Auth required. |
 | PATCH | `/applicants/<id>` | Update status (reviewed/contacted/rejected/hired) + admin_notes. Stamps reviewed_by/at. |
 | GET | `/applicants/<id>/resume` | Server-side proxy that streams the resume file from the private Storage bucket using the service-role key. Auth required. |
@@ -278,10 +279,14 @@ id, proposal_id, number, date, description, snap (JSONB), add_total, deduct_tota
 - `_safe_error(e, context)` — logs internally via `app.logger.exception`, returns generic `{'error': 'Internal error. Check logs.'}` with 500. Use in authed routes; do NOT use for 400/403 semantic responses or public routes.
 - `_sb_eq(column, value)` — URL-safe PostgREST filter via `urllib.parse.quote`. Use instead of f-string interpolation in any route that builds a `?col=eq.{var}` filter.
 - `_owns_or_admin(record_created_by)` — null-safe ownership check. Returns True for admin/dev unconditionally; for other roles compares `record_created_by` to `session.get('username')`. Apply on update/delete routes.
-- `set_security_headers` allowlists `https://hdapp.up.railway.app` for CORS, AND allows iframe embedding for `/lead-form` + `/applicants-form` only (everything else gets `X-Frame-Options: DENY` + `frame-ancestors 'none'`).
+- `set_security_headers` allowlists `https://hdapp.up.railway.app` for CORS, AND allows iframe embedding for `/lead-form` + `/applicants-form` only (everything else gets `X-Frame-Options: DENY` + `frame-ancestors 'none'`). The same two form routes also get `https://maps.googleapis.com` / `https://maps.gstatic.com` whitelisted in CSP `script-src` + `connect-src` so Google Places Autocomplete works — strictly scoped to those two paths.
 - `/send-email` rate-limit: 20 sends per rolling 24h per user. Audit log to `hd_email_log` table — must exist in Supabase or rate limit silently fails open.
 - `_users_opted_in(email_pref_key, default=False)` — returns active office users (admin/user/dev) opted in to a given email pref. **`default=True`** treats users with `notif_prefs.email[key]==null` as opted-in (used for `new_leads` and `new_applicants` so existing users get emails without re-saving prefs).
-- `_send_lead_email(lead)` and `_send_applicant_email(applicant)` — both use the Gmail OAuth (`GMAIL_TOKEN_JSON`) and send from `admin@hdgrading.com`. Sender Gmail account configured 2026-04-22.
+- `_send_lead_email(lead)` and `_send_applicant_email(applicant)` — both use the Gmail OAuth (`GMAIL_TOKEN_JSON`) and send from `admin@hdgrading.com`. Sender Gmail account configured 2026-04-22. Both send `multipart/alternative` with HTML + plain-text fallback (2026-04-23).
+- `_render_form_email_html(title, name, subtitle, rows, badges=None, free_text_label=None, free_text=None, cta_label, cta_url)` — returns inline-CSS branded HTML for form-submission notification emails. Red header bar, 560px card, zebra-striped key/value rows, optional eligibility pills (green for true, gray for false), optional blockquote for free text, red CTA button. All inputs HTML-escaped via `html.escape`.
+- `_normalize_phone(raw)` — returns `000-000-0000` or `None`. Strips non-digits; accepts optional leading `1` (strips it). Used by both public submit routes to enforce format.
+- `_valid_email(raw)` — regex check (`^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$`). Bounded at 254 chars to avoid ReDoS. Stricter than HTML5 `type=email` (requires TLD).
+- `_honeypot_tripped(payload)` — returns True if hidden `website_url` field was filled. Dict-like input. Used by both public submit routes to short-circuit bot submissions with a fake 200.
 
 ### Sender info (changed 2026-04-22)
 The "From" name/email/phone on proposal PDFs and prefilled email templates **always reflects the logged-in user** (sourced from `hd_users.full_name/email/phone`). The previous shared `hd_sender` app setting was removed — Settings → Account is the single place to update it. `hydrateSenderFromAccount()` re-derives the sender global from `window._userName/_userEmail/_userPhone`.
@@ -543,6 +548,13 @@ Always verify roundtrip. Never use `btoa(unescape(encodeURIComponent(src)))` —
 
 ### renderExtra() and renderBadgeList()
 These functions MUST use the DOM API, not innerHTML string building. Previous versions using HTML strings caused `SyntaxError: Unexpected identifier` that broke the entire app.
+
+### ⚠️ Public form conventions (lead_form.html + applicants_form.html)
+- **Phone input**: client-side mask auto-formats to `555-123-4567` on `input`; HTML `pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"` + `maxlength="12"`. Server normalizes via `_normalize_phone` (accepts any input, rejects if not 10 digits). Stored format in `hd_leads.phone` / `hd_applicants.phone` is always `000-000-0000`.
+- **Email input**: HTML `pattern` requires TLD; server re-validates via `_valid_email`.
+- **Honeypot**: hidden `<input name="website_url">` on both forms (visually offscreen, `aria-hidden="true"`, `tabindex="-1"`). Real users never touch it; if filled, the server returns a fake `{ok:true}` and skips all DB writes / notifications / email. Log line: `[honeypot] /leads/submit rejected submission from <ip>`.
+- **Google Places**: both forms fetch `/forms/config` on load, then inject `maps.googleapis.com/maps/api/js?libraries=places&loading=async` only if the key is present. If the key or fetch fails, inputs stay as plain text — forms keep working.
+- **Env var**: `GOOGLE_PLACES_API_KEY` is a browser-exposed key; lock it down in Google Cloud console with HTTP-referrer restrictions (`https://hdapp.up.railway.app/*` + any embed domain) and API restrictions (Places + Maps JavaScript only).
 
 ---
 
