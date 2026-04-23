@@ -1383,7 +1383,9 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 .client-card{background:var(--wht);border:1px solid var(--bdr);border-radius:var(--rad);padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:11px;transition:box-shadow .2s,transform .2s;}
 .client-card:hover{box-shadow:var(--shadow-m);transform:translateY(-1px);}
 .client-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;}
-.avatar-logo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#fff;border-radius:50%;}
+/* Logo overlay: white backing, full logo (no crop), crisp rendering of low-res
+   sources. inset:0 fills the circle; object-fit:contain preserves aspect. */
+.avatar-logo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;border-radius:50%;image-rendering:-webkit-optimize-contrast;}
 .client-info{flex:1;}
 .client-name{font-weight:600;font-size:13px;}
 .client-sub{font-size:11px;color:var(--dgray);margin-top:2px;}
@@ -11675,24 +11677,40 @@ function _normalizeDomain(raw){
   return d;
 }
 
-// Two-tier fallback chain: icon.horse (sharper, ~17KB) primary, DDG (stable,
-// proper 404s) secondary, then remove the img so initials show through.
-function _imgWithFallback(primary, fallback, cls){
-  var attrs = 'class="' + cls + '" src="' + esc(primary) + '" alt="" loading="lazy"';
-  if(fallback){
-    attrs += ' onerror="if(this.dataset.f){this.remove();}else{this.dataset.f=\'1\';this.src=\'' + esc(fallback) + '\';}"';
-  } else {
-    attrs += ' onerror="this.remove()"';
-  }
-  return '<img ' + attrs + '>';
+// N-tier image fallback. Given an ordered list of URLs, sets src to the
+// first; on error, advances to the next; when exhausted, removes the <img>
+// so the initials underneath stay visible.
+function _imgWithFallbacks(urls, cls){
+  if(!urls || !urls.length) return '';
+  var primary = urls[0];
+  var rest = urls.slice(1);
+  var fbAttr = rest.length ? ' data-fb="' + esc(rest.join('|')) + '"' : '';
+  var onerr = rest.length
+    ? "var l=(this.dataset.fb||'').split('|').filter(Boolean);if(!l.length){this.remove();return;}this.src=l.shift();this.dataset.fb=l.join('|');"
+    : 'this.remove()';
+  return '<img class="' + cls + '" src="' + esc(primary) + '" alt="" loading="lazy"' + fbAttr + ' onerror="' + onerr + '">';
 }
 
+// Fallback chain — prioritises sources that return the HIGHEST native res
+// for the given domain so the 36px avatar (72px on retina) stays sharp:
+// 1. Google faviconV2 at sz=128 — scrapes the site's HTML for the best
+//    available icon. Returns 128×128 when the site has one; proper 404 for
+//    unknown domains (so onerror advances the chain).
+// 2. icon.horse — community service that also fetches the site's best icon.
+// 3. DuckDuckGo /ip3/<domain>.ico — stable backup, smaller images.
+// When all three fail → img removed, initials show through.
 function _logoImgsForDomain(domain){
   if(!domain) return null;
-  return {
-    primary: 'https://icon.horse/icon/' + domain,
-    fallback: 'https://icons.duckduckgo.com/ip3/' + domain + '.ico'
-  };
+  return [
+    'https://www.google.com/s2/favicons?domain=' + domain + '&sz=128',
+    'https://icon.horse/icon/' + domain,
+    'https://icons.duckduckgo.com/ip3/' + domain + '.ico'
+  ];
+}
+
+// Back-compat shim for anywhere that still calls the 2-arg form.
+function _imgWithFallback(primary, fallback, cls){
+  return _imgWithFallbacks(fallback ? [primary, fallback] : [primary], cls);
 }
 
 // Email-based overlay (used for clients, subs, applicants — anywhere we only
@@ -11700,8 +11718,7 @@ function _logoImgsForDomain(domain){
 function _logoOverlayHtml(email){
   var d = _domainFromEmail(email);
   if(!d) return '';
-  var urls = _logoImgsForDomain(d);
-  return _imgWithFallback(urls.primary, urls.fallback, 'avatar-logo-img');
+  return _imgWithFallbacks(_logoImgsForDomain(d), 'avatar-logo-img');
 }
 
 // Company-record-aware: prefers manual logo_url override, else derives from
@@ -11713,8 +11730,7 @@ function _companyLogoHtml(company){
   }
   var d = _normalizeDomain(company.domain || '');
   if(!d) return '';
-  var urls = _logoImgsForDomain(d);
-  return _imgWithFallback(urls.primary, urls.fallback, 'avatar-logo-img');
+  return _imgWithFallbacks(_logoImgsForDomain(d), 'avatar-logo-img');
 }
 
 // Kept for callers that still want just the URL

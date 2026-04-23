@@ -319,7 +319,7 @@ When Settings customization renames standard materials (e.g., "ABC" → "Heavy D
 
 ### Frontend Helpers
 - `_safeFetch(url, opts)` — fetch wrapper; throws on non-2xx with the server's `{error}` message. Use in every save/delete/update handler. Pattern: try/catch; toast in catch; do NOT close the modal on failure.
-- **Logo helpers** — derive a company logo URL from a domain via a two-tier fallback chain: **icon.horse** primary (high-quality PNGs, ~17KB), **icons.duckduckgo.com/ip3/<domain>.ico** fallback (stable service with proper 404s), then remove the `<img>` so initials show through.
+- **Logo helpers** — derive a company logo URL from a domain via a three-tier fallback chain: **Google faviconV2** (`www.google.com/s2/favicons?domain=X&sz=128` — scrapes the site for best available icon, returns 128×128 when available, proper 404 for unknown domains) → **icon.horse** → **DDG `/ip3/<domain>.ico`** → remove the `<img>` so initials show through.
   - `_logoOverlayHtml(email)` — email-based (derives domain, skips personal providers via `_PERSONAL_EMAIL_DOMAINS`).
   - `_companyLogoHtml(company)` — company-record-aware; prefers manual `logo_url` override, else derives from `company.domain`. Used in client cards (when `company_id` is present), company cards, and the company detail page.
   - `_imgWithFallback(primary, fallback, cls)` — the underlying helper that builds an `<img>` with a two-tier onerror chain.
