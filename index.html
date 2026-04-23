@@ -2126,6 +2126,8 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             <div class="settings-tab-bar" style="margin:0;">
               <button class="stab on" id="contacts-tab-clients" onclick="showContactsTab('clients')">Clients</button>
               <button class="stab" id="contacts-tab-subs" onclick="showContactsTab('subs')">Subcontractors</button>
+              <button class="stab" id="contacts-tab-leads" onclick="showContactsTab('leads')">Past Leads</button>
+              <button class="stab" id="contacts-tab-applicants" onclick="showContactsTab('applicants')">Past Applicants</button>
             </div>
             <div style="margin-left:auto;display:flex;gap:8px;" id="contacts-action-btns">
               <button class="btn btn-sec btn-sm" onclick="openClientModal()">Add Client</button>
@@ -2154,6 +2156,42 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                 <div class="empty-state">
                   <div class="empty-state-title">No subcontractors yet</div>
                   <div class="empty-state-desc">Add a subcontractor to track relationships.</div>
+                </div>
+              </div>
+            </div>
+            <div id="contacts-pane-leads" style="display:none;">
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+                <div id="contacts-leads-count" style="font-size:13px;color:var(--dgray);"></div>
+                <select id="contacts-leads-status" onchange="filterContactsLeads()" style="max-width:160px;">
+                  <option value="all">All statuses</option>
+                  <option value="new">New</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <input id="contacts-leads-search" type="text" aria-label="Search past leads" placeholder="Search name, company, email, phone&hellip;" oninput="filterContactsLeads()" style="flex:1;max-width:400px;"/>
+              </div>
+              <div id="contacts-leads-list">
+                <div class="empty-state">
+                  <div class="empty-state-title">Loading past leads&hellip;</div>
+                </div>
+              </div>
+            </div>
+            <div id="contacts-pane-applicants" style="display:none;">
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+                <div id="contacts-applicants-count" style="font-size:13px;color:var(--dgray);"></div>
+                <select id="contacts-applicants-status" onchange="filterContactsApplicants()" style="max-width:160px;">
+                  <option value="all">All statuses</option>
+                  <option value="new">New</option>
+                  <option value="reviewed">Reviewed</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="hired">Hired</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <input id="contacts-applicants-search" type="text" aria-label="Search past applicants" placeholder="Search name, position, email, phone&hellip;" oninput="filterContactsApplicants()" style="flex:1;max-width:400px;"/>
+              </div>
+              <div id="contacts-applicants-list">
+                <div class="empty-state">
+                  <div class="empty-state-title">Loading past applicants&hellip;</div>
                 </div>
               </div>
             </div>
@@ -11560,10 +11598,191 @@ async function renderClients() {
 }
 
 function showContactsTab(tab){
-  ['clients','subs'].forEach(function(t){
+  ['clients','subs','leads','applicants'].forEach(function(t){
     var pane=document.getElementById('contacts-pane-'+t);if(pane)pane.style.display=t===tab?'':'none';
     var btn=document.getElementById('contacts-tab-'+t);if(btn){if(t===tab)btn.classList.add('on');else btn.classList.remove('on');}
   });
+  // Add Client/Subcontractor buttons only make sense on clients/subs tabs
+  var actionBtns=document.getElementById('contacts-action-btns');
+  if(actionBtns) actionBtns.style.display=(tab==='clients'||tab==='subs')?'':'none';
+  // Lazy-load the historical tabs on first open
+  if(tab==='leads' && !_contactsLeadsLoaded){ loadContactsLeads(); }
+  if(tab==='applicants' && !_contactsApplicantsLoaded){ loadContactsApplicants(); }
+}
+
+// ---------- Past Leads (Contacts tab) ----------
+var _contactsLeadsCache=[];
+var _contactsLeadsLoaded=false;
+
+function loadContactsLeads(){
+  var list=document.getElementById('contacts-leads-list');
+  if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Loading past leads&hellip;</div></div>';
+  fetch('/leads/list?status=all').then(function(r){return r.json();}).then(function(d){
+    if(!d.ok){
+      if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Couldn\'t load leads</div><div class="empty-state-desc">'+esc(d.error||'Unknown error')+'</div></div>';
+      return;
+    }
+    _contactsLeadsCache=d.items||[];
+    _contactsLeadsLoaded=true;
+    filterContactsLeads();
+  }).catch(function(){
+    if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Network error</div><div class="empty-state-desc">Could not load past leads.</div></div>';
+  });
+}
+
+function filterContactsLeads(){
+  var q=((document.getElementById('contacts-leads-search')||{}).value||'').toLowerCase().trim();
+  var statusSel=((document.getElementById('contacts-leads-status')||{}).value||'all');
+  var filtered=_contactsLeadsCache.filter(function(l){
+    if(statusSel!=='all' && (l.status||'new')!==statusSel) return false;
+    if(!q) return true;
+    var hay=((l.name||'')+' '+(l.company||'')+' '+(l.email||'')+' '+(l.phone||'')+' '+(l.address||'')+' '+(l.description||'')).toLowerCase();
+    return hay.indexOf(q)>-1;
+  });
+  renderContactsLeadsList(filtered);
+  var count=document.getElementById('contacts-leads-count');
+  if(count) count.textContent=filtered.length+' of '+_contactsLeadsCache.length+(_contactsLeadsCache.length===1?' lead':' leads');
+}
+
+function _leadStatusPill(status){
+  var s=status||'new';
+  var colors={new:'--badge-info-bg:--badge-info',accepted:'--badge-ok-bg:--badge-ok',rejected:'--badge-muted-bg:--badge-muted'};
+  var map={new:['var(--badge-info-bg)','var(--badge-info)'],accepted:['var(--badge-ok-bg)','var(--badge-ok)'],rejected:['var(--badge-muted-bg)','var(--badge-muted)']};
+  var c=map[s]||map.new;
+  return '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;padding:2px 8px;border-radius:3px;background:'+c[0]+';color:'+c[1]+';">'+esc(s)+'</span>';
+}
+
+function renderContactsLeadsList(items){
+  var list=document.getElementById('contacts-leads-list');
+  if(!list) return;
+  if(!items.length){
+    list.innerHTML='<div class="empty-state"><div class="empty-state-title">No past leads match</div><div class="empty-state-desc">Try clearing filters or check the dashboard Forms &amp; Applicants feed for brand-new submissions.</div></div>';
+    return;
+  }
+  var html='';
+  items.forEach(function(l){
+    var when=l.submitted_at?new Date(l.submitted_at).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'';
+    html+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bdr);">';
+    html+='<div style="flex:1;min-width:0;">';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">';
+    html+=_leadStatusPill(l.status);
+    html+='<span style="font-size:11px;color:var(--dgray);">'+esc(when)+'</span>';
+    html+='</div>';
+    html+='<div style="font-size:13px;font-weight:600;">'+esc(l.name||'(no name)')+(l.company?' <span style="color:var(--dgray);font-weight:400;">— '+esc(l.company)+'</span>':'')+'</div>';
+    html+='<div style="font-size:11px;color:var(--dgray);margin-top:2px;">';
+    if(l.email) html+=esc(l.email)+' ';
+    if(l.phone) html+=esc(l.phone);
+    html+='</div>';
+    if(l.description) html+='<div style="font-size:12px;color:var(--dgray);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(l.description)+'</div>';
+    html+='</div>';
+    html+='<div style="flex-shrink:0;"><button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="viewLead('+l.id+')">View</button></div>';
+    html+='</div>';
+  });
+  list.innerHTML=html;
+}
+
+function viewLead(id){
+  var l=_contactsLeadsCache.find(function(x){return x.id===id;});
+  if(!l){ toast('Lead not found','err'); return; }
+  var modal=document.getElementById('lead-modal');
+  if(!modal){ console.error('lead-modal element missing'); return; }
+  document.getElementById('lm-title').textContent=l.name||'Lead';
+  var bodyHtml='';
+  function row(label,val){ if(!val && val!==false) return ''; return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px;"><span style="color:var(--dgray);">'+label+'</span><span style="font-weight:600;text-align:right;max-width:60%;word-break:break-word;">'+esc(String(val))+'</span></div>'; }
+  bodyHtml+=row('Status', l.status);
+  bodyHtml+=row('Company', l.company);
+  bodyHtml+=row('Email', l.email);
+  bodyHtml+=row('Phone', l.phone);
+  bodyHtml+=row('Address', l.address);
+  bodyHtml+=row('Source', l.source);
+  bodyHtml+=row('Submitted', l.submitted_at?new Date(l.submitted_at).toLocaleString():'');
+  if(l.description){
+    bodyHtml+='<div style="margin-top:14px;"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--dgray);margin-bottom:5px;">Project description</div><div style="font-size:13px;line-height:1.5;background:var(--lgray);padding:10px 12px;border-radius:6px;white-space:pre-wrap;">'+esc(l.description)+'</div></div>';
+  }
+  document.getElementById('lm-body').innerHTML=bodyHtml;
+  modal.classList.remove('hidden');
+}
+
+function closeLeadModal(){
+  var m=document.getElementById('lead-modal');
+  if(m) m.classList.add('hidden');
+}
+
+// ---------- Past Applicants (Contacts tab) ----------
+var _contactsApplicantsCache=[];
+var _contactsApplicantsLoaded=false;
+
+function loadContactsApplicants(){
+  var list=document.getElementById('contacts-applicants-list');
+  if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Loading past applicants&hellip;</div></div>';
+  fetch('/applicants/list?status=all').then(function(r){return r.json();}).then(function(d){
+    if(!d.ok){
+      if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Couldn\'t load applicants</div><div class="empty-state-desc">'+esc(d.error||'Unknown error')+'</div></div>';
+      return;
+    }
+    _contactsApplicantsCache=d.items||[];
+    _contactsApplicantsLoaded=true;
+    // Prime the shared viewApplicant cache so the modal opens instantly
+    _contactsApplicantsCache.forEach(function(a){ if(typeof _applicantsCache==='object') _applicantsCache[a.id]=a; });
+    filterContactsApplicants();
+  }).catch(function(){
+    if(list) list.innerHTML='<div class="empty-state"><div class="empty-state-title">Network error</div><div class="empty-state-desc">Could not load past applicants.</div></div>';
+  });
+}
+
+function filterContactsApplicants(){
+  var q=((document.getElementById('contacts-applicants-search')||{}).value||'').toLowerCase().trim();
+  var statusSel=((document.getElementById('contacts-applicants-status')||{}).value||'all');
+  var filtered=_contactsApplicantsCache.filter(function(a){
+    if(statusSel!=='all' && (a.status||'new')!==statusSel) return false;
+    if(!q) return true;
+    var hay=((a.name||'')+' '+(a.position||'')+' '+(a.email||'')+' '+(a.phone||'')+' '+(a.city_state||'')).toLowerCase();
+    return hay.indexOf(q)>-1;
+  });
+  renderContactsApplicantsList(filtered);
+  var count=document.getElementById('contacts-applicants-count');
+  if(count) count.textContent=filtered.length+' of '+_contactsApplicantsCache.length+(_contactsApplicantsCache.length===1?' applicant':' applicants');
+}
+
+function _applicantStatusPill(status){
+  var s=status||'new';
+  var map={new:['var(--badge-info-bg)','var(--badge-info)'],reviewed:['var(--badge-info-bg)','var(--badge-info)'],contacted:['var(--badge-warn-bg)','var(--badge-warn)'],hired:['var(--badge-ok-bg)','var(--badge-ok)'],rejected:['var(--badge-muted-bg)','var(--badge-muted)']};
+  var c=map[s]||map.new;
+  return '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;padding:2px 8px;border-radius:3px;background:'+c[0]+';color:'+c[1]+';">'+esc(s)+'</span>';
+}
+
+function renderContactsApplicantsList(items){
+  var list=document.getElementById('contacts-applicants-list');
+  if(!list) return;
+  if(!items.length){
+    list.innerHTML='<div class="empty-state"><div class="empty-state-title">No past applicants match</div><div class="empty-state-desc">Try clearing filters or check the dashboard feed for new applications.</div></div>';
+    return;
+  }
+  var html='';
+  items.forEach(function(a){
+    var when=a.submitted_at?new Date(a.submitted_at).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'';
+    var roleBits=[];
+    if(a.position) roleBits.push(esc(a.position));
+    if(a.years_exp) roleBits.push(esc(a.years_exp)+' yrs');
+    if(a.cdl_class && a.cdl_class!=='None') roleBits.push(esc(a.cdl_class));
+    html+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bdr);">';
+    html+='<div style="flex:1;min-width:0;">';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">';
+    html+=_applicantStatusPill(a.status);
+    html+='<span style="font-size:11px;color:var(--dgray);">'+esc(when)+'</span>';
+    if(a.resume_path) html+='<span style="font-size:10px;color:var(--form-resume-fg);font-weight:600;">Resume attached</span>';
+    html+='</div>';
+    html+='<div style="font-size:13px;font-weight:600;">'+esc(a.name||'(no name)')+'</div>';
+    if(roleBits.length) html+='<div style="font-size:12px;color:var(--dgray);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+roleBits.join(' · ')+'</div>';
+    html+='<div style="font-size:11px;color:var(--dgray);margin-top:2px;">';
+    if(a.email) html+=esc(a.email)+' ';
+    if(a.phone) html+=esc(a.phone);
+    html+='</div>';
+    html+='</div>';
+    html+='<div style="flex-shrink:0;"><button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="viewApplicant('+a.id+')">View</button></div>';
+    html+='</div>';
+  });
+  list.innerHTML=html;
 }
 
 // Search filters
@@ -17272,6 +17491,7 @@ function setApplicantStatus(newStatus){
       toast('Marked '+newStatus, 'ok');
       closeApplicantModal();
       loadDashForms();
+      _contactsApplicantsLoaded=false; // force a refresh next time the Past Applicants tab opens
     } else {
       toast(d.error||'Update failed','err');
     }
@@ -17284,7 +17504,7 @@ function dismissApplicant(id){
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({status:'rejected'})
   }).then(function(r){return r.json();}).then(function(d){
-    if(d.ok){ loadDashForms(); toast('Applicant dismissed','ok'); }
+    if(d.ok){ loadDashForms(); _contactsApplicantsLoaded=false; toast('Applicant dismissed','ok'); }
   });
 }
 
@@ -17306,6 +17526,7 @@ function convertLead(id){
         // Refresh server-side data before re-rendering so the new proposal
         // shows up in Pipeline + Saved Docs without a manual page reload.
         loadDashForms();
+        _contactsLeadsLoaded=false; // force refresh of Past Leads tab next time it opens
         fetch('/pipeline/list').then(function(r){return r.json();}).then(function(pl){
           if(pl&&pl.proposals)pipelineProposals=pl.proposals;
           renderPipeline();
@@ -17320,7 +17541,7 @@ function dismissLead(id){
   fetch('/leads/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'rejected'})})
     .then(function(r){return r.json();})
     .then(function(d){
-      if(d.ok){loadDashLeads();toast('Lead dismissed','ok');}
+      if(d.ok){loadDashLeads();_contactsLeadsLoaded=false;toast('Lead dismissed','ok');}
     });
 }
 
@@ -17349,6 +17570,20 @@ function addReminderFromProject(){
         <button class="btn btn-sec btn-sm" onclick="setApplicantStatus('hired')" style="border-color:#2e7d32;color:#2e7d32;">Mark Hired</button>
       </div>
       <button class="btn btn-red" onclick="closeApplicantModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lead Detail Modal (read-only) -->
+<div id="lead-modal" class="modal-overlay hidden">
+  <div class="modal" style="width:520px;max-width:96vw;">
+    <div class="modal-hdr">
+      <h3><span style="display:inline-block;font-size:9px;font-weight:800;letter-spacing:0.6px;padding:2px 7px;border-radius:3px;background:var(--form-pill-quote-bg);color:var(--form-pill-quote-fg);margin-right:8px;vertical-align:middle;">QUOTE</span><span id="lm-title">Lead</span></h3>
+      <button class="btn-ico" onclick="closeLeadModal()" style="font-size:18px;">&#10005;</button>
+    </div>
+    <div class="modal-body" id="lm-body" style="max-height:70vh;overflow-y:auto;"></div>
+    <div class="modal-foot" style="display:flex;justify-content:flex-end;">
+      <button class="btn btn-red" onclick="closeLeadModal()">Close</button>
     </div>
   </div>
 </div>
