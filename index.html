@@ -48,6 +48,12 @@ html{scroll-behavior:smooth;color-scheme:light dark;}
   --rail-w:56px;--sidebar-w:240px;--topbar-h:56px;
   --transition:200ms cubic-bezier(0.4, 0, 0.2, 1);
   --card-gap:14px;
+  /* Dashboard Forms & Applicants feed cards (light mode) */
+  --form-card-quote-bg:#fffafa;
+  --form-card-career-bg:#fafbff;
+  --form-pill-quote-bg:#fdecec;--form-pill-quote-fg:#a30000;
+  --form-pill-career-bg:#e8f0fb;--form-pill-career-fg:#1e4ba0;
+  --form-resume-fg:#1e4ba0;
 }
 body{font-family:var(--font);background:var(--bg-base);color:var(--blk);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 
@@ -97,6 +103,12 @@ body.dark{
   --badge-muted-bg:#3A3A3C;--badge-muted:#A1A1AA;
   --txt-secondary:#A1A1AA;--txt-muted:#71717A;--dot-sep:rgba(255,255,255,0.15);
   --info-bg:#2C2414;--info-border:#8B6914;--info-text:#E6A800;
+  /* Dashboard Forms & Applicants feed cards (dark mode) */
+  --form-card-quote-bg:rgba(39,39,42,0.55);
+  --form-card-career-bg:rgba(39,39,42,0.55);
+  --form-pill-quote-bg:#3C1818;--form-pill-quote-fg:#FF6961;
+  --form-pill-career-bg:#1C2234;--form-pill-career-fg:#6BABF7;
+  --form-resume-fg:#6BABF7;
   background:#0A0A0C;color:#E4E4E7;
 }
 body.dark .main{background:transparent;}
@@ -17128,8 +17140,8 @@ function renderPricingOptions(){
 // Combined feed: leads (Quote requests) + applicants (Careers).
 // Each card carries a colored badge so the type is readable at a glance.
 
-var _BADGE_QUOTE = 'background:#fdecec;color:#a30000;border-left:3px solid #cc0000;';
-var _BADGE_CAREER = 'background:#e8f0fb;color:#1e4ba0;border-left:3px solid #2563eb;';
+var _BADGE_QUOTE = 'background:var(--form-pill-quote-bg);color:var(--form-pill-quote-fg);border-left:3px solid #cc0000;';
+var _BADGE_CAREER = 'background:var(--form-pill-career-bg);color:var(--form-pill-career-fg);border-left:3px solid #2563eb;';
 
 function _formCardOuter(borderLeftCss){
   return 'display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bdr);' + borderLeftCss;
@@ -17159,7 +17171,7 @@ function loadDashForms(){
       var ago = item.when ? timeSince(new Date(item.when)) : '';
       if(item.kind === 'lead'){
         var l = item.data;
-        html += '<div style="' + _formCardOuter('border-left:3px solid #cc0000;background:#fffafa;') + '">';
+        html += '<div style="' + _formCardOuter('border-left:3px solid #cc0000;background:var(--form-card-quote-bg);') + '">';
         html += '<div style="flex:1;min-width:0;">';
         html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' + _badgePill('Quote', _BADGE_QUOTE) + '<span style="font-size:11px;color:var(--dgray);">' + ago + '</span></div>';
         html += '<div style="font-size:13px;font-weight:600;">' + esc(l.name) + (l.company?' <span style="color:var(--dgray);font-weight:400;">— ' + esc(l.company) + '</span>':'') + '</div>';
@@ -17179,9 +17191,9 @@ function loadDashForms(){
         if(a.position) roleBits.push(esc(a.position));
         if(a.role_type) roleBits.push(esc(a.role_type));
         if(a.years_exp) roleBits.push(esc(a.years_exp) + ' yrs');
-        html += '<div style="' + _formCardOuter('border-left:3px solid #2563eb;background:#fafbff;') + '">';
+        html += '<div style="' + _formCardOuter('border-left:3px solid #2563eb;background:var(--form-card-career-bg);') + '">';
         html += '<div style="flex:1;min-width:0;">';
-        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' + _badgePill('Career', _BADGE_CAREER) + '<span style="font-size:11px;color:var(--dgray);">' + ago + '</span>' + (a.resume_path?'<span style="font-size:10px;color:#1e4ba0;font-weight:600;">Resume attached</span>':'') + '</div>';
+        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' + _badgePill('Career', _BADGE_CAREER) + '<span style="font-size:11px;color:var(--dgray);">' + ago + '</span>' + (a.resume_path?'<span style="font-size:10px;color:var(--form-resume-fg);font-weight:600;">Resume attached</span>':'') + '</div>';
         html += '<div style="font-size:13px;font-weight:600;">' + esc(a.name) + '</div>';
         if(roleBits.length) html += '<div style="font-size:12px;color:var(--dgray);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + roleBits.join(' · ') + '</div>';
         html += '<div style="font-size:11px;color:var(--dgray);margin-top:2px;">';
@@ -17325,7 +17337,7 @@ function addReminderFromProject(){
 <div id="applicant-modal" class="modal-overlay hidden">
   <div class="modal" style="width:520px;max-width:96vw;">
     <div class="modal-hdr">
-      <h3><span style="display:inline-block;font-size:9px;font-weight:800;letter-spacing:0.6px;padding:2px 7px;border-radius:3px;background:#e8f0fb;color:#1e4ba0;margin-right:8px;vertical-align:middle;">CAREER</span><span id="am-title">Applicant</span></h3>
+      <h3><span style="display:inline-block;font-size:9px;font-weight:800;letter-spacing:0.6px;padding:2px 7px;border-radius:3px;background:var(--form-pill-career-bg);color:var(--form-pill-career-fg);margin-right:8px;vertical-align:middle;">CAREER</span><span id="am-title">Applicant</span></h3>
       <button class="btn-ico" onclick="closeApplicantModal()" style="font-size:18px;">&#10005;</button>
     </div>
     <div class="modal-body" id="am-body" style="max-height:70vh;overflow-y:auto;"></div>
