@@ -9,6 +9,17 @@
 3. **Mark fixed bugs** — status "Fixed" in `hd_bug_reports` via Supabase (see Bug Report Workflow)
 4. **Commit CLAUDE.md** with the final commit
 
+### Beta Release Workflow (post-2026-04-24)
+
+App is live. Kyle is testing. Default mode is now **accumulate changes locally, push as a tagged beta once tests pass.** Do NOT auto-push every commit like during active dev.
+
+When user says "push as vX.Y.Z":
+1. Bump `APP_VERSION` constant in `index.html` (near the `sitePlanDataUrl` line)
+2. Add a top entry to `BETA_VERSIONS.md` (what's new since the previous version, + Supabase migration state)
+3. Commit + push + `git tag vX.Y.Z && git push origin vX.Y.Z`
+
+The sidebar footer shows `Beta v{APP_VERSION}` as a small pill (visible when sidebar is hovered/pinned). Versioning: patch for fixes (1.0.1), minor for features (1.1.0), major for breaking changes (2.0.0). See `BETA_VERSIONS.md` for rollback notes.
+
 ---
 
 ## MCP Servers
