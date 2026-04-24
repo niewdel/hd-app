@@ -3781,6 +3781,13 @@ var sitePlanDataUrl=null;
 var gM=0;
 window._userAvatar='';
 window._draftUserAvatar='';
+// Tracks whether the user has intentionally changed their avatar in this
+// session (via Upload Photo or Remove Photo). The profile-save handlers only
+// include avatar_data in the PATCH payload when this flag is true — otherwise
+// the backend preserves the existing DB value. Fixes a bug where saving
+// unrelated profile fields (phone, email) sent an empty hidden input back
+// to the server and wiped the avatar.
+window._avatarDirty=false;
 
 function getUserInitials(name){
   var parts=String(name||window._userName||window._userUsername||'HD').trim().split(/\s+/).filter(Boolean);
@@ -3883,6 +3890,7 @@ function triggerAcctPhotoInput(){document.getElementById('acct-photo-file').clic
 function clearAcctPhoto(){
   document.getElementById('acct-avatar-data').value='';
   window._draftUserAvatar='';
+  window._avatarDirty=true;
   var ap=document.getElementById('acct-avatar-preview');
   if(ap)ap.innerHTML='<span>'+getUserInitials(window._userName||'HD')+'</span>';
 }
@@ -3893,6 +3901,7 @@ function handleAcctPhoto(files){
     reader.onload=function(){
       var dataUrl=reader.result;
       window._draftUserAvatar=dataUrl;
+      window._avatarDirty=true;
       document.getElementById('acct-avatar-data').value=dataUrl;
       var ap=document.getElementById('acct-avatar-preview');
       if(ap)ap.innerHTML='<img src="'+dataUrl+'" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
@@ -3905,14 +3914,20 @@ async function saveAcctProfile(){
   var fullName=(document.getElementById('acct-name').value||'').trim();
   var email=(document.getElementById('acct-email').value||'').trim();
   var phone=(document.getElementById('acct-phone').value||'').trim();
-  var avatarData=(document.getElementById('acct-avatar-data').value||'').trim();
   if(!fullName){if(status){status.textContent='Name is required.';status.style.color='var(--red)';}return;}
+  // Only include avatar_data when the user actively changed it this session;
+  // otherwise the backend preserves the existing DB value.
+  var payload={full_name:fullName,email:email,phone:phone};
+  if(window._avatarDirty){
+    payload.avatar_data=(document.getElementById('acct-avatar-data').value||'').trim();
+  }
   try{
-    var r=await fetch('/auth/profile',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({full_name:fullName,email:email,phone:phone,avatar_data:avatarData})});
+    var r=await fetch('/auth/profile',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     var d=await r.json();if(!d.ok)throw new Error(d.error||'Failed');
     var prof=d.profile||{};
     window._userName=prof.full_name||fullName;window._userEmail=prof.email||email;window._userPhone=prof.phone||phone;
     window._userAvatar=prof.avatar_data||'';window._draftUserAvatar=window._userAvatar;
+    window._avatarDirty=false;
     renderUserChrome();
     hydrateSenderFromAccount();
     // Also sync the old profile form if it exists
@@ -3960,6 +3975,7 @@ function triggerProfilePhotoInput(){
 
 function clearProfilePhoto(){
   window._draftUserAvatar='';
+  window._avatarDirty=true;
   var hidden=document.getElementById('profile-avatar-data');
   if(hidden)hidden.value='';
   renderUserChrome();
@@ -3973,6 +3989,7 @@ function handleProfilePhotoSelected(input){
     var reader=new FileReader();
     reader.onload=function(e){
       window._draftUserAvatar=e.target.result||'';
+      window._avatarDirty=true;
       var hidden=document.getElementById('profile-avatar-data');
       if(hidden)hidden.value=window._draftUserAvatar;
       renderUserChrome();
@@ -10738,13 +10755,19 @@ async function saveOwnProfile(){
   var fullName=(document.getElementById('profile-name')||{}).value||'';
   var email=(document.getElementById('profile-email')||{}).value||'';
   var phone=(document.getElementById('profile-phone')||{}).value||'';
-  var avatarData=(document.getElementById('profile-avatar-data')||{}).value||'';
   if(!fullName.trim()){
     if(status){status.textContent='Full name is required.';status.style.color='var(--red)';}
     return;
   }
+  // Only include avatar_data when the user actively changed it this session.
+  // Otherwise this form's hidden input is empty (loadOwnProfileUI is rarely
+  // called) and sending avatar_data:'' would wipe the DB value.
+  var payload={full_name:fullName,email:email,phone:phone};
+  if(window._avatarDirty){
+    payload.avatar_data=(document.getElementById('profile-avatar-data')||{}).value||'';
+  }
   try{
-    var r=await fetch('/auth/profile',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({full_name:fullName,email:email,phone:phone,avatar_data:avatarData})});
+    var r=await fetch('/auth/profile',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     var d=await r.json();
     if(!d.ok)throw new Error(d.error||'Failed to update profile.');
     var p=d.profile||{};
@@ -10753,6 +10776,7 @@ async function saveOwnProfile(){
     window._userPhone=p.phone||phone;
     window._userAvatar=p.avatar_data||'';
     window._draftUserAvatar=window._userAvatar||'';
+    window._avatarDirty=false;
     renderUserChrome();
     hydrateSenderFromAccount();
     if(status){status.textContent='Profile saved.';status.style.color='var(--badge-ok)';}
