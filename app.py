@@ -2035,7 +2035,7 @@ def _send_notif_emails(recipients, created_by, title, body, project_name):
                 continue
             email_addr = users[0]['email']
             full_name = users[0].get('full_name', username)
-            subject = f'HD Hauling — {title}'
+            subject = f'HD — {title}'
             email_body = f'Hi {full_name},\n\n{title}\n'
             if body:
                 email_body += f'\n{body}\n'
@@ -2769,7 +2769,7 @@ def _send_lead_email(lead):
         subject_bits = ['New lead', name]
         if company:
             subject_bits.append(f'({company})')
-        subject = 'HD Hauling — ' + ' '.join(subject_bits)
+        subject = 'HD — ' + ' '.join(subject_bits)
         plain_lines = [
             'A new quote request came in from the website.',
             '',
@@ -2940,6 +2940,21 @@ def convert_lead(lid):
 
 # ── Applicant Intake (job applications) ───────────────────
 APPLICANT_EMAIL_FROM = 'HD Hauling & Grading <admin@hdgrading.com>'
+
+# Maps stored years_exp values (the form stores terse codes like "<1", "1-3")
+# back to full human-readable phrases for display in emails and notifications.
+def _fmt_years_exp(raw):
+    s = str(raw or '').strip()
+    mapping = {
+        'None': 'None / entry-level',
+        '<1':   'Less than 1 year',
+        '1-3':  '1 – 3 years',
+        '3-5':  '3 – 5 years',
+        '5-10': '5 – 10 years',
+        '10+':  '10+ years',
+    }
+    return mapping.get(s, s or '—')
+
 RESUME_BUCKET = 'resumes'
 RESUME_MAX_BYTES = 5 * 1024 * 1024  # mirrors Storage bucket cap
 RESUME_ALLOWED_MIME = {
@@ -3072,7 +3087,7 @@ def submit_applicant():
             if ur.status_code == 200 and ur.json():
                 pos = row['position'] or 'Unspecified role'
                 title = f'New applicant: {name}'
-                body = f'{pos} — {row["years_exp"] or "—"} yrs exp, {row["role_type"] or "Role TBD"}'
+                body = f'{pos} — {_fmt_years_exp(row.get("years_exp"))}, {row["role_type"] or "Role TBD"}'
                 rows = [{'recipient': u['username'], 'type': 'info', 'title': title, 'body': body, 'created_by': 'system'} for u in ur.json()]
                 http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=rows, timeout=5)
         except Exception:
@@ -3108,13 +3123,13 @@ def _send_applicant_email(applicant):
         service = gmail_build('gmail', 'v1', credentials=creds)
         name = applicant.get('name') or 'Unknown'
         position = applicant.get('position') or 'Unspecified role'
-        subject = f'HD Hauling — New applicant: {name} ({position})'
+        subject = f'HD — New applicant: {name} ({position})'
         plain_lines = [
             'A new job application came in from the careers form.',
             '',
             f'Name:           {name}',
             f'Position:       {position}',
-            f'Experience:     {applicant.get("years_exp") or "—"}',
+            f'Experience:     {_fmt_years_exp(applicant.get("years_exp"))}',
             f'Email:          {applicant.get("email") or "—"}',
             f'Phone:          {applicant.get("phone") or "—"}',
             f'Location:       {applicant.get("city_state") or "—"}',
@@ -3139,7 +3154,7 @@ def _send_applicant_email(applicant):
             name=name,
             subtitle=position,
             rows=[
-                ('Experience', applicant.get('years_exp')),
+                ('Experience', _fmt_years_exp(applicant.get('years_exp'))),
                 ('Phone', applicant.get('phone')),
                 ('Email', applicant.get('email')),
                 ('Location', applicant.get('city_state')),
