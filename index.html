@@ -1767,59 +1767,32 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
         <div id="presets" style="display:none;"></div>
 
         <!-- PAVEMENT (Asphalt Sections + Concrete + Library items) -->
+        <!-- LINE ITEMS (unified — 2026-04-24 consolidation: pavement + site work + additional items) -->
         <div class="mc-card" style="margin-bottom:var(--card-gap);">
           <div class="card-hdr" role="button" tabindex="0" aria-label="Toggle section" style="cursor:pointer;" onclick="toggleCardCollapse(this)">
             <div style="display:flex;align-items:center;gap:8px;">
               <svg class="collapse-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
-              <span class="card-title">Pavement</span>
+              <span class="card-title">Line Items</span>
             </div>
             <div style="display:flex;gap:6px;" onclick="event.stopPropagation();">
-              <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('pavement')">From Library</button>
-              <button class="btn btn-sec btn-sm" onclick="showPresetPicker('pavement')">Add Preset</button>
-              <button class="btn btn-sec btn-sm" onclick="addSection(null,[{type:'ABC'}])">+ Add Item</button>
+              <button class="btn btn-sec btn-sm" onclick="openLibraryPicker()">Library</button>
+              <button class="btn btn-sec btn-sm" onclick="showPresetPicker()">Preset</button>
+              <button class="btn btn-sec btn-sm" onclick="addCustomItem()">+ Add Item</button>
             </div>
           </div>
           <div class="card-collapsible" style="padding:0;">
+            <!-- Sub-containers are preserved so the existing per-type render
+                 functions (renderAll, renderConc, renderPavementItems,
+                 renderSiteWork, renderExtra) keep populating the same IDs. -->
             <div id="sections"></div>
             <div id="conc-rows"></div>
             <div id="pavement-items"></div>
-            <div id="pavement-empty" class="empty-state" style="padding:24px 16px;"><div class="empty-state-title">No pavement items yet</div><div class="empty-state-desc">Click "Add Preset", "From Library", or "+ Add Item" above to get started.</div></div>
-          </div>
-        </div>
-
-        <!-- SITE WORK (Line items from library) -->
-        <div class="mc-card" style="margin-bottom:var(--card-gap);">
-          <div class="card-hdr" role="button" tabindex="0" aria-label="Toggle section" style="cursor:pointer;" onclick="toggleCardCollapse(this)">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <svg class="collapse-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
-              <span class="card-title">Site Work</span>
-            </div>
-            <div style="display:flex;gap:6px;" onclick="event.stopPropagation();">
-              <button class="btn btn-sec btn-sm" onclick="openLibraryPicker('sitework')">From Library</button>
-              <button class="btn btn-sec btn-sm" onclick="showPresetPicker('sitework')">Add Preset</button>
-              <button class="btn btn-sec btn-sm" onclick="addSiteWorkItem()">+ Add Item</button>
-            </div>
-          </div>
-          <div class="card-collapsible">
             <div id="sitework-rows"></div>
-            <div id="sitework-empty" class="empty-state" style="padding:16px;"><div class="empty-state-title" style="font-size:13px;">No site work items yet</div><div class="empty-state-desc">Grading, utilities, erosion control, clearing, and other site work items.</div></div>
-          </div>
-        </div>
-
-        <!-- ADDITIONAL ITEMS (Custom manual items only) -->
-        <div class="mc-card" style="margin-bottom:var(--card-gap);">
-          <div class="card-hdr" role="button" tabindex="0" aria-label="Toggle section" style="cursor:pointer;" onclick="toggleCardCollapse(this)">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <svg class="collapse-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
-              <span class="card-title">Additional Items</span>
-            </div>
-            <div onclick="event.stopPropagation();">
-              <button class="btn btn-sec btn-sm" onclick="addExtra()">+ Add Item</button>
-            </div>
-          </div>
-          <div class="card-collapsible">
             <div id="extra-rows"></div>
-            <div id="extra-empty" class="empty-state" style="padding:16px;"><div class="empty-state-title" style="font-size:13px;">No additional items yet</div><div class="empty-state-desc">Custom items not in the library. Click "+ Add Item" above.</div></div>
+            <div id="lineitems-empty" class="empty-state" style="padding:24px 16px;">
+              <div class="empty-state-title">No line items yet</div>
+              <div class="empty-state-desc">Click Library, Preset, or + Add Item above to get started.</div>
+            </div>
           </div>
         </div>
 
@@ -1835,39 +1808,12 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           <div class="metric"><div class="metric-lbl">Gross Profit</div><div class="metric-val" id="m-gp">-</div></div>
         </div>
 
-      <div class="mc-card" id="bk-asphalt-card" style="margin-bottom:var(--card-gap);">
-        <div class="card-hdr"><span class="card-title">Pavement Breakdown</span><button class="btn btn-sec btn-sm" onclick="exportPricingBreakdown()">Export PDF</button></div>
+      <div class="mc-card" id="bk-lineitems-card" style="margin-bottom:var(--card-gap);">
+        <div class="card-hdr"><span class="card-title">Line Item Breakdown</span><button class="btn btn-sec btn-sm" onclick="exportPricingBreakdown()">Export PDF</button></div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Section</th><th>Layer</th><th>SY</th><th>Depth</th><th>Tons</th><th>Days</th><th>Mat Cost</th><th>Crew</th><th>Trucking</th><th>Total</th><th>MU%</th></tr></thead>
+              <thead><tr><th>Division</th><th>Item</th><th>Qty</th><th>Unit</th><th>Mat Cost</th><th>Labor</th><th>Trucking</th><th>Total</th><th>MU%</th></tr></thead>
               <tbody id="breakdown"></tbody>
-            </table>
-          </div>
-        </div>
-      <div class="mc-card" id="bk-concrete-card" style="display:none;margin-bottom:var(--card-gap);">
-        <div class="card-hdr"><span class="card-title">Concrete Breakdown</span></div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Type</th><th>Qty</th><th>Unit</th><th>CY</th><th>Mat Cost</th><th>Labor</th><th>Total</th><th>MU%</th></tr></thead>
-              <tbody id="breakdown-conc"></tbody>
-            </table>
-          </div>
-        </div>
-      <div class="mc-card" id="bk-sitework-card" style="display:none;margin-bottom:var(--card-gap);">
-        <div class="card-hdr"><span class="card-title">Site Work Breakdown</span></div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Mat Cost</th><th>Labor</th><th>Total</th><th>MU%</th></tr></thead>
-              <tbody id="breakdown-sitework"></tbody>
-            </table>
-          </div>
-        </div>
-      <div class="mc-card" id="bk-extra-card" style="display:none;margin-bottom:var(--card-gap);">
-        <div class="card-hdr"><span class="card-title">Additional Items Breakdown</span></div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Mat Cost</th><th>Labor</th><th>Total</th><th>MU%</th></tr></thead>
-              <tbody id="breakdown-extra"></tbody>
             </table>
           </div>
         </div>
@@ -4094,19 +4040,24 @@ function openLibraryPicker(target){
         ins.addEventListener("click",function(){
           var tradeBadge=TRADE_BADGE_MAP[item.category]||'b-general';
           var newItem={id:0,name:item.name,desc:item.desc||"",qty:1,unit:item.unit,mat_cost:item.mat_cost||0,sub_cost:item.sub_cost||0,crew:item.crew||'',prod_rate:item.prod_rate||0,has_trucks:item.has_trucks||false,trucks:item.has_trucks?3:0,markup:item.markup_default||20,days_override:null,badge:tradeBadge,material:item.material||''};
-          if(_libPickerTarget==='sitework'){newItem.id=swid++;siteWorkItems.push(newItem);renderSiteWork();}
-          else if(_libPickerTarget==='pavement'){
-            var _trade=item.crew||TRADE_BADGE_MAP[item.category]||'';
-            if(_trade==='b-asphalt'||_trade==='b-stone'){
-              // Asphalt/stone: create full section with SF/tonnage/trucks calc
-              var _matType=_resolveMatType(item.material||item.name);
-              addSection(null,[{type:_matType,depth:item.depth||DDEPTH[_matType]||4,name:item.name,description:item.desc||''}]);
-            } else {
-              // Concrete/other: simple line item in pavement card
-              newItem.id=pvid++;pavementItems.push(newItem);renderPavementItems();
-            }
+          // Route based on the item's category/trade — independent of
+          // which picker button was clicked. Asphalt/stone become full
+          // pavement sections (SF + layer math); concrete stays in the
+          // pavement-items slot; sitework categories go to siteWorkItems;
+          // everything else falls through to extraItems.
+          var _trade=item.crew||TRADE_BADGE_MAP[item.category]||'';
+          var _cat=item.category||'';
+          var SITEWORK_DEST=['Grading / Earthwork','Storm Drain','Sanitary Sewer','Water','Erosion Control','Land Clearing','Landscaping'];
+          if(_trade==='b-asphalt'||_trade==='b-stone'||_cat==='Asphalt'||_cat==='Stone / Aggregate'){
+            var _matType=_resolveMatType(item.material||item.name);
+            addSection(null,[{type:_matType,depth:item.depth||DDEPTH[_matType]||4,name:item.name,description:item.desc||''}]);
+          } else if(_cat==='Concrete'){
+            newItem.id=pvid++;pavementItems.push(newItem);renderPavementItems();
+          } else if(SITEWORK_DEST.indexOf(_cat)>=0){
+            newItem.id=swid++;siteWorkItems.push(newItem);renderSiteWork();
+          } else {
+            newItem.id=eid++;extraItems.push(newItem);renderExtra();
           }
-          else{newItem.id=eid++;extraItems.push(newItem);renderExtra();}
           recalc();toast("Item added","ok");
         });
         row.appendChild(info);row.appendChild(ins);listWrap.appendChild(row);
@@ -4122,12 +4073,105 @@ function openLibraryPicker(target){
   document.body.appendChild(modal);
   searchInp.focus();
 }
+// Render a single CUSTOM extra item (isCustom:true) — qty × unit_price only,
+// no autocomplete, fully manual fields.
+function _renderCustomExtraRow(item, idx, container){
+  var bid = (item.qty||0) * (item.unit_price||0);
+  var row = document.createElement("div");
+  row.className = "lyr-row";
+  row.style.cssText = "padding:14px 16px;";
+
+  // Top: name input + delete
+  var top = document.createElement("div");
+  top.style.cssText = "display:flex;align-items:center;gap:10px;margin-bottom:6px;";
+  var pill = document.createElement("span");
+  pill.style.cssText = "font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:var(--lgray);color:var(--dgray);flex-shrink:0;";
+  pill.textContent = "Custom";
+  top.appendChild(pill);
+  var nameIn = document.createElement("input");
+  nameIn.type = "text"; nameIn.value = item.name || "";
+  nameIn.placeholder = "Item name";
+  nameIn.autocomplete = "off";
+  nameIn.style.cssText = "flex:1;font-size:13px;font-weight:600;padding:6px 10px;border:1px solid var(--bdr);border-radius:6px;background:var(--wht);";
+  (function(id){nameIn.addEventListener("change",function(){
+    var it = extraItems.find(function(x){return x.id===id;}); if(it){it.name=this.value; recalc();}
+  });})(item.id);
+  top.appendChild(nameIn);
+  var del = document.createElement("button");
+  del.className = "btn-ico"; del.style.color = "var(--red)";
+  del.innerHTML = "&times;";
+  (function(id){del.addEventListener("click",function(){remExtra(id);});})(item.id);
+  top.appendChild(del);
+  row.appendChild(top);
+
+  // Description (full width)
+  var descIn = document.createElement("input");
+  descIn.type = "text"; descIn.value = item.desc || "";
+  descIn.placeholder = "Description (appears on proposal)";
+  descIn.className = "lyr-desc";
+  (function(id){descIn.addEventListener("change",function(){
+    var it = extraItems.find(function(x){return x.id===id;}); if(it){it.desc=this.value; recalc();}
+  });})(item.id);
+  row.appendChild(descIn);
+
+  // Fields row: Qty | Unit | Unit Price | Total
+  var fields = document.createElement("div");
+  fields.className = "lyr-fields";
+
+  var qF = document.createElement("div"); qF.className = "lyr-field";
+  qF.innerHTML = "<label>Qty</label>";
+  var qIn = document.createElement("input"); qIn.type = "number"; qIn.min = 0; qIn.step = 0.01;
+  qIn.value = item.qty === 0 ? 0 : (item.qty || "");
+  (function(id){qIn.addEventListener("change",function(){
+    var it = extraItems.find(function(x){return x.id===id;});
+    if(it){it.qty = parseFloat(this.value) || 0; renderExtra(); recalc();}
+  });})(item.id);
+  qF.appendChild(qIn); fields.appendChild(qF);
+
+  var uF = document.createElement("div"); uF.className = "lyr-field";
+  uF.innerHTML = "<label>Unit</label>";
+  var uIn = document.createElement("input"); uIn.type = "text";
+  uIn.value = item.unit || "";
+  uIn.placeholder = "SY, CY, LF, TON…";
+  uIn.maxLength = 10;
+  (function(id){uIn.addEventListener("change",function(){
+    var it = extraItems.find(function(x){return x.id===id;}); if(it){it.unit=this.value; recalc();}
+  });})(item.id);
+  uF.appendChild(uIn); fields.appendChild(uF);
+
+  var pF = document.createElement("div"); pF.className = "lyr-field";
+  pF.innerHTML = "<label>Unit Price ($)</label>";
+  var pIn = document.createElement("input"); pIn.type = "number"; pIn.min = 0; pIn.step = 0.01;
+  pIn.value = item.unit_price === 0 ? 0 : (item.unit_price || "");
+  (function(id){pIn.addEventListener("change",function(){
+    var it = extraItems.find(function(x){return x.id===id;});
+    if(it){it.unit_price = parseFloat(this.value) || 0; renderExtra(); recalc();}
+  });})(item.id);
+  pF.appendChild(pIn); fields.appendChild(pF);
+
+  var tF = document.createElement("div"); tF.className = "lyr-field";
+  tF.innerHTML = "<label>Total</label>";
+  var tVal = document.createElement("span");
+  tVal.style.cssText = "display:block;font-size:14px;font-weight:700;color:var(--red);padding:4px 0;";
+  tVal.textContent = bid > 0 ? "$" + Math.round(bid).toLocaleString() : "—";
+  tF.appendChild(tVal); fields.appendChild(tF);
+
+  row.appendChild(fields);
+  container.appendChild(row);
+}
+
 function renderExtra(){
   var c=document.getElementById("extra-rows"),em=document.getElementById("extra-empty");if(!c)return;c.innerHTML="";
   if(em)em.style.display=extraItems.length?"none":"";
   extraItems.forEach(function(item,idx){
     if(item.markup===undefined)item.markup=20;
     if(item.days_override===undefined)item.days_override=null;
+    // Custom manual item — simple qty × unit_price form. No autocomplete on
+    // the name field; user does their own math externally.
+    if(item.isCustom){
+      _renderCustomExtraRow(item, idx, c);
+      return;
+    }
     var bid=calcItemBid(item);var days=calcItemDays(item);var labor=calcItemLabor(item);
     var ppu=item.qty>0?bid/item.qty:0;
     var row=document.createElement("div");row.className="lyr-row";row.style.cssText="padding:14px 16px;";
@@ -4550,7 +4594,8 @@ function boot(){
     var secEl=document.getElementById('sections');
     if(secEl)secEl.innerHTML='';
   } else {renderAll();}
-  renderConc();renderExtra();renderPavementItems();
+  renderConc();renderExtra();renderPavementItems();renderSiteWork();
+  try{recalc();}catch(e){console.warn('initial recalc skipped:',e);}
   loadClientsForAutocomplete();
   initAddrAutocomplete('proj-addr','proj-addr-sug');
   loadAllUsers();
@@ -8806,6 +8851,20 @@ function renderConc(){
 // -- Extra items ---------------------------------------------------------------
 function addExtra(){extraItems.push({id:eid++,name:'',desc:'',qty:1,unit:'EA',mat_cost:0,crew:'',markup:20,days_override:null,badge:''});renderExtra();}
 
+// + Add Item on the unified Line Items card. Creates a CUSTOM (isCustom:true)
+// row in extraItems — simple name/description/qty/unit/unit_price form, no
+// crew/markup/trucking math. Total = qty × unit_price. User bakes their own
+// margin into unit_price. Landed on the extraItems array for back-compat with
+// existing code (autosave, buildPayload, renderExtra) — renderExtra detects
+// isCustom and renders the simpler form.
+function addCustomItem(){
+  extraItems.push({id:eid++, isCustom:true,
+    name:'', desc:'', qty:1, unit:'', unit_price:0,
+    badge:'', crew:''});
+  renderExtra();
+  recalc();
+}
+
 // Site Work items (same structure as extra items but separate array)
 var pavementItems=[],pvid=0;
 function addPavementItem(){pavementItems.push({id:pvid++,name:'',desc:'',qty:1,unit:'EA',mat_cost:0,crew:'',markup:20,days_override:null,badge:'b-asphalt',material:''});renderPavementItems();}
@@ -9087,12 +9146,111 @@ function calcItemTrucking(item){
   return (item.trucks||0)*days*truckRate;
 }
 function calcItemBid(item){
+  // Custom manual items (isCustom=true): qty × unit_price, no markup / crew
+  // / trucking / material. The user bakes their own margin into unit_price.
+  if(item.isCustom) return (item.qty||0)*(item.unit_price||0);
   if(_isStripingItem(item))return (item.price||0)*(1+(item.markup||0)/100);
   var matTotal=(item.mat_cost||0)*(item.qty||0);
   var laborTotal=calcItemLabor(item);
   var truckTotal=calcItemTrucking(item);
   var cost=matTotal+laborTotal+truckTotal;
   return cost*(1+(item.markup||0)/100);
+}
+
+// ---------- Division mapping + grouped breakdown (2026-04-24) ----------
+// Ordered list of divisions for grouping rows in the Line Item Breakdown.
+// Any division name not in the list falls through to 'Other'.
+var _DIVISION_ORDER = ['Asphalt','Stone','Concrete','Grading','Utility',
+  'Erosion Control','Striping','Signage','Clearing','Landscaping','Other'];
+
+var _TRADE_TO_DIVISION = {
+  'b-asphalt':'Asphalt', 'b-stone':'Stone',
+  'b-concrete':'Concrete', 'b-conc':'Concrete',
+  'b-grading':'Grading', 'b-utility':'Utility',
+  'b-erosion':'Erosion Control',
+  'b-striping':'Striping', 'b-signage':'Signage',
+  'b-clearing':'Clearing', 'b-landscape':'Landscaping'
+};
+
+function _divisionForTrade(trade){ return _TRADE_TO_DIVISION[trade] || 'Other'; }
+
+function getLayerTrade(l){
+  if(!l) return '';
+  if(l.type && MAT_TRADE && MAT_TRADE[l.type]) return MAT_TRADE[l.type];
+  if(typeof _resolveTradeForMat === 'function') return _resolveTradeForMat(l.type);
+  return '';
+}
+
+function _divisionForItem(item){
+  if(!item) return 'Other';
+  var trade = item.crew || item.badge || '';
+  return _divisionForTrade(trade);
+}
+
+// Render the unified Line Item Breakdown table: one tbody per division with
+// a subtotal row, then a Grand Total row at the end. Rows missing/empty =>
+// no header printed (division groups hide themselves when empty).
+function _renderGroupedBreakdown(rows, grandPreMob){
+  var bk = document.getElementById('breakdown');
+  if(!bk) return;
+  bk.innerHTML = '';
+  if(!rows || !rows.length){
+    var emptyTr = document.createElement('tr');
+    emptyTr.innerHTML = '<td colspan="9" style="text-align:center;padding:18px;color:var(--dgray);font-size:12px;">No line items yet.</td>';
+    bk.appendChild(emptyTr);
+    return;
+  }
+  var groups = {};
+  rows.forEach(function(r){ (groups[r.division] = groups[r.division] || []).push(r); });
+  var grand = 0;
+  _DIVISION_ORDER.forEach(function(cat){
+    var list = groups[cat];
+    if(!list || !list.length) return;
+    delete groups[cat]; // mark consumed so "Other" catches any unlisted divisions below
+    _appendBreakdownGroup(bk, cat, list);
+    grand += list.reduce(function(a,r){return a + (r.total||0);}, 0);
+  });
+  // Catch-all for any division names not in _DIVISION_ORDER
+  Object.keys(groups).forEach(function(cat){
+    var list = groups[cat];
+    if(!list || !list.length) return;
+    _appendBreakdownGroup(bk, cat, list);
+    grand += list.reduce(function(a,r){return a + (r.total||0);}, 0);
+  });
+  // Grand Total row
+  var grandTr = document.createElement('tr');
+  grandTr.innerHTML = '<td colspan="7" style="text-align:right;font-weight:700;text-transform:uppercase;font-size:11px;padding:10px 12px;letter-spacing:0.5px;border-top:2px solid var(--bdr);">Grand Total</td>'
+    +'<td style="font-weight:800;font-size:14px;padding:10px 12px;border-top:2px solid var(--bdr);">$'+fi(grand)+'</td>'
+    +'<td style="border-top:2px solid var(--bdr);"></td>';
+  bk.appendChild(grandTr);
+}
+
+function _appendBreakdownGroup(bk, division, rows){
+  var subtotal = rows.reduce(function(a,r){return a + (r.total||0);}, 0);
+  // Division header row
+  var hdrTr = document.createElement('tr');
+  hdrTr.innerHTML = '<td colspan="9" style="background:var(--lgray);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.5px;padding:8px 12px;color:var(--dgray);">'+esc(division)+'</td>';
+  bk.appendChild(hdrTr);
+  rows.forEach(function(r){
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+       '<td></td>'
+      +'<td>'+esc(r.name||'')+'</td>'
+      +'<td>'+(r.qty===''||r.qty==null?'-':r.qty)+'</td>'
+      +'<td>'+esc(r.unit||'')+'</td>'
+      +'<td>'+(r.matCost>0?'$'+fi(r.matCost):'-')+'</td>'
+      +'<td>'+(r.labor>0?'$'+fi(r.labor):'-')+'</td>'
+      +'<td>'+(r.trucking>0?'$'+fi(r.trucking):'-')+'</td>'
+      +'<td style="font-weight:600;">'+(r.total>0?'$'+fi(r.total):'-')+'</td>'
+      +'<td class="'+((r.markup||0)>=0?'gp':'gn')+'">'+(r.markup && !r.isCustom?r.markup.toFixed(1)+'%':'-')+'</td>';
+    bk.appendChild(tr);
+  });
+  // Subtotal row
+  var subTr = document.createElement('tr');
+  subTr.innerHTML = '<td></td><td colspan="6" style="text-align:right;font-weight:600;padding:6px 12px;font-size:12px;color:var(--dgray);">Subtotal</td>'
+    +'<td style="font-weight:700;padding:6px 12px;">$'+fi(subtotal)+'</td>'
+    +'<td></td>';
+  bk.appendChild(subTr);
 }
 
 // -- Recalc --------------------------------------------------------------------
@@ -9134,13 +9292,12 @@ function recalc(){
   _proposalDirty=true;
   _scheduleAutoSave();
   pushUndo();
-  var bk=document.getElementById('breakdown');bk.innerHTML='';
-  var bkConc=document.getElementById('breakdown-conc');bkConc.innerHTML='';
-  var bkExtra=document.getElementById('breakdown-extra');bkExtra.innerHTML='';
   var wfv=wf(),mobv=mob();
   var gSF=0,gSY=0,gT=0,gB=0; gM=0;
   var gCrew=0,gTruck=0;
-  var hasConc=false,hasExtra=false;
+  // Collect every breakdown row into one array — we render it grouped by
+  // division at the end instead of populating four separate tables.
+  var bkRows=[];
   sections.forEach(function(s){
     var sf=s.sf||0,sy=calcSY(sf);gSF+=sf;gSY+=sy;
     s.layers.forEach(function(l){
@@ -9154,37 +9311,21 @@ function recalc(){
       var costC=mC+crewC+truckC;
       var mp=costC>0?((bC-costC)/costC*100):0;
       gT+=t;gM+=mC;gB+=bC;gCrew+=crewC;gTruck+=truckC;
-      var tr=document.createElement('tr');
-      tr.innerHTML='<td><small>'+esc(s.name)+'</small></td>'
-        +'<td><span class="badge '+(LBADGE[l.type]||'')+'">'+esc(l.type)+'</span></td>'
-        +'<td>'+(sf>0?sy.toLocaleString():'-')+'</td>'
-        +'<td>'+l.depth+'"</td>'
-        +'<td>'+(t>0?t.toLocaleString():'-')+'</td>'
-        +'<td>'+(lDays>0?lDays.toFixed(1):'-')+'</td>'
-        +'<td>'+(mC>0?'$'+fi(mC):'-')+'</td>'
-        +'<td>'+(crewC>0?'$'+fi(crewC):'-')+'</td>'
-        +'<td>'+(truckC>0?'$'+fi(truckC):'-')+'</td>'
-        +'<td style="font-weight:600;">'+(bC>0?'$'+fi(bC):'-')+'</td>'
-        +'<td class="'+(mp>=0?'gp':'gn')+'">'+(bC>0?mp.toFixed(1)+'%':'-')+'</td>';
-      bk.appendChild(tr);
+      if(bC>0) bkRows.push({division:_divisionForTrade(getLayerTrade(l)),
+        name:(s.name||'Pavement')+' — '+l.type+(l.depth?' ('+l.depth+'")':''),
+        qty:sf>0?sy.toLocaleString():'-', unit:sf>0?'SY':'',
+        matCost:mC, labor:crewC, trucking:truckC, total:bC, markup:mp});
     });
   });
   concItems.forEach(function(i){
     if(!i.qty||!i.sub)return;
-    hasConc=true;
     var ct=CTYPES.find(function(x){return x.id===i.type;})||CTYPES[0];
-    var matC=concMatCost(i);var labC=concLaborCost(i);var bidC=concBidTotal(i);var cy=calcConcCY(i);var costC=matC+labC;var mp=costC>0?((bidC-costC)/costC*100):0;
+    var matC=concMatCost(i);var labC=concLaborCost(i);var bidC=concBidTotal(i);
+    var costC=matC+labC;var mp=costC>0?((bidC-costC)/costC*100):0;
     gM+=matC+labC;gB+=bidC;
-    var tr=document.createElement('tr');
-    tr.innerHTML='<td><span class="badge b-conc">'+esc(ct.name)+'</span></td>'
-      +'<td>'+i.qty.toLocaleString()+'</td>'
-      +'<td>'+ct.unit+'</td>'
-      +'<td>'+cy.toFixed(1)+'</td>'
-      +'<td>$'+fi(matC)+'</td>'
-      +'<td>$'+fi(labC)+'</td>'
-      +'<td style="font-weight:600;">$'+fi(bidC)+'</td>'
-      +'<td class="'+(mp>=0?'gp':'gn')+'">'+mp.toFixed(1)+'%</td>';
-    bkConc.appendChild(tr);
+    bkRows.push({division:'Concrete', name:ct.name,
+      qty:i.qty.toLocaleString(), unit:ct.unit,
+      matCost:matC, labor:labC, trucking:0, total:bidC, markup:mp});
   });
   pavementItems.forEach(function(i){
     var bid=calcItemBid(i);
@@ -9195,45 +9336,49 @@ function recalc(){
     var pLabT=_isStripingItem(i)?(i.price||0):calcItemLabor(i);
     var pTrkT=calcItemTrucking(i);
     gM+=pMatT;gCrew+=pLabT;gTruck+=pTrkT;
+    var costP=pMatT+pLabT+pTrkT;
+    var mp=costP>0?((bid-costP)/costP*100):0;
+    bkRows.push({division:_divisionForItem(i), name:i.name,
+      qty:pqty, unit:i.unit||'',
+      matCost:pMatT, labor:pLabT, trucking:pTrkT, total:bid, markup:mp});
   });
   extraItems.forEach(function(i){
     var bid=calcItemBid(i);
     if(!i.name||bid<=0)return;
-    hasExtra=true;
     gB+=bid;
+    // Custom items (isCustom=true): simple qty × unit_price; no math bucket.
+    if(i.isCustom){
+      bkRows.push({division:'Other', name:i.name,
+        qty:i.qty||0, unit:i.unit||'',
+        matCost:0, labor:0, trucking:0, total:bid, markup:0, isCustom:true});
+      return;
+    }
     var qty=i.qty||0;var matT,labT,truckT,costE,mpE;
     if(_isStripingItem(i)){matT=0;labT=i.price||0;truckT=0;costE=labT;mpE=i.markup||0;}
     else{matT=(i.mat_cost||0)*qty;labT=calcItemLabor(i);truckT=calcItemTrucking(i);costE=matT+labT+truckT;mpE=costE>0?((bid-costE)/costE*100):0;}
     gM+=matT;gCrew+=labT;gTruck+=truckT;
-    var tr=document.createElement('tr');
-    tr.innerHTML='<td>'+esc(i.name)+'</td>'
-      +'<td>'+qty+'</td>'
-      +'<td>'+esc(i.unit)+'</td>'
-      +'<td>'+(matT>0?'$'+fi(matT):'-')+'</td>'
-      +'<td>'+(labT>0?'$'+fi(labT):'-')+'</td>'
-      +'<td style="font-weight:600;">$'+fi(bid)+'</td>'
-      +'<td class="'+(mpE>=0?'gp':'gn')+'">'+(costE>0?mpE.toFixed(1)+'%':'-')+'</td>';
-    bkExtra.appendChild(tr);
+    bkRows.push({division:_divisionForItem(i)||'Other', name:i.name,
+      qty:qty, unit:i.unit||'',
+      matCost:matT, labor:labT, trucking:truckT, total:bid, markup:mpE});
   });
-  // Site work items
-  var bkSW=document.getElementById('breakdown-sitework');if(bkSW)bkSW.innerHTML='';
-  var hasSW=false;
   siteWorkItems.forEach(function(item){
     var bid=calcItemBid(item);
     if(!item.name||bid<=0)return;
-    hasSW=true;gB+=bid;
+    gB+=bid;
     var qty=item.qty||0;var matT,labT,truckT,costSW,mpSW;
     if(_isStripingItem(item)){matT=0;labT=item.price||0;truckT=0;costSW=labT;mpSW=item.markup||0;}
     else{matT=(item.mat_cost||0)*qty;labT=calcItemLabor(item);truckT=calcItemTrucking(item);costSW=matT+labT+truckT;mpSW=costSW>0?((bid-costSW)/costSW*100):0;}
     gM+=matT;gCrew+=labT;gTruck+=truckT;
-    if(bkSW){var tr=document.createElement('tr');tr.innerHTML='<td>'+esc(item.name)+'</td><td>'+qty+'</td><td>'+item.unit+'</td><td>'+(matT>0?'$'+fi(matT):'-')+'</td><td>'+(labT>0?'$'+fi(labT):'-')+'</td><td>$'+fi(bid)+'</td><td class="'+(mpSW>=0?'gp':'gn')+'">'+(costSW>0?mpSW.toFixed(1)+'%':'-')+'</td>';bkSW.appendChild(tr);}
+    bkRows.push({division:_divisionForItem(item), name:item.name,
+      qty:qty, unit:item.unit||'',
+      matCost:matT, labor:labT, trucking:truckT, total:bid, markup:mpSW});
   });
-  // Show/hide breakdown cards
-  var concCard=document.getElementById('bk-concrete-card');if(concCard)concCard.style.display=hasConc?'':'none';
-  var swCard=document.getElementById('bk-sitework-card');if(swCard)swCard.style.display=hasSW?'':'none';
-  var extraCard=document.getElementById('bk-extra-card');if(extraCard)extraCard.style.display=hasExtra?'':'none';
-  // Update pavement empty state
-  var pavEmpty=document.getElementById('pavement-empty');if(pavEmpty)pavEmpty.style.display=(sections.length||concItems.length)?'none':'';
+  _renderGroupedBreakdown(bkRows, gB);
+  // Toggle the unified Line Items empty state when every array is empty
+  var anyItems = sections.length || concItems.length || pavementItems.length
+                 || siteWorkItems.length || extraItems.length;
+  var lineEmpty=document.getElementById('lineitems-empty');
+  if(lineEmpty) lineEmpty.style.display=anyItems?'none':'';
   var total=gB+mobv,gp=gB-gM-gCrew-gTruck;
   document.getElementById('m-sf').textContent=gSF>0?gSF.toLocaleString():'-';
   renderJobCost();
