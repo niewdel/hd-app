@@ -4160,11 +4160,34 @@ function _renderCustomExtraRow(item, idx, container){
   pF.appendChild(pIn); fields.appendChild(pF);
 
   var tF = document.createElement("div"); tF.className = "lyr-field";
-  tF.innerHTML = "<label>Total</label>";
+  tF.innerHTML = "<label>Bid Total</label>";
   var tVal = document.createElement("span");
   tVal.style.cssText = "display:block;font-size:14px;font-weight:700;color:var(--red);padding:4px 0;";
   tVal.textContent = bid > 0 ? "$" + Math.round(bid).toLocaleString() : "—";
   tF.appendChild(tVal); fields.appendChild(tF);
+
+  // Est. Cost (internal only — never on the customer proposal PDF; drives
+  // the margin calc on the pricing breakdown export).
+  var cF = document.createElement("div"); cF.className = "lyr-field";
+  cF.innerHTML = "<label>Est. Cost ($)</label>";
+  var cIn = document.createElement("input"); cIn.type = "number"; cIn.min = 0; cIn.step = 0.01;
+  cIn.value = item.cost === 0 ? 0 : (item.cost || "");
+  cIn.title = "Your estimated internal cost for this item. Used only on the Pricing Breakdown export to calc margin. Never shown on the customer proposal.";
+  (function(id){cIn.addEventListener("change",function(){
+    var it = extraItems.find(function(x){return x.id===id;});
+    if(it){it.cost = parseFloat(this.value) || 0; renderExtra(); recalc();}
+  });})(item.id);
+  cF.appendChild(cIn); fields.appendChild(cF);
+
+  // Margin — derived, read-only
+  var mF = document.createElement("div"); mF.className = "lyr-field";
+  mF.innerHTML = "<label>Margin</label>";
+  var mVal = document.createElement("span");
+  var mCost = item.cost || 0;
+  var mPct = mCost > 0 ? ((bid - mCost) / mCost * 100) : null;
+  mVal.style.cssText = "display:block;font-size:13px;font-weight:600;padding:4px 0;color:" + (mPct !== null && mPct >= 0 ? "var(--badge-ok)" : mPct !== null ? "var(--red)" : "var(--dgray)") + ";";
+  mVal.textContent = mPct !== null ? mPct.toFixed(1) + "%" : "—";
+  mF.appendChild(mVal); fields.appendChild(mF);
 
   row.appendChild(fields);
   container.appendChild(row);
@@ -8869,7 +8892,7 @@ function addExtra(){extraItems.push({id:eid++,name:'',desc:'',qty:1,unit:'EA',ma
 // isCustom and renders the simpler form.
 function addCustomItem(){
   extraItems.push({id:eid++, isCustom:true,
-    name:'', desc:'', qty:1, unit:'', unit_price:0,
+    name:'', desc:'', qty:1, unit:'', unit_price:0, cost:0,
     badge:'', crew:''});
   renderExtra();
   recalc();
@@ -9252,7 +9275,7 @@ function _appendBreakdownGroup(bk, division, rows){
       +'<td>'+(r.labor>0?'$'+fi(r.labor):'-')+'</td>'
       +'<td>'+(r.trucking>0?'$'+fi(r.trucking):'-')+'</td>'
       +'<td style="font-weight:600;">'+(r.total>0?'$'+fi(r.total):'-')+'</td>'
-      +'<td class="'+((r.markup||0)>=0?'gp':'gn')+'">'+(r.markup && !r.isCustom?r.markup.toFixed(1)+'%':'-')+'</td>';
+      +'<td class="'+((r.markup||0)>=0?'gp':'gn')+'">'+(r.markup?r.markup.toFixed(1)+'%':'-')+'</td>';
     bk.appendChild(tr);
   });
   // Subtotal row
@@ -9356,11 +9379,17 @@ function recalc(){
     var bid=calcItemBid(i);
     if(!i.name||bid<=0)return;
     gB+=bid;
-    // Custom items (isCustom=true): simple qty × unit_price; no math bucket.
+    // Custom items (isCustom=true): qty × unit_price for bid. The user's
+    // entered estimated cost drives the margin calc on the pricing
+    // breakdown PDF — we fold it into gCrew so the Gross Profit metric
+    // at the top of the builder reflects real margin.
     if(i.isCustom){
+      var cCost = i.cost || 0;
+      var cMp = cCost > 0 ? ((bid - cCost) / cCost * 100) : 0;
+      gCrew += cCost;
       bkRows.push({division:'Other', name:i.name,
         qty:i.qty||0, unit:i.unit||'',
-        matCost:0, labor:0, trucking:0, total:bid, markup:0, isCustom:true});
+        matCost:0, labor:cCost, trucking:0, total:bid, markup:cMp, isCustom:true});
       return;
     }
     var qty=i.qty||0;var matT,labT,truckT,costE,mpE;
@@ -10384,14 +10413,40 @@ async function exportPricingBreakdown(){
       material:matT,labor:labor,trucking:truckT,bid:bid,crew:i.crew||'',
       is_striping:isStrip,lump_price:i.price||0,markup:i.markup||0});
   });
-  // Extra / additional items
+  // Extra / additional items (includes both legacy full-featured extras
+  // AND the new isCustom qty × unit_price items). Every item with a name
+  // is included in the PDF so nothing silently drops off the breakdown.
   var extraItems2=[];
   extraItems.forEach(function(i){
-    if(!i.name||!i.subtotal)return;
-    gBid+=i.subtotal;
-    var mc=parseFloat(i.mat_cost)||0;var lc=parseFloat(i.labor_cost)||0;
-    gM+=mc;gCrew+=lc;
-    extraItems2.push({name:i.name,qty:i.qty,unit:i.unit,price:i.price,subtotal:i.subtotal,material:mc,labor:lc});
+    if(!i.name)return;
+    // Custom (isCustom:true) — qty × unit_price = bid; user-entered cost
+    // goes into the "labor" column so the backend's existing
+    // cost = material + labor margin formula works naturally.
+    if(i.isCustom){
+      var cBid=(i.qty||0)*(i.unit_price||0);
+      if(cBid<=0 && !(i.cost||0)) return; // skip blank custom rows
+      var cCost=i.cost||0;
+      gBid+=cBid; gCrew+=cCost;
+      extraItems2.push({name:i.name, desc:i.desc||'',
+        qty:i.qty||0, unit:i.unit||'',
+        price:i.unit_price||0, subtotal:cBid,
+        material:0, labor:cCost, is_custom:true});
+      return;
+    }
+    // Legacy full-featured extras (library items added from the old
+    // Additional Items tab). Use the live calc functions so the numbers
+    // match what's in the on-screen breakdown.
+    var bid=calcItemBid(i);
+    if(bid<=0)return;
+    var isStrip=_isStripingItem(i);
+    var matT=isStrip?0:(i.mat_cost||0)*(i.qty||0);
+    var labT=isStrip?(i.price||0):calcItemLabor(i);
+    var truckT=isStrip?0:calcItemTrucking(i);
+    gM+=matT; gCrew+=labT; gTruck+=truckT; gBid+=bid;
+    extraItems2.push({name:i.name, desc:i.desc||'',
+      qty:i.qty||0, unit:i.unit||'',
+      price:bid/((i.qty||1)||1), subtotal:bid,
+      material:matT, labor:labT, trucking:truckT});
   });
   var mobCostV=mobCost();
   var totalCost=gM+gCrew+gTruck+mobCostV;
