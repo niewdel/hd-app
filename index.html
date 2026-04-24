@@ -1692,7 +1692,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
                     <button class="btn btn-sec btn-sm" onclick="window.open('/applicants-form','_blank')" title="Public Careers / Application form">Careers Form</button>
                   </div>
                 </div>
-                <div id="dash-leads" style="max-height:320px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><div class="empty-state-title">No new submissions</div><div class="empty-state-desc">Share your Quote &amp; Careers forms to capture inbound activity</div></div></div>
+                <div id="dash-leads" style="max-height:320px;overflow-y:auto;overscroll-behavior:contain;"><div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><div class="empty-state-title">No new submissions</div><div class="empty-state-desc">Form submissions from the website will show up here</div></div></div>
               </div>
 
               <div class="dash-section">
@@ -17938,7 +17938,7 @@ function loadDashForms(){
     apps.forEach(function(a){ feed.push({kind:'applicant', when:a.submitted_at||'', data:a}); });
     feed.sort(function(a,b){ return (b.when||'').localeCompare(a.when||''); });
     if(feed.length === 0){
-      c.innerHTML='<div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><div class="empty-state-title">No new submissions</div><div class="empty-state-desc">Share your Quote &amp; Careers forms to capture inbound activity</div></div>';
+      c.innerHTML='<div class="empty-state" style="padding:24px 18px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><div class="empty-state-title">No new submissions</div><div class="empty-state-desc">Form submissions from the website will show up here</div></div>';
       return;
     }
     var html='';
