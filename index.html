@@ -12919,25 +12919,43 @@ async function renderArchived(){
     var r=await fetch('/admin/archived');var d=await r.json();
     c.innerHTML='';
     if(!d.ok||!d.items||!d.items.length){c.innerHTML='<p style="color:var(--dgray);font-size:12px;">No archived items.</p>';return;}
+    var retentionDays = d.auto_delete_days || 90;
+    // Header banner explaining the retention policy
+    var banner=document.createElement('div');
+    banner.style.cssText='padding:10px 12px;background:var(--bg-sub);border:1px solid var(--bdr);border-radius:6px;font-size:12px;color:var(--dgray);margin-bottom:12px;line-height:1.5;';
+    banner.innerHTML='Archived projects are permanently deleted <b>'+retentionDays+' days</b> after they\'re archived. Restore within the window to keep them. The &times; button on any row deletes it immediately.';
+    c.appendChild(banner);
     d.items.forEach(function(item){
       var row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bdr);';
-      var ago='';
-      if(item.archived_at){var ms=Date.now()-new Date(item.archived_at).getTime();var days=Math.floor(ms/86400000);ago=days>0?days+'d ago':Math.floor(ms/3600000)+'h ago';}
+      var ago='', daysRemaining=null;
+      if(item.archived_at){
+        var archivedMs=new Date(item.archived_at).getTime();
+        var ms=Date.now()-archivedMs;
+        var days=Math.floor(ms/86400000);
+        ago=days>0?days+'d ago':Math.floor(ms/3600000)+'h ago';
+        daysRemaining=Math.max(0, retentionDays - days);
+      }
       var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
       var nameEl=document.createElement('div');nameEl.style.cssText='font-weight:600;font-size:13px;';nameEl.textContent=item.name||'Untitled';
       var metaEl=document.createElement('div');metaEl.style.cssText='font-size:11px;color:var(--dgray);';
       metaEl.textContent=(item.client||'No client')+(item.total?' · $'+Math.round(item.total).toLocaleString():'');
       var timeEl=document.createElement('div');timeEl.style.cssText='font-size:10px;color:var(--dgray);';
-      timeEl.textContent='Archived '+ago;
+      var countdownTxt='';
+      if(daysRemaining!==null){
+        if(daysRemaining<=0) countdownTxt=' · <span style="color:var(--red);font-weight:700;">Eligible for purge</span>';
+        else if(daysRemaining<=7) countdownTxt=' · <span style="color:var(--red);font-weight:600;">Auto-deletes in '+daysRemaining+'d</span>';
+        else countdownTxt=' · Auto-deletes in '+daysRemaining+'d';
+      }
+      timeEl.innerHTML='Archived '+ago+countdownTxt;
       info.appendChild(nameEl);info.appendChild(metaEl);info.appendChild(timeEl);row.appendChild(info);
-      var restoreBtn=document.createElement('button');restoreBtn.className='btn btn-red btn-sm';restoreBtn.textContent='Restore';
+      // Restore button
+      var restoreBtn=document.createElement('button');restoreBtn.className='btn btn-sec btn-sm';restoreBtn.textContent='Restore';
       (function(id){restoreBtn.addEventListener('click',async function(){
         try{
           var rr=await fetch('/admin/restore/'+id,{method:'POST'});var dd=await rr.json();
           if(dd.ok){
             toast('Restored successfully','ok');
-            // Refresh in-memory caches so Pipeline/Reports/Saved all see the restored row.
             try{
               var results=await Promise.all([
                 fetch('/quotes/list').then(function(r){return r.json();}),
@@ -12951,6 +12969,26 @@ async function renderArchived(){
         }catch(e){toast('Restore error: '+e.message,'err');}
       });})(item.id);
       row.appendChild(restoreBtn);
+      // Permanent delete button — destructive, so double-confirm
+      var delBtn=document.createElement('button');delBtn.className='btn-ico';delBtn.style.cssText='color:var(--red);font-size:18px;';delBtn.title='Delete permanently';delBtn.innerHTML='&times;';
+      (function(id,nm){delBtn.addEventListener('click',async function(){
+        var label=nm||'this project';
+        if(!confirm('Permanently delete "'+label+'"?\n\nThis cannot be undone. All change orders, time entries, and notifications for this project will also be deleted.')) return;
+        // Second confirm on the most destructive action
+        if(!confirm('Are you sure? Type OK in the next prompt to confirm.')) return;
+        var t=prompt('Type OK to confirm permanent deletion:','');
+        if((t||'').trim().toUpperCase()!=='OK'){ toast('Cancelled','ok'); return; }
+        try{
+          var rr=await fetch('/admin/permanent-delete/'+id,{method:'DELETE'});var dd=await rr.json();
+          if(dd && dd.ok){
+            toast('Deleted permanently','ok');
+            renderArchived();
+          } else {
+            toast((dd&&dd.error)||'Delete failed','err');
+          }
+        }catch(e){toast('Delete error: '+e.message,'err');}
+      });})(item.id, item.name);
+      row.appendChild(delBtn);
       c.appendChild(row);
     });
   }catch(e){c.innerHTML='<p style="color:var(--dgray);font-size:12px;">Error loading archived items.</p>';}

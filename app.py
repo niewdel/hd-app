@@ -1226,33 +1226,80 @@ def get_logs():
     except Exception as e:
         return _safe_error(e, context='admin/logs')
 
+ARCHIVE_AUTO_DELETE_DAYS = 90  # archived proposals hard-delete after N days
+
 @app.route('/admin/archived')
-@require_dev
+@require_admin
 def admin_archived():
     try:
         r = http.get(
-            sb_url('proposals', '?archived=is.true&select=id,name,client,total,archived_at,snap&order=archived_at.desc&limit=50'),
-            headers=sb_headers(), timeout=10
+            sb_url('proposals', '?archived=is.true&select=id,name,client,total,archived_at,snap&order=archived_at.desc&limit=100'),
+            headers=sb_admin_headers(), timeout=10
         )
         r.raise_for_status()
-        return jsonify({'ok': True, 'items': r.json()})
+        return jsonify({'ok': True, 'items': r.json(),
+                        'auto_delete_days': ARCHIVE_AUTO_DELETE_DAYS})
     except Exception as e:
         return _safe_error(e, context='admin/archived')
 
 @app.route('/admin/restore/<int:qid>', methods=['POST'])
-@require_dev
+@require_admin
 def admin_restore(qid):
     try:
         r = http.patch(
             sb_url('proposals', '?' + _sb_eq('id', qid)),
             json={'archived': False, 'archived_at': None},
-            headers=sb_headers(), timeout=10
+            headers=sb_admin_headers(), timeout=10
         )
         r.raise_for_status()
         log_access(session.get('username',''), session.get('full_name',''), f'restored archived proposal id={qid}')
         return jsonify({'ok': True})
     except Exception as e:
         return _safe_error(e, context='admin/restore/<int:qid>')
+
+@app.route('/admin/permanent-delete/<int:qid>', methods=['DELETE'])
+@require_admin
+def admin_permanent_delete(qid):
+    """Hard-delete an archived proposal and cascade-clean its dependents.
+    Safety guard: proposal must already be archived. Deletes:
+      - change_orders with proposal_id = qid
+      - hd_time_entries with project_id = qid
+      - hd_notifications with project_id = qid
+      - hd_reminders with ref_type='project' and ref_id = qid
+      - the proposals row itself
+    No soft-delete, no undo. Logged to hd_access_log."""
+    try:
+        # Verify archived
+        v = http.get(
+            sb_url('proposals', '?' + _sb_eq('id', qid) + '&select=id,name,archived'),
+            headers=sb_admin_headers(), timeout=5
+        )
+        if v.status_code != 200 or not v.json():
+            return jsonify({'ok': False, 'error': 'Proposal not found'}), 404
+        row = v.json()[0]
+        if not row.get('archived'):
+            return jsonify({'ok': False, 'error': 'Proposal must be archived before it can be permanently deleted. Archive it first.'}), 400
+        # Cascade delete — order matters: children first, then parent
+        for tbl, col in [
+            ('change_orders',    'proposal_id'),
+            ('hd_time_entries',  'project_id'),
+            ('hd_notifications', 'project_id'),
+        ]:
+            http.delete(sb_url(tbl, '?' + _sb_eq(col, qid)), headers=sb_admin_headers(), timeout=10)
+        # Reminders have composite filter (ref_type + ref_id)
+        http.delete(
+            sb_url('hd_reminders', '?ref_type=eq.project&' + _sb_eq('ref_id', qid)),
+            headers=sb_admin_headers(), timeout=10
+        )
+        # Finally, the proposal row
+        r = http.delete(sb_url('proposals', '?' + _sb_eq('id', qid)), headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        log_access(session.get('username',''), session.get('full_name',''),
+                   f'permanently deleted archived proposal id={qid} name="{row.get("name","")}"')
+        return jsonify({'ok': True})
+    except Exception as e:
+        return _safe_error(e, context='admin/permanent-delete/<int:qid>')
 
 @app.route('/generate-pdf', methods=['POST'])
 @require_auth

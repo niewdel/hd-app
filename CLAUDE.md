@@ -230,6 +230,11 @@ CRM-level organization entities. A company can be a customer, a subcontractor, o
 | POST | `/admin/users` | Create (requires `full_name`, `username`, `password`; 6-char min) |
 | PATCH | `/admin/users/<id>` | Update |
 | GET | `/admin/logs` | Activity log |
+| GET | `/admin/archived` | List archived proposals (admin + dev). Returns `{items, auto_delete_days:90}`. |
+| POST | `/admin/restore/<id>` | Un-archive (admin + dev). Clears `archived` + `archived_at`. |
+| DELETE | `/admin/permanent-delete/<id>` | Hard-delete an archived proposal + cascade-clean change_orders, hd_time_entries, hd_notifications, hd_reminders (ref_type=project). Requires admin + dev. Safety guard: proposal must already be archived. |
+
+**Archive auto-delete:** `pg_cron` job `purge-archived-proposals` runs daily at 03:00 UTC. Calls `public.purge_old_archived_proposals()` which deletes proposals where `archived = true AND archived_at < now() - interval '90 days'` plus cascades the same dependents as the manual-delete route. Retention window is set via `ARCHIVE_AUTO_DELETE_DAYS` constant in app.py (must match the interval in the SQL function if you change it).
 
 ### Tasks
 | Method | Route | Auth | Description |
