@@ -212,6 +212,28 @@ body.dark .rpt-stat{background:rgba(24,24,27,0.85);backdrop-filter:blur(12px);-w
 body.dark .rpt-stat-val{color:#F5F5F7;}
 body.dark .rpt-stat-lbl{color:#A1A1A6;}
 body.dark .rpt-stat-sub{color:#8E8E93;}
+
+/* Driver.js tutorial popover — dark-mode overrides. Driver.js ships with
+   hardcoded light-mode colors; scope under body.dark so the popover and
+   arrow match the rest of the app when dark mode is on. Light mode uses
+   the library's defaults. */
+body.dark .driver-popover{
+  background:#1C1C1F !important;
+  color:#E4E4E7 !important;
+  border:1px solid rgba(255,255,255,0.08) !important;
+  box-shadow:0 12px 40px rgba(0,0,0,0.6) !important;
+}
+body.dark .driver-popover-title{color:#F5F5F7 !important;}
+body.dark .driver-popover-description{color:#D1D1D6 !important;}
+body.dark .driver-popover-close-btn{color:#A1A1AA !important;}
+body.dark .driver-popover-close-btn:hover{color:#F5F5F7 !important;}
+body.dark .driver-popover-progress-text{color:#A1A1AA !important;}
+/* Arrows pointing at highlighted element — Driver.js uses border trickery
+   for arrows, all four directions need explicit color overrides. */
+body.dark .driver-popover-arrow-side-left.driver-popover-arrow{border-left-color:#1C1C1F !important;}
+body.dark .driver-popover-arrow-side-right.driver-popover-arrow{border-right-color:#1C1C1F !important;}
+body.dark .driver-popover-arrow-side-top.driver-popover-arrow{border-top-color:#1C1C1F !important;}
+body.dark .driver-popover-arrow-side-bottom.driver-popover-arrow{border-bottom-color:#1C1C1F !important;}
 body.dark .rpt-tbl th{background:#2C2C2E;border-bottom-color:#48484A;color:#D1D1D6;}
 body.dark .rpt-tbl td{border-bottom-color:#3A3A3C;color:#F5F5F7;}
 body.dark .rpt-tbl tr:hover{background:#2C2C2E;}
