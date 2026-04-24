@@ -2296,14 +2296,61 @@ def submit_feedback():
 def list_feedback():
     username = session.get('username', '')
     role = session.get('role', 'user')
+    # Optional ?status=open|reviewed|all (default: all)
+    status = (request.args.get('status') or 'all').lower()
     try:
-        if role == 'dev':
-            r = http.get(sb_url('hd_feedback', '?select=*&order=submitted_at.desc&limit=200'), headers=sb_headers(), timeout=10)
+        # admin + dev see every submission; everyone else sees only their own
+        if role in ('admin', 'dev'):
+            base = '?select=*&order=submitted_at.desc&limit=200'
         else:
-            r = http.get(sb_url('hd_feedback', '?' + _sb_eq('submitted_by', username) + '&' + 'select=*&' + 'order=submitted_at.desc&' + 'limit=200'), headers=sb_headers(), timeout=10)
+            base = '?' + _sb_eq('submitted_by', username) + '&select=*&order=submitted_at.desc&limit=200'
+        if status in ('open', 'reviewed'):
+            base += '&' + _sb_eq('status', status)
+        r = http.get(sb_url('hd_feedback', base), headers=sb_admin_headers(), timeout=10)
         return jsonify({'ok': True, 'items': r.json() if r.status_code == 200 else []})
     except Exception as e:
         return _safe_error(e, context='feedback/list')
+
+@app.route('/feedback/<int:fid>', methods=['PATCH'])
+@require_auth
+def update_feedback(fid):
+    """Mark feedback as reviewed / re-open. Admin + dev only."""
+    role = session.get('role', 'user')
+    if role not in ('admin', 'dev'):
+        return jsonify({'ok': False, 'error': 'Not permitted'}), 403
+    d = request.get_json() or {}
+    new_status = str(d.get('status', '')).strip().lower()
+    if new_status not in ('open', 'reviewed'):
+        return jsonify({'ok': False, 'error': "status must be 'open' or 'reviewed'"}), 400
+    row = {'status': new_status}
+    if new_status == 'reviewed':
+        row['reviewed_by'] = session.get('username', '')
+        row['reviewed_at'] = datetime.utcnow().isoformat()
+    else:
+        row['reviewed_by'] = None
+        row['reviewed_at'] = None
+    try:
+        r = http.patch(sb_url('hd_feedback', '?' + _sb_eq('id', fid)), json=row, headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True})
+    except Exception as e:
+        return _safe_error(e, context='feedback/<int:fid> PATCH')
+
+@app.route('/feedback/<int:fid>', methods=['DELETE'])
+@require_auth
+def delete_feedback(fid):
+    """Permanently delete a feedback entry. Admin + dev only (no undo)."""
+    role = session.get('role', 'user')
+    if role not in ('admin', 'dev'):
+        return jsonify({'ok': False, 'error': 'Not permitted'}), 403
+    try:
+        r = http.delete(sb_url('hd_feedback', '?' + _sb_eq('id', fid)), headers=sb_admin_headers(), timeout=10)
+        if r.status_code >= 300:
+            return jsonify({'ok': False, 'error': r.text[:500]}), 400
+        return jsonify({'ok': True})
+    except Exception as e:
+        return _safe_error(e, context='feedback/<int:fid> DELETE')
 
 # ── Roadmap ──────────────────────────────────────────────
 @app.route('/roadmap/list')

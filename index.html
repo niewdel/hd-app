@@ -3019,7 +3019,14 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
     </div>
   </div>
   <div class="mc-card">
-    <div class="card-hdr"><span class="card-title">Previous Feedback</span></div>
+    <div class="card-hdr" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span class="card-title">Previous Feedback</span>
+      <select id="feedback-filter-status" data-admin-hidden onchange="loadFeedback()" style="border:1px solid var(--bdr);border-radius:4px;padding:4px 8px;font-size:11px;margin-left:auto;">
+        <option value="all">All</option>
+        <option value="open">Open</option>
+        <option value="reviewed">Reviewed</option>
+      </select>
+    </div>
     <div class="card-body" id="feedback-list"><div class="empty-state"><div class="empty-state-desc">No feedback submitted yet.</div></div></div>
   </div>
 </div></div>
@@ -16937,23 +16944,84 @@ function submitFeedback(){
     }
   }).catch(function(){msg.textContent='Network error.';msg.style.color='var(--red)';});
 }
+function _canManageFeedback(){
+  return window._userRole === 'admin' || window._userRole === 'dev';
+}
+
 function loadFeedback(){
   var c=document.getElementById('feedback-list');if(!c)return;
+  var statusSel=document.getElementById('feedback-filter-status');
+  var status=statusSel?statusSel.value:'all';
   c.innerHTML='<div style="padding:12px;font-size:12px;color:var(--dgray);">Loading...</div>';
-  fetch('/feedback/list').then(function(r){return r.json();}).then(function(d){
-    if(!d.ok||!d.items||!d.items.length){c.innerHTML='<div class="empty-state"><div class="empty-state-desc">No feedback submitted yet.</div></div>';return;}
+  var url='/feedback/list'+(status && status!=='all'?('?status='+encodeURIComponent(status)):'');
+  fetch(url).then(function(r){return r.json();}).then(function(d){
+    if(!d.ok||!d.items||!d.items.length){
+      c.innerHTML='<div class="empty-state"><div class="empty-state-desc">'+(status==='reviewed'?'No reviewed feedback yet.':status==='open'?'Nothing in the open queue.':'No feedback submitted yet.')+'</div></div>';
+      return;
+    }
+    var canManage=_canManageFeedback();
     var html='';
     d.items.forEach(function(f){
       var dt=new Date(f.submitted_at);
       var dateStr=dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' at '+dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
       var byStr=isDevUser()&&f.submitted_by?('<span style="font-weight:600;">'+esc(f.submitted_by)+'</span> &middot; '):'';
-      html+='<div style="padding:12px 16px;border-bottom:1px solid var(--bdr);">';
-      html+='<div style="font-size:11px;color:var(--dgray);margin-bottom:4px;">'+byStr+dateStr+'</div>';
-      html+='<div style="font-size:14px;white-space:pre-wrap;">'+esc(f.message)+'</div>';
+      var isReviewed=f.status==='reviewed';
+      var pill=isReviewed
+        ? '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:var(--badge-ok-bg);color:var(--badge-ok);margin-left:8px;">Reviewed</span>'
+        : '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:var(--badge-info-bg);color:var(--badge-info);margin-left:8px;">Open</span>';
+      var reviewedMeta='';
+      if(isReviewed && f.reviewed_by){
+        var rDt=f.reviewed_at?new Date(f.reviewed_at):null;
+        var rDateStr=rDt?rDt.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+        reviewedMeta=' <span style="color:var(--dgray);font-size:11px;">&middot; reviewed by '+esc(f.reviewed_by)+(rDateStr?' on '+rDateStr:'')+'</span>';
+      }
+      html+='<div style="padding:12px 16px;border-bottom:1px solid var(--bdr);'+(isReviewed?'opacity:0.72;':'')+'">';
+      html+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">';
+      html+='<div style="flex:1;min-width:0;">';
+      html+='<div style="font-size:11px;color:var(--dgray);margin-bottom:4px;">'+byStr+dateStr+pill+reviewedMeta+'</div>';
+      html+='<div style="font-size:14px;white-space:pre-wrap;'+(isReviewed?'text-decoration:line-through;text-decoration-color:var(--dgray);':'')+'">'+esc(f.message)+'</div>';
       html+='</div>';
+      if(canManage){
+        html+='<div style="display:flex;gap:4px;flex-shrink:0;">';
+        if(isReviewed){
+          html+='<button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setFeedbackStatus('+f.id+',\'open\')">Reopen</button>';
+        } else {
+          html+='<button class="btn btn-sec btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setFeedbackStatus('+f.id+',\'reviewed\')">Mark Reviewed</button>';
+        }
+        html+='<button class="btn-ico" title="Delete feedback" onclick="deleteFeedback('+f.id+')" style="color:var(--red);font-size:14px;">&#10005;</button>';
+        html+='</div>';
+      }
+      html+='</div></div>';
     });
     c.innerHTML=html;
   }).catch(function(){c.innerHTML='<div class="empty-state"><div class="empty-state-desc">Failed to load feedback.</div></div>';});
+}
+
+function setFeedbackStatus(id, newStatus){
+  fetch('/feedback/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:newStatus})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d && d.ok){
+        toast(newStatus==='reviewed'?'Marked reviewed':'Reopened','ok');
+        loadFeedback();
+      } else {
+        toast((d&&d.error)||'Update failed','err');
+      }
+    }).catch(function(){ toast('Network error — try again','err'); });
+}
+
+function deleteFeedback(id){
+  if(!confirm('Permanently delete this feedback? This cannot be undone.')) return;
+  fetch('/feedback/'+id,{method:'DELETE'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d && d.ok){
+        toast('Feedback deleted','ok');
+        loadFeedback();
+      } else {
+        toast((d&&d.error)||'Delete failed','err');
+      }
+    }).catch(function(){ toast('Network error — try again','err'); });
 }
 
 async function submitBug(){

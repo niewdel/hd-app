@@ -213,6 +213,16 @@ CRM-level organization entities. A company can be a customer, a subcontractor, o
 | GET | `/bugs/list` | List (admin) |
 | PATCH | `/bugs/<id>` | Update status/notes (admin) |
 
+### Feedback
+| Method | Route | Description |
+|---|---|---|
+| POST | `/feedback/submit` | Submit a feedback note (auth). Stored in `hd_feedback`. |
+| GET | `/feedback/list` | `?status=open\|reviewed\|all`. admin + dev see every entry; standard users see their own. |
+| PATCH | `/feedback/<id>` | Set `status` to `open` or `reviewed`. Stamps `reviewed_by` + `reviewed_at` on review. **admin + dev only.** |
+| DELETE | `/feedback/<id>` | Permanently delete. **admin + dev only.** |
+
+`hd_feedback` table: id, message, submitted_by, submitted_at, status (default `open`, check constraint allows `open`/`reviewed`), reviewed_by, reviewed_at.
+
 ### Admin
 | Method | Route | Description |
 |---|---|---|
