@@ -3266,35 +3266,6 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
   </div>
 </div>
 
-<!-- Full Tutorial Modal (2026-04-24) — multi-slide page-by-page walkthrough
-     shown on first login. Re-launchable via the Help & Tour modal's
-     "Retake Full Tutorial" button. -->
-<div class="modal-overlay hidden" id="full-tutorial-modal" role="dialog" aria-modal="true" aria-labelledby="full-tut-title">
-  <div class="modal" style="width:min(720px,94vw);max-width:none;max-height:92vh;display:flex;flex-direction:column;padding:0;">
-    <div class="modal-hdr" style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;gap:14px;">
-      <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
-        <span id="full-tut-step-label" style="font-size:11px;font-weight:700;letter-spacing:0.6px;color:var(--dgray);text-transform:uppercase;white-space:nowrap;">Step 1 of 13</span>
-        <div style="flex:1;max-width:200px;height:4px;background:var(--lgray);border-radius:4px;overflow:hidden;">
-          <div id="full-tut-progress-bar" style="width:0%;height:100%;background:var(--red);transition:width .25s;"></div>
-        </div>
-      </div>
-      <button class="btn-ico" id="full-tut-close" style="font-size:18px;" aria-label="Skip tutorial">&#10005;</button>
-    </div>
-    <div class="modal-body" style="padding:18px 24px 8px;flex:1;overflow-y:auto;">
-      <div id="full-tut-lede" style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--red);font-weight:800;margin-bottom:6px;"></div>
-      <h2 id="full-tut-title" style="font-family:var(--font-display);font-size:24px;margin:0 0 16px;letter-spacing:-0.01em;color:var(--blk);"></h2>
-      <div id="full-tut-body" style="font-size:14px;line-height:1.65;color:var(--blk);"></div>
-    </div>
-    <div class="modal-foot" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 20px;border-top:1px solid var(--bdr);">
-      <button class="btn btn-sec btn-sm" id="full-tut-skip" style="font-size:12px;">Skip Tutorial</button>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-sec btn-sm" id="full-tut-back">&larr; Back</button>
-        <button class="btn btn-red btn-sm" id="full-tut-next">Next &rarr;</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 </div><!-- /app -->
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -5905,45 +5876,9 @@ function renderDashStats(){
   // Stats bar removed per user request (Active Projects removed, Bids Due moved to pipeline snapshot)
   c.innerHTML='';c.style.display='none';
 }
-function renderDashPipelineSnapshot(){
-  var c=document.getElementById('dash-pipeline-snapshot');if(!c)return;
-  c.innerHTML='';
-  if(isFieldUser())return;
-  var pipelineVal=calcPipelineValue();
-  var today=new Date().toISOString().split('T')[0];
-  var weekEnd=new Date();weekEnd.setDate(weekEnd.getDate()+7);
-  var weekEndStr=weekEnd.toISOString().split('T')[0];
-  var bidsDue=0;
-  Object.keys(dashBidDueDates||{}).forEach(function(dk){
-    if(dk>=today&&dk<=weekEndStr)bidsDue+=(dashBidDueDates[dk]||[]).length;
-  });
-  var wonProjects=0,lostProjects=0;
-  var closedStages={};
-  if(_pipelineStages)_pipelineStages.forEach(function(s){
-    if(s.name==='Completed'||s.name==='Won')closedStages[s.id]='won';
-    if(s.name==='Lost')closedStages[s.id]='lost';
-  });
-  (pipelineProposals||[]).forEach(function(p){
-    var snap=typeof p.snap==='string'?JSON.parse(p.snap||'{}'):p.snap||{};
-    if(!snap.is_project)return;
-    if(closedStages[p.stage_id]==='won')wonProjects++;
-    else if(closedStages[p.stage_id]==='lost')lostProjects++;
-  });
-  var decided=wonProjects+lostProjects;
-  var winRate=decided>0?Math.round(wonProjects/decided*100):0;
-  var items=[];
-  if(canSeePricing())items.push({lbl:'Pipeline',val:'$'+Math.round(pipelineVal).toLocaleString()});
-  items.push({lbl:'Bids Due',val:bidsDue,warn:bidsDue>0});
-  if(decided>0)items.push({lbl:'Win Rate',val:winRate+'%'});
-  if(!items.length)return;
-  c.style.gridTemplateColumns='repeat('+items.length+',1fr)';
-  items.forEach(function(s){
-    var card=document.createElement('div');card.className='mc-card';
-    card.style.cssText='padding:14px 18px;text-align:center;';
-    card.innerHTML='<div class="mc-kpi-lbl">'+s.lbl+'</div><div class="mc-kpi-val" style="font-size:22px;'+(s.warn?'color:var(--red);':'')+'">'+s.val+'</div>';
-    c.appendChild(card);
-  });
-}
+// renderDashPipelineSnapshot removed 2026-04-24 — the Pipeline Snapshot
+// widget was taken off the dashboard. Function had no remaining callers
+// and targeted a non-existent #dash-pipeline-snapshot element.
 function calcPipelineValue(){
   var totalBid=0;var linkedIds={};
   if(typeof pipelineProposals!=='undefined'){
@@ -15936,212 +15871,357 @@ function _maybeShowWelcomeOnFirstLogin(){
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Full page-by-page tutorial (first login + Retake from Help & Tour)
+// Full interactive tutorial (first login + Retake from Help & Tour)
+// Uses Driver.js to highlight real UI elements as the user clicks through.
+// Between steps, navigate panels so each highlight happens on the live page.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Each slide: id, roles (who sees it), lede (small eyebrow), title, body (HTML).
-// Add to this array to extend. Keep body paragraphs short — the modal scrolls
-// but concise teaching lands better.
-var _FULL_TUT_SLIDES = [
-  { id:'welcome', roles:['admin','user','dev','field'],
-    lede:'Your operations hub', title:'Welcome to the HD Platform',
-    body:
-      '<p>This is your command center for proposals, projects, scheduling, and reporting — everything HD Hauling &amp; Grading does, in one app.</p>'+
-      '<p>The next few slides walk through every page and the key workflows. Takes about <b>5 minutes</b>. Click <b>Next</b> to continue, or <b>Skip Tutorial</b> at the bottom-left if you\'d rather dive in.</p>'+
-      '<div style="margin-top:16px;padding:12px 14px;background:var(--red-soft);border-left:3px solid var(--red);border-radius:6px;font-size:13px;"><b>Tip:</b> you can re-launch this tutorial anytime from your avatar menu → <b>Help &amp; Tour</b> → <b>Retake Full Tutorial</b>.</div>'
-  },
-  { id:'dashboard', roles:['admin','user','dev','field'],
-    lede:'Your daily snapshot', title:'Dashboard',
-    body:
-      '<p>The first page you see when you log in. Everything you need for the day is here.</p>'+
-      '<ul style="padding-left:20px;margin:10px 0;"><li><b>Weather</b> — 7-day forecast for Concord, NC. Click a day tile to preview its conditions on the hero band above.</li>'+
-      '<li><b>Today\'s schedule</b> — work orders and crew assignments for today only.</li>'+
-      '<li><b>Pipeline snapshot</b> — count of active quotes by stage.</li>'+
-      '<li><b>Forms &amp; Applicants</b> — new leads (quote requests) and job applications from your public forms, newest first.</li>'+
-      '<li><b>Recent activity</b> — an audit trail of recent system events.</li></ul>'
-  },
-  { id:'projects', roles:['admin','user','dev'],
-    lede:'Where deals live', title:'Projects &amp; Pipeline',
-    body:
-      '<p>The <b>Projects</b> panel has four views: <b>Pipeline</b> (Kanban), <b>List</b>, <b>Map</b>, and <b>Bid Calendar</b>.</p>'+
-      '<p><b>Pipeline stages:</b> Lead → Takeoff → Waiting for Approval → Approved → Sent → Won → Lost → Disqualified.</p>'+
-      '<p>Drag cards between stages. Moving a card to <b>Won</b> auto-creates a work order and sends the "jobs won" email. Moving to <b>Lost</b> sends the "jobs lost" email.</p>'+
-      '<p>Click any card to open the project detail — attach proposals, change orders, notes, contacts, and site info.</p>'
-  },
-  { id:'proposal-1', roles:['admin','user','dev'],
-    lede:'Build a quote, part 1', title:'Proposal Builder — Line Items',
-    body:
-      '<p>Open any project → <b>Build Proposal</b>. Fill in client and project info at the top.</p>'+
-      '<p>Scroll down to <b>Line Items</b> — one box with three action buttons:</p>'+
-      '<ul style="padding-left:20px;margin:10px 0;">'+
-      '<li><b>Library</b> — pick from your 41 saved items. Asphalt items auto-create full pavement sections (SF + layer tonnage math). Concrete goes to its slot. Everything else becomes a regular line item.</li>'+
-      '<li><b>Preset</b> — pick a pavement preset (like "Light Duty Asphalt") to drop in a multi-layer section in one click.</li>'+
-      '<li><b>+ Add Item</b> — fully custom manual line item. Covered on the next slide.</li></ul>'
-  },
-  { id:'proposal-2', roles:['admin','user','dev'],
-    lede:'Build a quote, part 2', title:'Custom Items &amp; Margin',
-    body:
-      '<p>Click <b>+ Add Item</b> for anything not in the library yet (grading, erosion control, one-offs). You get a simple row:</p>'+
-      '<ul style="padding-left:20px;margin:10px 0;">'+
-      '<li><b>Name</b> and <b>Description</b> — how it appears on the proposal.</li>'+
-      '<li><b>Qty</b> × <b>Unit</b> × <b>Unit Price</b> — unit is free-text (SY, CY, LF, TON, AC — whatever you type).</li>'+
-      '<li><b>Bid Total</b> — auto-calculated: qty × unit price.</li>'+
-      '<li><b>Est. Cost</b> — your internal cost estimate. Drives the margin calc.</li>'+
-      '<li><b>Margin %</b> — live readout of <code>(bid − cost) / cost</code>.</li></ul>'+
-      '<div style="margin-top:12px;padding:10px 12px;background:var(--bg-sub);border:1px solid var(--bdr);border-radius:6px;font-size:12.5px;"><b>Est. Cost is internal only</b> — never appears on the customer-facing proposal PDF. It only shows on the Pricing Breakdown export so you can track margin on every project.</div>'
-  },
-  { id:'proposal-3', roles:['admin','user','dev'],
-    lede:'Build a quote, part 3', title:'Breakdown &amp; Export',
-    body:
-      '<p>Below the Line Items sits the <b>Line Item Breakdown</b> — one table grouped by division (Asphalt / Grading / Concrete / Striping / etc.) with a subtotal per group and a Grand Total.</p>'+
-      '<p>Two export options at the top of the breakdown table:</p>'+
-      '<ul style="padding-left:20px;margin:10px 0;">'+
-      '<li><b>Proposal PDF</b> — customer-facing. No internal costs, no margin. This is what you send to the client.</li>'+
-      '<li><b>Pricing Breakdown PDF</b> — <em>internal</em>. Shows material / labor / trucking / markup % per row. Your pricing worksheet. Never share this externally.</li></ul>'
-  },
-  { id:'contacts-1', roles:['admin','user','dev'],
-    lede:'Two layers', title:'Clients vs Companies',
-    body:
-      '<p><b>Contacts</b> has four tabs: Clients, Companies, Leads, Applicants.</p>'+
-      '<p><b>Clients</b> are PEOPLE — Jared Marion, Chris Smith. Individual contacts.</p>'+
-      '<p><b>Companies</b> are ORGANIZATIONS — Four Thumb Construction. One company can have many client contacts.</p>'+
-      '<p>When you add a client, pick their company from the dropdown or type a new name (we create the company automatically).</p>'+
-      '<p>A company can be flagged as a <b>Customer</b> (we sell to them), a <b>Subcontractor</b> (we hire them), or both.</p>'+
-      '<p>Click any company → see all linked contacts and a <b>+ Add Contact</b> button that\'s prefilled with that company. Logos auto-fetch from the company\'s domain.</p>'
-  },
-  { id:'contacts-2', roles:['admin','user','dev'],
-    lede:'Inbound from the website', title:'Leads &amp; Applicants',
-    body:
-      '<p>The <b>Leads</b> tab is your full history of quote requests from the public form on your website.</p>'+
-      '<p>The <b>Applicants</b> tab is the same for job applications from the careers form.</p>'+
-      '<p>Filter by status (<b>New</b> / <b>Accepted</b> / <b>Rejected</b> / etc.), click <b>View</b> to see the full submission, or <b>×</b> to delete test submissions and duplicates.</p>'+
-      '<p>Clicking <b>View</b> on an applicant with a resume gives you a download link.</p>'+
-      '<p><b>New</b> submissions also appear on the dashboard Forms feed. Email notifications go to every admin/user (not field) plus <code>estimates@hdgrading.com</code> for leads.</p>'
-  },
-  { id:'schedule', roles:['admin','user','dev','field'],
-    lede:'Crews + calendar', title:'Schedule',
-    body:
-      '<p>Day / 3-day / Week / Month views of every work order across all crews.</p>'+
-      '<p>Drag work orders onto calendar days to assign them.</p>'+
-      '<p>Weather is pinned at the top of the Schedule panel so you can see what\'s coming before committing crew.</p>'+
-      '<p>Field users can clock in and out here — the time tracker feeds hours directly into the job-cost report.</p>'
-  },
-  { id:'reports', roles:['admin','user','dev'],
-    lede:'Numbers that matter', title:'Reports',
-    body:
-      '<p>Multiple reporting surfaces driven by live project and time data:</p>'+
-      '<ul style="padding-left:20px;margin:10px 0;">'+
-      '<li><b>Sales Pipeline</b> — conversion ratios, win rate, average deal size</li>'+
-      '<li><b>Job Costing</b> — estimated vs actual per project</li>'+
-      '<li><b>Crew Utilization</b> — hours tracked per crew per week</li>'+
-      '<li><b>Financial</b> — revenue, cost, margin summary</li>'+
-      '<li><b>Won/Lost</b> — closed-out project analytics</li></ul>'+
-      '<p>Archived proposals and anything in the <b>Disqualified</b> stage are excluded from the pipeline ratios so the numbers stay honest.</p>'
-  },
-  { id:'settings', roles:['admin','user','dev'],
-    lede:'Operational config', title:'Settings',
-    body:
-      '<p>Settings holds the operational numbers that power proposals and reports:</p>'+
-      '<ul style="padding-left:20px;margin:10px 0;">'+
-      '<li><b>Materials</b> — base price per ton for ABC, S9.5C, I19.0C, etc. Used in pavement tonnage calcs.</li>'+
-      '<li><b>Crew Rates</b> — daily labor rate + productivity per crew (Asphalt, Stone, Grading, Utility, Erosion Control, Striping, Signage).</li>'+
-      '<li><b>Item Library</b> — your 41 reusable line items. The <b>Library</b> button in Build Proposal pulls from here.</li>'+
-      '<li><b>Company Info</b> — address, license number, logo shown on proposal PDFs.</li></ul>'+
-      '<p>Your personal profile (avatar menu → Account) has your <b>name / email / phone</b> — that\'s the "From" info on any proposal you send.</p>'
-  },
-  { id:'feedback', roles:['admin','user','dev'],
-    lede:'Tell Justin', title:'Feedback',
-    body:
-      '<p>Got a bug, an idea, or something that feels off? Use the <b>Feedback</b> tab.</p>'+
-      '<p>Type a quick note — Justin sees it and replies / fixes.</p>'+
-      '<p>As admin, you can <b>mark entries reviewed</b> or <b>delete</b> them once handled. Filter by All / Open / Reviewed at the top of the list.</p>'+
-      '<div style="margin-top:14px;padding:12px 14px;background:#fff5e6;border-left:3px solid #FFA800;border-radius:6px;font-size:13px;"><b>Text Justin directly</b> if: you can\'t log in, you see a stack trace or 500 error, or data you saved is gone. For everything else, Feedback is the fastest path.</div>'
-  },
-  { id:'done', roles:['admin','user','dev','field'],
-    lede:'Start exploring', title:'You\'re all set',
-    body:
-      '<p>Click <b>Finish</b> to close this tutorial. You\'re ready to work.</p>'+
-      '<p><b>Need a refresher?</b> Avatar menu → <b>Help &amp; Tour</b> → <b>Retake Full Tutorial</b>.</p>'+
-      '<p><b>Need a sidebar-only quick tour?</b> Same menu → <b>Sidebar Tour</b> (highlights where each feature lives in about 30 seconds).</p>'+
-      '<p>Go build a real quote. Move it through the pipeline. Send Justin feedback on anything that\'s confusing or missing — that\'s how this gets better.</p>'
+// Build the step list for a role. Each step points at a DOM element in the
+// real UI. `panel` is applied BEFORE the step shows (showPanel) so the target
+// is visible when Driver.js looks it up. Intro/outro steps omit `element` and
+// render a centered modal-style popover with no spotlight.
+function _buildInteractiveTutorialSteps(role){
+  var r = role || 'user';
+  var isField = r === 'field';
+
+  var S = function(cfg){ return cfg; }; // just a helper for readability
+  var steps = [];
+
+  // ─── Intro ──────────────────────────────────────────────────────────────
+  steps.push(S({
+    id:'welcome',
+    panel:'dashboard',
+    popover:{
+      title:'Welcome to HD Platform',
+      description:
+        '<p>Let me walk you through every page. I\'ll navigate and point out what each piece does as we go.</p>'+
+        '<p>Click <b>Next</b> to move forward, <b>Back</b> to repeat, or the <b>×</b> in the corner to skip. Whole thing takes ~5 minutes.</p>'+
+        '<p style="margin-top:10px;color:var(--dgray);font-size:12px;">Tip: you can re-launch this tutorial any time from your avatar menu → Help &amp; Tour → Retake Full Tutorial.</p>'
+    }
+  }));
+
+  // ─── Dashboard ──────────────────────────────────────────────────────────
+  steps.push(S({
+    id:'dash-hero', panel:'dashboard',
+    element:'#dash-greeting',
+    popover:{ title:'Dashboard', description:'<p>This is what loads when you sign in. The top of the page greets you and shows today\'s date. Everything below is your daily snapshot.</p>', side:'bottom', align:'start' }
+  }));
+  steps.push(S({
+    id:'dash-weather', panel:'dashboard',
+    element:'#dash-weather-strip',
+    popover:{ title:'Weather', description:'<p>Seven-day forecast for Concord, NC. Click any day tile below the hero band to preview its forecast — the big card above updates to show that day.</p>', side:'right', align:'start' }
+  }));
+  steps.push(S({
+    id:'dash-today', panel:'dashboard',
+    element:'.dash-today-card',
+    popover:{ title:'Today', description:'<p>Work orders and crew assignments for <b>today only</b>. Empty today? You\'ll see it. The <b>Full Schedule</b> button opens the calendar view.</p>', side:'right', align:'center' }
+  }));
+  if(!isField){
+    steps.push(S({
+      id:'dash-forms', panel:'dashboard',
+      element:'#dash-leads',
+      popover:{ title:'Forms & Applicants', description:'<p>Every quote request and job application from your public forms. Newest first. Click through to view details or take action.</p><p>The buttons at the top of this card open your live public forms in a new tab — the same URLs you embed on your website.</p>', side:'left', align:'start' }
+    }));
+    steps.push(S({
+      id:'dash-bidcal', panel:'dashboard',
+      element:'#dash-cal-grid',
+      popover:{ title:'Bid Calendar', description:'<p>Month view of when quotes are due (red dot) and site visits are scheduled (black dot). Click any day to drill in.</p>', side:'left', align:'center' }
+    }));
   }
-];
 
-var _currentTutSlides = [];
-var _currentTutIdx = 0;
+  // ─── Projects / Pipeline ────────────────────────────────────────────────
+  if(!isField){
+    steps.push(S({
+      id:'nav-projects',
+      element:'[aria-label="Projects"]',
+      popover:{ title:'Projects nav', description:'<p>Click <b>Next</b> — I\'ll switch to the Projects page and show you what\'s there.</p>', side:'right', align:'center' }
+    }));
+    steps.push(S({
+      id:'projects-panel', panel:'projects',
+      element:'#panel-projects',
+      popover:{ title:'Projects', description:'<p>Your pipeline of deals. The tabs near the top switch between Pipeline (Kanban), List, Map, and Bid Calendar views.</p><p>Drag cards between stage columns. Moving to <b>Won</b> auto-creates a work order and sends the jobs-won email. Moving to <b>Lost</b> sends jobs-lost.</p>', side:'top' }
+    }));
+  }
 
-function _tutorialSlidesForRole(role){
-  return _FULL_TUT_SLIDES.filter(function(s){
-    return !s.roles || s.roles.indexOf(role||'user') >= 0;
+  // ─── Proposal Builder (jump to the panel, no project attached) ──────────
+  if(!isField){
+    steps.push(S({
+      id:'build-intro',
+      popover:{
+        title:'Proposal Builder',
+        description:
+          '<p>Now let me show you the Proposal Builder — this is where you actually price a job.</p>'+
+          '<p>In real use you\'ll get here by clicking into a project and hitting <b>Build Proposal</b>. For the tutorial, I\'m jumping straight to the page so you can see the layout.</p>'
+      }
+    }));
+    steps.push(S({
+      id:'build-panel', panel:'build',
+      element:'#panel-build',
+      popover:{ title:'The builder', description:'<p>Client + project info at the top. Line Items next. Metrics bar in the middle with Total SF, Total SY, Tonnage, etc. Breakdown at the bottom.</p>', side:'top' }
+    }));
+    steps.push(S({
+      id:'build-lineitems', panel:'build',
+      element:'#line-items',
+      popover:{ title:'Line Items', description:'<p>Everything that goes on the proposal lives here. Three buttons in the header (above) let you add items.</p>', side:'top' }
+    }));
+    steps.push(S({
+      id:'build-buttons', panel:'build',
+      elementFn:function(){ return _tutFindButtonByText(['Library','From Library']); },
+      popover:{ title:'Library / Preset / + Add Item', description:'<p><b>Library</b> picks from your 41 saved items. Asphalt items become full pavement sections (SF × layer tonnage). Concrete/grading/other become line items in the right slot.</p><p><b>Preset</b> drops in a multi-layer pavement preset (Light Duty, Heavy Duty, etc.) in one click.</p><p><b>+ Add Item</b> creates a custom manual line item — qty × unit × price with an internal cost field for margin tracking.</p>', side:'bottom', align:'start' }
+    }));
+    steps.push(S({
+      id:'build-breakdown', panel:'build',
+      element:'#bk-lineitems-card',
+      popover:{ title:'Line Item Breakdown', description:'<p>Rows grouped by division (Asphalt / Concrete / Grading / Striping / etc.) with subtotals + a Grand Total.</p><p>The <b>Export PDF</b> button here exports the internal <b>Pricing Breakdown</b> (with cost + margin columns). The customer-facing Proposal PDF is exported elsewhere in the builder — no internal costs on that one.</p>', side:'top' }
+    }));
+  }
+
+  // ─── Contacts ───────────────────────────────────────────────────────────
+  if(!isField){
+    steps.push(S({
+      id:'nav-contacts',
+      element:'[aria-label="Contacts"]',
+      popover:{ title:'Contacts nav', description:'<p>Clients, companies, and all inbound from your website forms live here. Next slide: let\'s open it.</p>', side:'right' }
+    }));
+    steps.push(S({
+      id:'contacts-tabs', panel:'contacts',
+      element:'#panel-contacts .settings-tab-bar',
+      popover:{ title:'Clients / Companies / Leads / Applicants', description:'<p>Four tabs:</p><ul style="margin:6px 0;padding-left:18px;"><li><b>Clients</b> — individual people (Jared Marion, Chris Smith).</li><li><b>Companies</b> — orgs (Four Thumb Construction). Flag as Customer, Subcontractor, or both. Logos auto-fetch from the company\'s domain.</li><li><b>Leads</b> — full history of quote-form submissions.</li><li><b>Applicants</b> — full history of careers-form submissions + resumes.</li></ul>', side:'bottom' }
+    }));
+  }
+
+  // ─── Schedule ───────────────────────────────────────────────────────────
+  steps.push(S({
+    id:'nav-schedule',
+    element:'[aria-label="Schedule"]',
+    popover:{ title:'Schedule nav', description:'<p>Crew assignments, work orders, and the calendar live here.</p>', side:'right' }
+  }));
+  steps.push(S({
+    id:'schedule-panel', panel:'schedule',
+    element:'#panel-schedule',
+    popover:{ title:'Schedule', description:'<p>Day / 3-day / Week / Month views of every work order. Drag a work order onto a day to assign it.</p>' + (isField ? '<p>Field users clock in/out via the time tracker in this panel — hours feed the job-cost report.</p>' : ''), side:'top' }
+  }));
+
+  // ─── Reports ────────────────────────────────────────────────────────────
+  if(!isField){
+    steps.push(S({
+      id:'nav-reports',
+      element:'[aria-label="Reports"]',
+      popover:{ title:'Reports nav', description:'<p>Pipeline ratios, job costing, win rate, crew utilization, financials.</p>', side:'right' }
+    }));
+  }
+
+  // ─── Settings ───────────────────────────────────────────────────────────
+  if(!isField){
+    steps.push(S({
+      id:'nav-settings',
+      element:'[aria-label="App Settings"]',
+      popover:{ title:'Settings nav', description:'<p>Operational config — material prices, crew rates, item library, company info. These numbers power proposals and reports, so changes here ripple across the app.</p>', side:'right' }
+    }));
+  }
+
+  // ─── Feedback ───────────────────────────────────────────────────────────
+  if(!isField){
+    steps.push(S({
+      id:'nav-feedback',
+      element:'[aria-label="Feedback"]',
+      popover:{ title:'Feedback', description:'<p>Got a bug or an idea? Drop a note here — Justin reviews everything. You can mark entries reviewed or delete them once handled.</p><p><b>Text Justin directly</b> for the emergencies: can\'t log in, stack traces, missing data. For everything else, Feedback is fastest.</p>', side:'right' }
+    }));
+  }
+
+  // ─── Avatar menu ────────────────────────────────────────────────────────
+  steps.push(S({
+    id:'avatar-menu',
+    elementFn:function(){ return document.querySelector('.user-avatar, [aria-label*="Account"], .user-menu-btn, .topbar-avatar'); },
+    popover:{ title:'Your avatar', description:'<p>Your avatar in the top right has <b>Account</b> (name, password, profile photo), <b>Help &amp; Tour</b> (re-launch this tutorial), and <b>Sign Out</b>.</p>', side:'left' }
+  }));
+
+  // ─── Done ───────────────────────────────────────────────────────────────
+  steps.push(S({
+    id:'done',
+    panel:'dashboard',
+    popover:{
+      title:'You\'re all set',
+      description:
+        '<p>That\'s the full tour. Go explore — build a real quote, move it through the pipeline, poke around each page.</p>'+
+        '<p>If anything\'s confusing or missing, tell Justin via the <b>Feedback</b> tab. You can always come back here (Avatar menu → Help &amp; Tour → Retake Full Tutorial) or run the quick <b>Sidebar Tour</b> for a 30-second nav refresher.</p>'
+    }
+  }));
+
+  return steps;
+}
+
+// Build the driver.js "step" objects from our step config. Each gets an
+// `element` string OR we leave it off for intro/outro centered popovers.
+function _toDriverSteps(mySteps){
+  return mySteps.map(function(s){
+    var out = { popover: s.popover };
+    // Resolve elementFn → string selector (or DOM element) at build time
+    if(s.element){ out.element = s.element; }
+    else if(typeof s.elementFn === 'function'){
+      try { out.element = s.elementFn(); } catch(_){}
+    }
+    return out;
   });
 }
 
+// Try to find a button by one of several possible text labels — useful when
+// the target text might differ across versions.
+function _tutFindButtonByText(labels){
+  var btns = document.querySelectorAll('#panel-build button, #line-items button');
+  for(var i=0;i<btns.length;i++){
+    var t = (btns[i].textContent||'').trim();
+    for(var j=0;j<labels.length;j++){
+      if(t === labels[j] || t.indexOf(labels[j]) >= 0) return btns[i];
+    }
+  }
+  return null;
+}
+
+var _tutorialDriver = null;
+var _tutorialActive = false;
+var _tutorialSteps = [];   // our rich step config (with panel, elementFn, etc)
+var _tutorialIdx = 0;
+
 function startFullTutorial(){
-  _currentTutSlides = _tutorialSlidesForRole(window._userRole || 'user');
-  _currentTutIdx = 0;
-  var modal = document.getElementById('full-tutorial-modal');
-  if(!modal) return;
-  // Wire buttons on first open — idempotent (onclick overwrites)
-  document.getElementById('full-tut-next').onclick = _nextTutSlide;
-  document.getElementById('full-tut-back').onclick = _prevTutSlide;
-  document.getElementById('full-tut-skip').onclick = function(){ _closeFullTutorial(true); };
-  document.getElementById('full-tut-close').onclick = function(){ _closeFullTutorial(true); };
-  modal.addEventListener('click', function(ev){
-    if(ev.target === modal) _closeFullTutorial(true);
-  }, {once:true});
-  // Keyboard nav: Esc closes, arrows navigate
-  document.addEventListener('keydown', _tutKeyHandler);
-  _renderCurrentTutSlide();
-  modal.classList.remove('hidden');
+  if(_tutorialActive) return;
+  if(typeof window.driver === 'undefined' || !window.driver.js){
+    if(typeof toast === 'function') toast('Tour library not loaded','err');
+    return;
+  }
+  var role = window._userRole || 'user';
+  _tutorialSteps = _buildInteractiveTutorialSteps(role);
+  _tutorialIdx = 0;
+  _tutorialActive = true;
+  // Pre-navigate to the first step's panel so the first highlight lands on a
+  // rendered element.
+  var first = _tutorialSteps[0];
+  if(first && first.panel && typeof showPanel === 'function') showPanel(first.panel);
+  setTimeout(_tutShowStep, 250);
 }
 
-function _tutKeyHandler(e){
-  var modal = document.getElementById('full-tutorial-modal');
-  if(!modal || modal.classList.contains('hidden')) return;
-  if(e.key === 'Escape'){ _closeFullTutorial(true); }
-  else if(e.key === 'ArrowRight' || e.key === 'Enter'){ _nextTutSlide(); }
-  else if(e.key === 'ArrowLeft'){ _prevTutSlide(); }
+function _tutResolveElement(step){
+  if(!step) return null;
+  if(step.element) return step.element;
+  if(typeof step.elementFn === 'function'){
+    try { return step.elementFn(); } catch(_){}
+  }
+  return null;
 }
 
-function _renderCurrentTutSlide(){
-  var slides = _currentTutSlides;
-  var idx = _currentTutIdx;
-  var slide = slides[idx];
-  if(!slide){ _closeFullTutorial(true); return; }
-  var total = slides.length;
-  document.getElementById('full-tut-step-label').textContent = 'Step ' + (idx+1) + ' of ' + total;
-  document.getElementById('full-tut-progress-bar').style.width = Math.round((idx+1)/total*100) + '%';
-  document.getElementById('full-tut-lede').textContent = slide.lede || '';
-  document.getElementById('full-tut-title').innerHTML = slide.title || '';
-  document.getElementById('full-tut-body').innerHTML = slide.body || '';
-  document.getElementById('full-tut-back').disabled = idx === 0;
-  var nextBtn = document.getElementById('full-tut-next');
-  nextBtn.innerHTML = (idx === total - 1) ? 'Finish &#10003;' : 'Next &rarr;';
-  // Scroll body to top so each slide starts fresh
-  var body = document.querySelector('#full-tutorial-modal .modal-body');
-  if(body) body.scrollTop = 0;
+// Each "scene" is one Driver.js instance showing one step. We transition
+// between scenes by destroying and rebuilding — simpler than fighting
+// driver.js internals when panel navigation is involved.
+function _tutShowStep(){
+  if(!_tutorialActive) return;
+  var step = _tutorialSteps[_tutorialIdx];
+  if(!step){ _finishTutorial(true); return; }
+  var target = _tutResolveElement(step);
+  // If target is a CSS selector, check element exists and is visible
+  if(target && typeof target === 'string'){
+    var el = document.querySelector(target);
+    if(!el || el.offsetParent === null){
+      // Skip invisible / missing targets — keeps the tour moving
+      _tutorialIdx++;
+      _tutShowStep();
+      return;
+    }
+  }
+  if(target && typeof target !== 'string' && target.offsetParent === null){
+    // DOM node from elementFn but hidden
+    _tutorialIdx++;
+    _tutShowStep();
+    return;
+  }
+  // Destroy any prior driver instance before creating a new one
+  _destroyTutorialDriver();
+  var driverFn = window.driver.js.driver;
+  var isLast = (_tutorialIdx === _tutorialSteps.length - 1);
+  var stepCfg = { popover: _extendPopover(step.popover, _tutorialIdx + 1, _tutorialSteps.length) };
+  if(target) stepCfg.element = target;
+  _tutorialDriver = driverFn({
+    showProgress: false,
+    showButtons: [], // hide driver's built-in next/prev/close; we inject our own
+    overlayColor: 'rgba(0,0,0,0.65)',
+    stagePadding: 8,
+    stageRadius: 10,
+    allowClose: true,
+    disableActiveInteraction: true,
+    onDestroyStarted: function(){
+      // Driver's built-in close (clicking outside). Treat as skip.
+      if(!_tutorialActive) return;
+      _finishTutorial(true);
+    },
+    steps: [stepCfg]
+  });
+  _tutorialDriver.drive();
 }
 
-function _nextTutSlide(){
-  if(_currentTutIdx < _currentTutSlides.length - 1){
-    _currentTutIdx++;
-    _renderCurrentTutSlide();
+function _extendPopover(p, cur, total){
+  p = p || {};
+  var title = p.title || '';
+  var description = p.description || '';
+  var backDisabled = _tutorialIdx === 0 ? ' disabled style="opacity:0.4;cursor:not-allowed;"' : '';
+  var nextLabel = _tutorialIdx === total - 1 ? 'Finish &#10003;' : 'Next &rarr;';
+  // Custom footer with Back / Next buttons we wire to our advance logic.
+  // Driver.js lets us pass HTML via description; inject our own footer at
+  // the bottom so we have full control over navigation.
+  var stepLabel = '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--dgray);font-weight:700;margin-bottom:6px;">Step '+cur+' of '+total+'</div>';
+  var footer =
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--bdr);">'+
+      '<button type="button" onclick="_tutPrev()" class="btn btn-sec btn-sm"'+backDisabled+'>&larr; Back</button>'+
+      '<button type="button" onclick="_tutNext()" class="btn btn-red btn-sm">'+nextLabel+'</button>'+
+    '</div>';
+  return {
+    title: title,
+    description: stepLabel + description + footer,
+    side: p.side || 'bottom',
+    align: p.align || 'start'
+  };
+}
+
+function _tutNext(){
+  if(!_tutorialActive) return;
+  if(_tutorialIdx >= _tutorialSteps.length - 1){
+    _finishTutorial(true);
+    return;
+  }
+  _tutorialIdx++;
+  var nextStep = _tutorialSteps[_tutorialIdx];
+  if(nextStep && nextStep.panel && typeof showPanel === 'function'){
+    showPanel(nextStep.panel);
+    setTimeout(_tutShowStep, 250);
   } else {
-    _closeFullTutorial(true); // finished
+    _tutShowStep();
+  }
+}
+window._tutNext = _tutNext; // exposed for popover onclick handlers
+
+function _tutPrev(){
+  if(!_tutorialActive) return;
+  if(_tutorialIdx === 0) return;
+  _tutorialIdx--;
+  var prevStep = _tutorialSteps[_tutorialIdx];
+  if(prevStep && prevStep.panel && typeof showPanel === 'function'){
+    showPanel(prevStep.panel);
+    setTimeout(_tutShowStep, 250);
+  } else {
+    _tutShowStep();
+  }
+}
+window._tutPrev = _tutPrev;
+
+function _destroyTutorialDriver(){
+  if(_tutorialDriver){
+    try { _tutorialDriver.destroy(); } catch(_){}
+    _tutorialDriver = null;
   }
 }
 
-function _prevTutSlide(){
-  if(_currentTutIdx > 0){
-    _currentTutIdx--;
-    _renderCurrentTutSlide();
-  }
-}
-
-function _closeFullTutorial(markSeen){
-  var modal = document.getElementById('full-tutorial-modal');
-  if(modal) modal.classList.add('hidden');
-  document.removeEventListener('keydown', _tutKeyHandler);
+function _finishTutorial(markSeen){
+  if(!_tutorialActive) return;
+  _tutorialActive = false;
+  _destroyTutorialDriver();
   if(markSeen) _markWelcomeSeen();
 }
 function _tourStepsForRole(role){
