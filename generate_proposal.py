@@ -651,9 +651,11 @@ def approval_page(data, st):
         # Left column right-padding acts as half-gutter
         ('RIGHTPADDING',  (0,0),(0,-1),  gutter / 2),
         ('LEFTPADDING',   (1,0),(1,-1),  gutter / 2),
-        # Top and bottom borders
+        # Top border only — keep the block visually separated from the
+        # terms above. The bottom border (LINEBELOW) was removed 2026-04-24
+        # because it drew a stray gray line below the "Date:" label that
+        # made the PDF end look unfinished.
         ('LINEABOVE',     (0,0),(-1,0),  1,   TBLBORD),
-        ('LINEBELOW',     (0,-1),(-1,-1),1,   TBLBORD),
     ]
     sig_tbl.setStyle(TableStyle(sig_styles))
     elems.append(sig_tbl)
