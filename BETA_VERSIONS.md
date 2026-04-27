@@ -36,6 +36,21 @@ Semver-ish: `MAJOR.MINOR.PATCH`. While in beta we stay on `1.x`:
 
 ---
 
+## v1.0.1 — 2026-04-27
+
+**Commit:** tagged `v1.0.1`
+**Supabase schema state:** unchanged from v1.0.
+
+### Fix
+- `/auth/check` now returns `phone` and `avatar_data` alongside the rest of
+  the user payload. Previously these were only included in `/auth/login`,
+  so a fresh sign-in showed them correctly but every subsequent page reload
+  wiped `window._userPhone` and `window._userAvatar` to empty strings —
+  Kyle was hitting this every time he refreshed. The save flow and DB were
+  always correct; only the read path on reload was leaking.
+
+---
+
 ## v1.0 — 2026-04-24
 
 **Commit:** tagged `v1.0` (see `git log --oneline --decorate`)

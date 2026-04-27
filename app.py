@@ -400,11 +400,16 @@ def auth_check():
                         'username': user.get('username', session.get('username', '')),
                         'full_name': user.get('full_name', session.get('full_name', '')),
                         'email': user.get('email', session.get('email', '')),
+                        'phone': user.get('phone', session.get('phone', '')),
+                        'avatar_data': user.get('avatar_data', '') or '',
                         'notif_prefs': user.get('notif_prefs') or {},
                         'welcome_seen': bool(user.get('welcome_seen_at'))})
     return jsonify({'authenticated': True, 'role': session.get('role', 'user'),
                     'username': session.get('username', ''), 'full_name': session.get('full_name', ''),
-                    'email': session.get('email', ''), 'notif_prefs': {}, 'welcome_seen': False})
+                    'email': session.get('email', ''),
+                    'phone': session.get('phone', ''),
+                    'avatar_data': '',
+                    'notif_prefs': {}, 'welcome_seen': False})
 
 @app.route('/auth/prefs', methods=['GET'])
 @require_auth
