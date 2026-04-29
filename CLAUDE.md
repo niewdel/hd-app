@@ -70,7 +70,7 @@ PATCH: `...rest/v1/TABLE?id=eq.ID` with a JSON body.
 
 ## Database Schema (Supabase / PostgreSQL)
 
-**All tables have RLS DISABLED.** Backend uses the service role key for all queries.
+**RLS is ENABLED on all `public` tables with a permissive `backend_only_deny_direct_access` policy that blocks `anon` + `authenticated` (`USING (false) WITH CHECK (false)`).** The backend uses the service role key, which bypasses RLS, so all routes keep working unchanged. Direct PostgREST access from the browser using the anon key is fully blocked. New tables get RLS auto-enabled by the `ensure_rls` event trigger (`public.rls_auto_enable()`); after creating a new table, also add the matching deny-all policy and `REVOKE ALL ... FROM anon, authenticated` to match the existing pattern.
 
 ### `hd_users`
 id, username (unique), full_name, email, phone, pin_hash (bcrypt), role (`admin`/`user`/`field`/`dev`), active, created_at, created_by, avatar_data (TEXT, base64), failed_login_count, locked_until, last_login_at, password_updated_at, hourly_rate, welcome_seen_at (TIMESTAMPTZ — account-bound, not browser-bound), notif_prefs (JSONB — `{inapp:{mention,assignment,stage_change,due_date,weather}, email:{new_leads,jobs_won,assignment,mention,jobs_lost,new_applicants}}`).
@@ -98,7 +98,7 @@ A separate `projects` table was considered and rejected (2026-04-21): refactorin
 id, name, color, position, counts_in_ratio, is_closed.
 
 1. **Lead** — counts_in_ratio:false, is_closed:false
-2. **Takeoff** — false / false
+2. **Takeoff Done** — false / false
 3. **Waiting for Approval** — false / false (triggers approval-request notification to approver group)
 4. **Approved** — false / false (internal pricing approval; locks proposal)
 5. **Sent** — false / false (auto-set when PDF exported)

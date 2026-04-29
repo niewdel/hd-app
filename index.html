@@ -3240,7 +3240,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
 
       <div style="font-family:var(--font-display);font-weight:700;font-size:14px;margin:18px 0 8px;color:var(--blk);">What I want from you</div>
       <p style="margin-bottom:8px;">
-        Walk every panel. Build a test proposal. Move it through the pipeline (Lead &rarr; Takeoff &rarr; Sent &rarr; Won). Export a PDF. Add a test client. Log a test work order. Then go through the panels you'd actually use day-to-day and tell me what's confusing, what's missing, what you'd change.
+        Walk every panel. Build a test proposal. Move it through the pipeline (Lead &rarr; Takeoff Done &rarr; Sent &rarr; Won). Export a PDF. Add a test client. Log a test work order. Then go through the panels you'd actually use day-to-day and tell me what's confusing, what's missing, what you'd change.
       </p>
       <p style="margin-bottom:6px;">The surfaces where your input matters most:</p>
       <ul style="padding-left:20px;margin-bottom:14px;">
@@ -3575,7 +3575,7 @@ var sitePlanDataUrl=null;
 // commit with `git tag vX.Y.Z`. Current workflow (2026-04-24+): accumulate
 // changes locally, push as a tagged beta once tests pass.
 // ─────────────────────────────────────────────────────────────────────────────
-var APP_VERSION = '1.0.1';
+var APP_VERSION = '1.0.2';
 // Update the sidebar pill as soon as the DOM is parsed
 (function(){
   try{
@@ -11685,8 +11685,7 @@ async function renderClients() {
         +'<div class="client-name">'+esc(c.name)+(c.company?' <span style="font-weight:400;color:var(--dgray);">- '+esc(c.company)+'</span>':'')+'</div>'
         +'<div class="client-sub">'+[c.phone,c.email].filter(Boolean).map(esc).join(' | ')+'</div>'
         +'</div>'
-        +'<button class="btn btn-sec btn-sm" onclick="event.stopPropagation();editClient('+c.id+')">Edit</button>'
-        +'<button class="btn-ico" onclick="event.stopPropagation();deleteClient('+c.id+')" style="color:var(--red);">×</button>';
+        +'<button class="btn btn-sec btn-sm" onclick="event.stopPropagation();editClient('+c.id+')">Edit</button>';
       var cb=_makeBulkCheckbox('clients-list',c.id);
       cb.style.marginRight='6px';
       cb.addEventListener('click',function(e){e.stopPropagation();});
@@ -11884,7 +11883,6 @@ function renderContactsCompaniesList(items){
     if(sub) html+='<div class="client-sub">'+sub+'</div>';
     html+='</div>';
     html+='<button class="btn btn-sec btn-sm" onclick="event.stopPropagation();editCompany('+co.id+')">Edit</button>';
-    html+='<button class="btn-ico" title="Delete company" onclick="event.stopPropagation();deleteCompany('+co.id+')" style="color:var(--red);">&#10005;</button>';
     html+='</div>';
   });
   list.innerHTML=html;
@@ -11938,9 +11936,12 @@ function _openCompanyModal(editing){
     +  '<label style="margin-top:10px;">Logo URL (optional override)</label><input id="cmpy-logo" type="url" placeholder="https://… (leave blank to auto-fetch from domain)" value="'+esc(editing&&editing.logo_url?editing.logo_url:'')+'"/>'
     +  '<label style="margin-top:10px;">Notes</label><textarea id="cmpy-notes" style="min-height:60px;">'+esc(editing&&editing.notes?editing.notes:'')+'</textarea>'
     +'</div>'
-    +'<div class="modal-foot" style="display:flex;justify-content:flex-end;gap:8px;">'
-    +  '<button class="btn btn-sec btn-sm" id="cmpy-cancel">Cancel</button>'
-    +  '<button class="btn btn-red btn-sm" id="cmpy-save">'+(editing?'Save':'Create Company')+'</button>'
+    +'<div class="modal-foot" style="display:flex;justify-content:'+(editing?'space-between':'flex-end')+';gap:8px;">'
+    +  (editing?'<button class="btn btn-sec btn-sm" id="cmpy-delete" style="color:var(--red);border-color:var(--red);">Delete Company</button>':'')
+    +  '<div style="display:flex;gap:8px;">'
+    +    '<button class="btn btn-sec btn-sm" id="cmpy-cancel">Cancel</button>'
+    +    '<button class="btn btn-red btn-sm" id="cmpy-save">'+(editing?'Save':'Create Company')+'</button>'
+    +  '</div>'
     +'</div>';
   modal.appendChild(box);
   document.body.appendChild(modal);
@@ -11948,6 +11949,24 @@ function _openCompanyModal(editing){
   document.getElementById('cmpy-close').onclick=close;
   document.getElementById('cmpy-cancel').onclick=close;
   modal.addEventListener('click',function(ev){ if(ev.target===modal) close(); });
+  if(editing){
+    var delBtn=document.getElementById('cmpy-delete');
+    if(delBtn){
+      delBtn.onclick=function(){
+        if(!confirm('Delete '+(editing.name||'this company')+'? Any linked contacts will remain but become unlinked. This cannot be undone.')) return;
+        fetch('/companies/'+editing.id,{method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
+          if(d && d.ok){
+            _contactsCompaniesCache=_contactsCompaniesCache.filter(function(x){return x.id!==editing.id;});
+            filterCompanies();
+            toast('Company deleted','ok');
+            close();
+          } else {
+            toast((d&&d.error)||'Delete failed','err');
+          }
+        }).catch(function(){ toast('Network error — try again','err'); });
+      };
+    }
+  }
   document.getElementById('cmpy-save').onclick=function(){
     var payload={
       name:document.getElementById('cmpy-name').value.trim(),
@@ -12611,6 +12630,7 @@ function openClientModal(prefill) {
   });
   document.getElementById('cm-company-id').value = (prefill && prefill.company_id) ? String(prefill.company_id) : '';
   _ensureCompaniesLoaded().then(function(){ _populateCompanyPicker(prefill && prefill.company_id); });
+  var delBtn=document.getElementById('cm-delete'); if(delBtn) delBtn.style.display='none';
   document.getElementById('client-modal').classList.remove('hidden');
 }
 
@@ -12631,6 +12651,7 @@ function editClient(id) {
   document.getElementById('cm-notes').value   = c.notes||'';
   document.getElementById('cm-company-id').value = c.company_id ? String(c.company_id) : '';
   _ensureCompaniesLoaded().then(function(){ _populateCompanyPicker(c.company_id || null); if(!c.company_id) document.getElementById('cm-company').value = c.company||''; });
+  var delBtn=document.getElementById('cm-delete'); if(delBtn) delBtn.style.display='';
   document.getElementById('client-modal').classList.remove('hidden');
 }
 
@@ -12698,6 +12719,21 @@ async function deleteClient(id) {
   try {
     await _safeFetch('/clients/delete/'+id,{method:'DELETE'});
     toast('Client deleted','ok');
+    renderClients();
+  } catch(e){
+    toast(e.message||'Failed to delete client','err');
+  }
+}
+
+async function deleteClientFromModal() {
+  if(!editingClientId) return;
+  var c = clientsList.find(function(x){return x.id===editingClientId;});
+  var label = c && c.name ? c.name : 'this client';
+  if(!confirm('Delete '+label+'? This cannot be undone.')) return;
+  try {
+    await _safeFetch('/clients/delete/'+editingClientId,{method:'DELETE'});
+    toast('Client deleted','ok');
+    closeClientModal();
     renderClients();
   } catch(e){
     toast(e.message||'Failed to delete client','err');
@@ -16273,7 +16309,7 @@ function _tourStepsForRole(role){
   var dashboard=step('[aria-label="Dashboard"]','Dashboard',
     'Your operations command center. Today\'s weather, scheduled jobs, the bid calendar, and incoming leads &mdash; all in one view.');
   var projects=step('[aria-label="Projects"]','Projects',
-    'Pipeline (Kanban), list, bid calendar, and map views of every job. Move proposals through stages &mdash; Lead &rarr; Takeoff &rarr; Waiting for Approval &rarr; Approved &rarr; Sent &rarr; Won.');
+    'Pipeline (Kanban), list, bid calendar, and map views of every job. Move proposals through stages &mdash; Lead &rarr; Takeoff Done &rarr; Waiting for Approval &rarr; Approved &rarr; Sent &rarr; Won.');
   var schedule=step('[aria-label="Schedule"]','Schedule',
     'Day, week, and month views of all crew assignments. Drag work orders onto days to assign. Weather is pinned at the top so you can see what\'s coming.');
   var contacts=step('[aria-label="Contacts"]','Contacts',
@@ -18612,9 +18648,12 @@ function addReminderFromProject(){
       <label>Email</label><input id="cm-email" type="email" placeholder="email@example.com"/>
       <label>Notes</label><textarea id="cm-notes" style="min-height:70px;"></textarea>
     </div>
-    <div class="modal-foot">
-      <button class="btn btn-sec" onclick="closeClientModal()">Cancel</button>
-      <button class="btn btn-red" onclick="saveClient()">Save Client</button>
+    <div class="modal-foot" style="display:flex;justify-content:space-between;gap:8px;">
+      <button class="btn btn-sec" id="cm-delete" onclick="deleteClientFromModal()" style="display:none;color:var(--red);border-color:var(--red);">Delete Client</button>
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <button class="btn btn-sec" onclick="closeClientModal()">Cancel</button>
+        <button class="btn btn-red" onclick="saveClient()">Save Client</button>
+      </div>
     </div>
   </div>
 </div>

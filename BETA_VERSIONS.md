@@ -36,6 +36,31 @@ Semver-ish: `MAJOR.MINOR.PATCH`. While in beta we stay on `1.x`:
 
 ---
 
+## v1.0.2 — 2026-04-29
+
+**Commit:** tagged `v1.0.2`
+**Supabase schema state:** RLS now enabled on every public table with a permissive `backend_only_deny_direct_access` policy that blocks `anon` + `authenticated` (`USING (false) WITH CHECK (false)`). Service role bypasses RLS, so backend stays unaffected. Function lockdown:
+- `public.purge_old_archived_proposals()` — `SET search_path = pg_catalog, public`; `EXECUTE` revoked from `PUBLIC, anon, authenticated` (pg_cron continues to run it as `postgres`).
+- `public.rls_auto_enable()` — `EXECUTE` revoked from `PUBLIC, anon, authenticated` (event trigger `ensure_rls` continues to fire as the table creator).
+- `hd_applicants` and `hd_companies` had RLS / policies / grants brought in line with the rest of the schema. `REVOKE ALL ... FROM anon, authenticated` applied to both.
+- All Supabase security advisors come back clean (`{"lints":[]}`).
+- Pipeline stage `Takeoff` (id 21) renamed to `Takeoff Done`.
+
+### Security
+- All Supabase security advisor findings resolved (1 ERROR, 1 INFO, 5 WARN → 0).
+  Anon key now hits `permission denied` on every table and both RPC functions
+  (`purge_old_archived_proposals`, `rls_auto_enable`).
+
+### UX
+- Pipeline: stage 2 renamed `Takeoff` → `Takeoff Done`. Tutorial + welcome
+  modal copy updated to match.
+- Contacts → Clients / Companies: removed the inline red ✕ delete buttons
+  from each card. Delete is now inside the Edit modal as a `Delete Client`
+  / `Delete Company` button anchored bottom-left in red, only visible in
+  edit mode. Standard `confirm()` flow; modal closes on success.
+
+---
+
 ## v1.0.1 — 2026-04-27
 
 **Commit:** tagged `v1.0.1`
