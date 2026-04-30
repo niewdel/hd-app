@@ -36,6 +36,23 @@ Semver-ish: `MAJOR.MINOR.PATCH`. While in beta we stay on `1.x`:
 
 ---
 
+## v1.1.4 — 2026-04-30
+
+**Commit:** tagged `v1.1.4`
+**Supabase schema state:** unchanged from v1.1.3. One-shot data backfill applied (see Data section).
+
+### Bug fix
+- **Pipeline card totals no longer drift from proposal totals.** When an existing linked proposal was edited in the builder, the proposal's own `total` was updated but the parent project row's stored `proposals.total` was left at the value it had when the proposal was first linked. Pipeline cards read that stored column directly, so they showed stale numbers (e.g. Fordham's Cleaners pipeline $19,928 vs. proposal $25,307; PB Express off by $300K). Project-summary view was always correct because it recomputes from `linked_proposals` live.
+
+### Frontend
+- `saveQuote()` (`index.html` ~line 10492): after a successful PATCH on an existing proposal, scan `pipelineProposals` for any project whose `snap.linked_proposals` contains this proposal's id, recompute via `calcProjectTotal`, and PATCH the project's `total` if it changed. The new-proposal-link branch (`_pendingProjectLink`) was already correct and is unchanged.
+- `updateProjectTotal()` at `index.html:6179` is the same shape as the new logic but had zero callers — leaving it in place for future use.
+
+### Data
+- Backfilled 7 stale projects with `UPDATE proposals SET total = sum(linked proposal totals)`. None had change orders so a flat sum was correct. Affected: PB Express - Grier Rd ($10K → $310,030), CSG Transportation Facility ($10K → $102,730), Michelin MARC ($125,903 → $155,403), The Loom at Fort Mill ($12,400 → $22,000), Fordham's Cleaners ($19,928 → $25,307), Woodlawn Community Fellowship ($232,547 → $235,247), Iredell Urgent Care MOB ($66,776 → $66,676). Audit query returns zero stale rows post-backfill.
+
+---
+
 ## v1.1.3 — 2026-04-30
 
 **Commit:** tagged `v1.1.3`
