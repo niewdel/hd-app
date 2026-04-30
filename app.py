@@ -50,6 +50,15 @@ def sb_admin_headers(prefer='return=representation'):
         'Prefer': prefer
     }
 
+def _notif_link(kind, ref_id):
+    """Build the deep-link string stored in hd_notifications.link.
+    Frontend parses 'kind:id' and dispatches to viewLead / viewApplicant /
+    openProjectSummary. Returns None when ref_id is missing so the column
+    stays NULL rather than carrying a broken link like 'lead:None'."""
+    if not ref_id:
+        return None
+    return f'{kind}:{ref_id}'
+
 @app.after_request
 def set_security_headers(response):
     # /lead-form and /applicants-form are intentionally embeddable on external
@@ -671,7 +680,8 @@ def pipeline_move(proposal_id):
                 username = session.get('username', '')
                 notif_rows = [{'recipient': u, 'type': 'approval', 'title': f'Approval Needed: {proposal_name}',
                               'body': f'{session.get("full_name", username)} submitted "{proposal_name}" for approval',
-                              'project_id': proposal_id, 'project_name': proposal_name, 'created_by': username} for u in approvers if u != username]
+                              'project_id': proposal_id, 'project_name': proposal_name,
+                              'link': _notif_link('project', proposal_id), 'created_by': username} for u in approvers if u != username]
                 if notif_rows:
                     http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=notif_rows, timeout=10)
                     # Email approvers
@@ -722,7 +732,8 @@ def approve_proposal(proposal_id):
             all_users = [u['username'] for u in all_users_r.json()] if all_users_r.status_code == 200 else []
             notif_rows = [{'recipient': u, 'type': 'approval', 'title': f'Approved: {proposal_name}',
                           'body': f'{session.get("full_name", username)} approved "{proposal_name}"',
-                          'project_id': proposal_id, 'project_name': proposal_name, 'created_by': username} for u in all_users if u != username]
+                          'project_id': proposal_id, 'project_name': proposal_name,
+                          'link': _notif_link('project', proposal_id), 'created_by': username} for u in all_users if u != username]
             if notif_rows:
                 http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=notif_rows, timeout=10)
                 # Email all users about approval
@@ -2155,6 +2166,8 @@ def notifications_send():
     project_id = data.get('project_id')
     project_name = data.get('project_name', '')
     email_notify = data.get('email_notify', False)
+    # Optional deep-link descriptor (e.g. 'lead:42'). Defaults to project link when project_id is set.
+    link_val = data.get('link') or _notif_link('project', project_id)
     created_by = session.get('username', '')
     if not recipients or not title:
         return jsonify({'ok': False, 'error': 'recipients and title required'}), 400
@@ -2167,7 +2180,7 @@ def notifications_send():
 
         rows = [{'recipient': r, 'type': ntype, 'title': title, 'body': body,
                  'project_id': project_id, 'project_name': project_name,
-                 'created_by': created_by} for r in recipients if r != created_by]
+                 'link': link_val, 'created_by': created_by} for r in recipients if r != created_by]
         if rows:
             http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=rows, timeout=10)
 
@@ -2718,6 +2731,7 @@ def public_proposal_approve(token):
                 'body': notif_body,
                 'project_id': pid,
                 'project_name': proj_name,
+                'link': _notif_link('project', pid),
                 'created_by': 'system'
             }
             http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=notif_row, timeout=5)
@@ -2794,6 +2808,10 @@ def submit_lead():
         r = http.post(f"{SUPABASE_URL}/rest/v1/hd_leads", json=row, headers=sb_admin_headers(), timeout=10)
         if r.status_code >= 300:
             return jsonify({'ok': False, 'error': 'Failed to save lead'}), 400
+        try:
+            new_lead_id = (r.json() or [{}])[0].get('id')
+        except Exception:
+            new_lead_id = None
         # Notify all admins and standard users
         try:
             ur = http.get(sb_url('hd_users', '?active=eq.true&role=neq.field&select=username'), headers=sb_admin_headers(), timeout=5)
@@ -2801,7 +2819,8 @@ def submit_lead():
                 company = str(d.get('company', '')).strip()
                 notif_title = f'New lead: {name}' + (f' ({company})' if company else '')
                 notif_body = str(d.get('description', '')).strip()[:200] or 'New quote request from the website'
-                notif_rows = [{'recipient': u['username'], 'type': 'info', 'title': notif_title, 'body': notif_body, 'created_by': 'system'} for u in ur.json()]
+                link_val = _notif_link('lead', new_lead_id)
+                notif_rows = [{'recipient': u['username'], 'type': 'info', 'title': notif_title, 'body': notif_body, 'link': link_val, 'created_by': 'system'} for u in ur.json()]
                 if notif_rows:
                     http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=notif_rows, timeout=5)
         except Exception:
@@ -3292,6 +3311,10 @@ def submit_applicant():
                 except Exception:
                     pass
             return jsonify({'ok': False, 'error': 'Could not save application. Try again.'}), 500
+        try:
+            new_applicant_id = (r.json() or [{}])[0].get('id')
+        except Exception:
+            new_applicant_id = None
 
         # In-app notification fan-out to office users
         try:
@@ -3300,7 +3323,8 @@ def submit_applicant():
                 pos = row['position'] or 'Unspecified role'
                 title = f'New applicant: {name}'
                 body = f'{pos} — {_fmt_years_exp(row.get("years_exp"))}, {row["role_type"] or "Role TBD"}'
-                rows = [{'recipient': u['username'], 'type': 'info', 'title': title, 'body': body, 'created_by': 'system'} for u in ur.json()]
+                link_val = _notif_link('applicant', new_applicant_id)
+                rows = [{'recipient': u['username'], 'type': 'info', 'title': title, 'body': body, 'link': link_val, 'created_by': 'system'} for u in ur.json()]
                 http.post(sb_url('hd_notifications', ''), headers=sb_headers(), json=rows, timeout=5)
         except Exception:
             pass

@@ -36,6 +36,31 @@ Semver-ish: `MAJOR.MINOR.PATCH`. While in beta we stay on `1.x`:
 
 ---
 
+## v1.1.3 — 2026-04-30
+
+**Commit:** tagged `v1.1.3`
+**Supabase schema state:** unchanged from v1.1.2. (The `hd_notifications.link` column already existed; this release is the first to populate it.)
+
+### UX
+- **Notifications are now clickable deep-links.** Clicking a "new lead" notification jumps to Contacts → Leads with the lead modal open; "new applicant" jumps to Contacts → Applicants with the applicant modal open; approval / public-approval notifications continue to land on the project summary. Old rows without a link still fall through to the previous `project_id` behavior, so nothing regresses.
+
+### Backend
+- New helper `_notif_link(kind, ref_id)` returns `'kind:id'` or `None`. Used at every `hd_notifications` insert site so the `link` column is populated:
+  - `/leads/submit` → `lead:<id>`
+  - `/applicants/submit` → `applicant:<id>`
+  - `/pipeline/move/<id>` (Waiting for Approval) → `project:<id>`
+  - `/pipeline/approve/<id>` → `project:<id>`
+  - `/p/<token>` (public approval) → `project:<id>`
+  - `/notifications/send` accepts an optional `link` in the body; defaults to `project:<id>` when `project_id` is set.
+
+### Frontend
+- New `_routeNotification(n)` parses the link (`kind:id`) and dispatches via `showPanel('contacts')` + `showContactsTab(...)` + `viewLead`/`viewApplicant`, or `openProjectSummary` for project links. Click handler at `index.html:15787-15790` now calls it instead of inlining the old project-only branch.
+
+### PDF
+- **Tightened spacing between site-plan heading and image.** Old layout sat the image area ~0.5"/0.58" below the slot top and then vertically centered the image inside that area, compounding into a wide gap under short headings. The image now sits a small fixed gap (~0.12"–0.16") below the heading and top-aligns within the slot, so the heading and image visually belong together.
+
+---
+
 ## v1.1.2 — 2026-04-30
 
 **Commit:** tagged `v1.1.2`

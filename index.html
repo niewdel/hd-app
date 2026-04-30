@@ -3571,7 +3571,7 @@ var sitePlans=[];
 // commit with `git tag vX.Y.Z`. Current workflow (2026-04-24+): accumulate
 // changes locally, push as a tagged beta once tests pass.
 // ─────────────────────────────────────────────────────────────────────────────
-var APP_VERSION = '1.1.2';
+var APP_VERSION = '1.1.3';
 // Update the sidebar pill as soon as the DOM is parsed
 (function(){
   try{
@@ -15657,6 +15657,39 @@ function loadAllUsers(){
   }).catch(function(){});
 }
 
+// Parse the notification's `link` field (format: "kind:id") and dispatch.
+// Falls back to legacy `project_id` for rows that don't have a link set.
+function _routeNotification(n){
+  var link=((n&&n.link)||'').toString().trim();
+  if(link){
+    var i=link.indexOf(':');
+    var kind=i>0?link.slice(0,i):link;
+    var id=i>0?parseInt(link.slice(i+1),10):NaN;
+    if(kind==='lead'&&id){
+      toggleNotifPanel();
+      showPanel('contacts');
+      showContactsTab('leads');
+      // viewLead reads from the leads cache populated when the panel renders.
+      setTimeout(function(){if(typeof viewLead==='function')viewLead(id);},80);
+      return;
+    }
+    if(kind==='applicant'&&id){
+      toggleNotifPanel();
+      showPanel('contacts');
+      showContactsTab('applicants');
+      setTimeout(function(){if(typeof viewApplicant==='function')viewApplicant(id);},80);
+      return;
+    }
+    if(kind==='project'&&id){
+      toggleNotifPanel();
+      openProjectSummary(id);
+      return;
+    }
+  }
+  // Legacy fallback for rows without a link
+  if(n&&n.project_id){toggleNotifPanel();openProjectSummary(n.project_id);}
+}
+
 function toggleNotifPanel(){
   var panel=document.getElementById('notif-panel');
   var backdrop=document.getElementById('notif-backdrop');
@@ -15783,10 +15816,10 @@ function renderNotifList(){
       var mins=Math.floor((now-nd)/60000);
       tm.textContent=mins<1?'now':mins<60?mins+'m':mins<1440?Math.floor(mins/60)+'h':nd.toLocaleDateString('en-US',{month:'short',day:'numeric'});
       row.appendChild(tm);
-      // Click: mark read + navigate if project
+      // Click: mark read + deep-link via n.link, with legacy project_id fallback.
       row.addEventListener('click',function(){
         if(!n.read){fetch('/notifications/read/'+n.id,{method:'POST'});n.read=true;row.classList.remove('unread');}
-        if(n.project_id){toggleNotifPanel();openProjectSummary(n.project_id);}
+        _routeNotification(n);
       });
       c.appendChild(row);
     });

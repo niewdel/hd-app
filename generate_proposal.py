@@ -482,8 +482,12 @@ class SitePlanPage(Flowable):
         c.setFont('Helvetica-Bold', head_size)
         c.setFillColor(BLACK)
         c.drawCentredString(self._aw/2, slot_top - head_offset, heading)
-        # Image area: below heading, with a little top/bottom breathing room
-        img_top = slot_top - (0.42*inch if stacked else 0.5*inch) - 0.08*inch
+        # Image area: hug the heading. Old layout placed img_top ~0.58"/0.50"
+        # below the slot top *and* vertically centered the image within that
+        # area, which compounded into a lot of whitespace under short headings.
+        # Now: small fixed gap below the heading + top-aligned image.
+        head_gap = 0.12*inch if stacked else 0.16*inch
+        img_top = slot_top - head_offset - head_gap
         img_bot = slot_bot + (0.08*inch if stacked else 0)
         max_h = img_top - img_bot
         if max_h <= 0:
@@ -500,7 +504,7 @@ class SitePlanPage(Flowable):
                 dw = iw * scale
                 dh = ih * scale
                 x = (self._aw - dw) / 2
-                y = img_bot + (max_h - dh) / 2  # vertically center within the slot
+                y = img_top - dh  # top-align: image hugs the heading
                 c.drawImage(img_path, x, y, width=dw, height=dh,
                             preserveAspectRatio=True, mask='auto')
                 os.unlink(img_path)
