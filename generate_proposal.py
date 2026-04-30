@@ -298,18 +298,11 @@ def bid_table(items, st):
         [Paragraph('ITEM &amp; DESCRIPTION', ch_l), Paragraph('QTY',ch_r),
          Paragraph('UNIT',ch_r), Paragraph('PRICE',ch_r), Paragraph('SUBTOTAL',ch_r)],
     ]
-    div_rows = set()  # track which rows are division headers
 
-    # Group items by division, preserving order of first appearance
-    current_div = None
+    # Flat list — no division grouping. Misclassified items (e.g. concrete curb
+    # tagged as asphalt) were surfacing under the wrong division header; until
+    # the upstream classifier is fixed, render items inline.
     for item in items:
-        div = item.get('division', '')
-        if div and div != current_div:
-            current_div = div
-            div_rows.add(len(rows))
-            rows.append([
-                Paragraph(f'<b>{div.upper()}</b>', div_st), '', '', '', ''
-            ])
         name  = item.get('name','')
         desc  = item.get('description','')
         qty   = item.get('qty','')
@@ -345,22 +338,10 @@ def bid_table(items, st):
         ('ALIGN',(1,0),(-1,-1),'RIGHT'),
         ('BOX',(0,0),(-1,-1),0.5,TBLBORD),
     ]
-    # Division header rows: span all columns, light background, top border
-    for r in div_rows:
-        ts.append(('SPAN', (0,r), (-1,r)))
-        ts.append(('BACKGROUND', (0,r), (-1,r), colors.HexColor('#E8E8E8')))
-        ts.append(('TOPPADDING', (0,r), (-1,r), 5))
-        ts.append(('BOTTOMPADDING', (0,r), (-1,r), 4))
-        ts.append(('LINEABOVE', (0,r), (-1,r), 0.5, MGRAY))
-    # Alternating row colors (skip division headers)
-    alt = False
+    # Alternating row colors
     for i in range(2, len(rows)):
-        if i in div_rows:
-            alt = False
-            continue
-        if alt:
+        if (i - 2) % 2 == 1:
             ts.append(('BACKGROUND',(0,i),(-1,i),ROWALT))
-        alt = not alt
     t.setStyle(TableStyle(ts))
     return t
 

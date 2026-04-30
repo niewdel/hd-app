@@ -36,6 +36,16 @@ Semver-ish: `MAJOR.MINOR.PATCH`. While in beta we stay on `1.x`:
 
 ---
 
+## v1.1.1 — 2026-04-30
+
+**Commit:** tagged `v1.1.1`
+**Supabase schema state:** unchanged from v1.1.0.
+
+### Fix
+- **Proposal PDF: removed division grouping in the BID ITEMS table.** The grouped layout was silently mis-bucketing items: any line whose payload arrived with an empty `division` (e.g., concrete curb & gutter, pavement markings — both rendered without a `badgeCls` upstream) was inheriting the last division header in scope, so concrete and striping rows were appearing under "ASPHALT". Until the upstream classifier (`getLineItemsForPayload` at `index.html:10299` derives division from `badgeCls`, while the builder breakdown uses `_divisionForItem(item)` which derives from `trade` — they disagree) is reconciled, the PDF renders bid items as a flat list.
+
+---
+
 ## v1.1.0 — 2026-04-30
 
 **Commit:** tagged `v1.1.0`
