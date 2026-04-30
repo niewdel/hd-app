@@ -255,6 +255,15 @@ CRM-level organization entities. A company can be a customer, a subcontractor, o
 | PATCH | `/tasks/<id>` | yes | Update |
 | DELETE | `/tasks/<id>` | yes | Delete |
 
+### Site Plans (multi-plan, per project)
+| Method | Route | Description |
+|---|---|---|
+| POST | `/upload/site-plan/<int:project_id>` | Upload one plan (50MB max). Appends to `snap.site_plans`. Optional `label` form field. Returns `{ok, url, plan, count}`. Caps at `SITE_PLANS_MAX=8`. |
+| DELETE | `/site-plan/<int:project_id>` | Body `{index}`. Splices entry from `snap.site_plans`; best-effort deletes the underlying Storage blob. |
+| PATCH | `/site-plan/<int:project_id>` | Body `{plans:[{url\|data, label, content_type}, ...]}`. Replaces the whole array (used for reorder + label edits in one call). Validates count ≤ 8. |
+
+Storage path is now unique per upload: `project-{id}/site-plan-{uuid8}.{ext}` (no more upsert overwrite). PDF generator (`generate_proposal.py` `SitePlanPage`) loops over `data['site_plans']` with legacy fallback to `site_plan_image`/`site_plan_url`. Per-plan `label` becomes the page heading — `Exhibit A — {label}` if set, else `Exhibit A — Site Plan {n} of {total}`. Frontend helpers: `renderSitePlans(container, opts)` (shared list UI with drag-reorder + label inputs + delete), `_normalizeSitePlans(snap)` (legacy → array), `_flushBuilderSitePlans(projectId)` (post-save base64 → Storage upload). Builder's `window.sitePlans` is the in-memory array. **Legacy `snap.site_plan_url` / `snap.site_plan_data` fields are kept untouched for one release as a safety net** — new code reads `site_plans` first; cleanup migration is a follow-up.
+
 ### Other Routes
 - `/boot/data` (GET, auth) — parallel server-side fetch of quotes + stages + proposals
 - `/roadmap/*` — Roadmap CRUD (admin)

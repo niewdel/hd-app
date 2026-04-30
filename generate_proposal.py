@@ -394,10 +394,13 @@ def total_line(total):
 class SitePlanPage(Flowable):
     """Renders the uploaded site plan image at top of page with Exhibit A heading.
     Accepts base64 data URL, remote image URL, or remote PDF URL."""
-    def __init__(self, image_data=None, site_plan_url=None):
+    def __init__(self, image_data=None, site_plan_url=None, label='', index=1, total=1):
         super().__init__()
         self._image_data = image_data
         self._site_plan_url = site_plan_url
+        self._label = (label or '').strip()
+        self._index = index
+        self._total = max(1, total)
         self._tmp_path = None
 
     def _resolve_image(self):
@@ -471,7 +474,13 @@ class SitePlanPage(Flowable):
         # Draw heading at top
         c.setFont('Helvetica-Bold', 16)
         c.setFillColor(BLACK)
-        c.drawCentredString(self._aw/2, self._ah - 0.25*inch, 'Exhibit A — Site Plan')
+        if self._label:
+            heading = 'Exhibit A — ' + (self._label[:60])
+        elif self._total > 1:
+            heading = 'Exhibit A — Site Plan {} of {}'.format(self._index, self._total)
+        else:
+            heading = 'Exhibit A — Site Plan'
+        c.drawCentredString(self._aw/2, self._ah - 0.25*inch, heading)
         img_top = self._ah - heading_h - 0.15*inch
 
         img_path = self._resolve_image()
@@ -942,8 +951,18 @@ def build(data, out_path):
 
     story.append(PageBreak())
 
-    if data.get('site_plan_image') or data.get('site_plan_url'):
-        story.append(SitePlanPage(data.get('site_plan_image'), data.get('site_plan_url')))
+    plans = data.get('site_plans') or []
+    if not plans:
+        if data.get('site_plan_image'):
+            plans = [{'data': data['site_plan_image'], 'label': ''}]
+        elif data.get('site_plan_url'):
+            plans = [{'url': data['site_plan_url'], 'label': ''}]
+    total = len(plans)
+    for i, p in enumerate(plans):
+        story.append(SitePlanPage(
+            p.get('data'), p.get('url'),
+            label=p.get('label', ''), index=i+1, total=total,
+        ))
         story.append(PageBreak())
 
     story += tc_pages(st)

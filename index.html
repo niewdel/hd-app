@@ -1662,7 +1662,6 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
           <div class="actions-menu" id="topbar-actions-menu"></div>
         </div>
       </div>
-      <input type="file" id="site-plan-input" accept="image/*" style="display:none" onchange="setSitePlan(this)"/>
       <input type="file" id="profile-photo-input" accept="image/*" style="display:none" onchange="handleProfilePhotoSelected(this)"/>
     </div>
 
@@ -2029,12 +2028,7 @@ body.dark .metrics-sticky{background:rgba(9,9,11,0.90);border-top-color:rgba(255
             </div>
             <div class="mc-card" style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Site Plan</span></div>
-              <div class="card-body" id="ps-site-plan">
-                <div class="empty-state">
-                  <div class="empty-state-desc">No site plan uploaded.</div>
-                  <label class="btn btn-sec btn-sm" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Upload Site Plan</label>
-                </div>
-              </div>
+              <div class="card-body" id="ps-site-plan"></div>
             </div>
             <div class="mc-card" style="margin-bottom:var(--card-gap);">
               <div class="card-hdr"><span class="card-title">Files</span></div>
@@ -3569,13 +3563,15 @@ var clients=[];
 var sender={name:'',email:'',phone:''};
 var selectedClient={name:'',company:'',phone:'',email:''};
 var sitePlanDataUrl=null;
+var SITE_PLANS_MAX=8;
+var sitePlans=[];
 // ─────────────────────────────────────────────────────────────────────────────
 // APP_VERSION: single source of truth for the beta version string. Bump this
 // when cutting a new beta release. Also update BETA_VERSIONS.md and tag the
 // commit with `git tag vX.Y.Z`. Current workflow (2026-04-24+): accumulate
 // changes locally, push as a tagged beta once tests pass.
 // ─────────────────────────────────────────────────────────────────────────────
-var APP_VERSION = '1.0.2';
+var APP_VERSION = '1.1.0';
 // Update the sidebar pill as soon as the DOM is parsed
 (function(){
   try{
@@ -5555,7 +5551,7 @@ function _renderWxHero(el,data,idx){
   var rainPill='';
   if(rain>50){
     var rainWhen=isToday?'today':dayShort;
-    rainPill='<div style="position:absolute;top:14px;right:14px;background:rgba(204,0,0,0.92);color:#fff;font-size:11px;font-weight:600;padding:6px 10px;border-radius:999px;z-index:3;letter-spacing:0.2px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">'+rain+'% rain '+rainWhen+' \u2014 plan crew</div>';
+    rainPill='<div style="position:absolute;bottom:14px;right:14px;background:rgba(204,0,0,0.92);color:#fff;font-size:11px;font-weight:600;padding:6px 10px;border-radius:999px;z-index:3;letter-spacing:0.2px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">'+rain+'% rain '+rainWhen+'</div>';
   }
   var hiloHtml=(hi!==null&&lo!==null)?('H: '+hi+'\u00B0  L: '+lo+'\u00B0'):'';
   var gustsHtml=(gusts>wind)?('<div style="font-size:11px;opacity:0.85;margin-top:2px;">Gusts '+gusts+' mph</div>'):'';
@@ -6597,19 +6593,23 @@ function _renderProjectSummaryInner(proj){
 
   // Material tracking moved to work orders
 
-  // ── Site Plan ──
+  // ── Site Plans (multi) ──
   var psSP=document.getElementById('ps-site-plan');
   if(psSP){
-    var spUrl=snap.site_plan_url;
-    if(spUrl){
-      var isPdf=spUrl.toLowerCase().indexOf('.pdf')>-1;
-      psSP.innerHTML=(isPdf
-        ?'<iframe src="'+esc(spUrl)+'" style="width:100%;height:300px;border:1px solid var(--bdr);border-radius:6px;" frameborder="0"></iframe>'
-        :'<img src="'+esc(spUrl)+'" alt="Site plan" style="max-width:100%;border-radius:6px;border:1px solid var(--bdr);"/>')
-        +'<div style="margin-top:8px;"><label class="btn btn-sec btn-sm" style="cursor:pointer;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Replace</label></div>';
-    } else {
-      psSP.innerHTML='<label class="btn btn-sec btn-sm" style="cursor:pointer;"><input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadProjectSitePlan(this)"/>Upload Site Plan</label>';
-    }
+    var psPlans=_normalizeSitePlans(snap);
+    renderSitePlans(psSP,{
+      plans:psPlans,
+      projectId:_currentProjectId,
+      onChange:function(updated){
+        // Mirror the live array back into the cached snap so other UI reads stay consistent.
+        var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
+        if(proj){
+          var s=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
+          s.site_plans=updated.slice();
+          proj.snap=s;
+        }
+      }
+    });
   }
 
   // ── Job Costing Card ──
@@ -7480,20 +7480,257 @@ function openWorkOrderModal(editWoId){
   });
 }
 
+// ── Site plans: normalize legacy fields into the array shape ──
+function _normalizeSitePlans(snap){
+  if(snap && Array.isArray(snap.site_plans)) return snap.site_plans.slice();
+  if(snap && snap.site_plan_url) return [{url:snap.site_plan_url,label:''}];
+  if(snap && snap.site_plan_data) return [{data:snap.site_plan_data,label:''}];
+  return [];
+}
+function _planIsPdf(p){
+  if(!p) return false;
+  if(p.content_type && p.content_type.indexOf('pdf')>=0) return true;
+  if(p.url && p.url.toLowerCase().indexOf('.pdf')>=0) return true;
+  if(p.data && p.data.indexOf('application/pdf')>=0) return true;
+  return false;
+}
+function _planSrc(p){return (p&&(p.url||p.data))||'';}
+
+// Renders the site-plans editor (thumbnails + label + drag-reorder + add/delete).
+//   container: target DOM element (cleared + repopulated)
+//   opts: {plans: array, projectId: int|null, onChange: fn(plans, action)}
+//     - plans: live array; helper mutates in place
+//     - projectId: when set, mutations call /upload, /site-plan/<id> endpoints. When null, builder mode (in-memory base64 only).
+//     - onChange: optional callback after each mutation; receives updated plans + action ('add'|'delete'|'reorder'|'label').
+function renderSitePlans(container, opts){
+  if(!container) return;
+  opts=opts||{};
+  var plans=opts.plans||[];
+  var projectId=opts.projectId||null;
+  var onChange=opts.onChange||function(){};
+  container.innerHTML='';
+  var dragIdx=null;
+
+  function rerender(){renderSitePlans(container,{plans:plans,projectId:projectId,onChange:onChange});}
+
+  function persistFullArray(action){
+    onChange(plans,action);
+    if(!projectId) return;
+    fetch('/site-plan/'+projectId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({plans:plans})})
+      .then(function(r){return r.json();}).then(function(d){if(!d.ok)toast(d.error||'Save failed','err');})
+      .catch(function(e){toast('Save error: '+(e.message||''),'err');});
+  }
+
+  var wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;gap:12px;overflow-x:auto;padding:4px 2px 8px;';
+
+  plans.forEach(function(plan,idx){
+    var card=document.createElement('div');
+    card.draggable=true;
+    card.style.cssText='flex:0 0 220px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;';
+    card.addEventListener('dragstart',function(ev){
+      dragIdx=idx;card.style.opacity='0.4';
+      try{ev.dataTransfer.effectAllowed='move';ev.dataTransfer.setData('text/plain',String(idx));}catch(_){}
+    });
+    card.addEventListener('dragend',function(){card.style.opacity='';dragIdx=null;});
+    card.addEventListener('dragover',function(ev){ev.preventDefault();try{ev.dataTransfer.dropEffect='move';}catch(_){}});
+    card.addEventListener('drop',function(ev){
+      ev.preventDefault();
+      if(dragIdx===null||dragIdx===idx) return;
+      var moved=plans.splice(dragIdx,1)[0];
+      plans.splice(idx,0,moved);
+      dragIdx=null;
+      persistFullArray('reorder');
+      rerender();
+    });
+
+    var thumb=document.createElement('div');
+    thumb.style.cssText='height:140px;background:var(--lgray);display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid var(--bdr);';
+    var src=_planSrc(plan);
+    if(src){
+      if(_planIsPdf(plan)){
+        var ifr=document.createElement('iframe');
+        ifr.src=src;
+        ifr.style.cssText='width:100%;height:100%;border:0;pointer-events:none;';
+        thumb.appendChild(ifr);
+      } else {
+        var img=document.createElement('img');
+        img.src=src;img.alt='Site plan';
+        img.style.cssText='max-width:100%;max-height:100%;object-fit:contain;';
+        thumb.appendChild(img);
+      }
+    } else {
+      thumb.textContent='No preview';
+      thumb.style.color='var(--dgray)';thumb.style.fontSize='12px';
+    }
+
+    var body=document.createElement('div');
+    body.style.cssText='padding:8px;display:flex;flex-direction:column;gap:6px;';
+    var labelInput=document.createElement('input');
+    labelInput.type='text';labelInput.placeholder='Label (e.g., Site Layout)';
+    labelInput.value=plan.label||'';labelInput.maxLength=120;
+    labelInput.style.cssText='width:100%;font-size:12px;padding:6px 8px;border:1px solid var(--bdr);border-radius:4px;background:var(--bg);color:var(--blk);box-sizing:border-box;';
+    var labelTimer=null;
+    labelInput.addEventListener('input',function(){
+      plan.label=labelInput.value;
+      clearTimeout(labelTimer);
+      labelTimer=setTimeout(function(){persistFullArray('label');},500);
+    });
+
+    var actions=document.createElement('div');
+    actions.style.cssText='display:flex;gap:6px;align-items:center;justify-content:space-between;';
+    var dragInfo=document.createElement('span');
+    dragInfo.textContent='\u22ee\u22ee drag';
+    dragInfo.style.cssText='font-size:11px;color:var(--dgray);user-select:none;cursor:grab;';
+    var openBtn=document.createElement('a');
+    openBtn.href=src||'#';openBtn.target='_blank';openBtn.rel='noopener';
+    openBtn.textContent='Open';
+    openBtn.style.cssText='font-size:11px;color:var(--red);text-decoration:none;';
+    if(!src)openBtn.style.display='none';
+    var delBtn=document.createElement('button');
+    delBtn.type='button';delBtn.textContent='Delete';
+    delBtn.className='btn btn-sec btn-sm';
+    delBtn.style.cssText='padding:4px 8px;font-size:11px;';
+    delBtn.addEventListener('click',function(){
+      if(!confirm('Delete this site plan?')) return;
+      if(projectId){
+        fetch('/site-plan/'+projectId,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({index:idx})})
+          .then(function(r){return r.json();}).then(function(d){
+            if(d.ok){plans.splice(idx,1);onChange(plans,'delete');rerender();toast('Site plan removed','ok');}
+            else toast(d.error||'Delete failed','err');
+          }).catch(function(e){toast('Delete error: '+(e.message||''),'err');});
+      } else {
+        plans.splice(idx,1);onChange(plans,'delete');rerender();
+      }
+    });
+    actions.appendChild(dragInfo);
+    actions.appendChild(openBtn);
+    actions.appendChild(delBtn);
+
+    body.appendChild(labelInput);
+    body.appendChild(actions);
+    card.appendChild(thumb);
+    card.appendChild(body);
+    wrap.appendChild(card);
+  });
+
+  if(plans.length<SITE_PLANS_MAX){
+    var addTile=document.createElement('label');
+    addTile.style.cssText='flex:0 0 220px;min-height:228px;border:2px dashed var(--bdr);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;background:transparent;color:var(--dgray);font-size:13px;';
+    addTile.innerHTML='<div style="font-size:28px;line-height:1;">+</div><div>Add Site Plan</div><div style="font-size:11px;opacity:0.7;text-align:center;">PDF, PNG, JPG, WebP \u00b7 50MB</div>';
+    var fileInput=document.createElement('input');
+    fileInput.type='file';fileInput.accept='image/*,.pdf';fileInput.multiple=true;fileInput.style.display='none';
+    fileInput.addEventListener('change',function(){
+      var files=Array.prototype.slice.call(fileInput.files||[]);
+      if(!files.length) return;
+      var room=SITE_PLANS_MAX-plans.length;
+      if(files.length>room){toast('Only '+room+' more plan(s) allowed (max '+SITE_PLANS_MAX+').','err');files=files.slice(0,room);}
+      (async function(){
+        var added=0,failed=0;
+        for(var i=0;i<files.length;i++){
+          var file=files[i];
+          if(projectId){
+            try{
+              var fd=new FormData();fd.append('file',file);
+              var r=await fetch('/upload/site-plan/'+projectId,{method:'POST',body:fd});
+              var d=await r.json();
+              if(d.ok&&d.plan){plans.push(d.plan);added++;}
+              else{toast(d.error||'Upload failed','err');failed++;}
+            }catch(e){toast('Upload error: '+(e.message||''),'err');failed++;}
+          } else {
+            await new Promise(function(resolve){
+              var rdr=new FileReader();
+              rdr.onload=function(ev){plans.push({data:ev.target.result,label:'',content_type:file.type||''});added++;resolve();};
+              rdr.onerror=function(){failed++;toast('File read failed','err');resolve();};
+              rdr.readAsDataURL(file);
+            });
+          }
+        }
+        if(added){onChange(plans,'add');toast(added+' site plan'+(added===1?'':'s')+' added','ok');}
+        rerender();
+      })();
+    });
+    addTile.appendChild(fileInput);
+    wrap.appendChild(addTile);
+  }
+
+  container.appendChild(wrap);
+}
+
+// Builder modal: lets the user manage proposal site plans before saving.
+function openBuilderSitePlansModal(){
+  var ex=document.getElementById('site-plans-modal');if(ex)ex.remove();
+  var pid=lastSavedQuoteId||null;
+  var modal=document.createElement('div');modal.id='site-plans-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;';
+  var box=document.createElement('div');box.className='dk-card';
+  box.style.cssText='border-radius:10px;padding:20px;width:760px;max-width:96vw;max-height:90vh;overflow-y:auto;';
+  var head=document.createElement('div');
+  head.innerHTML='<h3 style="margin:0 0 6px;font-size:15px;">Site Plans</h3>'
+    +'<p style="margin:0 0 12px;font-size:12px;color:var(--dgray);">Attach up to '+SITE_PLANS_MAX+' plans. Each becomes a separate \u201cExhibit A\u201d page in the exported PDF, in the order shown. Optional labels appear as page headings.</p>';
+  box.appendChild(head);
+  var listEl=document.createElement('div');box.appendChild(listEl);
+  // Builder mode: when proposal isn't saved yet, plans live in-memory; when it has an id, they're in Storage and we hit the server.
+  renderSitePlans(listEl,{plans:sitePlans,projectId:pid,onChange:function(){_proposalDirty=true;updateSitePlanButtonLabel();}});
+  var foot=document.createElement('div');
+  foot.style.cssText='display:flex;justify-content:flex-end;gap:8px;margin-top:14px;';
+  var closeBtn=document.createElement('button');closeBtn.className='btn btn-sec';closeBtn.textContent='Close';
+  closeBtn.addEventListener('click',function(){modal.remove();});
+  foot.appendChild(closeBtn);
+  box.appendChild(foot);
+  modal.appendChild(box);
+  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+}
+
+function updateSitePlanButtonLabel(){
+  var spBtn=document.getElementById('site-plan-btn');
+  if(!spBtn) return;
+  var n=sitePlans.length;
+  if(n===0){spBtn.textContent='Upload Site Plan';spBtn.style.borderColor='';}
+  else{spBtn.textContent=n+' Site Plan'+(n===1?'':'s')+' Loaded';spBtn.style.borderColor='#27500A';}
+}
+
+// Upload pending in-memory base64 plans to Supabase Storage after a builder save.
+// Replaces each {data,...} entry in sitePlans with the {url,...} returned by the server.
+async function _flushBuilderSitePlans(projectId){
+  if(!projectId||!sitePlans.length) return;
+  var dirty=false;
+  for(var i=0;i<sitePlans.length;i++){
+    var p=sitePlans[i];
+    if(p && p.data && !p.url){
+      try{
+        var ct=p.content_type||(p.data.split(';')[0].split(':')[1])||'application/octet-stream';
+        var ext=(ct.split('/')[1]||'png').replace('jpeg','jpg');
+        var bin=atob(p.data.split(',')[1]||'');
+        var arr=new Uint8Array(bin.length);for(var k=0;k<bin.length;k++)arr[k]=bin.charCodeAt(k);
+        var blob=new Blob([arr],{type:ct});
+        var fd=new FormData();fd.append('file',blob,'plan.'+ext);
+        if(p.label)fd.append('label',p.label);
+        var r=await fetch('/upload/site-plan/'+projectId,{method:'POST',body:fd});
+        var d=await r.json();
+        if(d.ok&&d.plan){sitePlans[i]=d.plan;dirty=true;}
+      }catch(e){/* leave as base64; PDF gen still works */}
+    }
+  }
+  return dirty;
+}
+
+// Replaces the legacy single-file uploader on the project summary card.
 function uploadProjectSitePlan(input){
-  if(!input.files||!input.files[0]||!_currentProjectId)return;
+  // Compatibility shim: legacy onchange handlers may still call this.
+  // Treat as "add a single plan via the new pipeline".
+  if(!input||!input.files||!input.files[0]||!_currentProjectId)return;
   var file=input.files[0];
-  var fd=new FormData();
-  fd.append('file',file);
+  var fd=new FormData();fd.append('file',file);
   toast('Uploading site plan...','ok');
   fetch('/upload/site-plan/'+_currentProjectId,{method:'POST',body:fd})
     .then(function(r){return r.json();}).then(function(d){
       if(d.ok){
-        // Update local pipeline data so renderProjectSummary picks it up
         var proj=pipelineProposals.find(function(p){return p.id===_currentProjectId;});
         if(proj){
           var snap=typeof proj.snap==='string'?JSON.parse(proj.snap):proj.snap||{};
-          snap.site_plan_url=d.url;
+          var arr=_normalizeSitePlans(snap);arr.push(d.plan);snap.site_plans=arr;
           proj.snap=snap;
         }
         toast('Site plan uploaded','ok');
@@ -8166,7 +8403,7 @@ var TOPBAR_MENU = {
     {label:'Export PDF',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',fn:'exportPDF()'},
     {sep:true},
     {label:'Email Proposal',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',fn:'openEmailModal()'},
-    {label:'Upload Site Plan',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',fn:"document.getElementById('site-plan-input').click()"},
+    {label:'Site Plans',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',fn:"openBuilderSitePlansModal()"},
     {sep:true},
     {label:'Reset Form',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',fn:'resetAll()',cls:'danger'}
   ],
@@ -10090,13 +10327,19 @@ async function exportPDF(){
     var p=buildPayload();
     // Always use today's date on exported PDFs
     p.date=new Date().toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
-    if(sitePlanDataUrl)p.site_plan_image=sitePlanDataUrl;
-    // Include project site plan URL if available
-    var _spProjId=window._pendingProjectLink||(lastSavedQuoteId?findParentProject(lastSavedQuoteId):null);
-    if(!p.site_plan_image&&_spProjId){
-      var _proj=pipelineProposals.find(function(x){return x.id===_spProjId;});
-      if(_proj){var _sn=typeof _proj.snap==='string'?JSON.parse(_proj.snap):_proj.snap||{};if(_sn.site_plan_url)p.site_plan_url=_sn.site_plan_url;}
+    // Site plans (array): builder's in-memory plans take precedence; fall back to parent project's plans.
+    var _plansForPdf=(sitePlans&&sitePlans.length)?sitePlans.slice():[];
+    if(!_plansForPdf.length){
+      var _spProjId=window._pendingProjectLink||(lastSavedQuoteId?findParentProject(lastSavedQuoteId):null);
+      if(_spProjId){
+        var _proj=pipelineProposals.find(function(x){return x.id===_spProjId;});
+        if(_proj){
+          var _sn=typeof _proj.snap==='string'?JSON.parse(_proj.snap):_proj.snap||{};
+          _plansForPdf=_normalizeSitePlans(_sn);
+        }
+      }
     }
+    if(_plansForPdf.length) p.site_plans=_plansForPdf;
     var r=await fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
     if(!r.ok){var e=await r.json();throw new Error(e.error||'Server error');}
     var blob=await r.blob();
@@ -10111,14 +10354,17 @@ async function exportPDF(){
   }
 }
 
-// -- Site plan -----------------------------------------------------------------
+// -- Site plan (legacy single-file shim) --------------------------------------
+// New flow: openBuilderSitePlansModal() manages window.sitePlans (multi-plan array).
+// Kept for any old onchange="setSitePlan(this)" still in the wild.
 function setSitePlan(inp){
   if(!inp.files||!inp.files[0])return;
   var reader=new FileReader();
   reader.onload=function(e){
+    sitePlans.push({data:e.target.result,label:'',content_type:inp.files[0].type||''});
     sitePlanDataUrl=e.target.result;
-    var spBtn=document.getElementById('site-plan-btn');
-    if(spBtn){spBtn.textContent='Plan Loaded';spBtn.style.borderColor='#27500A';}
+    updateSitePlanButtonLabel();
+    _proposalDirty=true;
     toast('Site plan loaded','ok');
   };
   reader.readAsDataURL(inp.files[0]);
@@ -10185,6 +10431,7 @@ async function saveQuote(quiet){
     waste:document.getElementById('waste').value,mob:document.getElementById('mob').value,mob_cost:document.getElementById('mob-cost').value,contingency:document.getElementById('contingency').value,
     selectedClient:selectedClient,liOverrides:liOverrides,
     site_plan_data:sitePlanDataUrl||undefined,
+    site_plans:sitePlans.slice(),
     sections:sections,concItems:concItems,extraItems:extraItems,siteWorkItems:siteWorkItems,pavementItems:pavementItems};
   if(document.getElementById('options-toggle').checked&&pricingOptions.length)snap.pricing_options=pricingOptions;
   var p=buildPayload();
@@ -10211,6 +10458,15 @@ async function saveQuote(quiet){
     var d=await _safeFetch(url,{method:method,body:JSON.stringify(body)});
     lastSavedQuoteId=d.id;
     updateProposalDocBadge();
+    // Now that we have an id, push any in-memory base64 plans to Storage and re-save the snap with their URLs.
+    try{
+      var dirty=await _flushBuilderSitePlans(d.id);
+      if(dirty){
+        snap.site_plans=sitePlans.slice();
+        await _safeFetch('/quotes/update/'+d.id,{method:'PATCH',body:JSON.stringify({snap:snap})});
+        updateSitePlanButtonLabel();
+      }
+    }catch(_){/* PDF gen still works with inline data if upload fails */}
     // Update local cache
     var existing=savedQuotes.find(function(q){return q.id===d.id;});
     if(existing){existing.name=name;existing.client=snap.client;existing.date=snap.date;existing.total=p.total;existing.snap=JSON.stringify(snap);}
@@ -10274,10 +10530,10 @@ function loadQuote(id,skipNav){
   pavementItems=d.pavementItems||[];pvid=pavementItems.reduce(function(m,x){return Math.max(m,x.id+1);},0);
   lastSavedQuoteId=q.id;
   evaActuals=d.eva_actuals||{};
-  // Restore site plan data if saved
+  // Restore site plans (array). Hydrate from new snap.site_plans first; fall back to legacy single-field shape.
+  sitePlans=_normalizeSitePlans(d);
   sitePlanDataUrl=d.site_plan_data||null;
-  var spBtn=document.getElementById('site-plan-btn');
-  if(spBtn){if(sitePlanDataUrl){spBtn.textContent='Plan Loaded';spBtn.style.borderColor='#27500A';}else{spBtn.textContent='Upload Site Plan';spBtn.style.borderColor='';}}
+  updateSitePlanButtonLabel();
   // Set project link from parent project if not already set
   if(!window._pendingProjectLink){
     var parentId=findParentProject(q.id);
@@ -10748,6 +11004,7 @@ async function duplicateProposal(id){
 }
 function resetAll(){
   sections=[];sid=0;lid=0;concItems=[];cid=0;extraItems=[];eid=0;pavementItems=[];pvid=0;siteWorkItems=[];swid=0;lastSavedQuoteId=null;
+  sitePlans=[];sitePlanDataUrl=null;updateSitePlanButtonLabel();
   ['proj-name','proj-client','proj-addr','proj-cs'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('proj-notes').value=_defaultProjectNotes;
   document.getElementById('waste').value=5;document.getElementById('mob').value=jcMobPrice;document.getElementById('mob-cost').value=jcMobCost;document.getElementById('contingency').value=0;
   document.getElementById('proj-date').value=new Date().toISOString().split('T')[0];
@@ -13422,14 +13679,19 @@ function renderWorkOrderDetail(){
 
   // Material Suppliers section removed from WO view — block intentionally omitted.
 
-  // Site Plan
+  // Site Plans (read-only stack of all plans on this project)
   var spEl=document.getElementById('wo-site-plan');
-  var spUrl=snap.site_plan_url;
-  if(spUrl){
-    var isPdf=spUrl.toLowerCase().indexOf('.pdf')>-1;
-    spEl.innerHTML=(isPdf
-      ?'<iframe src="'+esc(spUrl)+'" style="width:100%;height:280px;border:1px solid var(--bdr);border-radius:6px;" frameborder="0"></iframe>'
-      :'<img src="'+esc(spUrl)+'" alt="Site plan" style="max-width:100%;border-radius:6px;border:1px solid var(--bdr);"/>');
+  var spList=_normalizeSitePlans(snap);
+  if(spList.length){
+    spEl.innerHTML='';
+    spList.forEach(function(plan){
+      var src=_planSrc(plan);if(!src)return;
+      var heading=plan.label?('<div style="font-size:11px;font-weight:600;color:var(--dgray);margin:0 0 4px;">'+esc(plan.label)+'</div>'):'';
+      var body=_planIsPdf(plan)
+        ?'<iframe src="'+esc(src)+'" style="width:100%;height:280px;border:1px solid var(--bdr);border-radius:6px;" frameborder="0"></iframe>'
+        :'<img src="'+esc(src)+'" alt="Site plan" style="max-width:100%;border-radius:6px;border:1px solid var(--bdr);"/>';
+      spEl.insertAdjacentHTML('beforeend','<div style="margin-bottom:10px;">'+heading+body+'</div>');
+    });
   } else {
     spEl.innerHTML='<p style="color:var(--dgray);font-size:12px;">No site plan uploaded for this project.</p>';
   }
@@ -14967,7 +15229,7 @@ function renderSchedWeatherStrip(){
     if(sRainEl&&sRainText){
       var rain=daily&&daily.precipitation_probability_max?daily.precipitation_probability_max[0]:0;
       if(rain>50){
-        sRainText.innerHTML='<strong>'+rain+'% chance of rain today</strong> \u2014 '+(rain>=80?'Heavy rain expected. Consider rescheduling outdoor work.':'Rain likely. Plan indoor tasks or have tarps ready.');
+        sRainText.innerHTML='<strong>'+rain+'% chance of rain today</strong> \u2014 plan accordingly.';
         sRainEl.style.display='flex';
       } else { sRainEl.style.display='none'; }
     }

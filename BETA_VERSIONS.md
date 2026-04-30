@@ -36,6 +36,36 @@ Semver-ish: `MAJOR.MINOR.PATCH`. While in beta we stay on `1.x`:
 
 ---
 
+## v1.1.0 — 2026-04-30
+
+**Commit:** tagged `v1.1.0`
+**Supabase schema state:** one-time backfill applied to `proposals.snap`. Every row that previously had `snap.site_plan_url` or `snap.site_plan_data` now also has `snap.site_plans = [{url|data, label:''}]` — 8 rows touched, all URL-based. The legacy `site_plan_url` / `site_plan_data` keys are intentionally **left in place** for one release as a rollback safety net; cleanup is a follow-up. No DDL, no policy changes.
+
+### Features
+- **Multiple site plans per project.** Up to 8 plans per proposal/project, each with an optional label, attached as separate `Exhibit A` pages (in user-controlled order) on the exported proposal PDF.
+  - Project summary card: replaced single thumbnail with a horizontal-scroll list. Each card has thumbnail (iframe for PDFs, img for images), label input, drag handle, delete. "+ Add Site Plan" tile at end (hidden at 8). Multi-select in the file picker uploads sequentially.
+  - Proposal builder: the topbar "Site Plans" action opens a modal with the same UI. Plans live in memory as base64 until the proposal is saved; on save, they're flushed to Supabase Storage and the snap is rewritten with URL refs in a second PATCH.
+  - PDF heading per plan: `Exhibit A — {label}` if a label is set, else `Exhibit A — Site Plan {n} of {total}` (single-plan output is unchanged).
+  - Drag-to-reorder + label edits both fire a debounced `PATCH /site-plan/<id>` (full-array replace).
+- **Storage layout change.** New uploads land at `project-{id}/site-plan-{uuid8}.{ext}` (no more upsert overwrite). DELETE route removes the underlying blob best-effort.
+
+### Backend
+- `POST /upload/site-plan/<int:project_id>` — now appends to `snap.site_plans`, accepts optional `label` form field, caps at `SITE_PLANS_MAX = 8`.
+- `DELETE /site-plan/<int:project_id>` (new) — body `{index}`, splices the entry + best-effort Storage cleanup.
+- `PATCH /site-plan/<int:project_id>` (new) — body `{plans: [...]}`, full-array replace for reorder + label edits.
+- New helpers: `_load_proposal_snap`, `_site_plans_from_snap`, `_storage_path_from_url`.
+
+### Fixes
+- **Dashboard weather hero rain pill** moved from top-right (was overlapping the day pill / temperature) to bottom-right; "— plan crew" tagline removed. (Feedback #3)
+- **Schedule panel rain alert** simplified to `<strong>X% chance of rain today</strong> — plan accordingly.` (Feedback #2 — the previous "Rain likely. Plan indoor tasks or have tarps ready." copy didn't fit a sitework context.)
+- Both feedback items marked `reviewed` in `hd_feedback`.
+
+### Out of scope this release
+- Public proposal view (`/p/<token>`) does not render plans inline — clients still see plans only via the PDF download.
+- Cleanup of legacy `snap.site_plan_url` / `snap.site_plan_data` fields — follow-up migration once multi-plan is confirmed stable.
+
+---
+
 ## v1.0.2 — 2026-04-29
 
 **Commit:** tagged `v1.0.2`

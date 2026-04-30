@@ -1545,6 +1545,7 @@ def send_email():
 # ── File Upload (Supabase Storage) ───────────────────────────────────────────
 
 STORAGE_BUCKET = 'site-plans'
+SITE_PLANS_MAX = 8
 _bucket_ensured = False
 
 def ensure_storage_bucket():
@@ -1566,10 +1567,47 @@ def ensure_storage_bucket():
     except Exception:
         pass
 
+def _load_proposal_snap(project_id):
+    """Fetch and parse snap for a proposal. Returns (snap_dict, error_response_or_none)."""
+    proj_r = http.get(
+        sb_url('proposals', '?' + _sb_eq('id', project_id) + '&' + 'select=snap'),
+        headers=sb_headers(), timeout=5)
+    rows = proj_r.json()
+    if not rows:
+        return None, (jsonify({'ok': False, 'error': 'Project not found'}), 404)
+    snap = rows[0].get('snap') or {}
+    if isinstance(snap, str):
+        snap = json.loads(snap)
+    return snap, None
+
+def _site_plans_from_snap(snap):
+    """Return the site_plans array, hydrating from legacy fields if missing."""
+    plans = snap.get('site_plans')
+    if isinstance(plans, list):
+        return list(plans)
+    legacy_url = (snap.get('site_plan_url') or '').strip()
+    legacy_data = (snap.get('site_plan_data') or '').strip()
+    if legacy_url:
+        return [{'url': legacy_url, 'label': ''}]
+    if legacy_data:
+        return [{'data': legacy_data, 'label': ''}]
+    return []
+
+def _storage_path_from_url(url):
+    """Extract the bucket-relative path from a public Supabase Storage URL.
+    Returns None if the URL doesn't match this bucket."""
+    if not url:
+        return None
+    marker = f'/object/public/{STORAGE_BUCKET}/'
+    idx = url.find(marker)
+    if idx < 0:
+        return None
+    return url[idx + len(marker):]
+
 @app.route('/upload/site-plan/<int:project_id>', methods=['POST'])
 @require_auth
 def upload_site_plan(project_id):
-    """Upload a site plan to Supabase Storage, save URL in project snap."""
+    """Upload a site plan, append to snap.site_plans array. Cap at SITE_PLANS_MAX."""
     if 'file' not in request.files:
         return jsonify({'ok': False, 'error': 'No file provided'}), 400
     file = request.files['file']
@@ -1583,7 +1621,6 @@ def upload_site_plan(project_id):
     if size > 50_000_000:
         return jsonify({'ok': False, 'error': 'File too large. Maximum 50MB.'}), 400
 
-    # Determine content type
     ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else 'png'
     allowed = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'webp'}
     if ext not in allowed:
@@ -1591,22 +1628,26 @@ def upload_site_plan(project_id):
     content_types = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'gif': 'image/gif', 'pdf': 'application/pdf', 'webp': 'image/webp'}
     ct = content_types.get(ext, 'application/octet-stream')
 
-    # Ensure bucket exists
-    ensure_storage_bucket()
+    label = (request.form.get('label') or '').strip()[:120]
 
-    # Upload to Supabase Storage
-    svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
-    file_path = f'project-{project_id}/site-plan.{ext}'
     try:
+        snap, err = _load_proposal_snap(project_id)
+        if err:
+            return err
+        plans = _site_plans_from_snap(snap)
+        if len(plans) >= SITE_PLANS_MAX:
+            return jsonify({'ok': False, 'error': f'Maximum {SITE_PLANS_MAX} site plans per project. Remove one before uploading.'}), 400
+
+        ensure_storage_bucket()
+        svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+        file_path = f'project-{project_id}/site-plan-{uuid.uuid4().hex[:8]}.{ext}'
         file_data = file.read()
-        # Upload (upsert)
         r = http.post(
             f'{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{file_path}',
             headers={
                 'apikey': svc_key,
                 'Authorization': f'Bearer {svc_key}',
                 'Content-Type': ct,
-                'x-upsert': 'true'
             },
             data=file_data,
             timeout=30
@@ -1615,27 +1656,99 @@ def upload_site_plan(project_id):
             err_detail = r.text[:200] if r.text else 'Unknown error'
             return jsonify({'ok': False, 'error': f'Storage upload failed ({r.status_code}): {err_detail}'}), 500
 
-        # Build public URL
         public_url = f'{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{file_path}'
-
-        # Update project snap with site_plan_url
-        proj_r = http.get(sb_url('proposals', '?' + _sb_eq('id', project_id) + '&' + 'select=snap'), headers=sb_headers(), timeout=5)
-        rows = proj_r.json()
-        if rows:
-            snap = rows[0].get('snap') or {}
-            if isinstance(snap, str):
-                snap = json.loads(snap)
-            snap['site_plan_url'] = public_url
-            http.patch(
-                sb_url('proposals', '?' + _sb_eq('id', project_id)),
-                headers=sb_headers(),
-                json={'snap': snap},
-                timeout=5
-            )
-
-        return jsonify({'ok': True, 'url': public_url})
+        new_plan = {'url': public_url, 'label': label, 'content_type': ct}
+        plans.append(new_plan)
+        snap['site_plans'] = plans
+        http.patch(
+            sb_url('proposals', '?' + _sb_eq('id', project_id)),
+            headers=sb_headers(),
+            json={'snap': snap},
+            timeout=5
+        )
+        return jsonify({'ok': True, 'url': public_url, 'plan': new_plan, 'count': len(plans)})
     except Exception as e:
         return _safe_error(e, context='upload/site-plan/<int:project_id>')
+
+@app.route('/site-plan/<int:project_id>', methods=['DELETE'])
+@require_auth
+def delete_site_plan(project_id):
+    """Remove one entry from snap.site_plans. Body: {index: N}.
+    Best-effort cleanup of the underlying Storage blob."""
+    body = request.get_json(silent=True) or {}
+    try:
+        index = int(body.get('index'))
+    except (TypeError, ValueError):
+        return jsonify({'ok': False, 'error': 'index (int) is required'}), 400
+    try:
+        snap, err = _load_proposal_snap(project_id)
+        if err:
+            return err
+        plans = _site_plans_from_snap(snap)
+        if index < 0 or index >= len(plans):
+            return jsonify({'ok': False, 'error': 'index out of range'}), 400
+        removed = plans.pop(index)
+        snap['site_plans'] = plans
+        http.patch(
+            sb_url('proposals', '?' + _sb_eq('id', project_id)),
+            headers=sb_headers(),
+            json={'snap': snap},
+            timeout=5
+        )
+        # Best-effort blob delete
+        path = _storage_path_from_url(removed.get('url'))
+        if path:
+            try:
+                svc_key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
+                http.delete(
+                    f'{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{path}',
+                    headers={'apikey': svc_key, 'Authorization': f'Bearer {svc_key}'},
+                    timeout=10
+                )
+            except Exception:
+                app.logger.warning('site-plan blob delete failed for %s', path)
+        return jsonify({'ok': True, 'count': len(plans)})
+    except Exception as e:
+        return _safe_error(e, context='delete /site-plan/<int:project_id>')
+
+@app.route('/site-plan/<int:project_id>', methods=['PATCH'])
+@require_auth
+def patch_site_plans(project_id):
+    """Replace snap.site_plans with the provided array (used for reorder + label edits).
+    Body: {plans: [{url|data, label, content_type}, ...]}."""
+    body = request.get_json(silent=True) or {}
+    plans_in = body.get('plans')
+    if not isinstance(plans_in, list):
+        return jsonify({'ok': False, 'error': 'plans (list) is required'}), 400
+    if len(plans_in) > SITE_PLANS_MAX:
+        return jsonify({'ok': False, 'error': f'Maximum {SITE_PLANS_MAX} site plans per project'}), 400
+    cleaned = []
+    for p in plans_in:
+        if not isinstance(p, dict):
+            continue
+        entry = {'label': (p.get('label') or '').strip()[:120]}
+        if p.get('url'):
+            entry['url'] = p['url']
+        if p.get('data'):
+            entry['data'] = p['data']
+        if p.get('content_type'):
+            entry['content_type'] = p['content_type']
+        if entry.get('url') or entry.get('data'):
+            cleaned.append(entry)
+    try:
+        snap, err = _load_proposal_snap(project_id)
+        if err:
+            return err
+        snap['site_plans'] = cleaned
+        http.patch(
+            sb_url('proposals', '?' + _sb_eq('id', project_id)),
+            headers=sb_headers(),
+            json={'snap': snap},
+            timeout=5
+        )
+        return jsonify({'ok': True, 'count': len(cleaned)})
+    except Exception as e:
+        return _safe_error(e, context='patch /site-plan/<int:project_id>')
 
 # ── Project File Attachments (Supabase Storage) ──────────────────────────────
 
