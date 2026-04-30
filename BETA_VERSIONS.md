@@ -36,6 +36,16 @@ Semver-ish: `MAJOR.MINOR.PATCH`. While in beta we stay on `1.x`:
 
 ---
 
+## v1.1.2 — 2026-04-30
+
+**Commit:** tagged `v1.1.2`
+**Supabase schema state:** unchanged from v1.1.1.
+
+### UX
+- **Site plans pack 2-per-page in the exported proposal PDF.** 1 plan → full page (unchanged). 2 plans → stacked vertically on a single page with a hairline divider between them. 3+ plans → paginate 2 per page; the last page may carry a single plan. Per-plan headings shrink slightly (16pt → 13pt) when stacked so they don't dominate the slot.
+
+---
+
 ## v1.1.1 — 2026-04-30
 
 **Commit:** tagged `v1.1.1`

@@ -373,25 +373,29 @@ def total_line(total):
     return t
 
 class SitePlanPage(Flowable):
-    """Renders the uploaded site plan image at top of page with Exhibit A heading.
-    Accepts base64 data URL, remote image URL, or remote PDF URL."""
-    def __init__(self, image_data=None, site_plan_url=None, label='', index=1, total=1):
+    """Renders 1 or 2 site plans on a single page. With 2, plans stack vertically
+    so both fit on one page; with 1, the plan fills the page (legacy behavior).
+    Each entry is a dict with optional 'data' (base64 data URL), 'url' (remote),
+    and 'label'."""
+    def __init__(self, plans, start_index=1, total_count=1):
         super().__init__()
-        self._image_data = image_data
-        self._site_plan_url = site_plan_url
-        self._label = (label or '').strip()
-        self._index = index
-        self._total = max(1, total)
-        self._tmp_path = None
+        # Back-compat: also accept the old (image_data, site_plan_url, label, index, total) shape.
+        if not isinstance(plans, list):
+            plans = [{'data': plans, 'url': start_index if isinstance(start_index, str) else None, 'label': ''}]
+            start_index = 1
+        self._plans = plans[:2]  # cap at 2 per page; build() handles pagination
+        self._start_index = start_index
+        self._total = max(1, total_count)
 
-    def _resolve_image(self):
-        """Returns a local file path to the site plan image, or None."""
+    def _resolve_image(self, plan):
+        """Returns a local file path to the site plan image for this plan, or None."""
         import base64, tempfile
-        # 1. Base64 data URL (from proposal builder file upload)
-        if self._image_data and ',' in self._image_data:
+        image_data = plan.get('data')
+        site_plan_url = plan.get('url')
+        if image_data and ',' in image_data:
             try:
-                img_bytes = base64.b64decode(self._image_data.split(',')[1])
-                ext = self._image_data.split(';')[0].split('/')[1] if ';' in self._image_data else 'png'
+                img_bytes = base64.b64decode(image_data.split(',')[1])
+                ext = image_data.split(';')[0].split('/')[1] if ';' in image_data else 'png'
                 if ext == 'pdf':
                     return self._pdf_to_image(img_bytes)
                 with tempfile.NamedTemporaryFile(suffix=f'.{ext}', delete=False) as tmp:
@@ -399,14 +403,13 @@ class SitePlanPage(Flowable):
                     return tmp.name
             except Exception:
                 pass
-        # 2. Remote URL (from Supabase Storage)
-        if self._site_plan_url:
+        if site_plan_url:
             try:
                 import requests as _http
-                r = _http.get(self._site_plan_url, timeout=15, allow_redirects=True)
+                r = _http.get(site_plan_url, timeout=15, allow_redirects=True)
                 if r.status_code == 200:
                     ct = r.headers.get('content-type', '')
-                    if 'pdf' in ct or self._site_plan_url.lower().endswith('.pdf'):
+                    if 'pdf' in ct or site_plan_url.lower().endswith('.pdf'):
                         return self._pdf_to_image(r.content)
                     ext = 'png'
                     if 'jpeg' in ct or 'jpg' in ct:
@@ -431,7 +434,6 @@ class SitePlanPage(Flowable):
                     images[0].save(tmp.name, 'PNG')
                     return tmp.name
         except ImportError:
-            # pdf2image not available — try PyMuPDF as fallback
             try:
                 import fitz
                 doc = fitz.open(stream=pdf_bytes, filetype='pdf')
@@ -449,34 +451,56 @@ class SitePlanPage(Flowable):
     def wrap(self, aw, ah):
         self._aw, self._ah = aw, ah
         return aw, ah
+
     def draw(self):
         c = self.canv
-        heading_h = 0.5*inch
-        # Draw heading at top
-        c.setFont('Helvetica-Bold', 16)
-        c.setFillColor(BLACK)
-        if self._label:
-            heading = 'Exhibit A — ' + (self._label[:60])
+        n = max(1, len(self._plans))
+        slot_h = self._ah / n
+        for i, plan in enumerate(self._plans):
+            slot_top = self._ah - i * slot_h
+            slot_bot = slot_top - slot_h
+            self._draw_slot(c, plan, slot_top, slot_bot, self._start_index + i, stacked=(n > 1))
+            if n > 1 and i < n - 1:
+                # Hairline divider between stacked plans
+                c.setStrokeColor(MGRAY)
+                c.setLineWidth(0.4)
+                c.setDash(2, 2)
+                c.line(0.25*inch, slot_bot, self._aw - 0.25*inch, slot_bot)
+                c.setDash()
+
+    def _draw_slot(self, c, plan, slot_top, slot_bot, plan_idx, stacked):
+        label = (plan.get('label') or '').strip()
+        if label:
+            heading = 'Exhibit A — ' + label[:60]
         elif self._total > 1:
-            heading = 'Exhibit A — Site Plan {} of {}'.format(self._index, self._total)
+            heading = 'Exhibit A — Site Plan {} of {}'.format(plan_idx, self._total)
         else:
             heading = 'Exhibit A — Site Plan'
-        c.drawCentredString(self._aw/2, self._ah - 0.25*inch, heading)
-        img_top = self._ah - heading_h - 0.15*inch
+        # Heading sizing scales down when stacked so it doesn't dominate the slot
+        head_size = 13 if stacked else 16
+        head_offset = 0.22*inch if stacked else 0.25*inch
+        c.setFont('Helvetica-Bold', head_size)
+        c.setFillColor(BLACK)
+        c.drawCentredString(self._aw/2, slot_top - head_offset, heading)
+        # Image area: below heading, with a little top/bottom breathing room
+        img_top = slot_top - (0.42*inch if stacked else 0.5*inch) - 0.08*inch
+        img_bot = slot_bot + (0.08*inch if stacked else 0)
+        max_h = img_top - img_bot
+        if max_h <= 0:
+            return
+        max_w = self._aw
 
-        img_path = self._resolve_image()
+        img_path = self._resolve_image(plan)
         if img_path:
             try:
                 from reportlab.lib.utils import ImageReader
                 ir = ImageReader(img_path)
                 iw, ih = ir.getSize()
-                max_w = self._aw
-                max_h = img_top
                 scale = min(max_w / iw, max_h / ih)
                 dw = iw * scale
                 dh = ih * scale
                 x = (self._aw - dw) / 2
-                y = img_top - dh
+                y = img_bot + (max_h - dh) / 2  # vertically center within the slot
                 c.drawImage(img_path, x, y, width=dw, height=dh,
                             preserveAspectRatio=True, mask='auto')
                 os.unlink(img_path)
@@ -488,19 +512,18 @@ class SitePlanPage(Flowable):
         # Fallback placeholder
         c.setStrokeColor(MGRAY)
         c.setLineWidth(1)
-        c.setDash(6,4)
-        ph = img_top * 0.6
-        px = 0
-        py = img_top - ph
-        c.rect(px, py, self._aw, ph, stroke=1, fill=0)
+        c.setDash(6, 4)
+        ph_h = max_h * 0.7
+        py = img_bot + (max_h - ph_h) / 2
+        c.rect(0, py, self._aw, ph_h, stroke=1, fill=0)
         c.setDash()
-        cx, cy = self._aw/2, py + ph/2
-        c.setFont('Helvetica-Bold', 14)
+        cx, cy = self._aw/2, py + ph_h/2
+        c.setFont('Helvetica-Bold', 12 if stacked else 14)
         c.setFillColor(MGRAY)
-        c.drawCentredString(cx, cy + 0.2*inch, 'Site Plan / Drawing')
-        c.setFont('Helvetica', 10)
-        c.drawCentredString(cx, cy - 0.1*inch, 'Upload a site plan image in the proposal builder')
-        c.drawCentredString(cx, cy - 0.32*inch, 'or attach separately before sending to client')
+        c.drawCentredString(cx, cy + 0.15*inch, 'Site Plan / Drawing')
+        c.setFont('Helvetica', 9 if stacked else 10)
+        c.drawCentredString(cx, cy - 0.08*inch, 'Upload a site plan image in the proposal builder')
+        c.drawCentredString(cx, cy - 0.28*inch, 'or attach separately before sending to client')
 
 def red_hdr(text, st, cw):
     t = Table([[Paragraph(text, st['appr_hdr'])]], colWidths=[cw])
@@ -939,12 +962,14 @@ def build(data, out_path):
         elif data.get('site_plan_url'):
             plans = [{'url': data['site_plan_url'], 'label': ''}]
     total = len(plans)
-    for i, p in enumerate(plans):
-        story.append(SitePlanPage(
-            p.get('data'), p.get('url'),
-            label=p.get('label', ''), index=i+1, total=total,
-        ))
+    # Pack up to 2 plans per page (stacked). 1 plan → full page (legacy behavior);
+    # 2 → both fit on one page; 3+ → paginate 2 per page (last page may have 1).
+    i = 0
+    while i < total:
+        page_plans = plans[i:i+2]
+        story.append(SitePlanPage(page_plans, start_index=i+1, total_count=total))
         story.append(PageBreak())
+        i += len(page_plans)
 
     story += tc_pages(st)
     up_block = unit_prices_block(data)
