@@ -1,6 +1,6 @@
 import os, tempfile, functools, json, hashlib, time, uuid, re, html
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, session, send_file
+from flask import Flask, request, jsonify, session, send_file, abort
 from werkzeug.utils import secure_filename
 from generate_proposal import build
 try:
@@ -21,6 +21,48 @@ from security import (
 )
 
 app = Flask(__name__, static_folder='.', static_url_path='')
+
+# --- Static-file allowlist ----------------------------------------------------
+# Without this, `static_folder='.'` exposes the entire repo at the URL root —
+# app.py, CLAUDE.md, .git/*, generate_*.py, *.md, etc. would all be downloadable.
+# This before_request filter 404s anything the URL router would dispatch to the
+# `static` endpoint that isn't in the allowlist below. Explicit Flask routes
+# (`/`, `/auth/login`, `/lead-form`, ...) are unaffected.
+_PUBLIC_STATIC_FILES = frozenset({
+    'hd-favicon.png',
+    'hd-mark.png',
+    'hd-no-background.png',
+    'hd_logo.png',
+    'hd_logo_cropped.png',
+    'driver.css',
+    'driver.js.iife.js',
+})
+_PUBLIC_STATIC_PREFIXES = ('static/',)
+_PUBLIC_STATIC_PREFIX_EXTS = (
+    '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webp',
+    '.mp4', '.webm', '.mp3', '.css', '.js', '.json',
+    '.woff', '.woff2',
+)
+
+@app.before_request
+def _restrict_static_to_allowlist():
+    p = request.path.lstrip('/')
+    if not p:
+        return  # `/` is handled by the explicit index() route
+    try:
+        endpoint, _ = app.url_map.bind('').match('/' + p, method=request.method)
+    except Exception:
+        return  # no rule matched — let Flask 404 naturally
+    if endpoint != 'static':
+        return  # explicit route owns this path
+    if p in _PUBLIC_STATIC_FILES:
+        return
+    if (p.startswith(_PUBLIC_STATIC_PREFIXES)
+            and p.lower().endswith(_PUBLIC_STATIC_PREFIX_EXTS)):
+        return
+    abort(404)
+# -----------------------------------------------------------------------------
+
 _SECRET_KEY = os.environ.get('SECRET_KEY', '')
 if not _SECRET_KEY or _SECRET_KEY == 'hd-hauling-dev-key':
     raise RuntimeError('SECRET_KEY env var must be set to a non-default value. Refusing to start.')
@@ -241,9 +283,34 @@ def _owns_or_admin(record_created_by):
         return True
     return False
 
+import pricing_defaults
+
+_INDEX_HTML_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')
+_LOGIN_HTML_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'login.html')
+_HD_DEFAULTS_PLACEHOLDER = 'null /*__HD_DEFAULTS_INJECTION__*/'
+
+def _render_index_for_session():
+    """Read index.html and substitute the pricing-defaults placeholder with the
+    real JSON values. Only ever called for authenticated sessions, so the
+    constants never reach an unauthenticated visitor."""
+    with open(_INDEX_HTML_PATH, 'r', encoding='utf-8') as fp:
+        tmpl = fp.read()
+    defaults_json = json.dumps(pricing_defaults.serialize(), separators=(',', ':'))
+    return tmpl.replace(_HD_DEFAULTS_PLACEHOLDER, defaults_json)
+
 @app.route('/')
 def index():
-    return app.send_static_file('index.html')
+    if not session.get('authenticated'):
+        # Unauthenticated visitors get only the standalone login page —
+        # never the SPA HTML, never the pricing constants, never the panel structure.
+        resp = send_file(_LOGIN_HTML_PATH)
+        resp.headers['Cache-Control'] = 'no-store'
+        return resp
+    body = _render_index_for_session()
+    from flask import Response
+    resp = Response(body, mimetype='text/html')
+    resp.headers['Cache-Control'] = 'no-store'
+    return resp
 
 @app.route('/auth/login', methods=['POST'])
 def login():

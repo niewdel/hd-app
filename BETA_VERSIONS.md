@@ -36,6 +36,77 @@ Semver-ish: `MAJOR.MINOR.PATCH`. While in beta we stay on `1.x`:
 
 ---
 
+## v1.2.0 — 2026-05-19 — Security hardening (pre-auth exposure fix)
+
+**Why this is a minor bump and not a patch:** three pre-authentication
+information leaks have been closed. The fixes change how the app is served
+to unauthenticated visitors; they do not change any data model or in-app
+behavior for logged-in users.
+
+**Supabase schema state:** unchanged.
+
+### What changed
+
+1. **Source-code / repo leakage is closed.** Flask was configured with
+   `static_folder='.', static_url_path=''`, which meant every file in the
+   repo root was downloadable at the URL root — `/app.py`, `/security.py`,
+   `/generate_proposal.py`, `/CLAUDE.md`, `/.git/config`, every `*.md`, and
+   the Python source for the proposal generator were all `HTTP 200` from
+   `https://hdapp.up.railway.app`. A new `before_request` filter in
+   `app.py` enforces a strict allowlist of public assets (logos, driver
+   CSS/JS, favicon) and `static/` for weather media; everything else
+   returns `404`, including direct fetches of `index.html` and
+   `login.html`. Env vars were the only credential store, so no secrets
+   were leaked, but the source surface was readable.
+
+2. **The `/` route is now server-gated.** Previously, every visitor was
+   served the full 1.1 MB single-file SPA and the login screen was a
+   CSS overlay on top of the already-loaded app. View-source / DevTools
+   revealed all hardcoded pricing constants and the entire panel
+   structure. Now: an unauthenticated `GET /` returns the standalone
+   `login.html` (~7 KB, no app code), and only authenticated sessions
+   ever receive the full app HTML.
+
+3. **Pricing constants moved server-side.** All `MAT` (material costs),
+   `CREWS_DEFAULT` (daily rates + productivity), `JC_*_DEFAULT`,
+   `MOB_*_DEFAULT`, `TRUCK_*_DEFAULT`, `DRATE_DEFAULT`, `LBS_DEFAULT`,
+   `DDEPTH_DEFAULT`, and `DDEPTH_INITIAL` literals were deleted from
+   `index.html` and moved to a new `pricing_defaults.py` module. They
+   are injected into the rendered HTML at request time via a placeholder
+   replacement in `_render_index_for_session()` and read by the JS as
+   `window.__HD_DEFAULTS__`. Customer-level overrides in
+   `hd_settings` continue to overlay on top exactly as before.
+
+### How auth flow works now
+
+- `GET /` (anon) → `login.html` with `Cache-Control: no-store`.
+- `POST /auth/login` (unchanged: bcrypt + rate limit + lockout).
+- On login success the JS does `window.location.replace('/')`; the
+  server now serves the full SPA because the session cookie is set.
+- `POST /auth/logout` → existing flow (returns JSON, client reloads).
+- Mid-session expiry: the in-page auth-check IIFE in `index.html` now
+  redirects to `/` on `{authenticated: false}`, which serves `login.html`.
+
+### Files touched
+
+- `app.py` — `before_request` allowlist, conditional `/` route,
+  `_render_index_for_session()` helper, `pricing_defaults` import.
+- `pricing_defaults.py` — new module with all the JSON-serialized
+  defaults plus a `serialize()` entry point.
+- `login.html` — new standalone page. ~7 KB. No app code.
+- `index.html` — pricing literals replaced with `_hdDef()` lookups
+  against `window.__HD_DEFAULTS__`; injection placeholder added in
+  `<head>`; login overlay hidden by default (kept only as a defensive
+  fallback for session-expiry recovery).
+
+### Rollback
+
+If anything breaks for Kyle: `git checkout v1.1.4 -- index.html app.py
+login.html pricing_defaults.py && git commit && git push`. The static
+allowlist is the most defensible piece — leave it in if at all possible.
+
+---
+
 ## v1.1.4 — 2026-04-30
 
 **Commit:** tagged `v1.1.4`

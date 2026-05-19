@@ -66,6 +66,70 @@ PATCH: `...rest/v1/TABLE?id=eq.ID` with a JSON body.
 - `GMAIL_TOKEN_JSON` — OAuth token; sends mail as `admin@hdgrading.com`
 - `GOOGLE_PLACES_API_KEY` — browser-safe Places key. Optional; forms fall back to plain text if unset.
 
+### Pre-Auth Surface (v1.2.0+ — security hardening)
+
+The app uses `Flask(__name__, static_folder='.', static_url_path='')` so the
+repo root sits behind the URL root. To prevent source-code leakage the
+`_restrict_static_to_allowlist` `before_request` handler in `app.py` enforces
+a strict allowlist on anything Flask would dispatch to the `static` endpoint:
+
+- Allowed files (exact match): `hd-favicon.png`, `hd-mark.png`,
+  `hd-no-background.png`, `hd_logo.png`, `hd_logo_cropped.png`, `driver.css`,
+  `driver.js.iife.js`.
+- Allowed prefixes: `static/` (only with safe asset extensions —
+  `.png/.jpg/.svg/.ico/.webp/.mp4/.webm/.mp3/.css/.js/.json/.woff/.woff2`).
+- Explicit Flask routes (`/`, `/auth/*`, `/lead-form`, `/applicants-form`,
+  `/p/<token>`, …) are unaffected — they dispatch to non-`static` endpoints.
+- Everything else (e.g. `/app.py`, `/CLAUDE.md`, `/.git/config`,
+  `/generate_proposal.py`, `/index.html`, `/login.html`, any `*.md`/`*.txt`)
+  returns `404`.
+
+**When adding a new public asset:** put it under `static/` if possible (no
+allowlist edit needed). Only add new entries to `_PUBLIC_STATIC_FILES` for
+top-level repo-root assets you cannot easily move.
+
+The `/` route in `app.py` is now session-gated:
+
+- `session.get('authenticated') == False` → `send_file('login.html')`
+  (~7 KB, no app code, no pricing constants).
+- Authed → `_render_index_for_session()` reads `index.html` from disk on
+  each request and substitutes the JS placeholder `null /*__HD_DEFAULTS_INJECTION__*/`
+  with `json.dumps(pricing_defaults.serialize())`. Both branches set
+  `Cache-Control: no-store` so neither response is cached at the edge.
+
+### Pricing Defaults Module
+
+`pricing_defaults.py` is the single source of truth for the seed pricing
+constants that the proposal builder + job-costing engine boot with. It
+exposes a `serialize()` function returning a dict keyed by the JS global
+name (`MAT`, `MAT_UNIT`, `MAT_TRADE`, `CREWS_DEFAULT`, `JC_*_DEFAULT`,
+`MOB_*_DEFAULT`, `TRUCK_*_DEFAULT`, `DRATE_DEFAULT`, `LBS_DEFAULT`,
+`DDEPTH_DEFAULT`, `DDEPTH_INITIAL`).
+
+The frontend reads them via two helpers near the top of the constants
+section in `index.html`:
+
+```js
+function _hdDef(k){
+  var src = (window.__HD_DEFAULTS__||{})[k];
+  if(src === undefined || src === null) return null;
+  try{ return JSON.parse(JSON.stringify(src)); }catch(_){ return src; }
+}
+function _hdNum(k, fallback){
+  var v = (window.__HD_DEFAULTS__||{})[k];
+  return (typeof v === 'number') ? v : fallback;
+}
+```
+
+User-level customizations from `hd_settings` continue to overlay on top
+of these defaults in `boot()` exactly as before — only the seed values
+moved server-side.
+
+**When changing a default cost / rate / productivity figure:** edit
+`pricing_defaults.py`. Do NOT add the value back into `index.html` —
+the hardcoded constants block was deliberately removed in v1.2.0 to
+keep the values out of any HTML that ever reaches a non-session client.
+
 ---
 
 ## Database Schema (Supabase / PostgreSQL)
